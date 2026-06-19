@@ -14,7 +14,388 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cylinders: {
+        Row: {
+          created_at: string
+          cylinder_type: string | null
+          differ_number: number
+          finish: string | null
+          id: string
+          node_id: string | null
+          quantity: number
+          room_label: string | null
+          system_id: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          cylinder_type?: string | null
+          differ_number: number
+          finish?: string | null
+          id?: string
+          node_id?: string | null
+          quantity?: number
+          room_label?: string | null
+          system_id: string
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          cylinder_type?: string | null
+          differ_number?: number
+          finish?: string | null
+          id?: string
+          node_id?: string | null
+          quantity?: number
+          room_label?: string | null
+          system_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cylinders_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cylinders_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "key_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      key_systems: {
+        Row: {
+          created_at: string
+          door_count: number
+          id: string
+          name: string
+          next_differ: number
+          reference: string | null
+          tree_data: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          door_count?: number
+          id?: string
+          name: string
+          next_differ?: number
+          reference?: string | null
+          tree_data?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          door_count?: number
+          id?: string
+          name?: string
+          next_differ?: number
+          reference?: string | null
+          tree_data?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      keys: {
+        Row: {
+          created_at: string
+          id: string
+          key_reference: string | null
+          node_id: string | null
+          quantity: number
+          system_id: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_reference?: string | null
+          node_id?: string | null
+          quantity?: number
+          system_id: string
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_reference?: string | null
+          node_id?: string | null
+          quantity?: number
+          system_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "keys_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "keys_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "key_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nodes: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          meta: string | null
+          node_type: string
+          parent_id: string | null
+          sort_order: number
+          system_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          meta?: string | null
+          node_type: string
+          parent_id?: string | null
+          sort_order?: number
+          system_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          meta?: string | null
+          node_type?: string
+          parent_id?: string | null
+          sort_order?: number
+          system_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nodes_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nodes_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "key_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          cylinder_type: string | null
+          differ_ref: string | null
+          finish: string | null
+          id: string
+          item_type: string
+          line_total: number
+          order_id: string
+          product_code: string | null
+          quantity: number
+          room_label: string | null
+          unit_price: number
+        }
+        Insert: {
+          cylinder_type?: string | null
+          differ_ref?: string | null
+          finish?: string | null
+          id?: string
+          item_type: string
+          line_total?: number
+          order_id: string
+          product_code?: string | null
+          quantity?: number
+          room_label?: string | null
+          unit_price?: number
+        }
+        Update: {
+          cylinder_type?: string | null
+          differ_ref?: string | null
+          finish?: string | null
+          id?: string
+          item_type?: string
+          line_total?: number
+          order_id?: string
+          product_code?: string | null
+          quantity?: number
+          room_label?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          company: string | null
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          delivery_address: Json | null
+          id: string
+          notes: string | null
+          purchase_order_ref: string | null
+          status: string
+          stripe_payment_intent: string | null
+          stripe_session_id: string | null
+          subtotal: number
+          system_id: string | null
+          total: number
+          tree_snapshot: Json | null
+          user_id: string
+          vat: number
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          delivery_address?: Json | null
+          id?: string
+          notes?: string | null
+          purchase_order_ref?: string | null
+          status?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          subtotal?: number
+          system_id?: string | null
+          total?: number
+          tree_snapshot?: Json | null
+          user_id: string
+          vat?: number
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          delivery_address?: Json | null
+          id?: string
+          notes?: string | null
+          purchase_order_ref?: string | null
+          status?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          subtotal?: number
+          system_id?: string | null
+          total?: number
+          tree_snapshot?: Json | null
+          user_id?: string
+          vat?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "key_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          bs_en_1303: boolean
+          code: string
+          created_at: string
+          cylinder_type: string
+          description: string | null
+          finish: string | null
+          id: string
+          image_url: string | null
+          name: string
+          pin_count: number
+          price_gbp: number
+          security_rating: string | null
+          size: string | null
+        }
+        Insert: {
+          bs_en_1303?: boolean
+          code: string
+          created_at?: string
+          cylinder_type: string
+          description?: string | null
+          finish?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          pin_count?: number
+          price_gbp: number
+          security_rating?: string | null
+          size?: string | null
+        }
+        Update: {
+          bs_en_1303?: boolean
+          code?: string
+          created_at?: string
+          cylinder_type?: string
+          description?: string | null
+          finish?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          pin_count?: number
+          price_gbp?: number
+          security_rating?: string | null
+          size?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          phone: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id: string
+          name?: string | null
+          phone?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
