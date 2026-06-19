@@ -6,6 +6,7 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2, AlertCircle, Package } from "lucide-react";
+import { logAction } from "@/lib/audit";
 
 export default function CheckoutReturn() {
   const [params] = useSearchParams();
