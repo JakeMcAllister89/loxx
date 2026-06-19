@@ -19,6 +19,7 @@ export function AppSidebar() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const isAdmin = useIsAdmin();
   const [systems, setSystems] = useState<{ id: string; name: string; door_count: number }[]>([]);
 
   useEffect(() => {
