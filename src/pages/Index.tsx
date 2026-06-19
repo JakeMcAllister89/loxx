@@ -43,7 +43,7 @@ export default function Index() {
             UK distributor · Master key specialists
           </div>
           <h1 className="font-semibold text-4xl md:text-6xl leading-[1.05] tracking-tight">
-            Build & Order Master Key<br />Systems Online
+            Master key systems<br />made simple
           </h1>
           <p className="mt-6 text-lg text-sidebar-foreground/70 max-w-2xl">
             Design your cylinder hierarchy visually, validate it instantly, and order direct.
