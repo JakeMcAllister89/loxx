@@ -77,6 +77,12 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
+  const fitViewRef = useRef<(() => void) | null>(null);
+  const productsByCode = useMemo(() => {
+    const m = new Map<string, CanvasProduct>();
+    products.forEach((p) => m.set(p.code, { code: p.code, name: p.name, image_url: p.image_url }));
+    return m;
+  }, [products]);
 
   useEffect(() => {
     setLoading(true);
