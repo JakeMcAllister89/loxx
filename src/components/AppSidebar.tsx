@@ -1,8 +1,8 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Network, Package, ShoppingCart, ClipboardList, Settings, Plus, LogOut } from "lucide-react";
+import { LayoutDashboard, Network, Package, ShoppingCart, ClipboardList, Settings, Plus, LogOut, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { useAuth, useIsAdmin } from "@/lib/auth";
 import { LoxxLogo } from "./LoxxLogo";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +19,7 @@ export function AppSidebar() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const isAdmin = useIsAdmin();
   const [systems, setSystems] = useState<{ id: string; name: string; door_count: number }[]>([]);
 
   useEffect(() => {
@@ -86,6 +87,14 @@ export function AppSidebar() {
       </nav>
 
       <div className="p-3 border-t border-sidebar-border space-y-2">
+        {isAdmin && (
+          <div className="pb-2 mb-1 border-b border-sidebar-border">
+            <div className="px-3 pb-1 text-[11px] uppercase tracking-wider text-sidebar-foreground/50">Admin</div>
+            <NavLink to="/admin/products" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded-md text-sm ${isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"}`}>
+              <Shield className="h-4 w-4" /> Product catalogue
+            </NavLink>
+          </div>
+        )}
         <Button onClick={newSystem} className="w-full bg-primary hover:bg-primary/90">
           <Plus className="h-4 w-4" /> New System
         </Button>
