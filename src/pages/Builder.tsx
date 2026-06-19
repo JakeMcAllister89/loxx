@@ -58,6 +58,9 @@ export default function Builder() {
 
 function BuilderInner({ systemId }: { systemId: string }) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const imported = searchParams.get("imported") === "1";
+  const [showOnlyUnassigned, setShowOnlyUnassigned] = useState(false);
   const { add: addToCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
