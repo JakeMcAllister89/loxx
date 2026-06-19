@@ -524,6 +524,7 @@ function TreeRow({
           {node.children.map((c) => (
             <TreeRow key={c.id} node={c} depth={depth + 1}
               selectedId={selectedId} collapsed={collapsed} errorIds={errorIds} searchMatch={searchMatch}
+              highlightIds={highlightIds}
               onSelect={onSelect} onToggle={onToggle} onAdd={onAdd} onDelete={onDelete} />
           ))}
         </div>
