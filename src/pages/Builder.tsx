@@ -339,6 +339,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
               <div className="mt-6 space-y-2 text-xs">
                 <Legend type="GMK" /><Legend type="SMK" /><Legend type="CK" /><Legend type="CYL" />
               </div>
+              <div className="mt-8 pt-5 border-t">
+                <h4 className="text-sm font-semibold text-foreground mb-1">Activity</h4>
+                <p className="text-[11px] text-muted-foreground mb-3">Last 20 actions on this system.</p>
+                <ActivityTimeline systemId={systemId} />
+              </div>
             </div>
           ) : (
             <DetailPanel
