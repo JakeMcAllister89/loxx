@@ -11,7 +11,7 @@ const trust = [
 ];
 
 const steps = [
-  { n: 1, t: "Build your hierarchy", d: "Drag and drop grand master, sub masters, change keys and cylinders into a visual tree." },
+  { n: 1, t: "Build your hierarchy", d: "Drag and drop grand master, sub masters, door groups and cylinders into a visual tree." },
   { n: 2, t: "Assign cylinders", d: "Choose type, finish and room name for each door. Differ numbers assigned automatically." },
   { n: 3, t: "Order in one click", d: "Validated system goes straight to checkout. We handle fulfilment." },
 ];

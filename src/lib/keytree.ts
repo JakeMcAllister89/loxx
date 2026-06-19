@@ -174,12 +174,12 @@ export function validate(tree: TreeData): ValidationIssue[] {
     });
 
     if (n.type === "SMK" && n.children.length === 0) {
-      out.push({ level: "warning", nodeId: n.id, message: `Sub-master "${n.label}" has no change keys` });
+      out.push({ level: "warning", nodeId: n.id, message: `Sub-master "${n.label}" has no door groups` });
     }
     if (n.type === "CK") {
       hasCK = true;
       if (n.children.length === 0) {
-        out.push({ level: "error", nodeId: n.id, message: `Change key "${n.label}" has no cylinder assigned` });
+        out.push({ level: "error", nodeId: n.id, message: `Door group "${n.label}" has no cylinder assigned` });
       }
     }
     if (n.type === "CYL") {
@@ -194,7 +194,7 @@ export function validate(tree: TreeData): ValidationIssue[] {
   };
   walk(tree.root);
 
-  if (!hasCK) out.push({ level: "warning", message: "No change keys defined yet" });
+  if (!hasCK) out.push({ level: "warning", message: "No door groups defined yet" });
   if (countDoors(tree.root) > 500)
     out.push({ level: "warning", message: "System is very large (>500 doors) — please double-check" });
 

@@ -332,7 +332,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 </div>
                 <h3 className="text-lg font-semibold">Start your hierarchy</h3>
                 <p className="text-sm text-muted-foreground mt-1 mb-4">
-                  Every master-key system begins with a Grand Master Key. Add one to start branching into sub-masters, change keys and cylinders.
+                  Every master-key system begins with a Grand Master Key. Add one to start branching into sub-masters, door groups and cylinders.
                 </p>
                 <Button onClick={addRoot} className="bg-primary hover:bg-primary/90">
                   <Plus className="h-4 w-4" /> Add Grand Master

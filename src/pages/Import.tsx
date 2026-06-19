@@ -356,7 +356,7 @@ function ReviewStep({
         <div className="text-xs text-muted-foreground space-y-1">
           <div>{counts.GMK} grand master</div>
           <div>{counts.SMK} sub master{counts.SMK !== 1 ? "s" : ""}</div>
-          <div>{counts.CK} change key{counts.CK !== 1 ? "s" : ""}</div>
+          <div>{counts.CK} door group{counts.CK !== 1 ? "s" : ""}</div>
           <div>{counts.CYL} cylinder{counts.CYL !== 1 ? "s" : ""}</div>
         </div>
 
