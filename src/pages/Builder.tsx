@@ -310,9 +310,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
         </div>
       </div>
 
-      <div className="flex-1 flex min-h-0">
-        {/* Tree */}
-        <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 flex flex-col md:flex-row min-h-0">
+        {/* Canvas */}
+        <div className="flex-1 min-h-[400px] relative bg-muted/30 no-print">
           {!tree.root ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center max-w-sm">
@@ -329,23 +329,24 @@ function BuilderInner({ systemId }: { systemId: string }) {
               </div>
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto print-tree">
-              <TreeRow
-                node={tree.root}
-                depth={0}
-                selectedId={selectedId}
-                collapsed={collapsed}
-                errorIds={errorIds}
-                searchMatch={searchMatch}
-                highlightIds={showOnlyUnassigned ? unassignedIds : undefined}
-                onSelect={setSelectedId}
-                onToggle={toggleCollapse}
-                onAdd={handleAddChild}
-                onDelete={handleDelete}
-                isRoot
-              />
-            </div>
+            <BuilderCanvas
+              tree={tree}
+              selectedId={selectedId}
+              errorIds={errorIds}
+              highlightIds={showOnlyUnassigned ? unassignedIds : undefined}
+              productsByCode={productsByCode}
+              onSelect={setSelectedId}
+              onAddChild={handleAddChild}
+              registerFitView={(fn) => { fitViewRef.current = fn; }}
+            />
           )}
+        </div>
+
+        {/* Print-only hierarchy + schedule */}
+        <div className="print-only px-6">
+          <div className="text-sm text-muted-foreground">See cylinder schedule below.</div>
+        </div>
+
 
           {/* Print cylinder schedule */}
           {allCyls.length > 0 && (
