@@ -224,13 +224,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const selectedParent = selected ? findParent(tree.root, selected.id) : null;
   const trail = selected ? pathOf(tree.root, selected.id) : [];
 
-  // Flatten all CYL nodes for print schedule
+  // Flatten all CYL nodes for print schedule + import progress
   const allCyls = useMemo(() => {
     const out: TNode[] = [];
     const w = (n: TNode | null) => { if (!n) return; if (n.type === "CYL") out.push(n); n.children.forEach(w); };
     w(tree.root);
     return out;
   }, [tree]);
+  const confirmedCount = allCyls.filter((c) => !!c.cylinder_type).length;
+  const unassignedIds = useMemo(() => new Set(allCyls.filter((c) => !c.cylinder_type).map((c) => c.id)), [allCyls]);
 
   if (loading) {
     return <div className="h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
