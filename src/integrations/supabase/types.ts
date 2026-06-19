@@ -373,12 +373,14 @@ export type Database = {
         Row: {
           bs_en_1303: boolean
           code: string
+          cost_price: number | null
           created_at: string
           cylinder_type: string
           description: string | null
           finish: string | null
           id: string
           image_url: string | null
+          is_active: boolean
           name: string
           pin_count: number
           price_gbp: number
@@ -388,12 +390,14 @@ export type Database = {
         Insert: {
           bs_en_1303?: boolean
           code: string
+          cost_price?: number | null
           created_at?: string
           cylinder_type: string
           description?: string | null
           finish?: string | null
           id?: string
           image_url?: string | null
+          is_active?: boolean
           name: string
           pin_count?: number
           price_gbp: number
@@ -403,12 +407,14 @@ export type Database = {
         Update: {
           bs_en_1303?: boolean
           code?: string
+          cost_price?: number | null
           created_at?: string
           cylinder_type?: string
           description?: string | null
           finish?: string | null
           id?: string
           image_url?: string | null
+          is_active?: boolean
           name?: string
           pin_count?: number
           price_gbp?: number
@@ -423,6 +429,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_admin: boolean
           name: string | null
           phone: string | null
           role: string
@@ -433,6 +440,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id: string
+          is_admin?: boolean
           name?: string | null
           phone?: string | null
           role?: string
@@ -443,6 +451,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_admin?: boolean
           name?: string | null
           phone?: string | null
           role?: string
@@ -455,7 +464,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
