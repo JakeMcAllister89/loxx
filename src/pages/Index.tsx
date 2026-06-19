@@ -1,132 +1,139 @@
-import { Link } from 'react-router-dom';
-import { Shield, Award, Lock, ArrowRight, CheckCircle, Key, Building2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import heroImage from '@/assets/hero-image.jpg';
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { LoxxLogo } from "@/components/LoxxLogo";
+import { ShieldCheck, Lock, Truck, BadgeCheck, ArrowRight } from "lucide-react";
 
-const trustBadges = [
-  { icon: Shield, label: 'BS EN 1303 Compliant' },
-  { icon: Award, label: 'DOM-UK Official Partner' },
-  { icon: Lock, label: '256-bit Secure Checkout' },
+const trust = [
+  { icon: ShieldCheck, label: "BS EN 1303 compliant cylinders" },
+  { icon: BadgeCheck, label: "Authorised UK distributor" },
+  { icon: Lock, label: "Secure checkout via Stripe" },
+  { icon: Truck, label: "Systems saved to your account" },
 ];
 
-const features = [
-  { icon: Key, title: 'Visual Key Hierarchy', description: 'Design your master-key system with an interactive drag-and-drop tree builder.' },
-  { icon: Shield, title: 'Smart Validation', description: 'Automatic conflict detection for key codes, hierarchy levels, and cylinder compatibility.' },
-  { icon: Building2, title: 'One-Click Ordering', description: 'Export your entire system to a shopping cart and order with Stripe checkout.' },
+const steps = [
+  { n: 1, t: "Build your hierarchy", d: "Drag and drop grand master, sub masters, change keys and cylinders into a visual tree." },
+  { n: 2, t: "Assign cylinders", d: "Choose type, finish and room name for each door. Differ numbers assigned automatically." },
+  { n: 3, t: "Order in one click", d: "Validated system goes straight to checkout. We handle fulfilment." },
 ];
 
-export default function Landing() {
+const sampleProducts = [
+  { name: "Euro Cylinder Standard", spec: "6-pin · Nickel · 35/35", price: 45 },
+  { name: "Euro Cylinder Anti-Snap", spec: "6-pin · Satin Brass · 35/35", price: 38 },
+  { name: "Double Cylinder Standard", spec: "6-pin · Polished Brass · 36/36", price: 58 },
+  { name: "Oval Cylinder", spec: "6-pin · Polished Brass · 36/36", price: 72 },
+  { name: "High Security Euro", spec: "6-pin · Satin Chrome · 35/35", price: 85 },
+];
+
+export default function Index() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b">
-        <div className="container mx-auto flex items-center justify-between h-16 px-4">
-          <Link to="/" className="flex items-center gap-2">
-            <Lock className="h-6 w-6 text-accent" />
-            <span className="font-display text-lg font-bold text-foreground">DOM-UK Master Key</span>
-          </Link>
-          <div className="hidden md:flex items-center gap-6">
-            <Link to="/catalog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Products</Link>
-            <Link to="/designer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Designer</Link>
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign In</Link>
-            <Button asChild variant="hero" size="sm">
-              <Link to="/register">Start Free</Link>
-            </Button>
-          </div>
-          <Button asChild variant="hero" size="sm" className="md:hidden">
-            <Link to="/register">Start Free</Link>
-          </Button>
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Top bar */}
+      <header className="bg-[hsl(var(--sidebar-background))] text-sidebar-foreground">
+        <div className="container flex items-center justify-between py-4">
+          <LoxxLogo />
+          <nav className="flex items-center gap-2">
+            <Link to="/auth" className="text-sm px-3 py-2 text-sidebar-foreground/80 hover:text-sidebar-foreground">Sign in</Link>
+            <Button asChild className="bg-primary hover:bg-primary/90"><Link to="/auth?mode=signup">Get started</Link></Button>
+          </nav>
         </div>
-      </nav>
 
-      {/* Hero */}
-      <section className="relative pt-16 overflow-hidden">
-        <div className="absolute inset-0 gradient-hero opacity-95" />
-        <div className="absolute inset-0" style={{ backgroundImage: `url(${heroImage})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.15 }} />
-        <div className="relative container mx-auto px-4 py-24 md:py-36 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 mb-8">
-            <Shield className="h-3.5 w-3.5 text-accent" />
-            <span className="text-xs font-medium text-accent">Trusted by 500+ facility managers across the UK</span>
+        {/* Hero */}
+        <section className="container py-20 md:py-28 max-w-4xl">
+          <div className="inline-block px-3 py-1 rounded-full bg-white/5 text-xs text-sidebar-foreground/80 mb-6 border border-white/10">
+            UK distributor · Master key specialists
           </div>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-primary-foreground max-w-4xl mx-auto leading-tight">
-            Build & Order Perfect Master-Key Systems{' '}
-            <span className="text-accent">in Minutes</span>
+          <h1 className="font-semibold text-4xl md:text-6xl leading-[1.05] tracking-tight">
+            Build & Order Master Key<br />Systems Online
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-primary-foreground/70 max-w-2xl mx-auto">
-            Design your DOM-UK Euro cylinder hierarchy visually, validate for conflicts, and order exact replacements with one click. Delivered directly to your door.
+          <p className="mt-6 text-lg text-sidebar-foreground/70 max-w-2xl">
+            Design your cylinder hierarchy visually, validate it instantly, and order direct.
+            No spreadsheets, no back-and-forth emails.
           </p>
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild variant="hero" size="lg" className="text-base px-8">
-              <Link to="/register">
-                Start Designing Free <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+              <Link to="/auth?mode=signup">Start designing free <ArrowRight className="h-4 w-4" /></Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="text-base px-8 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
-              <Link to="/catalog">Browse Catalog</Link>
+            <Button asChild size="lg" variant="outline" className="border-white/20 bg-transparent text-sidebar-foreground hover:bg-white/5 hover:text-sidebar-foreground">
+              <a href="#how">See how it works</a>
             </Button>
           </div>
+        </section>
+      </header>
 
-          {/* Trust badges */}
-          <div className="mt-16 flex flex-wrap items-center justify-center gap-8">
-            {trustBadges.map(b => (
-              <div key={b.label} className="flex items-center gap-2 text-primary-foreground/60">
-                <b.icon className="h-4 w-4" />
-                <span className="text-sm font-medium">{b.label}</span>
-              </div>
-            ))}
-          </div>
+      {/* Trust */}
+      <section className="border-b border-border bg-card">
+        <div className="container py-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          {trust.map((t) => (
+            <div key={t.label} className="flex items-center gap-3 text-sm text-muted-foreground">
+              <t.icon className="h-5 w-5 text-primary shrink-0" />
+              <span className="text-foreground">{t.label}</span>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-24 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">How It Works</h2>
-            <p className="mt-4 text-muted-foreground max-w-xl mx-auto">Three simple steps from design to delivery</p>
+      {/* How */}
+      <section id="how" className="container py-20">
+        <h2 className="text-3xl font-semibold tracking-tight">How it works</h2>
+        <p className="text-muted-foreground mt-2">Three steps from blank canvas to delivered cylinders.</p>
+        <div className="grid md:grid-cols-3 gap-6 mt-10">
+          {steps.map((s) => (
+            <div key={s.n} className="rounded-[10px] border bg-card p-6 shadow-card">
+              <div className="font-mono text-sm text-primary">0{s.n}</div>
+              <h3 className="mt-3 text-lg font-semibold">{s.t}</h3>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{s.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Products */}
+      <section className="bg-card border-y border-border">
+        <div className="container py-14">
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-semibold">From the catalogue</h2>
+              <p className="text-muted-foreground text-sm mt-1">A selection of Euro cylinders ready to drop into your system.</p>
+            </div>
+            <Link to="/catalogue" className="text-sm text-primary hover:underline">Browse all →</Link>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {features.map((f, i) => (
-              <div key={f.title} className="relative bg-card rounded-xl p-8 shadow-card border hover:shadow-elevated transition-shadow">
-                <div className="absolute -top-4 -left-2 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-accent-foreground font-bold text-sm">
-                  {i + 1}
+          <div className="flex gap-4 overflow-x-auto pb-2 -mx-2 px-2">
+            {sampleProducts.map((p) => (
+              <div key={p.name} className="min-w-[240px] rounded-[10px] border border-border bg-background p-4">
+                <div className="h-28 rounded-md bg-accent-light flex items-center justify-center mb-3">
+                  <Lock className="h-10 w-10 text-primary/70" />
                 </div>
-                <f.icon className="h-10 w-10 text-accent mb-4" />
-                <h3 className="text-lg font-display font-semibold text-foreground mb-2">{f.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{f.description}</p>
+                <div className="text-sm font-semibold">{p.name}</div>
+                <div className="text-xs text-muted-foreground mt-0.5 font-mono">{p.spec}</div>
+                <div className="text-lg font-semibold text-primary mt-2">£{p.price.toFixed(2)}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 gradient-hero">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-primary-foreground mb-4">Ready to Simplify Your Key Management?</h2>
-          <p className="text-primary-foreground/70 mb-8 max-w-xl mx-auto">Join facility managers across UK and Europe who trust DOM-UK Master Key Platform.</p>
-          <Button asChild variant="hero" size="lg" className="text-base px-8">
-            <Link to="/register">Create Free Account <ArrowRight className="ml-2 h-4 w-4" /></Link>
-          </Button>
+      {/* Testimonial */}
+      <section className="container py-20 max-w-3xl">
+        <div className="rounded-[10px] border bg-card p-8 shadow-card">
+          <p className="text-xl leading-relaxed">
+            "Finally a system we can manage ourselves without calling a locksmith every time."
+          </p>
+          <div className="mt-4 text-sm text-muted-foreground">Facilities Manager, University of Nottingham</div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-card border-t py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-accent" />
-              <span className="font-display font-bold text-foreground">DOM-UK Master Key</span>
-            </div>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <Link to="/catalog" className="hover:text-foreground">Products</Link>
-              <Link to="/designer" className="hover:text-foreground">Designer</Link>
-              <a href="#" className="hover:text-foreground">Privacy</a>
-              <a href="#" className="hover:text-foreground">Terms</a>
-            </div>
-            <p className="text-xs text-muted-foreground">© 2026 DOM-UK Master Key Platform</p>
+      <footer className="border-t border-border bg-card">
+        <div className="container py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div>
+            <LoxxLogo />
+            <div className="text-sm text-muted-foreground mt-2">Master key systems made simple</div>
           </div>
+          <div className="flex gap-6 text-sm text-muted-foreground">
+            <a href="#" className="hover:text-foreground">Privacy</a>
+            <a href="#" className="hover:text-foreground">Terms</a>
+            <a href="#" className="hover:text-foreground">Contact</a>
+          </div>
+          <div className="text-xs text-muted-foreground">© 2025 LOXX</div>
         </div>
       </footer>
     </div>

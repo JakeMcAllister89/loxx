@@ -1,85 +1,141 @@
-import { DashboardLayout } from '@/components/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, ShoppingCart, DollarSign, Activity, GitBranch, Clock } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useCurrency } from '@/contexts/CurrencyContext';
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Plus, Copy, ExternalLink } from "lucide-react";
 
-const stats = [
-  { label: 'Total Cylinders', value: '0', icon: Package, change: 'In your systems' },
-  { label: 'Pending Orders', value: '0', icon: ShoppingCart, change: 'Awaiting dispatch' },
-  { label: 'Total Spend', valueGBP: '£0.00', valueEUR: '€0.00', icon: DollarSign, change: 'Lifetime' },
-  { label: 'Active Systems', value: '0', icon: GitBranch, change: 'Key hierarchies' },
-];
+interface Sys { id: string; name: string; reference: string | null; door_count: number; updated_at: string; }
+interface Ord { id: string; status: string; total: number; created_at: string; }
 
-const recentActivity = [
-  { text: 'Welcome to DOM-UK Master Key Platform! Start by browsing the product catalog or designing your first key system.', time: 'Just now', icon: Activity },
-];
+const statusColor: Record<string, string> = {
+  paid: "bg-accent-light text-primary",
+  processing: "bg-blue-100 text-info",
+  shipped: "bg-green-100 text-success",
+  delivered: "bg-green-200 text-success",
+};
 
 export default function Dashboard() {
-  const { currency } = useCurrency();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [systems, setSystems] = useState<Sys[]>([]);
+  const [orders, setOrders] = useState<Ord[]>([]);
+  const [totalSpend, setTotalSpend] = useState(0);
+  const [totalCyl, setTotalCyl] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [s, o, c] = await Promise.all([
+        supabase.from("key_systems").select("id,name,reference,door_count,updated_at").order("updated_at", { ascending: false }),
+        supabase.from("orders").select("id,status,total,created_at").order("created_at", { ascending: false }).limit(3),
+        supabase.from("cylinders").select("quantity"),
+      ]);
+      setSystems(s.data ?? []);
+      setOrders(o.data ?? []);
+      setTotalSpend((o.data ?? []).reduce((sum, x) => sum + Number(x.total), 0));
+      setTotalCyl((c.data ?? []).reduce((sum, x) => sum + (x.quantity ?? 0), 0));
+    })();
+  }, [user]);
+
+  const newSystem = async () => {
+    if (!user) return;
+    const ref = `SYS-${Math.floor(1000 + Math.random() * 9000)}`;
+    const { data } = await supabase.from("key_systems").insert({ user_id: user.id, name: "Untitled system", reference: ref, tree_data: { root: null } }).select("id").single();
+    if (data) navigate(`/builder/${data.id}`);
+  };
+
+  const dup = async (s: Sys) => {
+    if (!user) return;
+    const { data: src } = await supabase.from("key_systems").select("*").eq("id", s.id).single();
+    if (!src) return;
+    const ref = `SYS-${Math.floor(1000 + Math.random() * 9000)}`;
+    const { data } = await supabase.from("key_systems").insert({
+      user_id: user.id, name: `Copy of ${src.name}`, reference: ref, tree_data: src.tree_data, door_count: src.door_count,
+    }).select("id").single();
+    if (data) navigate(`/builder/${data.id}`);
+  };
+
+  const stats = [
+    { label: "Total cylinders", value: totalCyl },
+    { label: "Active systems", value: systems.length },
+    { label: "Orders placed", value: orders.length },
+    { label: "Total spend", value: `£${totalSpend.toFixed(2)}` },
+  ];
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">Dashboard</h1>
-          <p className="mt-1 text-muted-foreground">Welcome back! Here's your master-key system overview.</p>
+      <div className="p-8 max-w-7xl">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground text-sm">Your master key systems and recent activity.</p>
+          </div>
+          <Button onClick={newSystem} className="bg-primary hover:bg-primary/90"><Plus className="h-4 w-4" /> New system</Button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map(s => (
-            <Card key={s.label} className="shadow-card">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
-                <s.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-display font-bold text-foreground">
-                  {s.valueGBP ? (currency === 'GBP' ? s.valueGBP : s.valueEUR) : s.value}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{s.change}</p>
-              </CardContent>
-            </Card>
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {stats.map((s) => (
+            <div key={s.label} className="rounded-[10px] border bg-card p-5 shadow-card">
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">{s.label}</div>
+              <div className="text-2xl font-semibold mt-2 font-mono">{s.value}</div>
+            </div>
           ))}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="font-display text-lg">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link to="/designer"><GitBranch className="mr-2 h-4 w-4" />Create New Key System</Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link to="/catalog"><Package className="mr-2 h-4 w-4" />Browse Product Catalog</Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link to="/orders"><ShoppingCart className="mr-2 h-4 w-4" />View Orders</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="font-display text-lg">Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {recentActivity.map((a, i) => (
-                <div key={i} className="flex gap-3 py-3 border-b last:border-0">
-                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                    <a.icon className="h-4 w-4 text-accent" />
-                  </div>
+        {/* Recent systems */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Your systems</h2>
+          {systems.length === 0 ? (
+            <div className="rounded-[10px] border-dashed border-2 bg-card p-10 text-center">
+              <p className="text-muted-foreground text-sm">You haven't built a system yet.</p>
+              <Button onClick={newSystem} className="mt-4 bg-primary hover:bg-primary/90">Start your first system</Button>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              {systems.map((s) => (
+                <div key={s.id} className="rounded-[10px] border bg-card p-5 shadow-card flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-foreground">{a.text}</p>
-                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1"><Clock className="h-3 w-3" />{a.time}</p>
+                    <div className="font-semibold">{s.name}</div>
+                    <div className="text-xs text-muted-foreground mt-1 font-mono">{s.reference} · {s.door_count} doors</div>
+                    <div className="text-xs text-muted-foreground mt-1">Updated {new Date(s.updated_at).toLocaleDateString("en-GB")}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => dup(s)}><Copy className="h-3.5 w-3.5" /></Button>
+                    <Button size="sm" asChild className="bg-primary hover:bg-primary/90"><Link to={`/builder/${s.id}`}>Open <ExternalLink className="h-3.5 w-3.5" /></Link></Button>
                   </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          )}
+        </div>
+
+        {/* Recent orders */}
+        <div>
+          <h2 className="text-lg font-semibold mb-3">Recent orders</h2>
+          <div className="rounded-[10px] border bg-card shadow-card overflow-hidden">
+            {orders.length === 0 ? (
+              <div className="p-6 text-sm text-muted-foreground">No orders yet.</div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 text-left text-xs uppercase text-muted-foreground">
+                  <tr><th className="px-4 py-2">Order ref</th><th className="px-4 py-2">Date</th><th className="px-4 py-2">Total</th><th className="px-4 py-2">Status</th></tr>
+                </thead>
+                <tbody>
+                  {orders.map((o) => (
+                    <tr key={o.id} className="border-t">
+                      <td className="px-4 py-3 font-mono text-xs">#{o.id.slice(0, 8).toUpperCase()}</td>
+                      <td className="px-4 py-3">{new Date(o.created_at).toLocaleDateString("en-GB")}</td>
+                      <td className="px-4 py-3 font-mono">£{Number(o.total).toFixed(2)}</td>
+                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs ${statusColor[o.status] ?? "bg-muted"}`}>{o.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </div>
     </DashboardLayout>
