@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, Copy, ExternalLink } from "lucide-react";
+import { logAction } from "@/lib/audit";
 
 interface Sys { id: string; name: string; reference: string | null; door_count: number; updated_at: string; }
 interface Ord { id: string; status: string; total: number; created_at: string; }
