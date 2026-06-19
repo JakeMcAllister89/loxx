@@ -378,7 +378,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
 
         {/* Right detail panel */}
-        <aside className="w-[340px] shrink-0 border-l bg-card overflow-auto no-print">
+        <aside className="w-full md:w-[360px] md:shrink-0 border-t md:border-t-0 md:border-l bg-card overflow-auto no-print max-h-[60vh] md:max-h-none">
           {!selected ? (
             <div className="p-6 text-sm text-muted-foreground">
               <h3 className="text-base font-semibold text-foreground mb-1">Details</h3>
