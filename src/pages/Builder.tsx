@@ -36,7 +36,7 @@ const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }
   CYL: { label: "Cylinder",      color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30" },
 };
 
-interface Product { id: string; code: string; name: string; cylinder_type: string; finish: string | null; price_gbp: number }
+interface Product extends ProductFull {}
 
 export default function Builder() {
   const { id } = useParams();
