@@ -129,15 +129,15 @@ export function countDoors(root: TNode | null): number {
 
 export function assignNextDiffers(tree: TreeData): TreeData {
   if (!tree.root) return tree;
-  let next = tree.next_differ;
+  let next = Math.max(1, tree.next_differ ?? 1);
   const used = new Set<number>();
   const w = (n: TNode) => {
-    if (n.type === "CYL" && n.differ) used.add(n.differ);
+    if (n.type === "CYL" && n.differ != null) used.add(n.differ);
     n.children.forEach(w);
   };
   w(tree.root);
   const assigned = mapTree(tree.root, (n) => {
-    if (n.type === "CYL" && !n.differ) {
+    if (n.type === "CYL" && (n.differ === undefined || n.differ === null)) {
       while (used.has(next)) next++;
       used.add(next);
       return { ...n, differ: next++ };
