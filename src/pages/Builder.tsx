@@ -612,6 +612,18 @@ function DetailPanel({
           />
         </div>
 
+        {(node.type === "GMK" || node.type === "SMK") && (
+          <div>
+            <Label className="text-xs">Keys issued</Label>
+            <Input
+              type="number" min={1} max={50}
+              value={node.keys ?? (node.type === "GMK" ? 3 : 2)}
+              onChange={(e) => onPatch({ keys: Math.max(1, Number(e.target.value) || 1) })}
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">How many copies of this master key are required</p>
+          </div>
+        )}
+
         {node.type === "CK" && (
           <div>
             <Label className="text-xs">Number of keys (copies)</Label>
@@ -628,7 +640,7 @@ function DetailPanel({
         <div className="pt-3 border-t flex flex-col gap-2">
           {canAddChild && (
             <Button variant="outline" onClick={onAddChild}>
-              <Plus className="h-4 w-4" /> Add {childTypeOf(node.type)} child
+              <Plus className="h-4 w-4" /> Add {CHILD_LABEL[node.type]}
             </Button>
           )}
           {!isRoot && (
