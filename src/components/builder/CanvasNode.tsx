@@ -29,7 +29,8 @@ export const NODE_HEIGHT = 104;
 
 function CanvasNodeImpl(props: NodeProps) {
   const d = props.data as unknown as CanvasNodeData;
-  const { node, selected, hasError, product, highlight, onAddChild, canAddChild } = d;
+  const selected = props.selected ?? d.selected;
+  const { node, hasError, product, highlight, onAddChild, canAddChild } = d;
   const meta = TYPE_META[node.type];
   const noProduct = node.type === "CYL" && !node.cylinder_type;
 
