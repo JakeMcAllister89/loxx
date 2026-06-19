@@ -78,6 +78,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
     supabase.from("key_systems").select("*").eq("id", systemId).single().then(({ data, error }) => {
       if (error || !data) { toast.error("System not found"); navigate("/dashboard"); return; }
       setName(data.name);
+      savedNameRef.current = data.name;
       setReference(data.reference);
       const t = (data.tree_data as unknown as TreeData) ?? emptyTree();
       setTree(t?.root !== undefined ? t : emptyTree());
