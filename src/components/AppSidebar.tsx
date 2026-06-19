@@ -87,6 +87,14 @@ export function AppSidebar() {
       </nav>
 
       <div className="p-3 border-t border-sidebar-border space-y-2">
+        {isAdmin && (
+          <div className="pb-2 mb-1 border-b border-sidebar-border">
+            <div className="px-3 pb-1 text-[11px] uppercase tracking-wider text-sidebar-foreground/50">Admin</div>
+            <NavLink to="/admin/products" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded-md text-sm ${isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"}`}>
+              <Shield className="h-4 w-4" /> Product catalogue
+            </NavLink>
+          </div>
+        )}
         <Button onClick={newSystem} className="w-full bg-primary hover:bg-primary/90">
           <Plus className="h-4 w-4" /> New System
         </Button>
