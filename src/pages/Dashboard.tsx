@@ -27,17 +27,17 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [s, o, c] = await Promise.all([
+      const [s, o] = await Promise.all([
         supabase.from("key_systems").select("id,name,reference,door_count,updated_at").order("updated_at", { ascending: false }),
         supabase.from("orders").select("id,status,total,created_at").order("created_at", { ascending: false }).limit(3),
-        supabase.from("cylinders").select("quantity"),
       ]);
       setSystems(s.data ?? []);
       setOrders(o.data ?? []);
       setTotalSpend((o.data ?? []).reduce((sum, x) => sum + Number(x.total), 0));
-      setTotalCyl((c.data ?? []).reduce((sum, x) => sum + (x.quantity ?? 0), 0));
+      setTotalCyl((s.data ?? []).reduce((sum, x) => sum + (x.door_count ?? 0), 0));
     })();
   }, [user]);
+
 
   const newSystem = async () => {
     if (!user) return;
