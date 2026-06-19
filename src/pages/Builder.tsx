@@ -16,8 +16,10 @@ import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
-  AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info,
+  AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
 } from "lucide-react";
+import { BuilderCanvas, CanvasProduct } from "@/components/builder/BuilderCanvas";
+import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
 import {
   TNode, TreeData, NodeType,
   emptyTree, createGMK, makeChild, childTypeOf,
