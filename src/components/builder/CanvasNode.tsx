@@ -27,8 +27,8 @@ const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; bo
 export const NODE_WIDTH = 260;
 export const NODE_HEIGHT = 104;
 
-function CanvasNodeImpl({ data }: NodeProps<{ data: CanvasNodeData } & Record<string, unknown>>) {
-  const d = data as unknown as CanvasNodeData;
+function CanvasNodeImpl(props: NodeProps) {
+  const d = props.data as unknown as CanvasNodeData;
   const { node, selected, hasError, product, highlight, onAddChild, canAddChild } = d;
   const meta = TYPE_META[node.type];
   const noProduct = node.type === "CYL" && !node.cylinder_type;
