@@ -583,7 +583,9 @@ function DetailPanel({
         <span className="h-2.5 w-2.5 rounded-full" style={{ background: meta.color }} />
         <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">{meta.label}</span>
         {isCyl && node.differ != null && (
-          <Badge variant="outline" className="ml-auto font-mono">D{String(node.differ).padStart(3, "0")}</Badge>
+          <Badge className="ml-auto font-mono bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border border-[hsl(var(--node-cyl))]/30">
+            D{String(node.differ).padStart(3, "0")}
+          </Badge>
         )}
       </div>
       <h3 className="text-lg font-semibold mt-1">{node.label || "Unnamed"}</h3>
@@ -596,7 +598,6 @@ function DetailPanel({
             onChange={(e) => onPatch({ label: e.target.value })}
             placeholder={isCyl ? "e.g. Director's Office" : ""}
             className={isCyl ? "text-base font-medium" : ""}
-            autoFocus={isCyl}
           />
         </div>
 
@@ -609,26 +610,9 @@ function DetailPanel({
         )}
 
         {isCyl && (
-          <>
-            <div>
-              <Label className="text-xs">Cylinder product</Label>
-              <Select value={node.cylinder_type ?? ""} onValueChange={(v) => onPatch({ cylinder_type: v })}>
-                <SelectTrigger><SelectValue placeholder="Select a cylinder…" /></SelectTrigger>
-                <SelectContent>
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={p.code}>
-                      {p.code} — {p.name} · £{Number(p.price_gbp).toFixed(2)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Finish</Label>
-              <Input value={node.finish ?? ""} onChange={(e) => onPatch({ finish: e.target.value })} placeholder="e.g. Satin chrome" />
-            </div>
-          </>
+          <CylinderConfigurator node={node} products={products} onPatch={onPatch} />
         )}
+
 
         <div className="pt-3 border-t flex flex-col gap-2">
           {canAddChild && (
