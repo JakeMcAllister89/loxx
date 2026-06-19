@@ -347,34 +347,35 @@ function BuilderInner({ systemId }: { systemId: string }) {
           <div className="text-sm text-muted-foreground">See cylinder schedule below.</div>
         </div>
 
-
-          {/* Print cylinder schedule */}
-          {allCyls.length > 0 && (
-            <div className="print-only mt-8">
-              <h2 className="text-lg font-semibold mb-2">Cylinder schedule</h2>
-              <table className="w-full text-xs border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-1 px-2">Differ</th>
-                    <th className="text-left py-1 px-2">Room / Door</th>
-                    <th className="text-left py-1 px-2">Type</th>
-                    <th className="text-left py-1 px-2">Finish</th>
+        {/* Print cylinder schedule */}
+        {allCyls.length > 0 && (
+          <div className="print-only mt-8 px-6">
+            <h2 className="text-lg font-semibold mb-2">Cylinder schedule</h2>
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-1 px-2">Differ</th>
+                  <th className="text-left py-1 px-2">Room / Door</th>
+                  <th className="text-left py-1 px-2">Type</th>
+                  <th className="text-left py-1 px-2">Finish</th>
+                  <th className="text-left py-1 px-2">Qty</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allCyls.map((c) => (
+                  <tr key={c.id} className="border-b">
+                    <td className="py-1 px-2 font-mono">D{String(c.differ ?? 0).padStart(3, "0")}</td>
+                    <td className="py-1 px-2">{c.label}</td>
+                    <td className="py-1 px-2 font-mono">{c.cylinder_type ?? "—"}</td>
+                    <td className="py-1 px-2">{c.finish ?? "—"}</td>
+                    <td className="py-1 px-2 font-mono">{c.quantity ?? 1}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {allCyls.map((c) => (
-                    <tr key={c.id} className="border-b">
-                      <td className="py-1 px-2 font-mono">D{String(c.differ ?? 0).padStart(3, "0")}</td>
-                      <td className="py-1 px-2">{c.label}</td>
-                      <td className="py-1 px-2 font-mono">{c.cylinder_type ?? "—"}</td>
-                      <td className="py-1 px-2">{c.finish ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
 
         {/* Right detail panel */}
         <aside className="w-[340px] shrink-0 border-l bg-card overflow-auto no-print">
