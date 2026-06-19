@@ -58,11 +58,12 @@ export default function Dashboard() {
   };
 
   const stats = [
-    { label: "Total cylinders", value: totalCyl },
+    { label: "Total doors", value: totalCyl },
     { label: "Active systems", value: systems.length },
     { label: "Orders placed", value: orders.length },
     { label: "Total spend", value: `£${totalSpend.toFixed(2)}` },
   ];
+
 
   return (
     <DashboardLayout>
