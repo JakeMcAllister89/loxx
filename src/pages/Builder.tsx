@@ -16,8 +16,10 @@ import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
-  AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info,
+  AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
 } from "lucide-react";
+import { BuilderCanvas, CanvasProduct } from "@/components/builder/BuilderCanvas";
+import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
 import {
   TNode, TreeData, NodeType,
   emptyTree, createGMK, makeChild, childTypeOf,
@@ -34,7 +36,7 @@ const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }
   CYL: { label: "Cylinder",      color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30" },
 };
 
-interface Product { id: string; code: string; name: string; cylinder_type: string; finish: string | null; price_gbp: number }
+interface Product extends ProductFull {}
 
 export default function Builder() {
   const { id } = useParams();
@@ -75,6 +77,12 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
+  const fitViewRef = useRef<(() => void) | null>(null);
+  const productsByCode = useMemo(() => {
+    const m = new Map<string, CanvasProduct>();
+    products.forEach((p) => m.set(p.code, { code: p.code, name: p.name, image_url: p.image_url }));
+    return m;
+  }, [products]);
 
   useEffect(() => {
     setLoading(true);
@@ -87,7 +95,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setTree(t?.root !== undefined ? t : emptyTree());
       setLoading(false);
     });
-    supabase.from("products").select("id,code,name,cylinder_type,finish,price_gbp").order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
+    supabase.from("products").select("id,code,name,cylinder_type,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
   }, [systemId, navigate]);
 
   const mutate = (updater: (t: TreeData) => TreeData) => {
@@ -204,7 +212,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       if (n.type === "CYL" && n.cylinder_type) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
-        addToCart({ kind: "cylinder", product_code: n.cylinder_type, cylinder_type: p?.cylinder_type, finish: n.finish ?? p?.finish ?? undefined, room_label: n.label, differ_ref: `D${String(n.differ ?? 0).padStart(3, "0")}`, quantity: 1, unit_price: unit });
+        addToCart({ kind: "cylinder", product_code: n.cylinder_type, cylinder_type: p?.cylinder_type, finish: n.finish ?? p?.finish ?? undefined, room_label: n.label, differ_ref: `D${String(n.differ ?? 0).padStart(3, "0")}`, quantity: n.quantity ?? 1, unit_price: unit });
         lines++; total += unit;
       }
       if (n.type === "CK") {
@@ -253,6 +261,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
         <div className="flex-1" />
         <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import</Link></Button>
+        <Button variant="outline" onClick={() => fitViewRef.current?.()}><Maximize2 className="h-4 w-4" /> Fit view</Button>
         <Button variant="outline" onClick={runValidate}><ShieldCheck className="h-4 w-4" /> Validate</Button>
         <Button variant="outline" onClick={save} disabled={saving}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
@@ -301,9 +310,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
         </div>
       </div>
 
-      <div className="flex-1 flex min-h-0">
-        {/* Tree */}
-        <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 flex flex-col md:flex-row min-h-0">
+        {/* Canvas */}
+        <div className="flex-1 min-h-[400px] relative bg-muted/30 no-print">
           {!tree.root ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center max-w-sm">
@@ -320,54 +329,56 @@ function BuilderInner({ systemId }: { systemId: string }) {
               </div>
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto print-tree">
-              <TreeRow
-                node={tree.root}
-                depth={0}
-                selectedId={selectedId}
-                collapsed={collapsed}
-                errorIds={errorIds}
-                searchMatch={searchMatch}
-                highlightIds={showOnlyUnassigned ? unassignedIds : undefined}
-                onSelect={setSelectedId}
-                onToggle={toggleCollapse}
-                onAdd={handleAddChild}
-                onDelete={handleDelete}
-                isRoot
-              />
-            </div>
-          )}
-
-          {/* Print cylinder schedule */}
-          {allCyls.length > 0 && (
-            <div className="print-only mt-8">
-              <h2 className="text-lg font-semibold mb-2">Cylinder schedule</h2>
-              <table className="w-full text-xs border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-1 px-2">Differ</th>
-                    <th className="text-left py-1 px-2">Room / Door</th>
-                    <th className="text-left py-1 px-2">Type</th>
-                    <th className="text-left py-1 px-2">Finish</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allCyls.map((c) => (
-                    <tr key={c.id} className="border-b">
-                      <td className="py-1 px-2 font-mono">D{String(c.differ ?? 0).padStart(3, "0")}</td>
-                      <td className="py-1 px-2">{c.label}</td>
-                      <td className="py-1 px-2 font-mono">{c.cylinder_type ?? "—"}</td>
-                      <td className="py-1 px-2">{c.finish ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <BuilderCanvas
+              tree={tree}
+              selectedId={selectedId}
+              errorIds={errorIds}
+              highlightIds={showOnlyUnassigned ? unassignedIds : undefined}
+              productsByCode={productsByCode}
+              onSelect={setSelectedId}
+              onAddChild={handleAddChild}
+              registerFitView={(fn) => { fitViewRef.current = fn; }}
+            />
           )}
         </div>
 
+        {/* Print-only hierarchy + schedule */}
+        <div className="print-only px-6">
+          <div className="text-sm text-muted-foreground">See cylinder schedule below.</div>
+        </div>
+
+        {/* Print cylinder schedule */}
+        {allCyls.length > 0 && (
+          <div className="print-only mt-8 px-6">
+            <h2 className="text-lg font-semibold mb-2">Cylinder schedule</h2>
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-1 px-2">Differ</th>
+                  <th className="text-left py-1 px-2">Room / Door</th>
+                  <th className="text-left py-1 px-2">Type</th>
+                  <th className="text-left py-1 px-2">Finish</th>
+                  <th className="text-left py-1 px-2">Qty</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allCyls.map((c) => (
+                  <tr key={c.id} className="border-b">
+                    <td className="py-1 px-2 font-mono">D{String(c.differ ?? 0).padStart(3, "0")}</td>
+                    <td className="py-1 px-2">{c.label}</td>
+                    <td className="py-1 px-2 font-mono">{c.cylinder_type ?? "—"}</td>
+                    <td className="py-1 px-2">{c.finish ?? "—"}</td>
+                    <td className="py-1 px-2 font-mono">{c.quantity ?? 1}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+
         {/* Right detail panel */}
-        <aside className="w-[340px] shrink-0 border-l bg-card overflow-auto no-print">
+        <aside className="w-full md:w-[360px] md:shrink-0 border-t md:border-t-0 md:border-l bg-card overflow-auto no-print max-h-[60vh] md:max-h-none">
           {!selected ? (
             <div className="p-6 text-sm text-muted-foreground">
               <h3 className="text-base font-semibold text-foreground mb-1">Details</h3>
@@ -572,7 +583,9 @@ function DetailPanel({
         <span className="h-2.5 w-2.5 rounded-full" style={{ background: meta.color }} />
         <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">{meta.label}</span>
         {isCyl && node.differ != null && (
-          <Badge variant="outline" className="ml-auto font-mono">D{String(node.differ).padStart(3, "0")}</Badge>
+          <Badge className="ml-auto font-mono bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border border-[hsl(var(--node-cyl))]/30">
+            D{String(node.differ).padStart(3, "0")}
+          </Badge>
         )}
       </div>
       <h3 className="text-lg font-semibold mt-1">{node.label || "Unnamed"}</h3>
@@ -585,7 +598,6 @@ function DetailPanel({
             onChange={(e) => onPatch({ label: e.target.value })}
             placeholder={isCyl ? "e.g. Director's Office" : ""}
             className={isCyl ? "text-base font-medium" : ""}
-            autoFocus={isCyl}
           />
         </div>
 
@@ -598,26 +610,9 @@ function DetailPanel({
         )}
 
         {isCyl && (
-          <>
-            <div>
-              <Label className="text-xs">Cylinder product</Label>
-              <Select value={node.cylinder_type ?? ""} onValueChange={(v) => onPatch({ cylinder_type: v })}>
-                <SelectTrigger><SelectValue placeholder="Select a cylinder…" /></SelectTrigger>
-                <SelectContent>
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={p.code}>
-                      {p.code} — {p.name} · £{Number(p.price_gbp).toFixed(2)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Finish</Label>
-              <Input value={node.finish ?? ""} onChange={(e) => onPatch({ finish: e.target.value })} placeholder="e.g. Satin chrome" />
-            </div>
-          </>
+          <CylinderConfigurator node={node} products={products} onPatch={onPatch} />
         )}
+
 
         <div className="pt-3 border-t flex flex-col gap-2">
           {canAddChild && (

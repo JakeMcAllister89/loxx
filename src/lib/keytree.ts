@@ -7,6 +7,8 @@ export interface TNode {
   differ?: number;            // CYL only
   cylinder_type?: string;     // CYL only — product code
   finish?: string;            // CYL only
+  size?: string;              // CYL only — e.g. "35/35"
+  quantity?: number;          // CYL only — units required at this door (default 1)
   keys?: number;              // CK only — copies of the change key
   children: TNode[];
 }
