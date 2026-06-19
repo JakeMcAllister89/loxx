@@ -16,7 +16,7 @@ import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
-  AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer,
+  AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info,
 } from "lucide-react";
 import {
   TNode, TreeData, NodeType,
