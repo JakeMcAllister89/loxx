@@ -9,7 +9,8 @@ export interface TNode {
   finish?: string;            // CYL only
   size?: string;              // CYL only — e.g. "35/35"
   quantity?: number;          // CYL only — units required at this door (default 1)
-  keys?: number;              // CK only — copies of the change key
+  extra_keys?: number;        // CYL only — additional keys beyond the 2 included
+  keys?: number;              // GMK/SMK/CK — copies of the key at this level
   children: TNode[];
 }
 
