@@ -19,11 +19,26 @@ const statusColor: Record<string, string> = {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const isAdmin = useIsAdmin();
   const navigate = useNavigate();
   const [systems, setSystems] = useState<Sys[]>([]);
   const [orders, setOrders] = useState<Ord[]>([]);
   const [totalSpend, setTotalSpend] = useState(0);
   const [totalCyl, setTotalCyl] = useState(0);
+  const [catStats, setCatStats] = useState<{ avg: number; high: { name: string; m: number } | null; low: { name: string; m: number } | null; lowCount: number } | null>(null);
+
+  useEffect(() => {
+    if (!isAdmin) { setCatStats(null); return; }
+    supabase.from("products").select("name,cost_price,price_gbp").eq("is_active", true).then(({ data }) => {
+      const items = (data ?? []).map((p: any) => ({ name: p.name, m: p.cost_price && p.price_gbp ? ((p.price_gbp - p.cost_price) / p.price_gbp) * 100 : null })).filter(x => x.m != null) as { name: string; m: number }[];
+      if (!items.length) { setCatStats({ avg: 0, high: null, low: null, lowCount: 0 }); return; }
+      const avg = items.reduce((s, x) => s + x.m, 0) / items.length;
+      const high = items.reduce((a, b) => (b.m > a.m ? b : a));
+      const low = items.reduce((a, b) => (b.m < a.m ? b : a));
+      const lowCount = items.filter(x => x.m < 30).length;
+      setCatStats({ avg, high, low, lowCount });
+    });
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!user) return;
