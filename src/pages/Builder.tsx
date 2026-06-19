@@ -426,7 +426,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
 /* ------------------------- Tree Row ------------------------- */
 
 function TreeRow({
-  node, depth, selectedId, collapsed, errorIds, searchMatch,
+  node, depth, selectedId, collapsed, errorIds, searchMatch, highlightIds,
   onSelect, onToggle, onAdd, onDelete, isRoot,
 }: {
   node: TNode; depth: number;
@@ -434,6 +434,7 @@ function TreeRow({
   collapsed: Set<string>;
   errorIds: Set<string>;
   searchMatch: Set<string>;
+  highlightIds?: Set<string>;
   onSelect: (id: string) => void;
   onToggle: (id: string) => void;
   onAdd: (id: string) => void;
@@ -445,6 +446,7 @@ function TreeRow({
   const isSelected = selectedId === node.id;
   const hasError = errorIds.has(node.id);
   const isMatch = searchMatch.has(node.id);
+  const isHighlighted = highlightIds?.has(node.id) ?? false;
   const hasChildren = node.children.length > 0;
   const canAdd = childTypeOf(node.type) !== null;
 
@@ -453,6 +455,7 @@ function TreeRow({
       <div
         onClick={() => onSelect(node.id)}
         className={`group row flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer transition-colors ${
+          isHighlighted ? "bg-primary/15 ring-1 ring-primary/40" :
           isSelected ? "bg-accent-light" : isMatch ? "bg-warning/10" : "hover:bg-muted/40"
         } ${hasError ? "ring-1 ring-destructive/40" : ""}`}
         style={{ paddingLeft: `${depth * 20 + 8}px` }}
