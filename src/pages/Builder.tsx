@@ -328,6 +328,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 collapsed={collapsed}
                 errorIds={errorIds}
                 searchMatch={searchMatch}
+                highlightIds={showOnlyUnassigned ? unassignedIds : undefined}
                 onSelect={setSelectedId}
                 onToggle={toggleCollapse}
                 onAdd={handleAddChild}
