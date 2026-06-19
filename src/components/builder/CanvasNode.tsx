@@ -20,7 +20,7 @@ export interface CanvasNodeData {
 const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string }> = {
   GMK: { label: "Grand Master", tone: "text-[hsl(var(--node-gmk))]", dot: "hsl(var(--node-gmk))", border: "hsl(var(--node-gmk))" },
   SMK: { label: "Sub Master",   tone: "text-[hsl(var(--node-smk))]", dot: "hsl(var(--node-smk))", border: "hsl(var(--node-smk))" },
-  CK:  { label: "Change Key",   tone: "text-[hsl(var(--node-ck))]",  dot: "hsl(var(--node-ck))",  border: "hsl(var(--node-ck))" },
+  CK:  { label: "Door Group",   tone: "text-[hsl(var(--node-ck))]",  dot: "hsl(var(--node-ck))",  border: "hsl(var(--node-ck))" },
   CYL: { label: "Cylinder",     tone: "text-[hsl(var(--node-cyl))]", dot: "hsl(var(--node-cyl))", border: "hsl(var(--node-cyl))" },
 };
 
