@@ -71,6 +71,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const dirtyRef = useRef(false);
+  const savedNameRef = useRef<string>("");
 
   useEffect(() => {
     setLoading(true);
