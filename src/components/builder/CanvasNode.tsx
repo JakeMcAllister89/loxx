@@ -55,8 +55,13 @@ function CanvasNodeImpl(props: NodeProps) {
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full shrink-0" style={{ background: meta.dot }} />
           <span className={`text-[10px] font-mono uppercase tracking-wider ${meta.tone}`}>{meta.label}</span>
+          {node.type === "CYL" && (node.extra_keys ?? 0) > 0 && (
+            <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]" title={`${node.extra_keys} extra key(s)`}>
+              <Key className="h-2.5 w-2.5" />+{node.extra_keys}
+            </span>
+          )}
           {node.type === "CYL" && node.differ != null && (
-            <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]">
+            <span className={`${(node.extra_keys ?? 0) > 0 ? "" : "ml-auto"} text-[10px] font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]`}>
               D{String(node.differ).padStart(3, "0")}
             </span>
           )}
