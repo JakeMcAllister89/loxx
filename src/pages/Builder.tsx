@@ -32,8 +32,15 @@ import { ActivityTimeline } from "@/components/ActivityTimeline";
 const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }> = {
   GMK: { label: "Grand Master",  color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30" },
   SMK: { label: "Sub-master",    color: "hsl(var(--node-smk))", pill: "bg-[hsl(154_60%_95%)] text-[hsl(var(--node-smk))] border-[hsl(var(--node-smk))]/30" },
-  CK:  { label: "Change Key",    color: "hsl(var(--node-ck))",  pill: "bg-[hsl(210_75%_96%)] text-[hsl(var(--node-ck))] border-[hsl(var(--node-ck))]/30" },
+  CK:  { label: "Door Group",    color: "hsl(var(--node-ck))",  pill: "bg-[hsl(210_75%_96%)] text-[hsl(var(--node-ck))] border-[hsl(var(--node-ck))]/30" },
   CYL: { label: "Cylinder",      color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30" },
+};
+
+const CHILD_LABEL: Record<NodeType, string> = {
+  GMK: "Sub-master",
+  SMK: "Door Group",
+  CK: "Cylinder",
+  CYL: "",
 };
 
 interface Product extends ProductFull {}
@@ -91,8 +98,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setName(data.name);
       savedNameRef.current = data.name;
       setReference(data.reference);
-      const t = (data.tree_data as unknown as TreeData) ?? emptyTree();
-      setTree(t?.root !== undefined ? t : emptyTree());
+      const raw = (data.tree_data as unknown as TreeData) ?? emptyTree();
+      const loaded = raw?.root !== undefined ? raw : emptyTree();
+      setTree(loaded.root ? assignNextDiffers(loaded) : loaded);
       setLoading(false);
     });
     supabase.from("products").select("id,code,name,cylinder_type,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
@@ -212,12 +220,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
       if (n.type === "CYL" && n.cylinder_type) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
-        addToCart({ kind: "cylinder", product_code: n.cylinder_type, cylinder_type: p?.cylinder_type, finish: n.finish ?? p?.finish ?? undefined, room_label: n.label, differ_ref: `D${String(n.differ ?? 0).padStart(3, "0")}`, quantity: n.quantity ?? 1, unit_price: unit });
-        lines++; total += unit;
-      }
-      if (n.type === "CK") {
-        addToCart({ kind: "key", key_reference: n.label, quantity: n.keys ?? 1, unit_price: 12 });
-        lines++; total += 12 * (n.keys ?? 1);
+        const qty = n.quantity ?? 1;
+        const differRef = `D${String(n.differ ?? 0).padStart(3, "0")}`;
+        addToCart({ kind: "cylinder", product_code: n.cylinder_type, cylinder_type: p?.cylinder_type, finish: n.finish ?? p?.finish ?? undefined, room_label: n.label, differ_ref: differRef, quantity: qty, unit_price: unit });
+        lines++; total += unit * qty;
+        const extra = n.extra_keys ?? 0;
+        if (extra > 0) {
+          addToCart({ kind: "key", key_reference: `Extra keys — ${n.label} (${differRef})`, differ_ref: differRef, quantity: extra, unit_price: 12 });
+          lines++; total += 12 * extra;
+        }
       }
       n.children.forEach(walk);
     };
@@ -321,7 +332,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 </div>
                 <h3 className="text-lg font-semibold">Start your hierarchy</h3>
                 <p className="text-sm text-muted-foreground mt-1 mb-4">
-                  Every master-key system begins with a Grand Master Key. Add one to start branching into sub-masters, change keys and cylinders.
+                  Every master-key system begins with a Grand Master Key. Add one to start branching into sub-masters, door groups and cylinders.
                 </p>
                 <Button onClick={addRoot} className="bg-primary hover:bg-primary/90">
                   <Plus className="h-4 w-4" /> Add Grand Master
@@ -601,6 +612,18 @@ function DetailPanel({
           />
         </div>
 
+        {(node.type === "GMK" || node.type === "SMK") && (
+          <div>
+            <Label className="text-xs">Keys issued</Label>
+            <Input
+              type="number" min={1} max={50}
+              value={node.keys ?? (node.type === "GMK" ? 3 : 2)}
+              onChange={(e) => onPatch({ keys: Math.max(1, Number(e.target.value) || 1) })}
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">How many copies of this master key are required</p>
+          </div>
+        )}
+
         {node.type === "CK" && (
           <div>
             <Label className="text-xs">Number of keys (copies)</Label>
@@ -617,7 +640,7 @@ function DetailPanel({
         <div className="pt-3 border-t flex flex-col gap-2">
           {canAddChild && (
             <Button variant="outline" onClick={onAddChild}>
-              <Plus className="h-4 w-4" /> Add {childTypeOf(node.type)} child
+              <Plus className="h-4 w-4" /> Add {CHILD_LABEL[node.type]}
             </Button>
           )}
           {!isRoot && (

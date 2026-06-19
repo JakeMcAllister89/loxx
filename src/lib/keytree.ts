@@ -9,7 +9,8 @@ export interface TNode {
   finish?: string;            // CYL only
   size?: string;              // CYL only — e.g. "35/35"
   quantity?: number;          // CYL only — units required at this door (default 1)
-  keys?: number;              // CK only — copies of the change key
+  extra_keys?: number;        // CYL only — additional keys beyond the 2 included
+  keys?: number;              // GMK/SMK/CK — copies of the key at this level
   children: TNode[];
 }
 
@@ -26,14 +27,14 @@ export const newId = () =>
 export const emptyTree = (): TreeData => ({ root: null, next_differ: 1 });
 
 export function createGMK(label = "Grand Master"): TNode {
-  return { id: newId(), type: "GMK", label, children: [] };
+  return { id: newId(), type: "GMK", label, keys: 3, children: [] };
 }
 export function makeChild(parentType: NodeType, index: number): TNode {
   if (parentType === "GMK") {
-    return { id: newId(), type: "SMK", label: `Sub-master ${ALPHABET[index] ?? index + 1}`, children: [] };
+    return { id: newId(), type: "SMK", label: `Sub-master ${ALPHABET[index] ?? index + 1}`, keys: 2, children: [] };
   }
   if (parentType === "SMK") {
-    return { id: newId(), type: "CK", label: `Change Key ${index + 1}`, keys: 1, children: [] };
+    return { id: newId(), type: "CK", label: `Door Group ${index + 1}`, keys: 1, children: [] };
   }
   if (parentType === "CK") {
     return { id: newId(), type: "CYL", label: `Door ${index + 1}`, children: [] };
@@ -128,15 +129,15 @@ export function countDoors(root: TNode | null): number {
 
 export function assignNextDiffers(tree: TreeData): TreeData {
   if (!tree.root) return tree;
-  let next = tree.next_differ;
+  let next = Math.max(1, tree.next_differ ?? 1);
   const used = new Set<number>();
   const w = (n: TNode) => {
-    if (n.type === "CYL" && n.differ) used.add(n.differ);
+    if (n.type === "CYL" && n.differ != null) used.add(n.differ);
     n.children.forEach(w);
   };
   w(tree.root);
   const assigned = mapTree(tree.root, (n) => {
-    if (n.type === "CYL" && !n.differ) {
+    if (n.type === "CYL" && (n.differ === undefined || n.differ === null)) {
       while (used.has(next)) next++;
       used.add(next);
       return { ...n, differ: next++ };
@@ -173,12 +174,12 @@ export function validate(tree: TreeData): ValidationIssue[] {
     });
 
     if (n.type === "SMK" && n.children.length === 0) {
-      out.push({ level: "warning", nodeId: n.id, message: `Sub-master "${n.label}" has no change keys` });
+      out.push({ level: "warning", nodeId: n.id, message: `Sub-master "${n.label}" has no door groups` });
     }
     if (n.type === "CK") {
       hasCK = true;
       if (n.children.length === 0) {
-        out.push({ level: "error", nodeId: n.id, message: `Change key "${n.label}" has no cylinder assigned` });
+        out.push({ level: "error", nodeId: n.id, message: `Door group "${n.label}" has no cylinder assigned` });
       }
     }
     if (n.type === "CYL") {
@@ -193,7 +194,7 @@ export function validate(tree: TreeData): ValidationIssue[] {
   };
   walk(tree.root);
 
-  if (!hasCK) out.push({ level: "warning", message: "No change keys defined yet" });
+  if (!hasCK) out.push({ level: "warning", message: "No door groups defined yet" });
   if (countDoors(tree.root) > 500)
     out.push({ level: "warning", message: "System is very large (>500 doors) — please double-check" });
 

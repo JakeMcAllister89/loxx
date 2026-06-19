@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
-import { AlertCircle, Plus } from "lucide-react";
+import { AlertCircle, Plus, Key } from "lucide-react";
 import { NodeType, TNode, countDoors } from "@/lib/keytree";
 import { colorForFinish } from "@/lib/finishes";
 
@@ -20,7 +20,7 @@ export interface CanvasNodeData {
 const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string }> = {
   GMK: { label: "Grand Master", tone: "text-[hsl(var(--node-gmk))]", dot: "hsl(var(--node-gmk))", border: "hsl(var(--node-gmk))" },
   SMK: { label: "Sub Master",   tone: "text-[hsl(var(--node-smk))]", dot: "hsl(var(--node-smk))", border: "hsl(var(--node-smk))" },
-  CK:  { label: "Change Key",   tone: "text-[hsl(var(--node-ck))]",  dot: "hsl(var(--node-ck))",  border: "hsl(var(--node-ck))" },
+  CK:  { label: "Door Group",   tone: "text-[hsl(var(--node-ck))]",  dot: "hsl(var(--node-ck))",  border: "hsl(var(--node-ck))" },
   CYL: { label: "Cylinder",     tone: "text-[hsl(var(--node-cyl))]", dot: "hsl(var(--node-cyl))", border: "hsl(var(--node-cyl))" },
 };
 
@@ -55,8 +55,13 @@ function CanvasNodeImpl(props: NodeProps) {
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full shrink-0" style={{ background: meta.dot }} />
           <span className={`text-[10px] font-mono uppercase tracking-wider ${meta.tone}`}>{meta.label}</span>
+          {node.type === "CYL" && (node.extra_keys ?? 0) > 0 && (
+            <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]" title={`${node.extra_keys} extra key(s)`}>
+              <Key className="h-2.5 w-2.5" />+{node.extra_keys}
+            </span>
+          )}
           {node.type === "CYL" && node.differ != null && (
-            <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]">
+            <span className={`${(node.extra_keys ?? 0) > 0 ? "" : "ml-auto"} text-[10px] font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]`}>
               D{String(node.differ).padStart(3, "0")}
             </span>
           )}
@@ -71,13 +76,13 @@ function CanvasNodeImpl(props: NodeProps) {
         {/* Type-specific footer */}
         {node.type === "GMK" && (
           <div className="text-[11px] text-muted-foreground mt-1.5">
-            {d.rootDoorCount ?? 0} door{(d.rootDoorCount ?? 0) !== 1 ? "s" : ""} in system
+            {d.rootDoorCount ?? 0} door{(d.rootDoorCount ?? 0) !== 1 ? "s" : ""} · {node.keys ?? 3} key{(node.keys ?? 3) !== 1 ? "s" : ""}
           </div>
         )}
 
         {node.type === "SMK" && (
           <div className="text-[11px] text-muted-foreground mt-1.5">
-            {d.childCount ?? 0} change key{(d.childCount ?? 0) !== 1 ? "s" : ""}
+            {d.childCount ?? 0} door group{(d.childCount ?? 0) !== 1 ? "s" : ""} · {node.keys ?? 2} key{(node.keys ?? 2) !== 1 ? "s" : ""}
           </div>
         )}
 
