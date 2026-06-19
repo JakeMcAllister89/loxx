@@ -93,6 +93,24 @@ export default function Dashboard() {
           ))}
         </div>
 
+        {/* Start options */}
+        <div className="grid md:grid-cols-2 gap-4 mb-8">
+          <button onClick={newSystem} className="text-left rounded-[10px] border bg-card p-5 shadow-card hover:border-primary transition-colors">
+            <div className="inline-flex h-9 w-9 rounded-full bg-accent-light items-center justify-center mb-3">
+              <Plus className="h-4 w-4 text-primary" />
+            </div>
+            <div className="font-semibold">Start from scratch</div>
+            <p className="text-xs text-muted-foreground mt-1">Build a new master key system step by step.</p>
+          </button>
+          <Link to="/import" className="rounded-[10px] border bg-card p-5 shadow-card hover:border-primary transition-colors block">
+            <div className="inline-flex h-9 w-9 rounded-full bg-accent-light items-center justify-center mb-3">
+              <Upload className="h-4 w-4 text-primary" />
+            </div>
+            <div className="font-semibold">Import existing system</div>
+            <p className="text-xs text-muted-foreground mt-1">Upload a lockchart PDF or CSV and we'll build the hierarchy.</p>
+          </Link>
+        </div>
+
         {/* Recent systems */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-3">Your systems</h2>
