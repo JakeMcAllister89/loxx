@@ -44,6 +44,8 @@ const App = () => (
               <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
               <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
               <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
+              <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+              <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
