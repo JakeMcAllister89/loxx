@@ -166,8 +166,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
     const next = validate(tree);
     setIssues(next);
     setValidateOpen(true);
-    if (next.filter((i) => i.level === "error").length === 0) toast.success("Validation passed");
-    else toast.error(`${next.filter((i) => i.level === "error").length} error(s) found`);
+    const errors = next.filter((i) => i.level === "error").length;
+    const warnings = next.filter((i) => i.level === "warning").length;
+    logAction({ system_id: systemId, action: "validation_run", metadata: { errors, warnings } });
+    if (errors === 0) toast.success("Validation passed");
+    else toast.error(`${errors} error(s) found`);
   };
 
   const save = async () => {
@@ -178,6 +181,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
       .eq("id", systemId);
     setSaving(false);
     if (error) { toast.error("Failed to save"); return; }
+    if (savedNameRef.current && savedNameRef.current !== name) {
+      logAction({ system_id: systemId, action: "system_renamed", old_value: savedNameRef.current, new_value: name });
+    }
+    savedNameRef.current = name;
+    logAction({ system_id: systemId, action: "system_saved", metadata: { door_count: doors } });
     dirtyRef.current = false;
     toast.success("System saved");
   };
@@ -188,22 +196,26 @@ function BuilderInner({ systemId }: { systemId: string }) {
     if (errs.length) { toast.error("Fix validation errors before exporting"); setIssues(validate(tree)); setValidateOpen(true); return; }
     const productByCode = new Map(products.map((p) => [p.code, p]));
     let lines = 0;
+    let total = 0;
     const walk = (n: TNode) => {
       if (n.type === "CYL" && n.cylinder_type) {
         const p = productByCode.get(n.cylinder_type);
-        addToCart({ kind: "cylinder", product_code: n.cylinder_type, cylinder_type: p?.cylinder_type, finish: n.finish ?? p?.finish ?? undefined, room_label: n.label, differ_ref: `D${String(n.differ ?? 0).padStart(3, "0")}`, quantity: 1, unit_price: Number(p?.price_gbp ?? 0) });
-        lines++;
+        const unit = Number(p?.price_gbp ?? 0);
+        addToCart({ kind: "cylinder", product_code: n.cylinder_type, cylinder_type: p?.cylinder_type, finish: n.finish ?? p?.finish ?? undefined, room_label: n.label, differ_ref: `D${String(n.differ ?? 0).padStart(3, "0")}`, quantity: 1, unit_price: unit });
+        lines++; total += unit;
       }
       if (n.type === "CK") {
         addToCart({ kind: "key", key_reference: n.label, quantity: n.keys ?? 1, unit_price: 12 });
-        lines++;
+        lines++; total += 12 * (n.keys ?? 1);
       }
       n.children.forEach(walk);
     };
     walk(tree.root);
+    logAction({ system_id: systemId, action: "exported_to_cart", metadata: { line_count: lines, total_value: total } });
     toast.success(`Added ${lines} line(s) to cart`);
     navigate("/cart");
   };
+
 
   const selected = selectedId ? findNode(tree.root, selectedId) : null;
   const selectedParent = selected ? findParent(tree.root, selected.id) : null;
