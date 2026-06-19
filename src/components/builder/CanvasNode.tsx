@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
-import { AlertCircle, Plus } from "lucide-react";
+import { AlertCircle, Plus, Key } from "lucide-react";
 import { NodeType, TNode, countDoors } from "@/lib/keytree";
 import { colorForFinish } from "@/lib/finishes";
 
