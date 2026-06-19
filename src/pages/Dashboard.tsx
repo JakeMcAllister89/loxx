@@ -43,8 +43,11 @@ export default function Dashboard() {
   const newSystem = async () => {
     if (!user) return;
     const ref = `SYS-${Math.floor(1000 + Math.random() * 9000)}`;
-    const { data } = await supabase.from("key_systems").insert({ user_id: user.id, name: "Untitled system", reference: ref, tree_data: { root: null } }).select("id").single();
-    if (data) navigate(`/builder/${data.id}`);
+    const { data } = await supabase.from("key_systems").insert({ user_id: user.id, name: "Untitled system", reference: ref, tree_data: { root: null } }).select("id,name").single();
+    if (data) {
+      logAction({ system_id: data.id, action: "system_created", node_label: data.name });
+      navigate(`/builder/${data.id}`);
+    }
   };
 
   const dup = async (s: Sys) => {
@@ -54,8 +57,11 @@ export default function Dashboard() {
     const ref = `SYS-${Math.floor(1000 + Math.random() * 9000)}`;
     const { data } = await supabase.from("key_systems").insert({
       user_id: user.id, name: `Copy of ${src.name}`, reference: ref, tree_data: src.tree_data, door_count: src.door_count,
-    }).select("id").single();
-    if (data) navigate(`/builder/${data.id}`);
+    }).select("id,name").single();
+    if (data) {
+      logAction({ system_id: data.id, action: "system_created", node_label: data.name, metadata: { source: "duplicate", from: s.id } });
+      navigate(`/builder/${data.id}`);
+    }
   };
 
   const stats = [
