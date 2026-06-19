@@ -27,14 +27,14 @@ export const newId = () =>
 export const emptyTree = (): TreeData => ({ root: null, next_differ: 1 });
 
 export function createGMK(label = "Grand Master"): TNode {
-  return { id: newId(), type: "GMK", label, children: [] };
+  return { id: newId(), type: "GMK", label, keys: 3, children: [] };
 }
 export function makeChild(parentType: NodeType, index: number): TNode {
   if (parentType === "GMK") {
-    return { id: newId(), type: "SMK", label: `Sub-master ${ALPHABET[index] ?? index + 1}`, children: [] };
+    return { id: newId(), type: "SMK", label: `Sub-master ${ALPHABET[index] ?? index + 1}`, keys: 2, children: [] };
   }
   if (parentType === "SMK") {
-    return { id: newId(), type: "CK", label: `Change Key ${index + 1}`, keys: 1, children: [] };
+    return { id: newId(), type: "CK", label: `Door Group ${index + 1}`, keys: 1, children: [] };
   }
   if (parentType === "CK") {
     return { id: newId(), type: "CYL", label: `Door ${index + 1}`, children: [] };
