@@ -252,6 +252,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         </div>
 
         <div className="flex-1" />
+        <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import</Link></Button>
         <Button variant="outline" onClick={runValidate}><ShieldCheck className="h-4 w-4" /> Validate</Button>
         <Button variant="outline" onClick={save} disabled={saving}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
@@ -261,6 +262,35 @@ function BuilderInner({ systemId }: { systemId: string }) {
           <ShoppingCart className="h-4 w-4" /> Export to order
         </Button>
       </div>
+
+      {/* Import banner */}
+      {imported && allCyls.length > 0 && (
+        <div className={`border-b px-6 py-3 flex items-center gap-3 no-print ${
+          unassignedIds.size === 0 ? "bg-success/10 border-success/30" : "bg-info/10 border-info/30"
+        }`}>
+          <Info className={`h-4 w-4 ${unassignedIds.size === 0 ? "text-success" : "text-info"}`} />
+          <div className="text-sm">
+            {unassignedIds.size === 0
+              ? <span className="font-medium text-success">All cylinders confirmed — ready to order</span>
+              : <>
+                  <span className="font-medium">This system was imported from your existing lockchart.</span>{" "}
+                  Review each cylinder to confirm the product type and finish before placing an order.
+                </>}
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {confirmedCount} of {allCyls.length} cylinders confirmed
+            </div>
+          </div>
+          <div className="flex-1" />
+          {unassignedIds.size > 0 && (
+            <Button size="sm" variant="outline" onClick={() => setShowOnlyUnassigned((v) => !v)}>
+              {showOnlyUnassigned ? "Show all" : "Review cylinders"}
+            </Button>
+          )}
+          <Button size="sm" variant="ghost" onClick={() => { searchParams.delete("imported"); setSearchParams(searchParams); }}>
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
 
       {/* Print header */}
       <div className="print-only px-2 py-4">
