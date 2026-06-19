@@ -6,6 +6,7 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2, AlertCircle, Package } from "lucide-react";
+import { logAction } from "@/lib/audit";
 
 export default function CheckoutReturn() {
   const [params] = useSearchParams();
@@ -25,7 +26,15 @@ export default function CheckoutReturn() {
       if (error || !data) { setState("error"); setError(error?.message ?? "Verification failed"); return; }
       if ((data as any).error) { setState("error"); setError((data as any).error); return; }
       setOrder({ id: data.orderId, total: data.total });
-      if (data.paid) { setState("paid"); clear(); } else { setState("pending"); }
+      if (data.paid) {
+        setState("paid");
+        clear();
+        logAction({
+          system_id: data.systemId ?? null,
+          action: "order_placed",
+          metadata: { order_id: data.orderId, total: data.total },
+        });
+      } else { setState("pending"); }
     })();
   }, [sessionId]);
 

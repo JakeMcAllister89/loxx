@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          new_value: string | null
+          node_label: string | null
+          node_type: string | null
+          old_value: string | null
+          system_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          new_value?: string | null
+          node_label?: string | null
+          node_type?: string | null
+          old_value?: string | null
+          system_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          new_value?: string | null
+          node_label?: string | null
+          node_type?: string | null
+          old_value?: string | null
+          system_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "key_systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cylinders: {
         Row: {
           created_at: string

@@ -24,6 +24,8 @@ import {
   findNode, findParent, updateNode, addChild, removeNode,
   countDoors, assignNextDiffers, pathOf, validate, ValidationIssue,
 } from "@/lib/keytree";
+import { logAction } from "@/lib/audit";
+import { ActivityTimeline } from "@/components/ActivityTimeline";
 
 const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }> = {
   GMK: { label: "Grand Master",  color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30" },
@@ -69,12 +71,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const dirtyRef = useRef(false);
+  const savedNameRef = useRef<string>("");
 
   useEffect(() => {
     setLoading(true);
     supabase.from("key_systems").select("*").eq("id", systemId).single().then(({ data, error }) => {
       if (error || !data) { toast.error("System not found"); navigate("/dashboard"); return; }
       setName(data.name);
+      savedNameRef.current = data.name;
       setReference(data.reference);
       const t = (data.tree_data as unknown as TreeData) ?? emptyTree();
       setTree(t?.root !== undefined ? t : emptyTree());
@@ -101,18 +105,43 @@ function BuilderInner({ systemId }: { systemId: string }) {
       dirtyRef.current = true;
       setSelectedId(child.id);
       setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
+      logAction({ system_id: systemId, action: "node_added", node_type: child.type, node_label: child.label });
       return next;
     });
-  }, []);
+  }, [systemId]);
 
   const handleDelete = useCallback((nodeId: string) => {
-    setTree((prev) => { dirtyRef.current = true; return { ...prev, root: removeNode(prev.root, nodeId) }; });
+    setTree((prev) => {
+      const target = findNode(prev.root, nodeId);
+      if (target) logAction({ system_id: systemId, action: "node_deleted", node_type: target.type, node_label: target.label });
+      dirtyRef.current = true;
+      return { ...prev, root: removeNode(prev.root, nodeId) };
+    });
     setSelectedId((s) => (s === nodeId ? null : s));
-  }, []);
+  }, [systemId]);
 
   const patchSelected = (patch: Partial<TNode>) => {
     if (!selectedId) return;
-    mutate((t) => ({ ...t, root: updateNode(t.root, selectedId, patch) }));
+    setTree((prev) => {
+      const before = findNode(prev.root, selectedId);
+      const root = updateNode(prev.root, selectedId, patch);
+      dirtyRef.current = true;
+      if (before) {
+        if (patch.label !== undefined && patch.label !== before.label) {
+          logAction({ system_id: systemId, action: "node_renamed", node_type: before.type, node_label: patch.label, old_value: before.label, new_value: patch.label });
+        }
+        if (patch.cylinder_type !== undefined && patch.cylinder_type !== before.cylinder_type) {
+          logAction({ system_id: systemId, action: "cylinder_assigned", node_type: "CYL", node_label: before.label, old_value: before.cylinder_type ?? "", new_value: patch.cylinder_type ?? "" });
+        }
+        if (patch.finish !== undefined && patch.finish !== before.finish) {
+          logAction({ system_id: systemId, action: "cylinder_finish_changed", node_type: "CYL", node_label: before.label, old_value: before.finish ?? "", new_value: patch.finish ?? "" });
+        }
+        if (patch.keys !== undefined && patch.keys !== before.keys) {
+          logAction({ system_id: systemId, action: "keys_count_changed", node_type: "CK", node_label: before.label, old_value: String(before.keys ?? 1), new_value: String(patch.keys) });
+        }
+      }
+      return { ...prev, root };
+    });
   };
 
   const toggleCollapse = (id: string) => setCollapsed((c) => {
@@ -137,8 +166,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
     const next = validate(tree);
     setIssues(next);
     setValidateOpen(true);
-    if (next.filter((i) => i.level === "error").length === 0) toast.success("Validation passed");
-    else toast.error(`${next.filter((i) => i.level === "error").length} error(s) found`);
+    const errors = next.filter((i) => i.level === "error").length;
+    const warnings = next.filter((i) => i.level === "warning").length;
+    logAction({ system_id: systemId, action: "validation_run", metadata: { errors, warnings } });
+    if (errors === 0) toast.success("Validation passed");
+    else toast.error(`${errors} error(s) found`);
   };
 
   const save = async () => {
@@ -149,6 +181,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
       .eq("id", systemId);
     setSaving(false);
     if (error) { toast.error("Failed to save"); return; }
+    if (savedNameRef.current && savedNameRef.current !== name) {
+      logAction({ system_id: systemId, action: "system_renamed", old_value: savedNameRef.current, new_value: name });
+    }
+    savedNameRef.current = name;
+    logAction({ system_id: systemId, action: "system_saved", metadata: { door_count: doors } });
     dirtyRef.current = false;
     toast.success("System saved");
   };
@@ -159,22 +196,26 @@ function BuilderInner({ systemId }: { systemId: string }) {
     if (errs.length) { toast.error("Fix validation errors before exporting"); setIssues(validate(tree)); setValidateOpen(true); return; }
     const productByCode = new Map(products.map((p) => [p.code, p]));
     let lines = 0;
+    let total = 0;
     const walk = (n: TNode) => {
       if (n.type === "CYL" && n.cylinder_type) {
         const p = productByCode.get(n.cylinder_type);
-        addToCart({ kind: "cylinder", product_code: n.cylinder_type, cylinder_type: p?.cylinder_type, finish: n.finish ?? p?.finish ?? undefined, room_label: n.label, differ_ref: `D${String(n.differ ?? 0).padStart(3, "0")}`, quantity: 1, unit_price: Number(p?.price_gbp ?? 0) });
-        lines++;
+        const unit = Number(p?.price_gbp ?? 0);
+        addToCart({ kind: "cylinder", product_code: n.cylinder_type, cylinder_type: p?.cylinder_type, finish: n.finish ?? p?.finish ?? undefined, room_label: n.label, differ_ref: `D${String(n.differ ?? 0).padStart(3, "0")}`, quantity: 1, unit_price: unit });
+        lines++; total += unit;
       }
       if (n.type === "CK") {
         addToCart({ kind: "key", key_reference: n.label, quantity: n.keys ?? 1, unit_price: 12 });
-        lines++;
+        lines++; total += 12 * (n.keys ?? 1);
       }
       n.children.forEach(walk);
     };
     walk(tree.root);
+    logAction({ system_id: systemId, action: "exported_to_cart", metadata: { line_count: lines, total_value: total } });
     toast.success(`Added ${lines} line(s) to cart`);
     navigate("/cart");
   };
+
 
   const selected = selectedId ? findNode(tree.root, selectedId) : null;
   const selectedParent = selected ? findParent(tree.root, selected.id) : null;
@@ -297,6 +338,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
               <p>Click any row to edit its properties, or hover and tap <kbd className="px-1 rounded bg-muted text-xs">+</kbd> to add a child.</p>
               <div className="mt-6 space-y-2 text-xs">
                 <Legend type="GMK" /><Legend type="SMK" /><Legend type="CK" /><Legend type="CYL" />
+              </div>
+              <div className="mt-8 pt-5 border-t">
+                <h4 className="text-sm font-semibold text-foreground mb-1">Activity</h4>
+                <p className="text-[11px] text-muted-foreground mb-3">Last 20 actions on this system.</p>
+                <ActivityTimeline systemId={systemId} />
               </div>
             </div>
           ) : (
