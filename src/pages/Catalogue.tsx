@@ -32,7 +32,7 @@ export default function Catalogue() {
   const { add } = useCart();
 
   useEffect(() => {
-    supabase.from("products").select("*").order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
+    supabase.from("products").select("*").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
   }, []);
 
   const types = useMemo(() => Array.from(new Set(products.map((p) => p.cylinder_type))).sort(), [products]);
