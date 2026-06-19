@@ -215,6 +215,25 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
           <span className="text-[11px] text-muted-foreground ml-1">Double doors usually need 2</span>
         </div>
       </div>
+
+      {/* Additional keys */}
+      <div className="pt-3 border-t">
+        <Label className="text-xs">Additional keys</Label>
+        <p className="text-[11px] text-muted-foreground mt-0.5">2 keys are included as standard with every cylinder.</p>
+        <div className="mt-2">
+          <Label htmlFor="extra-keys" className="text-[11px] text-muted-foreground">Extra keys required</Label>
+          <Input
+            id="extra-keys"
+            type="number" min={0} max={50}
+            value={node.extra_keys ?? 0}
+            onChange={(e) => onPatch({ extra_keys: Math.max(0, Math.min(50, Number(e.target.value) || 0)) })}
+            className="h-9 w-24 font-mono mt-1"
+          />
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-2">
+          Total keys for this cylinder: <span className="font-mono font-semibold text-foreground">{2 + (node.extra_keys ?? 0)}</span>
+        </p>
+      </div>
     </div>
   );
 }
