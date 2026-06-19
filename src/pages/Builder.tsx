@@ -1,19 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  ReactFlow,
-  ReactFlowProvider,
-  Background,
-  Controls,
-  MiniMap,
-  Handle,
-  Position,
-  type Node,
-  type Edge,
-  type NodeProps,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import dagre from "dagre";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +16,7 @@ import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
-  AlertCircle, AlertTriangle, ChevronRight, KeyRound,
+  AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer,
 } from "lucide-react";
 import {
   TNode, TreeData, NodeType,
@@ -39,138 +25,17 @@ import {
   countDoors, assignNextDiffers, pathOf, validate, ValidationIssue,
 } from "@/lib/keytree";
 
-/* ------------------------- Layout (dagre) ------------------------- */
-
-const NODE_W = 220;
-const NODE_H = 78;
-
-function buildFlow(
-  tree: TreeData,
-  opts: { selectedId?: string | null; errorIds: Set<string>; searchMatch: Set<string>; onAdd: (id: string) => void; onDelete: (id: string) => void; },
-): { nodes: Node[]; edges: Edge[] } {
-  if (!tree.root) return { nodes: [], edges: [] };
-  const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: "TB", nodesep: 36, ranksep: 60 });
-  g.setDefaultEdgeLabel(() => ({}));
-
-  const nodes: Node[] = [];
-  const edges: Edge[] = [];
-
-  const walk = (n: TNode, parent?: TNode) => {
-    g.setNode(n.id, { width: NODE_W, height: NODE_H });
-    if (parent) {
-      g.setEdge(parent.id, n.id);
-      edges.push({ id: `${parent.id}->${n.id}`, source: parent.id, target: n.id, type: "smoothstep" });
-    }
-    n.children.forEach((c) => walk(c, n));
-  };
-  walk(tree.root);
-  dagre.layout(g);
-
-  const collect = (n: TNode) => {
-    const p = g.node(n.id);
-    nodes.push({
-      id: n.id,
-      type: "key",
-      position: { x: p.x - NODE_W / 2, y: p.y - NODE_H / 2 },
-      data: {
-        node: n,
-        selected: opts.selectedId === n.id,
-        hasError: opts.errorIds.has(n.id),
-        searchMatch: opts.searchMatch.has(n.id),
-        canAddChild: childTypeOf(n.type) !== null,
-        onAdd: opts.onAdd,
-        onDelete: opts.onDelete,
-        isRoot: tree.root?.id === n.id,
-      },
-    });
-    n.children.forEach(collect);
-  };
-  collect(tree.root);
-
-  return { nodes, edges };
-}
-
-/* ------------------------- Custom node ------------------------- */
-
-const TYPE_META: Record<NodeType, { label: string; color: string; bg: string; ring: string }> = {
-  GMK: { label: "Grand Master",  color: "hsl(var(--node-gmk))", bg: "hsl(245 70% 96%)",  ring: "hsl(var(--node-gmk))" },
-  SMK: { label: "Sub-master",    color: "hsl(var(--node-smk))", bg: "hsl(154 60% 95%)",  ring: "hsl(var(--node-smk))" },
-  CK:  { label: "Change Key",    color: "hsl(var(--node-ck))",  bg: "hsl(210 75% 96%)",  ring: "hsl(var(--node-ck))"  },
-  CYL: { label: "Cylinder",      color: "hsl(var(--node-cyl))", bg: "hsl(36 94% 95%)",   ring: "hsl(var(--node-cyl))" },
+const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }> = {
+  GMK: { label: "Grand Master",  color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30" },
+  SMK: { label: "Sub-master",    color: "hsl(var(--node-smk))", pill: "bg-[hsl(154_60%_95%)] text-[hsl(var(--node-smk))] border-[hsl(var(--node-smk))]/30" },
+  CK:  { label: "Change Key",    color: "hsl(var(--node-ck))",  pill: "bg-[hsl(210_75%_96%)] text-[hsl(var(--node-ck))] border-[hsl(var(--node-ck))]/30" },
+  CYL: { label: "Cylinder",      color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30" },
 };
-
-function KeyNodeView({ data }: NodeProps) {
-  const n = data.node as TNode;
-  const meta = TYPE_META[n.type];
-  const hasError = data.hasError as boolean;
-  const isSelected = data.selected as boolean;
-  const match = data.searchMatch as boolean;
-
-  return (
-    <div
-      className="group relative rounded-lg border bg-card transition-all"
-      style={{
-        width: NODE_W, height: NODE_H,
-        backgroundColor: meta.bg,
-        borderColor: hasError ? "hsl(var(--destructive))" : isSelected ? meta.ring : "hsl(var(--border))",
-        boxShadow: isSelected ? `0 0 0 2px ${meta.ring}` : match ? `0 0 0 2px hsl(var(--warning))` : "var(--shadow-card)",
-      }}
-    >
-      <Handle type="target" position={Position.Top} />
-      <div className="p-2.5 h-full flex flex-col">
-        <div className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full" style={{ background: meta.color }} />
-          <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">{meta.label}</span>
-          {n.type === "CYL" && n.differ && (
-            <span className="ml-auto text-[10px] font-mono text-muted-foreground">D{String(n.differ).padStart(3, "0")}</span>
-          )}
-        </div>
-        <div className="mt-1 text-sm font-semibold text-foreground leading-tight truncate">{n.label || <span className="text-muted-foreground italic">Unnamed</span>}</div>
-        <div className="mt-auto flex items-center justify-between text-[11px] text-muted-foreground">
-          {n.type === "CK" && <span>{n.keys ?? 1} key{(n.keys ?? 1) !== 1 ? "s" : ""}</span>}
-          {n.type === "CYL" && <span className="truncate">{n.cylinder_type ?? <span className="text-destructive">No product</span>}</span>}
-          {(n.type === "GMK" || n.type === "SMK") && <span>{n.children.length} branch{n.children.length !== 1 ? "es" : ""}</span>}
-          {hasError && <AlertCircle className="h-3 w-3 text-destructive" />}
-        </div>
-      </div>
-
-      {/* hover actions */}
-      <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        {data.canAddChild && (
-          <button
-            onClick={(e) => { e.stopPropagation(); (data.onAdd as (id: string) => void)(n.id); }}
-            className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-card hover:bg-primary/90"
-            title="Add child"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </button>
-        )}
-        {!data.isRoot && (
-          <button
-            onClick={(e) => { e.stopPropagation(); (data.onDelete as (id: string) => void)(n.id); }}
-            className="h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-card hover:opacity-90"
-            title="Delete"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
-
-      <Handle type="source" position={Position.Bottom} />
-    </div>
-  );
-}
-
-const nodeTypes = { key: KeyNodeView };
-
-/* ------------------------- Builder page ------------------------- */
 
 interface Product { id: string; code: string; name: string; cylinder_type: string; finish: string | null; price_gbp: number }
 
 export default function Builder() {
   const { id } = useParams();
-
   if (!id) {
     return (
       <DashboardLayout>
@@ -184,9 +49,7 @@ export default function Builder() {
   }
   return (
     <DashboardLayout>
-      <ReactFlowProvider>
-        <BuilderInner systemId={id} />
-      </ReactFlowProvider>
+      <BuilderInner systemId={id} />
     </DashboardLayout>
   );
 }
@@ -204,9 +67,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [validateOpen, setValidateOpen] = useState(false);
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const dirtyRef = useRef(false);
 
-  /* ---------- load ---------- */
   useEffect(() => {
     setLoading(true);
     supabase.from("key_systems").select("*").eq("id", systemId).single().then(({ data, error }) => {
@@ -220,15 +83,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
     supabase.from("products").select("id,code,name,cylinder_type,finish,price_gbp").order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
   }, [systemId, navigate]);
 
-  /* ---------- mutations ---------- */
   const mutate = (updater: (t: TreeData) => TreeData) => {
-    setTree((prev) => {
-      const next = updater(prev);
-      dirtyRef.current = true;
-      return next;
-    });
+    setTree((prev) => { const next = updater(prev); dirtyRef.current = true; return next; });
   };
-
   const addRoot = () => mutate((t) => ({ ...t, root: createGMK() }));
 
   const handleAddChild = useCallback((parentId: string) => {
@@ -243,16 +100,13 @@ function BuilderInner({ systemId }: { systemId: string }) {
       if (child.type === "CYL") next = assignNextDiffers(next);
       dirtyRef.current = true;
       setSelectedId(child.id);
+      setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
       return next;
     });
   }, []);
 
   const handleDelete = useCallback((nodeId: string) => {
-    setTree((prev) => {
-      const root = removeNode(prev.root, nodeId);
-      dirtyRef.current = true;
-      return { ...prev, root };
-    });
+    setTree((prev) => { dirtyRef.current = true; return { ...prev, root: removeNode(prev.root, nodeId) }; });
     setSelectedId((s) => (s === nodeId ? null : s));
   }, []);
 
@@ -261,7 +115,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
     mutate((t) => ({ ...t, root: updateNode(t.root, selectedId, patch) }));
   };
 
-  /* ---------- search & validation ---------- */
+  const toggleCollapse = (id: string) => setCollapsed((c) => {
+    const n = new Set(c); n.has(id) ? n.delete(id) : n.add(id); return n;
+  });
+
   const searchMatch = useMemo(() => {
     const s = new Set<string>();
     if (!search.trim() || !tree.root) return s;
@@ -284,12 +141,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
     else toast.error(`${next.filter((i) => i.level === "error").length} error(s) found`);
   };
 
-  /* ---------- save ---------- */
   const save = async () => {
     setSaving(true);
     const doors = countDoors(tree.root);
-    const { error } = await supabase
-      .from("key_systems")
+    const { error } = await supabase.from("key_systems")
       .update({ name, tree_data: tree as any, door_count: doors, next_differ: tree.next_differ })
       .eq("id", systemId);
     setSaving(false);
@@ -298,7 +153,6 @@ function BuilderInner({ systemId }: { systemId: string }) {
     toast.success("System saved");
   };
 
-  /* ---------- export to cart ---------- */
   const exportToCart = () => {
     if (!tree.root) { toast.error("Nothing to export"); return; }
     const errs = validate(tree).filter((i) => i.level === "error");
@@ -308,25 +162,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
     const walk = (n: TNode) => {
       if (n.type === "CYL" && n.cylinder_type) {
         const p = productByCode.get(n.cylinder_type);
-        addToCart({
-          kind: "cylinder",
-          product_code: n.cylinder_type,
-          cylinder_type: p?.cylinder_type,
-          finish: n.finish ?? p?.finish ?? undefined,
-          room_label: n.label,
-          differ_ref: `D${String(n.differ ?? 0).padStart(3, "0")}`,
-          quantity: 1,
-          unit_price: Number(p?.price_gbp ?? 0),
-        });
+        addToCart({ kind: "cylinder", product_code: n.cylinder_type, cylinder_type: p?.cylinder_type, finish: n.finish ?? p?.finish ?? undefined, room_label: n.label, differ_ref: `D${String(n.differ ?? 0).padStart(3, "0")}`, quantity: 1, unit_price: Number(p?.price_gbp ?? 0) });
         lines++;
       }
       if (n.type === "CK") {
-        addToCart({
-          kind: "key",
-          key_reference: n.label,
-          quantity: n.keys ?? 1,
-          unit_price: 12,
-        });
+        addToCart({ kind: "key", key_reference: n.label, quantity: n.keys ?? 1, unit_price: 12 });
         lines++;
       }
       n.children.forEach(walk);
@@ -336,44 +176,33 @@ function BuilderInner({ systemId }: { systemId: string }) {
     navigate("/cart");
   };
 
-  /* ---------- flow data ---------- */
-  const { nodes, edges } = useMemo(
-    () => buildFlow(tree, { selectedId, errorIds, searchMatch, onAdd: handleAddChild, onDelete: handleDelete }),
-    [tree, selectedId, errorIds, searchMatch, handleAddChild, handleDelete],
-  );
-
   const selected = selectedId ? findNode(tree.root, selectedId) : null;
   const selectedParent = selected ? findParent(tree.root, selected.id) : null;
   const trail = selected ? pathOf(tree.root, selected.id) : [];
 
+  // Flatten all CYL nodes for print schedule
+  const allCyls = useMemo(() => {
+    const out: TNode[] = [];
+    const w = (n: TNode | null) => { if (!n) return; if (n.type === "CYL") out.push(n); n.children.forEach(w); };
+    w(tree.root);
+    return out;
+  }, [tree]);
+
   if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <div className="h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   }
 
   return (
     <div className="flex flex-col h-screen">
       {/* Top bar */}
-      <div className="border-b bg-card px-6 py-3 flex items-center gap-3">
-        <Input
-          value={name}
-          onChange={(e) => { setName(e.target.value); dirtyRef.current = true; }}
-          className="max-w-xs font-semibold"
-        />
+      <div className="border-b bg-card px-6 py-3 flex items-center gap-3 no-print">
+        <Input value={name} onChange={(e) => { setName(e.target.value); dirtyRef.current = true; }} className="max-w-xs font-semibold" />
         {reference && <Badge variant="secondary" className="font-mono">{reference}</Badge>}
         <Badge variant="outline" className="font-mono">{countDoors(tree.root)} door{countDoors(tree.root) !== 1 ? "s" : ""}</Badge>
 
         <div className="ml-4 relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search nodes…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 w-56 h-9"
-          />
+          <Input placeholder="Search nodes…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 w-56 h-9" />
         </div>
 
         <div className="flex-1" />
@@ -381,16 +210,26 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <Button variant="outline" onClick={save} disabled={saving}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
         </Button>
+        <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" /> Export PDF</Button>
         <Button onClick={exportToCart} className="bg-primary hover:bg-primary/90">
           <ShoppingCart className="h-4 w-4" /> Export to order
         </Button>
       </div>
 
+      {/* Print header */}
+      <div className="print-only px-2 py-4">
+        <div className="text-2xl font-semibold">{name}</div>
+        <div className="text-sm text-muted-foreground mt-1">
+          {reference && <span className="font-mono">{reference} · </span>}
+          {countDoors(tree.root)} doors · Printed {new Date().toLocaleDateString("en-GB")}
+        </div>
+      </div>
+
       <div className="flex-1 flex min-h-0">
-        {/* Canvas */}
-        <div className="flex-1 relative">
+        {/* Tree */}
+        <div className="flex-1 overflow-auto p-6">
           {!tree.root ? (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-full flex items-center justify-center">
               <div className="text-center max-w-sm">
                 <div className="inline-flex h-14 w-14 rounded-full bg-accent-light items-center justify-center mb-4">
                   <KeyRound className="h-7 w-7 text-primary" />
@@ -405,38 +244,59 @@ function BuilderInner({ systemId }: { systemId: string }) {
               </div>
             </div>
           ) : (
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              nodeTypes={nodeTypes}
-              onNodeClick={(_, n) => setSelectedId(n.id)}
-              onPaneClick={() => setSelectedId(null)}
-              fitView
-              fitViewOptions={{ padding: 0.2, maxZoom: 1.1 }}
-              proOptions={{ hideAttribution: true }}
-              nodesDraggable={false}
-            >
-              <Background gap={20} size={1} color="hsl(var(--border))" />
-              <Controls showInteractive={false} />
-              <MiniMap pannable zoomable nodeColor={(n) => {
-                const t = (n.data?.node as TNode | undefined)?.type;
-                return t ? TYPE_META[t].color : "#ccc";
-              }} />
-            </ReactFlow>
+            <div className="max-w-4xl mx-auto print-tree">
+              <TreeRow
+                node={tree.root}
+                depth={0}
+                selectedId={selectedId}
+                collapsed={collapsed}
+                errorIds={errorIds}
+                searchMatch={searchMatch}
+                onSelect={setSelectedId}
+                onToggle={toggleCollapse}
+                onAdd={handleAddChild}
+                onDelete={handleDelete}
+                isRoot
+              />
+            </div>
+          )}
+
+          {/* Print cylinder schedule */}
+          {allCyls.length > 0 && (
+            <div className="print-only mt-8">
+              <h2 className="text-lg font-semibold mb-2">Cylinder schedule</h2>
+              <table className="w-full text-xs border-collapse">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-1 px-2">Differ</th>
+                    <th className="text-left py-1 px-2">Room / Door</th>
+                    <th className="text-left py-1 px-2">Type</th>
+                    <th className="text-left py-1 px-2">Finish</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allCyls.map((c) => (
+                    <tr key={c.id} className="border-b">
+                      <td className="py-1 px-2 font-mono">D{String(c.differ ?? 0).padStart(3, "0")}</td>
+                      <td className="py-1 px-2">{c.label}</td>
+                      <td className="py-1 px-2 font-mono">{c.cylinder_type ?? "—"}</td>
+                      <td className="py-1 px-2">{c.finish ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
         {/* Right detail panel */}
-        <aside className="w-[340px] shrink-0 border-l bg-card overflow-auto">
+        <aside className="w-[340px] shrink-0 border-l bg-card overflow-auto no-print">
           {!selected ? (
             <div className="p-6 text-sm text-muted-foreground">
               <h3 className="text-base font-semibold text-foreground mb-1">Details</h3>
-              <p>Click any node to edit its properties, or hover and tap <kbd className="px-1 rounded bg-muted text-xs">+</kbd> to add a child.</p>
+              <p>Click any row to edit its properties, or hover and tap <kbd className="px-1 rounded bg-muted text-xs">+</kbd> to add a child.</p>
               <div className="mt-6 space-y-2 text-xs">
-                <Legend type="GMK" />
-                <Legend type="SMK" />
-                <Legend type="CK" />
-                <Legend type="CYL" />
+                <Legend type="GMK" /><Legend type="SMK" /><Legend type="CK" /><Legend type="CYL" />
               </div>
             </div>
           ) : (
@@ -469,20 +329,120 @@ function BuilderInner({ systemId }: { systemId: string }) {
               <div className="text-sm text-success flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> All checks passed.</div>
             )}
             {issues.map((i, idx) => (
-              <button
-                key={idx}
-                onClick={() => i.nodeId && setSelectedId(i.nodeId)}
-                className="w-full text-left flex gap-2 p-2.5 rounded-md border hover:bg-muted/50"
-              >
-                {i.level === "error"
-                  ? <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                  : <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />}
+              <button key={idx} onClick={() => i.nodeId && setSelectedId(i.nodeId)} className="w-full text-left flex gap-2 p-2.5 rounded-md border hover:bg-muted/50">
+                {i.level === "error" ? <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" /> : <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />}
                 <div className="text-sm">{i.message}</div>
               </button>
             ))}
           </div>
         </SheetContent>
       </Sheet>
+    </div>
+  );
+}
+
+/* ------------------------- Tree Row ------------------------- */
+
+function TreeRow({
+  node, depth, selectedId, collapsed, errorIds, searchMatch,
+  onSelect, onToggle, onAdd, onDelete, isRoot,
+}: {
+  node: TNode; depth: number;
+  selectedId: string | null;
+  collapsed: Set<string>;
+  errorIds: Set<string>;
+  searchMatch: Set<string>;
+  onSelect: (id: string) => void;
+  onToggle: (id: string) => void;
+  onAdd: (id: string) => void;
+  onDelete: (id: string) => void;
+  isRoot?: boolean;
+}) {
+  const meta = TYPE_META[node.type];
+  const isCollapsed = collapsed.has(node.id);
+  const isSelected = selectedId === node.id;
+  const hasError = errorIds.has(node.id);
+  const isMatch = searchMatch.has(node.id);
+  const hasChildren = node.children.length > 0;
+  const canAdd = childTypeOf(node.type) !== null;
+
+  return (
+    <div>
+      <div
+        onClick={() => onSelect(node.id)}
+        className={`group row flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer transition-colors ${
+          isSelected ? "bg-accent-light" : isMatch ? "bg-warning/10" : "hover:bg-muted/40"
+        } ${hasError ? "ring-1 ring-destructive/40" : ""}`}
+        style={{ paddingLeft: `${depth * 20 + 8}px` }}
+      >
+        {/* indent guide */}
+        {depth > 0 && (
+          <div className="absolute -ml-3 h-full border-l border-border" aria-hidden />
+        )}
+
+        {/* chevron */}
+        <button
+          onClick={(e) => { e.stopPropagation(); if (hasChildren) onToggle(node.id); }}
+          className={`h-5 w-5 flex items-center justify-center rounded hover:bg-muted ${!hasChildren ? "invisible" : ""}`}
+          aria-label="toggle"
+        >
+          {isCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
+
+        {/* coloured dot */}
+        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: meta.color }} />
+
+        {/* label */}
+        <span className="text-sm font-medium truncate">
+          {node.label || <span className="text-muted-foreground italic">Unnamed</span>}
+        </span>
+
+        {/* differ for CYL */}
+        {node.type === "CYL" && node.differ != null && (
+          <span className="text-[11px] font-mono text-muted-foreground">· D{String(node.differ).padStart(3, "0")}</span>
+        )}
+        {node.type === "CYL" && !node.cylinder_type && (
+          <span className="text-[11px] text-destructive">· no product</span>
+        )}
+        {node.type === "CK" && (
+          <span className="text-[11px] font-mono text-muted-foreground">· {node.keys ?? 1} key{(node.keys ?? 1) !== 1 ? "s" : ""}</span>
+        )}
+
+        <div className="flex-1" />
+
+        {/* type pill */}
+        <span className={`text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${meta.pill}`}>
+          {node.type}
+        </span>
+
+        {hasError && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
+
+        {/* hover actions */}
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity no-print">
+          {canAdd && (
+            <button onClick={(e) => { e.stopPropagation(); onAdd(node.id); }}
+              className="h-6 w-6 rounded bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90" title="Add child">
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {!isRoot && (
+            <button onClick={(e) => { e.stopPropagation(); onDelete(node.id); }}
+              className="h-6 w-6 rounded bg-destructive text-destructive-foreground flex items-center justify-center hover:opacity-90" title="Delete">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!isCollapsed && hasChildren && (
+        <div>
+          {node.children.map((c) => (
+            <TreeRow key={c.id} node={c} depth={depth + 1}
+              selectedId={selectedId} collapsed={collapsed} errorIds={errorIds} searchMatch={searchMatch}
+              onSelect={onSelect} onToggle={onToggle} onAdd={onAdd} onDelete={onDelete} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -503,17 +463,14 @@ function Legend({ type }: { type: NodeType }) {
 function DetailPanel({
   node, parent, trail, products, onPatch, onAddChild, onDelete, canAddChild, isRoot,
 }: {
-  node: TNode;
-  parent: TNode | null;
-  trail: TNode[];
-  products: Product[];
+  node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
-  onAddChild: () => void;
-  onDelete: () => void;
-  canAddChild: boolean;
-  isRoot: boolean;
+  onAddChild: () => void; onDelete: () => void;
+  canAddChild: boolean; isRoot: boolean;
 }) {
   const meta = TYPE_META[node.type];
+  const isCyl = node.type === "CYL";
+
   return (
     <div className="p-5">
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-2 flex-wrap">
@@ -528,27 +485,33 @@ function DetailPanel({
       <div className="flex items-center gap-2">
         <span className="h-2.5 w-2.5 rounded-full" style={{ background: meta.color }} />
         <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">{meta.label}</span>
+        {isCyl && node.differ != null && (
+          <Badge variant="outline" className="ml-auto font-mono">D{String(node.differ).padStart(3, "0")}</Badge>
+        )}
       </div>
       <h3 className="text-lg font-semibold mt-1">{node.label || "Unnamed"}</h3>
 
       <div className="mt-5 space-y-4">
         <div>
-          <Label className="text-xs">Label</Label>
-          <Input value={node.label} onChange={(e) => onPatch({ label: e.target.value })} />
+          <Label className="text-xs">{isCyl ? "Room / door name" : "Label"}</Label>
+          <Input
+            value={node.label}
+            onChange={(e) => onPatch({ label: e.target.value })}
+            placeholder={isCyl ? "e.g. Director's Office" : ""}
+            className={isCyl ? "text-base font-medium" : ""}
+            autoFocus={isCyl}
+          />
         </div>
 
         {node.type === "CK" && (
           <div>
             <Label className="text-xs">Number of keys (copies)</Label>
-            <Input
-              type="number" min={1} max={50}
-              value={node.keys ?? 1}
-              onChange={(e) => onPatch({ keys: Math.max(1, Number(e.target.value) || 1) })}
-            />
+            <Input type="number" min={1} max={50} value={node.keys ?? 1}
+              onChange={(e) => onPatch({ keys: Math.max(1, Number(e.target.value) || 1) })} />
           </div>
         )}
 
-        {node.type === "CYL" && (
+        {isCyl && (
           <>
             <div>
               <Label className="text-xs">Cylinder product</Label>
@@ -567,11 +530,6 @@ function DetailPanel({
               <Label className="text-xs">Finish</Label>
               <Input value={node.finish ?? ""} onChange={(e) => onPatch({ finish: e.target.value })} placeholder="e.g. Satin chrome" />
             </div>
-            {node.differ != null && (
-              <div className="text-xs text-muted-foreground">
-                Differ ref: <span className="font-mono text-foreground">D{String(node.differ).padStart(3, "0")}</span>
-              </div>
-            )}
           </>
         )}
 

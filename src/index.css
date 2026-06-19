@@ -78,5 +78,12 @@
 .react-flow__handle { opacity: 0; }
 
 @media print {
-  .no-print { display: none !important; }
+  .no-print, [data-sidebar], aside, header, nav { display: none !important; }
+  .print-only { display: block !important; }
+  body { background: white !important; }
+  .print-tree { font-size: 11pt; }
+  .print-tree .row { padding: 2px 0; }
+  @page { margin: 18mm; }
 }
+.print-only { display: none; }
+
