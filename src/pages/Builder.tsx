@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
-  AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer,
+  AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info,
 } from "lucide-react";
 import {
   TNode, TreeData, NodeType,
@@ -58,6 +58,9 @@ export default function Builder() {
 
 function BuilderInner({ systemId }: { systemId: string }) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const imported = searchParams.get("imported") === "1";
+  const [showOnlyUnassigned, setShowOnlyUnassigned] = useState(false);
   const { add: addToCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -221,13 +224,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const selectedParent = selected ? findParent(tree.root, selected.id) : null;
   const trail = selected ? pathOf(tree.root, selected.id) : [];
 
-  // Flatten all CYL nodes for print schedule
+  // Flatten all CYL nodes for print schedule + import progress
   const allCyls = useMemo(() => {
     const out: TNode[] = [];
     const w = (n: TNode | null) => { if (!n) return; if (n.type === "CYL") out.push(n); n.children.forEach(w); };
     w(tree.root);
     return out;
   }, [tree]);
+  const confirmedCount = allCyls.filter((c) => !!c.cylinder_type).length;
+  const unassignedIds = useMemo(() => new Set(allCyls.filter((c) => !c.cylinder_type).map((c) => c.id)), [allCyls]);
 
   if (loading) {
     return <div className="h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
@@ -247,6 +252,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         </div>
 
         <div className="flex-1" />
+        <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import</Link></Button>
         <Button variant="outline" onClick={runValidate}><ShieldCheck className="h-4 w-4" /> Validate</Button>
         <Button variant="outline" onClick={save} disabled={saving}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
@@ -256,6 +262,35 @@ function BuilderInner({ systemId }: { systemId: string }) {
           <ShoppingCart className="h-4 w-4" /> Export to order
         </Button>
       </div>
+
+      {/* Import banner */}
+      {imported && allCyls.length > 0 && (
+        <div className={`border-b px-6 py-3 flex items-center gap-3 no-print ${
+          unassignedIds.size === 0 ? "bg-success/10 border-success/30" : "bg-info/10 border-info/30"
+        }`}>
+          <Info className={`h-4 w-4 ${unassignedIds.size === 0 ? "text-success" : "text-info"}`} />
+          <div className="text-sm">
+            {unassignedIds.size === 0
+              ? <span className="font-medium text-success">All cylinders confirmed — ready to order</span>
+              : <>
+                  <span className="font-medium">This system was imported from your existing lockchart.</span>{" "}
+                  Review each cylinder to confirm the product type and finish before placing an order.
+                </>}
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {confirmedCount} of {allCyls.length} cylinders confirmed
+            </div>
+          </div>
+          <div className="flex-1" />
+          {unassignedIds.size > 0 && (
+            <Button size="sm" variant="outline" onClick={() => setShowOnlyUnassigned((v) => !v)}>
+              {showOnlyUnassigned ? "Show all" : "Review cylinders"}
+            </Button>
+          )}
+          <Button size="sm" variant="ghost" onClick={() => { searchParams.delete("imported"); setSearchParams(searchParams); }}>
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
 
       {/* Print header */}
       <div className="print-only px-2 py-4">
@@ -293,6 +328,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 collapsed={collapsed}
                 errorIds={errorIds}
                 searchMatch={searchMatch}
+                highlightIds={showOnlyUnassigned ? unassignedIds : undefined}
                 onSelect={setSelectedId}
                 onToggle={toggleCollapse}
                 onAdd={handleAddChild}
@@ -390,7 +426,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
 /* ------------------------- Tree Row ------------------------- */
 
 function TreeRow({
-  node, depth, selectedId, collapsed, errorIds, searchMatch,
+  node, depth, selectedId, collapsed, errorIds, searchMatch, highlightIds,
   onSelect, onToggle, onAdd, onDelete, isRoot,
 }: {
   node: TNode; depth: number;
@@ -398,6 +434,7 @@ function TreeRow({
   collapsed: Set<string>;
   errorIds: Set<string>;
   searchMatch: Set<string>;
+  highlightIds?: Set<string>;
   onSelect: (id: string) => void;
   onToggle: (id: string) => void;
   onAdd: (id: string) => void;
@@ -409,6 +446,7 @@ function TreeRow({
   const isSelected = selectedId === node.id;
   const hasError = errorIds.has(node.id);
   const isMatch = searchMatch.has(node.id);
+  const isHighlighted = highlightIds?.has(node.id) ?? false;
   const hasChildren = node.children.length > 0;
   const canAdd = childTypeOf(node.type) !== null;
 
@@ -417,6 +455,7 @@ function TreeRow({
       <div
         onClick={() => onSelect(node.id)}
         className={`group row flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer transition-colors ${
+          isHighlighted ? "bg-primary/15 ring-1 ring-primary/40" :
           isSelected ? "bg-accent-light" : isMatch ? "bg-warning/10" : "hover:bg-muted/40"
         } ${hasError ? "ring-1 ring-destructive/40" : ""}`}
         style={{ paddingLeft: `${depth * 20 + 8}px` }}
@@ -485,6 +524,7 @@ function TreeRow({
           {node.children.map((c) => (
             <TreeRow key={c.id} node={c} depth={depth + 1}
               selectedId={selectedId} collapsed={collapsed} errorIds={errorIds} searchMatch={searchMatch}
+              highlightIds={highlightIds}
               onSelect={onSelect} onToggle={onToggle} onAdd={onAdd} onDelete={onDelete} />
           ))}
         </div>

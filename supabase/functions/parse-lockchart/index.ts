@@ -1,0 +1,114 @@
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  if (!ANTHROPIC_API_KEY) {
+    return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    const form = await req.formData();
+    const file = form.get("file");
+    if (!(file instanceof File)) {
+      return new Response(JSON.stringify({ error: "Missing file" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      return new Response(JSON.stringify({ error: "File too large — maximum 10MB" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    // Base64 encode in chunks to avoid call-stack overflow on large PDFs
+    let binary = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    const base64 = btoa(binary);
+
+    const prompt = `You are a master key system specialist. Extract the complete key hierarchy from this lockchart PDF and return it as a JSON object.
+
+Return ONLY valid JSON in this exact structure, no other text, no markdown fences:
+{
+  "system_name": "string",
+  "nodes": [
+    {
+      "level": "GMK|SMK|CK|CYL",
+      "label": "string",
+      "parent_label": "string or null for root",
+      "cylinder_type": "string or null",
+      "finish": "string or null",
+      "room_name": "string or null",
+      "key_ref": "string or null",
+      "key_qty": number or null
+    }
+  ]
+}
+
+Rules:
+- Every system has exactly one GMK (Grand Master Key) at the root
+- SMK = Sub Master Key, groups of doors
+- CK = Change Key, individual door group
+- CYL = Cylinder, physical hardware on a specific door
+- Extract ALL nodes you can find, including key quantities
+- For cylinder types, map to these codes where possible: EKZ-12, AZG, C-KDZ36K36, C-DZ36/36, C-KDZ36K41, C-DZ36/41, C-KDZ31K31, C-OKZ36K36, C-AZG
+- If you cannot determine a cylinder type, leave it null
+- Preserve the exact room/door names as written in the document`;
+
+    const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-5",
+        max_tokens: 8192,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } },
+            { type: "text", text: prompt },
+          ],
+        }],
+      }),
+    });
+
+    if (!anthropicRes.ok) {
+      const errText = await anthropicRes.text();
+      console.error("anthropic error", anthropicRes.status, errText);
+      return new Response(JSON.stringify({ error: `Anthropic API error (${anthropicRes.status})` }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await anthropicRes.json();
+    const text = result?.content?.[0]?.type === "text" ? result.content[0].text : "";
+    const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
+
+    try {
+      const parsed = JSON.parse(cleaned);
+      return new Response(JSON.stringify(parsed), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch {
+      return new Response(JSON.stringify({ error: "Could not parse lockchart — model did not return valid JSON", raw: text }), {
+        status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  } catch (e) {
+    console.error(e);
+    return new Response(JSON.stringify({ error: (e as Error).message }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
