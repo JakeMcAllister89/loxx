@@ -98,8 +98,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setName(data.name);
       savedNameRef.current = data.name;
       setReference(data.reference);
-      const t = (data.tree_data as unknown as TreeData) ?? emptyTree();
-      setTree(t?.root !== undefined ? t : emptyTree());
+      const raw = (data.tree_data as unknown as TreeData) ?? emptyTree();
+      const loaded = raw?.root !== undefined ? raw : emptyTree();
+      setTree(loaded.root ? assignNextDiffers(loaded) : loaded);
       setLoading(false);
     });
     supabase.from("products").select("id,code,name,cylinder_type,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
