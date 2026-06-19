@@ -43,7 +43,7 @@ export default function ImportPage() {
   const [source, setSource] = useState<"csv" | "pdf">("csv");
 
   useEffect(() => {
-    supabase.from("products").select("id,code,name").order("code").then(({ data }) => setProducts((data ?? []) as Product[]));
+    supabase.from("products").select("id,code,name").eq("is_active", true).order("code").then(({ data }) => setProducts((data ?? []) as Product[]));
   }, []);
 
   const goReview = (nodes: ParsedNode[], srcType: "csv" | "pdf", suggestedName?: string) => {
