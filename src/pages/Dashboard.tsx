@@ -1,10 +1,10 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { useAuth, useIsAdmin } from "@/lib/auth";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, Copy, ExternalLink, Upload } from "lucide-react";
+import { Plus, Copy, ExternalLink, Upload, Shield } from "lucide-react";
 import { logAction } from "@/lib/audit";
 
 interface Sys { id: string; name: string; reference: string | null; door_count: number; updated_at: string; }
