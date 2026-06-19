@@ -76,13 +76,13 @@ function CanvasNodeImpl(props: NodeProps) {
         {/* Type-specific footer */}
         {node.type === "GMK" && (
           <div className="text-[11px] text-muted-foreground mt-1.5">
-            {d.rootDoorCount ?? 0} door{(d.rootDoorCount ?? 0) !== 1 ? "s" : ""} in system
+            {d.rootDoorCount ?? 0} door{(d.rootDoorCount ?? 0) !== 1 ? "s" : ""} · {node.keys ?? 3} key{(node.keys ?? 3) !== 1 ? "s" : ""}
           </div>
         )}
 
         {node.type === "SMK" && (
           <div className="text-[11px] text-muted-foreground mt-1.5">
-            {d.childCount ?? 0} change key{(d.childCount ?? 0) !== 1 ? "s" : ""}
+            {d.childCount ?? 0} door group{(d.childCount ?? 0) !== 1 ? "s" : ""} · {node.keys ?? 2} key{(node.keys ?? 2) !== 1 ? "s" : ""}
           </div>
         )}
 
