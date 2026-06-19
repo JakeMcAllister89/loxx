@@ -103,7 +103,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setTree(loaded.root ? assignNextDiffers(loaded) : loaded);
       setLoading(false);
     });
-    supabase.from("products").select("id,code,name,cylinder_type,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
+    supabase.from("products").select("id,code,name,cylinder_type,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
   }, [systemId, navigate]);
 
   const mutate = (updater: (t: TreeData) => TreeData) => {
