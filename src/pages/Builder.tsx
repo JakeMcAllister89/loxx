@@ -105,18 +105,43 @@ function BuilderInner({ systemId }: { systemId: string }) {
       dirtyRef.current = true;
       setSelectedId(child.id);
       setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
+      logAction({ system_id: systemId, action: "node_added", node_type: child.type, node_label: child.label });
       return next;
     });
-  }, []);
+  }, [systemId]);
 
   const handleDelete = useCallback((nodeId: string) => {
-    setTree((prev) => { dirtyRef.current = true; return { ...prev, root: removeNode(prev.root, nodeId) }; });
+    setTree((prev) => {
+      const target = findNode(prev.root, nodeId);
+      if (target) logAction({ system_id: systemId, action: "node_deleted", node_type: target.type, node_label: target.label });
+      dirtyRef.current = true;
+      return { ...prev, root: removeNode(prev.root, nodeId) };
+    });
     setSelectedId((s) => (s === nodeId ? null : s));
-  }, []);
+  }, [systemId]);
 
   const patchSelected = (patch: Partial<TNode>) => {
     if (!selectedId) return;
-    mutate((t) => ({ ...t, root: updateNode(t.root, selectedId, patch) }));
+    setTree((prev) => {
+      const before = findNode(prev.root, selectedId);
+      const root = updateNode(prev.root, selectedId, patch);
+      dirtyRef.current = true;
+      if (before) {
+        if (patch.label !== undefined && patch.label !== before.label) {
+          logAction({ system_id: systemId, action: "node_renamed", node_type: before.type, node_label: patch.label, old_value: before.label, new_value: patch.label });
+        }
+        if (patch.cylinder_type !== undefined && patch.cylinder_type !== before.cylinder_type) {
+          logAction({ system_id: systemId, action: "cylinder_assigned", node_type: "CYL", node_label: before.label, old_value: before.cylinder_type ?? "", new_value: patch.cylinder_type ?? "" });
+        }
+        if (patch.finish !== undefined && patch.finish !== before.finish) {
+          logAction({ system_id: systemId, action: "cylinder_finish_changed", node_type: "CYL", node_label: before.label, old_value: before.finish ?? "", new_value: patch.finish ?? "" });
+        }
+        if (patch.keys !== undefined && patch.keys !== before.keys) {
+          logAction({ system_id: systemId, action: "keys_count_changed", node_type: "CK", node_label: before.label, old_value: String(before.keys ?? 1), new_value: String(patch.keys) });
+        }
+      }
+      return { ...prev, root };
+    });
   };
 
   const toggleCollapse = (id: string) => setCollapsed((c) => {
