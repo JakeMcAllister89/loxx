@@ -162,7 +162,7 @@ export default function QuoteDetail() {
 
         {/* The document */}
         <article className="bg-card border rounded-[10px] shadow-card p-10 print:shadow-none print:border-0">
-          <header className="flex items-start justify-between border-b pb-6">
+          <div className="flex items-start justify-between border-b pb-6">
             <div>
               <LoxxLogo />
               <div className="mt-3 text-sm text-muted-foreground whitespace-pre-line">{settings.address}</div>
@@ -176,7 +176,7 @@ export default function QuoteDetail() {
                 Valid until: {q.valid_until ? new Date(q.valid_until).toLocaleDateString("en-GB") : "—"}
               </div>
             </div>
-          </header>
+          </div>
 
           <section className="grid grid-cols-2 gap-8 mt-6">
             <div>
