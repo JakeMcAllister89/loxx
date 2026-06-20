@@ -209,13 +209,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
   };
   const addRoot = () => mutate((t) => ({ ...t, root: createGMK() }));
 
-  const handleAddChild = useCallback((parentId: string) => {
+  const handleAddChild = useCallback((parentId: string, childType?: NodeType) => {
     setTree((prev) => {
       const parent = findNode(prev.root, parentId);
       if (!parent) return prev;
-      const childT = childTypeOf(parent.type);
-      if (!childT) return prev;
-      const child = makeChild(parent.type, parent.children.length);
+      const valid = validChildTypes(parent.type);
+      if (valid.length === 0) return prev;
+      const desiredType: NodeType = childType && valid.includes(childType) ? childType : valid[0];
+      const sameTypeCount = parent.children.filter((c) => c.type === desiredType).length;
+      const child = makeChild(parent.type, sameTypeCount, desiredType);
       const root = addChild(prev.root, parentId, child);
       let next: TreeData = { ...prev, root };
       if (child.type === "CYL") next = assignNextDiffers(next);
