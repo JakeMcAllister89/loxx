@@ -519,12 +519,103 @@ export type Database = {
         }
         Relationships: []
       }
+      quotes: {
+        Row: {
+          company: string | null
+          converted_order_id: string | null
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_po_ref: string | null
+          delivery_address: Json | null
+          id: string
+          items: Json | null
+          notes: string | null
+          quote_number: string | null
+          sent_at: string | null
+          sent_to: string | null
+          status: string
+          subtotal: number | null
+          system_id: string | null
+          total: number | null
+          tree_snapshot: Json | null
+          updated_at: string
+          user_id: string
+          valid_until: string | null
+          vat: number | null
+        }
+        Insert: {
+          company?: string | null
+          converted_order_id?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_po_ref?: string | null
+          delivery_address?: Json | null
+          id?: string
+          items?: Json | null
+          notes?: string | null
+          quote_number?: string | null
+          sent_at?: string | null
+          sent_to?: string | null
+          status?: string
+          subtotal?: number | null
+          system_id?: string | null
+          total?: number | null
+          tree_snapshot?: Json | null
+          updated_at?: string
+          user_id: string
+          valid_until?: string | null
+          vat?: number | null
+        }
+        Update: {
+          company?: string | null
+          converted_order_id?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_po_ref?: string | null
+          delivery_address?: Json | null
+          id?: string
+          items?: Json | null
+          notes?: string | null
+          quote_number?: string | null
+          sent_at?: string | null
+          sent_to?: string | null
+          status?: string
+          subtotal?: number | null
+          system_id?: string | null
+          total?: number | null
+          tree_snapshot?: Json | null
+          updated_at?: string
+          user_id?: string
+          valid_until?: string | null
+          vat?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_converted_order_id_fkey"
+            columns: ["converted_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "key_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       assign_po_number: { Args: never; Returns: string }
+      assign_quote_number: { Args: never; Returns: string }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {

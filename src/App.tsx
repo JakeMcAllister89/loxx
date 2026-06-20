@@ -21,6 +21,9 @@ import CheckoutReturn from "./pages/CheckoutReturn";
 import ImportPage from "./pages/Import";
 import Admin from "./pages/Admin";
 import AdminProducts from "./pages/AdminProducts";
+import Quotes from "./pages/Quotes";
+import QuoteNew from "./pages/QuoteNew";
+import QuoteDetail from "./pages/QuoteDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +53,9 @@ const App = () => (
               <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
               <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+              <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
+              <Route path="/quotes/new" element={<ProtectedRoute><QuoteNew /></ProtectedRoute>} />
+              <Route path="/quotes/:id" element={<ProtectedRoute><QuoteDetail /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
