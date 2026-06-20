@@ -4,7 +4,7 @@ import {
   useReactFlow, Node, Edge, useNodesState, useEdgesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { TNode, TreeData, NodeType, countDoors } from "@/lib/keytree";
+import { TNode, TreeData, NodeType, countDoors, validChildTypes } from "@/lib/keytree";
 import { CanvasNode, NODE_WIDTH, NODE_HEIGHT } from "./CanvasNode";
 
 export interface CanvasProduct {
@@ -20,7 +20,7 @@ interface Props {
   highlightIds?: Set<string>;
   productsByCode: Map<string, CanvasProduct>;
   onSelect: (id: string) => void;
-  onAddChild: (parentId: string) => void;
+  onAddChild: (parentId: string, childType?: NodeType) => void;
   onPaneClick?: () => void;
   registerFitView?: (fn: () => void) => void;
 }
