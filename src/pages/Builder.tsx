@@ -23,7 +23,7 @@ import { BuilderCanvas, CanvasProduct } from "@/components/builder/BuilderCanvas
 import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
 import {
   TNode, TreeData, NodeType,
-  emptyTree, createGMK, makeChild, childTypeOf,
+  emptyTree, createGMK, makeChild, childTypeOf, validChildTypes,
   findNode, findParent, updateNode, addChild, removeNode,
   countDoors, assignNextDiffers, pathOf, validate, ValidationIssue,
   hasLegacyCK, flattenCK,
