@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { AuditRow, describeAction, actionIcon, actionColor, timeAgo } from "@/lib/audit";
+import { AuditRow, describeAction, actionIcon, actionColor, timeAgo, formatPreciseTimestamp } from "@/lib/audit";
 import { toast } from "sonner";
 
 export function ActivityTimeline({
@@ -57,23 +57,33 @@ export function ActivityTimeline({
         <div className="text-xs text-muted-foreground">No activity yet</div>
       ) : (
         <ol className="relative border-l border-border ml-2 space-y-3 mt-2">
-          {rows.map((r) => (
-            <li key={r.id} className="ml-4">
-              <span
-                className="absolute -left-[5px] h-2.5 w-2.5 rounded-full ring-2 ring-card"
-                style={{ background: actionColor(r.action) }}
-              />
-              <div className="flex items-start gap-2 text-sm">
-                <span aria-hidden>{actionIcon(r.action)}</span>
-                <div className="min-w-0">
-                  <div className="leading-tight">{describeAction(r)}</div>
-                  <div className="text-[11px] text-muted-foreground" title={new Date(r.created_at).toLocaleString("en-GB")}>
-                    {timeAgo(r.created_at)}
+          {rows.map((r) => {
+            const meta = (r.metadata ?? {}) as any;
+            const specParts = [meta.profile, meta.finish, meta.size].filter(Boolean).join(" · ");
+            return (
+              <li key={r.id} className="ml-4">
+                <span
+                  className="absolute -left-[5px] h-2.5 w-2.5 rounded-full ring-2 ring-card"
+                  style={{ background: actionColor(r.action) }}
+                />
+                <div className="flex items-start gap-2 text-sm">
+                  <span aria-hidden>{actionIcon(r.action)}</span>
+                  <div className="min-w-0">
+                    <div className="leading-tight">{describeAction(r)}</div>
+                    {r.action === "cylinder_configured" && specParts && (
+                      <div className="text-[11px] font-mono text-muted-foreground mt-0.5">{specParts}</div>
+                    )}
+                    <div
+                      className="text-[11px] text-muted-foreground mt-0.5"
+                      title={timeAgo(r.created_at)}
+                    >
+                      {r.user_name ?? "Unknown user"} · {formatPreciseTimestamp(r.created_at)}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ol>
       )}
       {showClear && systemId && rows.length > 0 && (
