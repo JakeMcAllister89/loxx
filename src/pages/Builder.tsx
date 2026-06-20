@@ -103,7 +103,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setTree(loaded.root ? assignNextDiffers(loaded) : loaded);
       setLoading(false);
     });
-    supabase.from("products").select("id,code,name,cylinder_type,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
+    supabase.from("products").select("id,code,name,cylinder_type,cylinder_profile,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as any));
   }, [systemId, navigate]);
 
   const mutate = (updater: (t: TreeData) => TreeData) => {
@@ -216,17 +216,40 @@ function BuilderInner({ systemId }: { systemId: string }) {
     const productByCode = new Map(products.map((p) => [p.code, p]));
     let lines = 0;
     let total = 0;
+    const sys = { system_id: systemId, system_name: name, system_reference: reference };
     const walk = (n: TNode) => {
       if (n.type === "CYL" && n.cylinder_type) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
         const differRef = `D${String(n.differ ?? 0).padStart(3, "0")}`;
-        addToCart({ kind: "cylinder", product_code: n.cylinder_type, cylinder_type: p?.cylinder_type, finish: n.finish ?? p?.finish ?? undefined, room_label: n.label, differ_ref: differRef, quantity: qty, unit_price: unit });
+        addToCart({
+          kind: "cylinder",
+          product_code: n.cylinder_type,
+          product_name: p?.name,
+          cylinder_type: p?.cylinder_type,
+          cylinder_profile: (p as any)?.cylinder_profile ?? undefined,
+          finish: n.finish ?? p?.finish ?? undefined,
+          size: p?.size ?? undefined,
+          image_url: p?.image_url ?? undefined,
+          room_label: n.label,
+          differ_ref: differRef,
+          quantity: qty,
+          unit_price: unit,
+          ...sys,
+        });
         lines++; total += unit * qty;
         const extra = n.extra_keys ?? 0;
         if (extra > 0) {
-          addToCart({ kind: "key", key_reference: `Extra keys — ${n.label} (${differRef})`, differ_ref: differRef, quantity: extra, unit_price: 12 });
+          addToCart({
+            kind: "key",
+            key_reference: `Extra keys — ${n.label} (${differRef})`,
+            room_label: n.label,
+            differ_ref: differRef,
+            quantity: extra,
+            unit_price: 12,
+            ...sys,
+          });
           lines++; total += 12 * extra;
         }
       }
@@ -234,7 +257,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
     };
     walk(tree.root);
     logAction({ system_id: systemId, action: "exported_to_cart", metadata: { line_count: lines, total_value: total } });
-    toast.success(`Added ${lines} line(s) to cart`);
+    toast.success(`Added ${lines} line(s) to basket`);
     navigate("/cart");
   };
 

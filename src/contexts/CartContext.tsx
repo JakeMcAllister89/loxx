@@ -2,14 +2,40 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 
 export interface CartLine {
   kind: "cylinder" | "key";
+  // Product info
   product_code?: string;
+  product_name?: string;
+  cylinder_type?: string;     // family e.g. "Double"
+  cylinder_profile?: string;  // e.g. "Euro"
+  finish?: string;
+  size?: string;
+  image_url?: string | null;
+  // Door / differ
   differ_ref?: string;
   room_label?: string;
-  cylinder_type?: string;
-  finish?: string;
+  // Key-only
   key_reference?: string;
+  // System grouping
+  system_id?: string | null;
+  system_name?: string | null;
+  system_reference?: string | null;
+  // Pricing
   quantity: number;
   unit_price: number;
+}
+
+export interface DeliveryAddress {
+  line1: string;
+  line2: string;
+  city: string;
+  county: string;
+  postcode: string;
+}
+
+interface OrderMeta {
+  customerPoRef: string;
+  notes: string;
+  delivery: DeliveryAddress;
 }
 
 interface CartCtx {
@@ -19,7 +45,11 @@ interface CartCtx {
   updateQty: (i: number, q: number) => void;
   clear: () => void;
   replace: (items: CartLine[]) => void;
+  meta: OrderMeta;
+  setMeta: (m: Partial<OrderMeta>) => void;
   subtotal: number;
+  cylindersSubtotal: number;
+  keysSubtotal: number;
   vat: number;
   total: number;
   count: number;
@@ -27,26 +57,44 @@ interface CartCtx {
 
 const Ctx = createContext<CartCtx | undefined>(undefined);
 const KEY = "loxx_cart_v1";
+const META_KEY = "loxx_cart_meta_v1";
+
+const blankMeta = (): OrderMeta => ({
+  customerPoRef: "",
+  notes: "",
+  delivery: { line1: "", line2: "", city: "", county: "", postcode: "" },
+});
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartLine[]>(() => {
     try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : []; } catch { return []; }
   });
+  const [meta, setMetaState] = useState<OrderMeta>(() => {
+    try { const s = localStorage.getItem(META_KEY); return s ? { ...blankMeta(), ...JSON.parse(s) } : blankMeta(); } catch { return blankMeta(); }
+  });
   useEffect(() => { localStorage.setItem(KEY, JSON.stringify(items)); }, [items]);
+  useEffect(() => { localStorage.setItem(META_KEY, JSON.stringify(meta)); }, [meta]);
 
   const add = (l: CartLine) => setItems((p) => [...p, l]);
   const remove = (i: number) => setItems((p) => p.filter((_, idx) => idx !== i));
   const updateQty = (i: number, q: number) =>
     setItems((p) => p.map((it, idx) => (idx === i ? { ...it, quantity: Math.max(1, q) } : it)));
-  const clear = () => setItems([]);
+  const clear = () => { setItems([]); setMetaState(blankMeta()); };
   const replace = (next: CartLine[]) => setItems(next);
+  const setMeta = (m: Partial<OrderMeta>) => setMetaState((prev) => ({ ...prev, ...m, delivery: { ...prev.delivery, ...(m.delivery ?? {}) } }));
 
-  const subtotal = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+  const cylindersSubtotal = items.filter(i => i.kind === "cylinder").reduce((s, i) => s + i.quantity * i.unit_price, 0);
+  const keysSubtotal = items.filter(i => i.kind === "key").reduce((s, i) => s + i.quantity * i.unit_price, 0);
+  const subtotal = cylindersSubtotal + keysSubtotal;
   const vat = +(subtotal * 0.2).toFixed(2);
   const total = +(subtotal + vat).toFixed(2);
   const count = items.reduce((s, i) => s + i.quantity, 0);
 
-  return <Ctx.Provider value={{ items, add, remove, updateQty, clear, replace, subtotal, vat, total, count }}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={{ items, add, remove, updateQty, clear, replace, meta, setMeta, subtotal, cylindersSubtotal, keysSubtotal, vat, total, count }}>
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export const useCart = () => {
