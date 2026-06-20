@@ -968,11 +968,6 @@ function DetailPanel({
             />
           </div>
         )}
-              placeholder={locationPlaceholder}
-            />
-            <p className="text-[11px] text-muted-foreground mt-1">Shown as a sub-label on the canvas node</p>
-          </div>
-        )}
 
         {(node.type === "GMK" || node.type === "MK" || node.type === "SMK") && (
           <div>
