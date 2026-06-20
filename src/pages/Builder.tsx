@@ -354,10 +354,13 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   const exportToCart = () => {
     if (!tree.root) { toast.error("Nothing to export"); return; }
+    // Flush pending audits so room name / cylinder config is captured before export
+    if (labelAuditRef.current) flushLabelAudit();
+    if (cylConfigRef.current) flushCylConfig();
     const errs = validate(tree).filter((i) => i.level === "error");
     if (errs.length) { toast.error("Fix validation errors before exporting"); setIssues(validate(tree)); setValidateOpen(true); return; }
     const productByCode = new Map(products.map((p) => [p.code, p]));
-    let lines = 0;
+    const lines: import("@/contexts/CartContext").CartLine[] = [];
     let total = 0;
     const sys = { system_id: systemId, system_name: name, system_reference: reference };
     const walk = (n: TNode) => {
@@ -366,7 +369,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
         const differRef = `D${String(n.differ ?? 0).padStart(3, "0")}`;
-        addToCart({
+        lines.push({
           kind: "cylinder",
           product_code: n.cylinder_type,
           product_name: p?.name,
@@ -381,10 +384,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
           unit_price: unit,
           ...sys,
         });
-        lines++; total += unit * qty;
+        total += unit * qty;
         const extra = n.extra_keys ?? 0;
         if (extra > 0) {
-          addToCart({
+          lines.push({
             kind: "key",
             key_reference: `Extra keys — ${n.label} (${differRef})`,
             room_label: n.label,
@@ -393,15 +396,16 @@ function BuilderInner({ systemId }: { systemId: string }) {
             unit_price: 12,
             ...sys,
           });
-          lines++; total += 12 * extra;
+          total += 12 * extra;
         }
       }
       n.children.forEach(walk);
     };
     walk(tree.root);
-    logAction({ system_id: systemId, action: "exported_to_cart", metadata: { line_count: lines, total_value: total } });
-    toast.success(`Added ${lines} line(s) to basket`);
-    navigate("/cart");
+    replaceBySystem(systemId, lines);
+    logAction({ system_id: systemId, action: "exported_to_cart", metadata: { line_count: lines.length, total_value: total } });
+    setExportedAt(Date.now());
+    toast.success(`Basket updated — ${lines.length} item${lines.length !== 1 ? "s" : ""} from ${name}`);
   };
 
 
