@@ -16,8 +16,15 @@ export function logAction(entry: AuditEntry): void {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", user.id)
+        .maybeSingle();
+      const userName = (profile as any)?.name || user.email || "Unknown user";
       await (supabase.from("audit_log" as any) as any).insert({
         user_id: user.id,
+        user_name: userName,
         system_id: entry.system_id ?? null,
         action: entry.action,
         node_type: entry.node_type ?? null,
@@ -35,6 +42,7 @@ export function logAction(entry: AuditEntry): void {
 export interface AuditRow {
   id: string;
   user_id: string;
+  user_name: string | null;
   system_id: string | null;
   action: string;
   node_type: string | null;
@@ -55,29 +63,53 @@ export function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB");
 }
 
+/** "14 Jun 2025 at 09:47:23" */
+export function formatPreciseTimestamp(iso: string): string {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+  return `${date} at ${time}`;
+}
+
+/** "14 Jun 2025 09:47:23" (table column) */
+export function formatTableTimestamp(iso: string): string {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+  return `${date} ${time}`;
+}
+
 export function describeAction(r: AuditRow): string {
-  const meta = r.metadata as any;
+  const meta = (r.metadata ?? {}) as any;
   switch (r.action) {
-    case "system_created":     return `Created system "${r.node_label ?? ""}"`;
-    case "system_imported":    return `Imported system "${r.node_label ?? ""}" from ${meta?.source ?? "file"} — ${meta?.node_count ?? 0} nodes`;
-    case "system_renamed":     return `Renamed system "${r.old_value}" → "${r.new_value}"`;
-    case "system_saved":       return `System saved${meta?.door_count != null ? ` (${meta.door_count} doors)` : ""}`;
-    case "node_added":         return `Added ${r.node_type} node — ${r.node_label}`;
-    case "node_deleted":       return `Deleted ${r.node_type} node — ${r.node_label}`;
-    case "node_renamed":       return `Renamed to "${r.new_value}"`;
-    case "cylinder_configured":return `Configured ${meta?.differ_ref ?? r.node_label} — ${meta?.room_name ?? r.node_label}${meta?.product ? ` (${meta.product})` : ""}`;
-    case "cylinder_assigned":  return `Assigned ${r.new_value} to ${r.node_label}`;
-    case "cylinder_finish_changed": return `Finish on ${r.node_label}: "${r.old_value ?? "—"}" → "${r.new_value ?? "—"}"`;
-    case "keys_count_changed": return `Updated key copies: ${r.old_value} → ${r.new_value} for ${r.node_label}`;
-    case "validation_run":     return `Validation run — ${meta?.errors ?? 0} errors, ${meta?.warnings ?? 0} warnings`;
-    case "exported_to_cart":   return `Exported to basket — ${meta?.line_count ?? 0} items`;
-    case "order_placed":       return `Order placed — £${Number(meta?.total ?? 0).toFixed(2)}`;
-    default:                    return r.action;
+    case "system_created":     return `System created`;
+    case "system_imported":    return `System imported from ${meta.source ?? "file"} — ${meta.node_count ?? 0} nodes${meta.cylinder_count != null ? `, ${meta.cylinder_count} cylinders` : ""}`;
+    case "system_renamed":     return `System renamed from "${r.old_value ?? ""}" to "${r.new_value ?? ""}"`;
+    case "system_saved":       return `System saved${meta.door_count != null ? ` — ${meta.door_count} doors` : ""}`;
+    case "node_added": {
+      if (r.node_type === "GMK") return `Grand master key node created`;
+      if (r.node_type === "SMK") return `Sub master added: ${r.node_label ?? ""}`;
+      if (r.node_type === "CK")  return `Door group added: ${r.node_label ?? ""}`;
+      return `Added ${r.node_type} node: ${r.node_label ?? ""}`;
+    }
+    case "node_deleted":       return `Deleted ${r.node_type} node: ${r.node_label ?? ""}`;
+    case "node_renamed":       return `Renamed "${r.old_value ?? ""}" → "${r.new_value ?? ""}"`;
+    case "cylinder_configured": {
+      const parts = [meta.profile, meta.finish, meta.size].filter(Boolean).join(" · ");
+      return `Configured ${meta.differ_ref ?? r.node_label ?? ""} — ${meta.room_name ?? r.node_label ?? ""}${parts ? ` · ${parts}` : ""}${meta.product ? ` (${meta.product})` : ""}`;
+    }
+    case "cylinder_assigned":         return `Assigned ${r.new_value} to ${r.node_label}`;
+    case "cylinder_finish_changed":   return `Changed finish on ${r.node_label}: ${r.old_value ?? "—"} → ${r.new_value ?? "—"}`;
+    case "keys_count_changed":        return `Key copies updated for ${r.node_label}: ${r.old_value} → ${r.new_value}`;
+    case "validation_run":            return `Validation run — ${meta.errors ?? 0} error(s), ${meta.warnings ?? 0} warning(s)`;
+    case "exported_to_cart":          return `Exported to basket — ${meta.line_count ?? 0} lines${meta.cylinder_count != null ? `, ${meta.cylinder_count} cylinders` : ""}`;
+    case "order_placed":              return `Order placed — £${Number(meta.total ?? 0).toFixed(2)}`;
+    default:                          return r.action;
   }
 }
 
 export function actionIcon(action: string): string {
-  if (action.startsWith("node_") || action === "cylinder_assigned" || action === "cylinder_finish_changed" || action === "keys_count_changed") return "🔑";
+  if (action.startsWith("node_") || action === "cylinder_assigned" || action === "cylinder_finish_changed" || action === "keys_count_changed" || action === "cylinder_configured") return "🔑";
   if (action === "system_saved" || action === "system_created" || action === "system_renamed" || action === "system_imported") return "💾";
   if (action === "validation_run") return "✅";
   if (action === "exported_to_cart" || action === "order_placed") return "🛒";
