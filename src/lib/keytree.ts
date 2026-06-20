@@ -4,6 +4,7 @@ export interface TNode {
   id: string;
   type: NodeType;
   label: string;
+  location?: string;          // MK/SMK only — optional reference e.g. "Block B", "Floors 1-3"
   differ?: number;            // CYL only
   cylinder_type?: string;     // CYL only — product code
   finish?: string;            // CYL only
@@ -30,24 +31,31 @@ export function createGMK(label = "Grand Master"): TNode {
   return { id: newId(), type: "GMK", label, keys: 3, children: [] };
 }
 
-export function makeChild(parentType: NodeType, index: number): TNode {
-  if (parentType === "GMK") {
-    return { id: newId(), type: "MK", label: `Master Key ${ALPHABET[index] ?? index + 1}`, keys: 2, children: [] };
+/**
+ * Valid child types for a given parent. Cylinders may be attached at any
+ * non-leaf level (e.g. a shared estate gate keyed to the GMK).
+ */
+export function validChildTypes(parentType: NodeType): NodeType[] {
+  if (parentType === "GMK") return ["MK", "CYL"];
+  if (parentType === "MK")  return ["SMK", "CYL"];
+  if (parentType === "SMK") return ["CYL"];
+  return [];
+}
+
+export function makeChild(parentType: NodeType, index: number, childType?: NodeType): TNode {
+  const t: NodeType = childType ?? (validChildTypes(parentType)[0] ?? "CYL");
+  if (t === "MK") {
+    return { id: newId(), type: "MK", label: `Building ${ALPHABET[index] ?? index + 1}`, keys: 2, children: [] };
   }
-  if (parentType === "MK") {
-    return { id: newId(), type: "SMK", label: `Sub-master ${ALPHABET[index] ?? index + 1}`, keys: 2, children: [] };
-  }
-  if (parentType === "SMK") {
-    return { id: newId(), type: "CYL", label: `Door ${index + 1}`, children: [] };
+  if (t === "SMK") {
+    return { id: newId(), type: "SMK", label: `Zone ${ALPHABET[index] ?? index + 1}`, keys: 2, children: [] };
   }
   return { id: newId(), type: "CYL", label: `Door ${index + 1}`, children: [] };
 }
 
+/** Primary (first) child type — kept for backwards compatibility. */
 export function childTypeOf(t: NodeType): NodeType | null {
-  if (t === "GMK") return "MK";
-  if (t === "MK") return "SMK";
-  if (t === "SMK") return "CYL";
-  return null;
+  return validChildTypes(t)[0] ?? null;
 }
 
 /** Immutable traversal helpers */
@@ -210,11 +218,14 @@ export function validate(tree: TreeData): ValidationIssue[] {
       }
     });
 
-    if (n.type === "MK" && n.children.length === 0) {
-      out.push({ level: "warning", nodeId: n.id, message: `Master key "${n.label}" has no sub-masters` });
+    if (n.type === "GMK" && n.children.length === 0) {
+      out.push({ level: "warning", nodeId: n.id, message: `Grand master has no keys or cylinders` });
     }
-    if (n.type === "SMK" && n.children.length === 0) {
-      out.push({ level: "warning", nodeId: n.id, message: `Sub-master "${n.label}" has no cylinders` });
+    if (n.type === "MK" && n.children.length === 0) {
+      out.push({ level: "warning", nodeId: n.id, message: `Master key "${n.label}" has no zones or cylinders assigned` });
+    }
+    if (n.type === "SMK" && !n.children.some((c) => c.type === "CYL")) {
+      out.push({ level: "warning", nodeId: n.id, message: `Sub-master "${n.label}" has no cylinders assigned` });
     }
     if (n.type === "CYL") {
       hasCyl = true;

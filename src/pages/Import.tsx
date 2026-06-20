@@ -185,6 +185,7 @@ function CsvCard({ onParsed }: { onParsed: (rows: ParsedNode[]) => void }) {
         const rows: ParsedNode[] = res.data.map((r) => ({
           level: (r.level ?? "").trim() as NodeType,
           label: (r.label ?? "").trim(),
+          location: (r.location ?? "").trim() || null,
           parent_label: (r.parent_label ?? "").trim() || null,
           cylinder_type: (r.cylinder_type ?? "").trim() || null,
           finish: (r.finish ?? "").trim() || null,
@@ -254,6 +255,7 @@ function PdfCard({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: str
       const nodes: ParsedNode[] = (data?.nodes ?? []).map((n: any) => ({
         level: (n.level ?? "").toUpperCase() as NodeType,
         label: n.label ?? "",
+        location: n.location ?? null,
         parent_label: n.parent_label ?? null,
         cylinder_type: n.cylinder_type ?? null,
         finish: n.finish ?? null,

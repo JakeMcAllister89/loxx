@@ -3,6 +3,7 @@ import { TreeData, TNode, NodeType, newId, assignNextDiffers } from "./keytree";
 export interface ParsedNode {
   level: NodeType;
   label: string;
+  location?: string | null;
   parent_label?: string | null;
   cylinder_type?: string | null;
   finish?: string | null;
@@ -91,6 +92,9 @@ export function buildTreeFromParsed(nodes: ParsedNode[]): BuildResult {
       label,
       children: [],
     };
+    if ((r.level === "MK" || r.level === "SMK") && r.location) {
+      node.location = r.location;
+    }
     if (r.level === "CYL") {
       if (r.cylinder_type) node.cylinder_type = r.cylinder_type;
       if (r.finish) node.finish = r.finish;
@@ -128,14 +132,14 @@ export function normalizeCylinderCode(raw: string, knownCodes: string[]): { matc
   return { matched: partial ?? null, original: raw };
 }
 
-export const CSV_TEMPLATE = `level,label,parent_label,cylinder_type,finish,room_name,key_ref,key_qty
-GMK,Grand Master Key,,,,,GMK,10
-MK,Building 1,Grand Master Key,,,,MK-B1,4
-SMK,Ground Floor Offices,Building 1,,,,SMK-GF,2
-CYL,,Ground Floor Offices,EKZ-12,N.P,Room 101,,
-CYL,,Ground Floor Offices,EKZ-12,N.P,Room 102,,
-SMK,First Floor,Building 1,,,,SMK-FF,2
-CYL,,First Floor,C-KDZ36K36,N.P,Server Room,,
+export const CSV_TEMPLATE = `level,label,location,parent_label,cylinder_type,finish,room_name,key_ref,key_qty
+GMK,Grand Master Key,,,,,,GMK,10
+MK,Main Building,Block A,Grand Master Key,,,,MK-A,4
+SMK,Ground Floor,Rooms 101-120,Main Building,,,,SMK-GF,2
+CYL,,,Ground Floor,EKZ-12,N.P,Room 101,,
+CYL,,,Ground Floor,EKZ-12,N.P,Room 102,,
+SMK,First Floor,Rooms 201-240,Main Building,,,,SMK-FF,2
+CYL,,,First Floor,C-KDZ36K36,N.P,Server Room,,
 `;
 
 export function downloadCsvTemplate() {
