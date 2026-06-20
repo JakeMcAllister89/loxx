@@ -23,6 +23,7 @@ export interface AdminProduct {
   name: string;
   code: string;
   cylinder_type: string;
+  cylinder_profile: string | null;
   pin_count: number;
   finish: string;
   size: string;
@@ -35,10 +36,10 @@ export interface AdminProduct {
   is_active: boolean;
 }
 
-const TYPES = ["Single", "Double", "Oval", "Thumbturn", "Mortice"];
+interface CylinderType { id: string; name: string; sort_order: number; is_active: boolean; }
 
-const blank = (): AdminProduct => ({
-  name: "", code: "", cylinder_type: "Double", pin_count: 6, finish: "Satin Nickel",
+const blank = (defaultType = "Double"): AdminProduct => ({
+  name: "", code: "", cylinder_type: defaultType, cylinder_profile: "Euro", pin_count: 6, finish: "Satin Nickel",
   size: "35/35", price_gbp: 0, cost_price: 0, description: "", bs_en_1303: true,
   security_rating: null, image_url: null, is_active: true,
 });
@@ -56,6 +57,7 @@ function calcMargin(cost: number | null, sell: number) {
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [types, setTypes] = useState<CylinderType[]>([]);
   const [sortKey, setSortKey] = useState<keyof AdminProduct>("cylinder_type");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -67,7 +69,11 @@ export default function AdminProducts() {
     const { data } = await supabase.from("products").select("*").order("cylinder_type").order("price_gbp");
     setProducts((data ?? []) as any);
   };
-  useEffect(() => { load(); }, []);
+  const loadTypes = async () => {
+    const { data } = await supabase.from("cylinder_types").select("*").eq("is_active", true).order("sort_order");
+    setTypes((data ?? []) as any);
+  };
+  useEffect(() => { load(); loadTypes(); }, []);
 
   const sorted = useMemo(() => {
     const arr = [...products];
@@ -85,7 +91,7 @@ export default function AdminProducts() {
     else { setSortKey(k); setSortDir("asc"); }
   };
 
-  const openNew = () => { setEditing(blank()); setDrawerOpen(true); };
+  const openNew = () => { setEditing(blank(types[0]?.name ?? "Double")); setDrawerOpen(true); };
   const openEdit = (p: AdminProduct) => { setEditing({ ...p }); setDrawerOpen(true); };
 
   const confirmDelete = async () => {
@@ -120,6 +126,7 @@ export default function AdminProducts() {
                 <th className="px-3 py-2 w-14"></th>
                 {([
                   ["name","Name"],["code","Code"],["cylinder_type","Type"],["finish","Finish"],["size","Size"],
+                  ["cylinder_profile","Profile"],
                   ["cost_price","Cost"],["price_gbp","Sell"],
                 ] as [keyof AdminProduct, string][]).map(([k,l]) => (
                   <th key={k} className="px-3 py-2 text-left">
@@ -148,6 +155,7 @@ export default function AdminProducts() {
                     <td className="px-3 py-2"><Badge variant="outline">{p.cylinder_type}</Badge></td>
                     <td className="px-3 py-2">{p.finish}</td>
                     <td className="px-3 py-2 font-mono text-xs">{p.size}</td>
+                    <td className="px-3 py-2 text-xs">{p.cylinder_profile ?? <span className="text-muted-foreground">—</span>}</td>
                     <td className="px-3 py-2 font-mono text-green-700">£{Number(p.cost_price ?? 0).toFixed(2)}</td>
                     <td className="px-3 py-2 font-mono font-semibold">£{Number(p.price_gbp).toFixed(2)}</td>
                     <td className={`px-3 py-2 font-mono ${m == null ? "text-muted-foreground" : marginColor(m)}`}>{m == null ? "—" : `${m.toFixed(1)}%`}</td>
@@ -160,17 +168,20 @@ export default function AdminProducts() {
                 );
               })}
               {sorted.length === 0 && (
-                <tr><td colSpan={11} className="text-center text-muted-foreground py-10">No products yet</td></tr>
+                <tr><td colSpan={12} className="text-center text-muted-foreground py-10">No products yet</td></tr>
               )}
             </tbody>
           </table>
         </div>
+
+        <CylinderTypesSection types={types} reload={loadTypes} products={products} />
       </div>
 
       <ProductDrawer
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         product={editing}
+        types={types}
         onSaved={() => { setDrawerOpen(false); load(); }}
       />
 
@@ -194,10 +205,10 @@ export default function AdminProducts() {
   );
 }
 
-function ProductDrawer({ open, onOpenChange, product, onSaved }: {
-  open: boolean; onOpenChange: (b: boolean) => void; product: AdminProduct | null; onSaved: () => void;
+function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
+  open: boolean; onOpenChange: (b: boolean) => void; product: AdminProduct | null; types: CylinderType[]; onSaved: () => void;
 }) {
-  const [p, setP] = useState<AdminProduct>(product ?? blank());
+  const [p, setP] = useState<AdminProduct>(product ?? blank(types[0]?.name ?? "Double"));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -227,7 +238,8 @@ function ProductDrawer({ open, onOpenChange, product, onSaved }: {
     if (!p.name || !p.code) { toast.error("Name and code required"); return; }
     setSaving(true);
     const payload: any = {
-      name: p.name, code: p.code, cylinder_type: p.cylinder_type, pin_count: p.pin_count,
+      name: p.name, code: p.code, cylinder_type: p.cylinder_type, cylinder_profile: p.cylinder_profile,
+      pin_count: p.pin_count,
       finish: p.finish, size: p.size, price_gbp: p.price_gbp, cost_price: p.cost_price,
       description: p.description, bs_en_1303: p.bs_en_1303, security_rating: p.security_rating,
       image_url: p.image_url, is_active: p.is_active,
@@ -241,7 +253,7 @@ function ProductDrawer({ open, onOpenChange, product, onSaved }: {
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Product saved");
-    if (addAnother) { setP(blank()); return; }
+    if (addAnother) { setP(blank(types[0]?.name ?? "Double")); return; }
     onSaved();
   };
 
@@ -268,7 +280,7 @@ function ProductDrawer({ open, onOpenChange, product, onSaved }: {
                 <Label>Cylinder type</Label>
                 <Select value={p.cylinder_type} onValueChange={v => upd("cylinder_type", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  <SelectContent>{types.map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
@@ -279,7 +291,11 @@ function ProductDrawer({ open, onOpenChange, product, onSaved }: {
                 </Select>
               </div>
               <div><Label>Size</Label><Input placeholder="e.g. 35/35" value={p.size} onChange={e => upd("size", e.target.value)} /></div>
-              <div><Label>Finish</Label><Input value={p.finish} onChange={e => upd("finish", e.target.value)} /></div>
+              <div>
+                <Label>Cylinder profile</Label>
+                <Input placeholder="e.g. Euro, Oval, Rim, Mortice" value={p.cylinder_profile ?? ""} onChange={e => upd("cylinder_profile", e.target.value || null)} />
+              </div>
+              <div className="col-span-2"><Label>Finish</Label><Input value={p.finish} onChange={e => upd("finish", e.target.value)} /></div>
             </div>
           </section>
 
