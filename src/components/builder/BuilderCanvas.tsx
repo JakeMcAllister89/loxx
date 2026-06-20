@@ -73,7 +73,7 @@ function layout(root: TNode): { laid: Laid[]; width: number; height: number } {
   return { laid, width: maxX, height: maxY };
 }
 
-function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, registerFitView }: Props) {
+function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, onPaneClick, registerFitView }: Props) {
   const { fitView, setCenter } = useReactFlow();
   const lastNodeCount = useRef(0);
 
