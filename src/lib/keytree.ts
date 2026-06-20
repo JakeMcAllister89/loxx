@@ -218,11 +218,14 @@ export function validate(tree: TreeData): ValidationIssue[] {
       }
     });
 
-    if (n.type === "MK" && n.children.length === 0) {
-      out.push({ level: "warning", nodeId: n.id, message: `Master key "${n.label}" has no sub-masters` });
+    if (n.type === "GMK" && n.children.length === 0) {
+      out.push({ level: "warning", nodeId: n.id, message: `Grand master has no keys or cylinders` });
     }
-    if (n.type === "SMK" && n.children.length === 0) {
-      out.push({ level: "warning", nodeId: n.id, message: `Sub-master "${n.label}" has no cylinders` });
+    if (n.type === "MK" && n.children.length === 0) {
+      out.push({ level: "warning", nodeId: n.id, message: `Master key "${n.label}" has no zones or cylinders assigned` });
+    }
+    if (n.type === "SMK" && !n.children.some((c) => c.type === "CYL")) {
+      out.push({ level: "warning", nodeId: n.id, message: `Sub-master "${n.label}" has no cylinders assigned` });
     }
     if (n.type === "CYL") {
       hasCyl = true;
