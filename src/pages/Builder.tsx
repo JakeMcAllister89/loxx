@@ -816,16 +816,45 @@ function Legend({ type }: { type: NodeType }) {
 }
 
 function DetailPanel({
-  node, parent, trail, products, onPatch, onAddChild, onDelete, canAddChild, isRoot, onClose,
+  node, parent, trail, products, onPatch, addOptions, onAddChildType, onDelete, isRoot, onClose,
 }: {
   node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
-  onAddChild: () => void; onDelete: () => void;
-  canAddChild: boolean; isRoot: boolean;
+  addOptions: NodeType[];
+  onAddChildType: (t: NodeType) => void;
+  onDelete: () => void;
+  isRoot: boolean;
   onClose: () => void;
 }) {
   const meta = TYPE_META[node.type];
   const isCyl = node.type === "CYL";
+  const isMk = node.type === "MK";
+  const isSmk = node.type === "SMK";
+
+  const nameLabel = isCyl
+    ? "Room / door name"
+    : isMk
+      ? "Building / location name"
+      : isSmk
+        ? "Zone / area name"
+        : "Label";
+  const namePlaceholder = isCyl
+    ? "e.g. Director's Office"
+    : isMk
+      ? "e.g. Main Building, North Campus, Tower Block, Building A"
+      : isSmk
+        ? "e.g. Ground Floor, Reception, Management Suite, IT Department, Car Park"
+        : "";
+  const locationLabel = isMk ? "Reference or zone code (optional)" : "Reference or floor code (optional)";
+  const locationPlaceholder = isMk
+    ? "e.g. Block B, Zone 2, Plot 14, MK-1"
+    : "e.g. Floor 1, Rooms 101–140, Wing C, Area 3";
+
+  const addButtonLabel = (t: NodeType) =>
+    t === "MK" ? "Add master key"
+      : t === "SMK" ? "Add sub-master"
+      : t === "CYL" ? "Add cylinder"
+      : "Add child";
 
   return (
     <div className="p-5">
@@ -860,16 +889,29 @@ function DetailPanel({
 
       <div className="mt-5 space-y-4">
         <div>
-          <Label className="text-xs">{isCyl ? "Room / door name" : "Label"}</Label>
+          <Label className="text-xs">{nameLabel}</Label>
           <Input
             value={node.label}
             onChange={(e) => onPatch({ label: e.target.value })}
-            placeholder={isCyl ? "e.g. Director's Office" : ""}
+            onFocus={(e) => { if (isMk || isSmk) e.currentTarget.select(); }}
+            placeholder={namePlaceholder}
             className={isCyl ? "text-base font-medium" : ""}
           />
         </div>
 
-        {(node.type === "GMK" || node.type === "SMK") && (
+        {(isMk || isSmk) && (
+          <div>
+            <Label className="text-xs">{locationLabel}</Label>
+            <Input
+              value={node.location ?? ""}
+              onChange={(e) => onPatch({ location: e.target.value })}
+              placeholder={locationPlaceholder}
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">Shown as a sub-label on the canvas node</p>
+          </div>
+        )}
+
+        {(node.type === "GMK" || node.type === "MK" || node.type === "SMK") && (
           <div>
             <Label className="text-xs">Keys issued</Label>
             <Input
@@ -877,7 +919,7 @@ function DetailPanel({
               value={node.keys ?? (node.type === "GMK" ? 3 : 2)}
               onChange={(e) => onPatch({ keys: Math.max(1, Number(e.target.value) || 1) })}
             />
-            <p className="text-[11px] text-muted-foreground mt-1">How many copies of this master key are required</p>
+            <p className="text-[11px] text-muted-foreground mt-1">How many copies of this key are required</p>
           </div>
         )}
 
@@ -888,12 +930,17 @@ function DetailPanel({
 
 
         <div className="pt-3 border-t flex flex-col gap-2">
-          {canAddChild && (
-            <Button variant="outline" onClick={onAddChild}>
-              <Plus className="h-4 w-4" /> Add {CHILD_LABEL[node.type]}
+          {addOptions.map((t, idx) => (
+            <Button
+              key={t}
+              variant={idx === 0 ? "default" : "outline"}
+              onClick={() => onAddChildType(t)}
+              className={idx === 0 ? "bg-primary hover:bg-primary/90" : ""}
+            >
+              <Plus className="h-4 w-4" /> {addButtonLabel(t)}
             </Button>
-          )}
-          <Button onClick={onClose} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full">
+          ))}
+          <Button onClick={onClose} variant="outline" className="w-full">
             <Check className="h-4 w-4" /> Done
           </Button>
           {!isRoot && (
@@ -912,6 +959,7 @@ function DetailPanel({
                 <li key={c.id} className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: TYPE_META[c.type].color }} />
                   <span className="truncate">{c.label}</span>
+                  {c.location && <span className="text-[11px] text-muted-foreground font-mono">· {c.location}</span>}
                 </li>
               ))}
             </ul>
