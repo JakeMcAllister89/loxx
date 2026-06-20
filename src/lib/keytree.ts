@@ -42,13 +42,17 @@ export function validChildTypes(parentType: NodeType): NodeType[] {
   return [];
 }
 
-export function makeChild(parentType: NodeType, index: number, childType?: NodeType): TNode {
+export function makeChild(parentType: NodeType, index: number, childType?: NodeType, parentLabel?: string): TNode {
   const t: NodeType = childType ?? (validChildTypes(parentType)[0] ?? "CYL");
   if (t === "MK") {
-    return { id: newId(), type: "MK", label: `Building ${ALPHABET[index] ?? index + 1}`, keys: 2, children: [] };
+    const letter = ALPHABET[index] ?? String(index + 1);
+    return { id: newId(), type: "MK", label: `MK-${letter}`, keys: 2, children: [] };
   }
   if (t === "SMK") {
-    return { id: newId(), type: "SMK", label: `Zone ${ALPHABET[index] ?? index + 1}`, keys: 2, children: [] };
+    const parentLetter = parentLabel?.startsWith("MK-")
+      ? parentLabel.slice(3)
+      : ALPHABET[0];
+    return { id: newId(), type: "SMK", label: `SMK-${parentLetter}${index + 1}`, keys: 2, children: [] };
   }
   return { id: newId(), type: "CYL", label: `Door ${index + 1}`, children: [] };
 }
