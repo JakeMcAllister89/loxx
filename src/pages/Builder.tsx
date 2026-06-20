@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
-  Check, RotateCw, FileText,
+  Check, RotateCw, FileText, RefreshCw, ArrowRight,
 } from "lucide-react";
 import { BuilderCanvas, CanvasProduct } from "@/components/builder/BuilderCanvas";
 import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
@@ -72,10 +72,12 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const imported = searchParams.get("imported") === "1";
   const [showOnlyUnassigned, setShowOnlyUnassigned] = useState(false);
-  const { add: addToCart } = useCart();
+  const { add: addToCart, replaceBySystem } = useCart();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "pending" | "saving" | "saved" | "error">("idle");
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [exportedAt, setExportedAt] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [reference, setReference] = useState<string | null>(null);
   const [tree, setTree] = useState<TreeData>(emptyTree());
@@ -88,6 +90,70 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
+
+  // Debounced audit refs
+  const labelAuditRef = useRef<{
+    nodeId: string;
+    original: string;
+    nodeType: string;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
+  const cylConfigRef = useRef<{
+    nodeId: string;
+    originalLabel: string;
+  } | null>(null);
+
+  const flushLabelAudit = useCallback(() => {
+    const p = labelAuditRef.current;
+    if (!p) return;
+    clearTimeout(p.timer);
+    labelAuditRef.current = null;
+    // Read latest label from tree via state setter trick
+    setTree((cur) => {
+      const n = findNode(cur.root, p.nodeId);
+      if (n && n.label !== p.original) {
+        logAction({
+          system_id: systemId,
+          action: "node_renamed",
+          node_type: p.nodeType,
+          node_label: n.label,
+          old_value: p.original,
+          new_value: n.label,
+        });
+      }
+      return cur;
+    });
+  }, [systemId]);
+
+  const flushCylConfig = useCallback(() => {
+    const c = cylConfigRef.current;
+    if (!c) return;
+    cylConfigRef.current = null;
+    setTree((cur) => {
+      const n = findNode(cur.root, c.nodeId);
+      if (n && n.type === "CYL") {
+        const parts = [n.cylinder_type, n.finish, n.size].filter(Boolean);
+        const differRef = `D${String(n.differ ?? 0).padStart(3, "0")}`;
+        logAction({
+          system_id: systemId,
+          action: "cylinder_configured",
+          node_type: "CYL",
+          node_label: n.label,
+          new_value: parts.join(" · "),
+          metadata: {
+            differ_ref: differRef,
+            room_name: n.label,
+            product: n.cylinder_type ?? null,
+            finish: n.finish ?? null,
+            size: n.size ?? null,
+            extra_keys: n.extra_keys ?? 0,
+          },
+        });
+      }
+      return cur;
+    });
+  }, [systemId]);
+
   const productsByCode = useMemo(() => {
     const m = new Map<string, CanvasProduct>();
     products.forEach((p) => m.set(p.code, { code: p.code, name: p.name, image_url: p.image_url }));
@@ -96,6 +162,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   useEffect(() => {
     setLoading(true);
+    setExportedAt(null);
+    setLastSavedAt(null);
+    labelAuditRef.current && clearTimeout(labelAuditRef.current.timer);
+    labelAuditRef.current = null;
+    cylConfigRef.current = null;
     supabase.from("key_systems").select("*").eq("id", systemId).single().then(({ data, error }) => {
       if (error || !data) { toast.error("System not found"); navigate("/dashboard"); return; }
       setName(data.name);
@@ -108,6 +179,17 @@ function BuilderInner({ systemId }: { systemId: string }) {
     });
     supabase.from("products").select("id,code,name,cylinder_type,cylinder_profile,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as any));
   }, [systemId, navigate]);
+
+  // Flush pending debounced audits when selectedId changes
+  const prevSelectedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const prev = prevSelectedRef.current;
+    if (prev && prev !== selectedId) {
+      if (labelAuditRef.current && labelAuditRef.current.nodeId === prev) flushLabelAudit();
+      if (cylConfigRef.current && cylConfigRef.current.nodeId === prev) flushCylConfig();
+    }
+    prevSelectedRef.current = selectedId;
+  }, [selectedId, flushLabelAudit, flushCylConfig]);
 
   const mutate = (updater: (t: TreeData) => TreeData) => {
     setTree((prev) => { const next = updater(prev); dirtyRef.current = true; return next; });
@@ -128,6 +210,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setSelectedId(child.id);
       setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
       logAction({ system_id: systemId, action: "node_added", node_type: child.type, node_label: child.label });
+      if (child.type === "CYL") {
+        cylConfigRef.current = { nodeId: child.id, originalLabel: child.label };
+      }
       return next;
     });
   }, [systemId]);
@@ -139,24 +224,41 @@ function BuilderInner({ systemId }: { systemId: string }) {
       dirtyRef.current = true;
       return { ...prev, root: removeNode(prev.root, nodeId) };
     });
+    if (labelAuditRef.current?.nodeId === nodeId) { clearTimeout(labelAuditRef.current.timer); labelAuditRef.current = null; }
+    if (cylConfigRef.current?.nodeId === nodeId) cylConfigRef.current = null;
     setSelectedId((s) => (s === nodeId ? null : s));
   }, [systemId]);
 
   const patchSelected = (patch: Partial<TNode>) => {
     if (!selectedId) return;
+    const inCylConfig = cylConfigRef.current?.nodeId === selectedId;
     setTree((prev) => {
       const before = findNode(prev.root, selectedId);
       const root = updateNode(prev.root, selectedId, patch);
       dirtyRef.current = true;
       if (before) {
-        if (patch.label !== undefined && patch.label !== before.label) {
-          logAction({ system_id: systemId, action: "node_renamed", node_type: before.type, node_label: patch.label, old_value: before.label, new_value: patch.label });
+        // Label edits: debounce; suppress entirely while configuring a CYL
+        if (patch.label !== undefined && patch.label !== before.label && !inCylConfig) {
+          const existing = labelAuditRef.current;
+          if (existing && existing.nodeId === selectedId) {
+            clearTimeout(existing.timer);
+            existing.timer = setTimeout(() => flushLabelAudit(), 2000);
+          } else {
+            if (existing) flushLabelAudit();
+            const original = before.label;
+            const nodeType = before.type;
+            const timer = setTimeout(() => flushLabelAudit(), 2000);
+            labelAuditRef.current = { nodeId: selectedId, original, nodeType, timer };
+          }
         }
-        if (patch.cylinder_type !== undefined && patch.cylinder_type !== before.cylinder_type) {
-          logAction({ system_id: systemId, action: "cylinder_assigned", node_type: "CYL", node_label: before.label, old_value: before.cylinder_type ?? "", new_value: patch.cylinder_type ?? "" });
-        }
-        if (patch.finish !== undefined && patch.finish !== before.finish) {
-          logAction({ system_id: systemId, action: "cylinder_finish_changed", node_type: "CYL", node_label: before.label, old_value: before.finish ?? "", new_value: patch.finish ?? "" });
+        // Cylinder configuration fields: suppress individual entries while in config session
+        if (!inCylConfig) {
+          if (patch.cylinder_type !== undefined && patch.cylinder_type !== before.cylinder_type) {
+            logAction({ system_id: systemId, action: "cylinder_assigned", node_type: "CYL", node_label: before.label, old_value: before.cylinder_type ?? "", new_value: patch.cylinder_type ?? "" });
+          }
+          if (patch.finish !== undefined && patch.finish !== before.finish) {
+            logAction({ system_id: systemId, action: "cylinder_finish_changed", node_type: "CYL", node_label: before.label, old_value: before.finish ?? "", new_value: patch.finish ?? "" });
+          }
         }
         if (patch.keys !== undefined && patch.keys !== before.keys) {
           logAction({ system_id: systemId, action: "keys_count_changed", node_type: "CK", node_label: before.label, old_value: String(before.keys ?? 1), new_value: String(patch.keys) });
@@ -215,6 +317,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
     logAction({ system_id: systemId, action: opts.auto ? "system_autosaved" : "system_saved", metadata: { door_count: doors } });
     dirtyRef.current = false;
     setSaveStatus("saved");
+    setLastSavedAt(Date.now());
     if (!opts.auto) toast.success("System saved");
   }, [name, tree, systemId]);
 
@@ -251,10 +354,13 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   const exportToCart = () => {
     if (!tree.root) { toast.error("Nothing to export"); return; }
+    // Flush pending audits so room name / cylinder config is captured before export
+    if (labelAuditRef.current) flushLabelAudit();
+    if (cylConfigRef.current) flushCylConfig();
     const errs = validate(tree).filter((i) => i.level === "error");
     if (errs.length) { toast.error("Fix validation errors before exporting"); setIssues(validate(tree)); setValidateOpen(true); return; }
     const productByCode = new Map(products.map((p) => [p.code, p]));
-    let lines = 0;
+    const lines: import("@/contexts/CartContext").CartLine[] = [];
     let total = 0;
     const sys = { system_id: systemId, system_name: name, system_reference: reference };
     const walk = (n: TNode) => {
@@ -263,7 +369,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
         const differRef = `D${String(n.differ ?? 0).padStart(3, "0")}`;
-        addToCart({
+        lines.push({
           kind: "cylinder",
           product_code: n.cylinder_type,
           product_name: p?.name,
@@ -278,10 +384,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
           unit_price: unit,
           ...sys,
         });
-        lines++; total += unit * qty;
+        total += unit * qty;
         const extra = n.extra_keys ?? 0;
         if (extra > 0) {
-          addToCart({
+          lines.push({
             kind: "key",
             key_reference: `Extra keys — ${n.label} (${differRef})`,
             room_label: n.label,
@@ -290,15 +396,16 @@ function BuilderInner({ systemId }: { systemId: string }) {
             unit_price: 12,
             ...sys,
           });
-          lines++; total += 12 * extra;
+          total += 12 * extra;
         }
       }
       n.children.forEach(walk);
     };
     walk(tree.root);
-    logAction({ system_id: systemId, action: "exported_to_cart", metadata: { line_count: lines, total_value: total } });
-    toast.success(`Added ${lines} line(s) to basket`);
-    navigate("/cart");
+    replaceBySystem(systemId, lines);
+    logAction({ system_id: systemId, action: "exported_to_cart", metadata: { line_count: lines.length, total_value: total } });
+    setExportedAt(Date.now());
+    toast.success(`Basket updated — ${lines.length} item${lines.length !== 1 ? "s" : ""} from ${name}`);
   };
 
 
@@ -348,9 +455,33 @@ function BuilderInner({ systemId }: { systemId: string }) {
         }}>
           <FileText className="h-4 w-4" /> Get quote
         </Button>
-        <Button onClick={exportToCart} className="bg-primary hover:bg-primary/90">
-          <ShoppingCart className="h-4 w-4" /> Add to basket
-        </Button>
+        {(() => {
+          const amber = "bg-[hsl(36_94%_52%)] hover:bg-[hsl(36_94%_46%)] text-white";
+          if (exportedAt == null) {
+            return (
+              <Button onClick={exportToCart} className={amber}>
+                <ShoppingCart className="h-4 w-4" /> Add to basket
+              </Button>
+            );
+          }
+          const stale = lastSavedAt != null && lastSavedAt > exportedAt;
+          if (stale) {
+            return (
+              <Button onClick={exportToCart} className={amber}>
+                <RefreshCw className="h-4 w-4" /> Update basket
+              </Button>
+            );
+          }
+          return (
+            <Button
+              variant="outline"
+              onClick={() => navigate("/cart")}
+              className="border-[hsl(36_94%_52%)] text-[hsl(36_94%_42%)] hover:bg-[hsl(36_94%_95%)]"
+            >
+              View basket <ArrowRight className="h-4 w-4" />
+            </Button>
+          );
+        })()}
       </div>
 
       {/* Import banner */}
@@ -471,7 +602,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               <div className="mt-8 pt-5 border-t">
                 <h4 className="text-sm font-semibold text-foreground mb-1">Activity</h4>
                 <p className="text-[11px] text-muted-foreground mb-3">Last 20 actions on this system.</p>
-                <ActivityTimeline systemId={systemId} />
+                <ActivityTimeline systemId={systemId} showClear />
               </div>
             </div>
           ) : (

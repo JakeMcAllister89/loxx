@@ -59,17 +59,18 @@ export function describeAction(r: AuditRow): string {
   const meta = r.metadata as any;
   switch (r.action) {
     case "system_created":     return `Created system "${r.node_label ?? ""}"`;
-    case "system_imported":    return `Imported system "${r.node_label ?? ""}"`;
+    case "system_imported":    return `Imported system "${r.node_label ?? ""}" from ${meta?.source ?? "file"} — ${meta?.node_count ?? 0} nodes`;
     case "system_renamed":     return `Renamed system "${r.old_value}" → "${r.new_value}"`;
     case "system_saved":       return `System saved${meta?.door_count != null ? ` (${meta.door_count} doors)` : ""}`;
     case "node_added":         return `Added ${r.node_type} node — ${r.node_label}`;
     case "node_deleted":       return `Deleted ${r.node_type} node — ${r.node_label}`;
-    case "node_renamed":       return `Renamed "${r.old_value}" → "${r.new_value}"`;
+    case "node_renamed":       return `Renamed to "${r.new_value}"`;
+    case "cylinder_configured":return `Configured ${meta?.differ_ref ?? r.node_label} — ${meta?.room_name ?? r.node_label}${meta?.product ? ` (${meta.product})` : ""}`;
     case "cylinder_assigned":  return `Assigned ${r.new_value} to ${r.node_label}`;
     case "cylinder_finish_changed": return `Finish on ${r.node_label}: "${r.old_value ?? "—"}" → "${r.new_value ?? "—"}"`;
-    case "keys_count_changed": return `Key copies on ${r.node_label}: ${r.old_value} → ${r.new_value}`;
+    case "keys_count_changed": return `Updated key copies: ${r.old_value} → ${r.new_value} for ${r.node_label}`;
     case "validation_run":     return `Validation run — ${meta?.errors ?? 0} errors, ${meta?.warnings ?? 0} warnings`;
-    case "exported_to_cart":   return `Exported to order — ${meta?.line_count ?? 0} lines`;
+    case "exported_to_cart":   return `Exported to basket — ${meta?.line_count ?? 0} items`;
     case "order_placed":       return `Order placed — £${Number(meta?.total ?? 0).toFixed(2)}`;
     default:                    return r.action;
   }
