@@ -74,6 +74,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const { add: addToCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "pending" | "saving" | "saved" | "error">("idle");
   const [name, setName] = useState("");
   const [reference, setReference] = useState<string | null>(null);
   const [tree, setTree] = useState<TreeData>(emptyTree());
