@@ -408,6 +408,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               productsByCode={productsByCode}
               onSelect={setSelectedId}
               onAddChild={handleAddChild}
+              onPaneClick={() => setSelectedId(null)}
               registerFitView={(fn) => { fitViewRef.current = fn; }}
             />
           )}
