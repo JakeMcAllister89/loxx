@@ -1,47 +1,91 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AuditRow, describeAction, actionIcon, actionColor, timeAgo } from "@/lib/audit";
+import { toast } from "sonner";
 
-export function ActivityTimeline({ systemId, limit = 20, refreshMs = 30000 }: { systemId?: string; limit?: number; refreshMs?: number }) {
+export function ActivityTimeline({
+  systemId,
+  limit = 20,
+  refreshMs = 30000,
+  showClear = false,
+}: {
+  systemId?: string;
+  limit?: number;
+  refreshMs?: number;
+  showClear?: boolean;
+}) {
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [nonce, setNonce] = useState(0);
+
+  const load = useCallback(async () => {
+    let q = (supabase.from("audit_log" as any) as any)
+      .select("*")
+      .not("action", "eq", "system_autosaved")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (systemId) q = q.eq("system_id", systemId);
+    const { data } = await q;
+    const filtered = ((data as AuditRow[]) ?? []).filter(
+      (r) => !(r.action === "node_added" && r.node_type === "CYL"),
+    );
+    setRows(filtered);
+    setLoading(false);
+  }, [systemId, limit]);
 
   useEffect(() => {
     let active = true;
-    const load = async () => {
-      let q = (supabase.from("audit_log" as any) as any).select("*").order("created_at", { ascending: false }).limit(limit);
-      if (systemId) q = q.eq("system_id", systemId);
-      const { data } = await q;
-      const filtered = ((data as AuditRow[]) ?? []).filter((r) => r.action !== "system_autosaved");
-      if (active) { setRows(filtered); setLoading(false); }
-    };
-    load();
+    (async () => { await load(); if (!active) return; })();
     const iv = setInterval(load, refreshMs);
     return () => { active = false; clearInterval(iv); };
-  }, [systemId, limit, refreshMs]);
+  }, [load, refreshMs, nonce]);
+
+  const clearAll = async () => {
+    if (!systemId) return;
+    if (!window.confirm("Clear all activity for this system? This cannot be undone.")) return;
+    const { error } = await (supabase.from("audit_log" as any) as any).delete().eq("system_id", systemId);
+    if (error) { toast.error("Failed to clear activity"); return; }
+    toast.success("Activity cleared");
+    setNonce((n) => n + 1);
+  };
 
   if (loading) return <div className="text-xs text-muted-foreground">Loading activity…</div>;
-  if (rows.length === 0) return <div className="text-xs text-muted-foreground">No activity yet</div>;
 
   return (
-    <ol className="relative border-l border-border ml-2 space-y-3 mt-2">
-      {rows.map((r) => (
-        <li key={r.id} className="ml-4">
-          <span
-            className="absolute -left-[5px] h-2.5 w-2.5 rounded-full ring-2 ring-card"
-            style={{ background: actionColor(r.action) }}
-          />
-          <div className="flex items-start gap-2 text-sm">
-            <span aria-hidden>{actionIcon(r.action)}</span>
-            <div className="min-w-0">
-              <div className="leading-tight">{describeAction(r)}</div>
-              <div className="text-[11px] text-muted-foreground" title={new Date(r.created_at).toLocaleString("en-GB")}>
-                {timeAgo(r.created_at)}
+    <div>
+      {rows.length === 0 ? (
+        <div className="text-xs text-muted-foreground">No activity yet</div>
+      ) : (
+        <ol className="relative border-l border-border ml-2 space-y-3 mt-2">
+          {rows.map((r) => (
+            <li key={r.id} className="ml-4">
+              <span
+                className="absolute -left-[5px] h-2.5 w-2.5 rounded-full ring-2 ring-card"
+                style={{ background: actionColor(r.action) }}
+              />
+              <div className="flex items-start gap-2 text-sm">
+                <span aria-hidden>{actionIcon(r.action)}</span>
+                <div className="min-w-0">
+                  <div className="leading-tight">{describeAction(r)}</div>
+                  <div className="text-[11px] text-muted-foreground" title={new Date(r.created_at).toLocaleString("en-GB")}>
+                    {timeAgo(r.created_at)}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </li>
-      ))}
-    </ol>
+            </li>
+          ))}
+        </ol>
+      )}
+      {showClear && systemId && rows.length > 0 && (
+        <div className="mt-4 pt-3 border-t">
+          <button
+            onClick={clearAll}
+            className="text-[11px] text-muted-foreground hover:text-destructive underline-offset-2 hover:underline"
+          >
+            Clear activity
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
