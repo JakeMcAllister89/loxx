@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Network, Package, ShoppingCart, ClipboardList, Settings, Plus, LogOut, Shield } from "lucide-react";
+import { LayoutDashboard, Network, Package, ShoppingCart, ClipboardList, Settings, Plus, LogOut, Shield, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useIsAdmin } from "@/lib/auth";
@@ -10,6 +10,7 @@ const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/builder", label: "System Builder", icon: Network },
   { to: "/catalogue", label: "Product Catalogue", icon: Package },
+  { to: "/quotes", label: "My Quotes", icon: FileText },
   { to: "/cart", label: "Basket", icon: ShoppingCart },
   { to: "/orders", label: "My Orders", icon: ClipboardList },
   { to: "/account", label: "Account", icon: Settings },
