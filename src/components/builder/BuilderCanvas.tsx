@@ -21,6 +21,7 @@ interface Props {
   productsByCode: Map<string, CanvasProduct>;
   onSelect: (id: string) => void;
   onAddChild: (parentId: string) => void;
+  onPaneClick?: () => void;
   registerFitView?: (fn: () => void) => void;
 }
 
