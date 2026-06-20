@@ -52,7 +52,7 @@ export const newId = () =>
 export const emptyTree = (): TreeData => ({ root: null, next_differ: 1 });
 
 export function createGMK(label = "Grand Master"): TNode {
-  return { id: newId(), type: "GMK", label, keys: [{ ref: "GMK", qty: 3 }], children: [] };
+  return { id: newId(), type: "GMK", label, keys: [{ ref: "GMK", qty: 2 }], children: [] };
 }
 
 /**
