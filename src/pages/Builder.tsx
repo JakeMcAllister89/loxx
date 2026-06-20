@@ -455,9 +455,33 @@ function BuilderInner({ systemId }: { systemId: string }) {
         }}>
           <FileText className="h-4 w-4" /> Get quote
         </Button>
-        <Button onClick={exportToCart} className="bg-primary hover:bg-primary/90">
-          <ShoppingCart className="h-4 w-4" /> Add to basket
-        </Button>
+        {(() => {
+          const amber = "bg-[hsl(36_94%_52%)] hover:bg-[hsl(36_94%_46%)] text-white";
+          if (exportedAt == null) {
+            return (
+              <Button onClick={exportToCart} className={amber}>
+                <ShoppingCart className="h-4 w-4" /> Add to basket
+              </Button>
+            );
+          }
+          const stale = lastSavedAt != null && lastSavedAt > exportedAt;
+          if (stale) {
+            return (
+              <Button onClick={exportToCart} className={amber}>
+                <RefreshCw className="h-4 w-4" /> Update basket
+              </Button>
+            );
+          }
+          return (
+            <Button
+              variant="outline"
+              onClick={() => navigate("/cart")}
+              className="border-[hsl(36_94%_52%)] text-[hsl(36_94%_42%)] hover:bg-[hsl(36_94%_95%)]"
+            >
+              View basket <ArrowRight className="h-4 w-4" />
+            </Button>
+          );
+        })()}
       </div>
 
       {/* Import banner */}
