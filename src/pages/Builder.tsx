@@ -776,9 +776,12 @@ function TreeRow({
         {node.type === "CYL" && !node.cylinder_type && (
           <span className="text-[11px] text-destructive">· no product</span>
         )}
-        {(node.type === "MK" || node.type === "SMK") && node.keys != null && (
-          <span className="text-[11px] font-mono text-muted-foreground">· {node.keys} key{node.keys !== 1 ? "s" : ""}</span>
-        )}
+        {(node.type === "MK" || node.type === "SMK") && node.keys != null && (() => {
+          const total = countKeys(node);
+          return (
+            <span className="text-[11px] font-mono text-muted-foreground">· {total} key{total !== 1 ? "s" : ""}</span>
+          );
+        })()}
 
         <div className="flex-1" />
 
