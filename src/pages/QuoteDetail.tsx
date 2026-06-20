@@ -267,9 +267,9 @@ export default function QuoteDetail() {
             </section>
           )}
 
-          <footer className="mt-10 pt-4 border-t text-center text-xs text-muted-foreground">
+          <div className="mt-10 pt-4 border-t text-center text-xs text-muted-foreground">
             {settings.footer}
-          </footer>
+          </div>
         </article>
       </div>
 
