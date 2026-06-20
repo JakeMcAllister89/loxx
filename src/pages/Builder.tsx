@@ -715,12 +715,16 @@ function DetailPanel({
               <Plus className="h-4 w-4" /> Add {CHILD_LABEL[node.type]}
             </Button>
           )}
+          <Button onClick={onClose} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full">
+            <Check className="h-4 w-4" /> Done
+          </Button>
           {!isRoot && (
             <Button variant="outline" onClick={onDelete} className="text-destructive hover:text-destructive">
               <X className="h-4 w-4" /> Delete node
             </Button>
           )}
         </div>
+
 
         {(node.type === "GMK" || node.type === "SMK" || node.type === "CK") && node.children.length > 0 && (
           <div className="pt-3 border-t">
