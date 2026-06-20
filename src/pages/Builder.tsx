@@ -88,6 +88,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [legacyCKDetected, setLegacyCKDetected] = useState(false);
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
@@ -185,6 +186,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setReference(data.reference);
       const raw = (data.tree_data as unknown as TreeData) ?? emptyTree();
       const loaded = raw?.root !== undefined ? raw : emptyTree();
+      setLegacyCKDetected(hasLegacyCK(loaded.root));
       setTree(loaded.root ? assignNextDiffers(loaded) : loaded);
       setLoading(false);
     });
@@ -544,7 +546,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 </div>
                 <h3 className="text-lg font-semibold">Start your hierarchy</h3>
                 <p className="text-sm text-muted-foreground mt-1 mb-4">
-                  Every master-key system begins with a Grand Master Key. Add one to start branching into sub-masters, door groups and cylinders.
+                  Every master-key system begins with a Grand Master Key. Add one to start branching into master keys, sub-masters and cylinders.
                 </p>
                 <Button onClick={addRoot} className="bg-primary hover:bg-primary/90">
                   <Plus className="h-4 w-4" /> Add Grand Master
