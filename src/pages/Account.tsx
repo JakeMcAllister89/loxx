@@ -38,9 +38,17 @@ export default function Account() {
       if (data) { setName(data.name ?? ""); setCompany(data.company ?? ""); setPhone(data.phone ?? ""); }
     });
     supabase.from("key_systems").select("id,name").order("name").then(({ data }) => setSystems(data ?? []));
-    (supabase.from("audit_log" as any) as any).select("*").order("created_at", { ascending: false }).limit(1000).then(({ data }: any) => {
-      setRows((data as AuditRow[]) ?? []);
-    });
+    (supabase.from("audit_log" as any) as any)
+      .select("*")
+      .not("action", "eq", "system_autosaved")
+      .order("created_at", { ascending: false })
+      .limit(1000)
+      .then(({ data }: any) => {
+        const rows = ((data as AuditRow[]) ?? []).filter(
+          (r) => !(r.action === "node_added" && r.node_type === "CYL"),
+        );
+        setRows(rows);
+      });
   }, [user]);
 
   const save = async () => {
