@@ -404,6 +404,21 @@ function BuilderInner({ systemId }: { systemId: string }) {
     let total = 0;
     const sys = { system_id: systemId, system_name: name, system_reference: reference };
     const walk = (n: TNode) => {
+      if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
+        normaliseKeys(n).forEach((k) => {
+          if (k.qty > 0) {
+            lines.push({
+              kind: "key",
+              key_reference: k.ref,
+              room_label: n.location || n.label,
+              quantity: k.qty,
+              unit_price: 12,
+              ...sys,
+            });
+            total += 12 * k.qty;
+          }
+        });
+      }
       if (n.type === "CYL" && n.cylinder_type) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
