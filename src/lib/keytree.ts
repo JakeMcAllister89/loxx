@@ -31,12 +31,12 @@ export interface TreeData {
 /** Normalise a node's keys field to an array of KeyEntry, handling legacy number form. */
 export function normaliseKeys(node: TNode): KeyEntry[] {
   if (node.keys == null) {
-    return [{ ref: node.label, qty: node.type === "GMK" ? 3 : 2 }];
+    return [{ ref: node.label, qty: 2 }];
   }
   if (typeof node.keys === "number") {
     return [{ ref: node.label, qty: node.keys }];
   }
-  return node.keys.length > 0 ? node.keys : [{ ref: node.label, qty: 1 }];
+  return node.keys.length > 0 ? node.keys : [{ ref: node.label, qty: 2 }];
 }
 
 /** Total key qty across all entries at this level. */
@@ -52,7 +52,7 @@ export const newId = () =>
 export const emptyTree = (): TreeData => ({ root: null, next_differ: 1 });
 
 export function createGMK(label = "Grand Master"): TNode {
-  return { id: newId(), type: "GMK", label, keys: [{ ref: "GMK", qty: 3 }], children: [] };
+  return { id: newId(), type: "GMK", label, keys: [{ ref: "GMK", qty: 2 }], children: [] };
 }
 
 /**

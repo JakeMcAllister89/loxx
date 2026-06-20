@@ -1109,17 +1109,7 @@ function KeyManager({ node, onPatch }: { node: TNode; onPatch: (p: Partial<TNode
     update(entries.map((e, idx) => (idx === i ? { ...e, ref } : e)));
 
   const updateQty = (i: number, delta: number) =>
-    update(entries.map((e, idx) => (idx === i ? { ...e, qty: Math.max(1, e.qty + delta) } : e)));
-
-  const removeKey = (i: number) => {
-    if (entries.length <= 1) return;
-    update(entries.filter((_, idx) => idx !== i));
-  };
-
-  const addKey = () =>
-    update([...entries, { ref: `${node.label}-${entries.length + 1}`, qty: 1 }]);
-
-  const total = entries.reduce((s, k) => s + k.qty, 0);
+    update(entries.map((e, idx) => (idx === i ? { ...e, qty: Math.max(0, e.qty + delta) } : e)));
 
   return (
     <div>
@@ -1129,50 +1119,37 @@ function KeyManager({ node, onPatch }: { node: TNode; onPatch: (p: Partial<TNode
       </div>
       <div className="flex flex-col gap-2">
         {entries.map((entry, i) => (
-          <div key={i} className="flex items-center gap-2 p-2 rounded-md border bg-muted/30">
-            <KeyRound className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-            <input
-              className="flex-1 min-w-0 text-xs font-mono bg-transparent border-none outline-none text-amber-700 font-medium"
-              value={entry.ref}
-              onChange={(e) => updateRef(i, e.target.value)}
-              placeholder="Key reference"
-            />
-            <button
-              type="button"
-              onClick={() => updateQty(i, -1)}
-              className="w-6 h-6 rounded border text-xs flex items-center justify-center hover:bg-muted"
-              aria-label="Decrease"
-            >−</button>
-            <span className="text-xs font-mono w-5 text-center">{entry.qty}</span>
-            <button
-              type="button"
-              onClick={() => updateQty(i, 1)}
-              className="w-6 h-6 rounded border text-xs flex items-center justify-center hover:bg-muted"
-              aria-label="Increase"
-            >+</button>
-            {entries.length > 1 && (
+          <div key={i}>
+            <div className="flex items-center gap-2 p-2 rounded-md border bg-muted/30">
+              <KeyRound className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+              <input
+                className="flex-1 min-w-0 text-xs font-mono bg-transparent border-none outline-none text-amber-700 font-medium"
+                value={entry.ref}
+                onChange={(e) => updateRef(i, e.target.value)}
+                placeholder="Key reference"
+              />
               <button
                 type="button"
-                onClick={() => removeKey(i)}
-                className="text-muted-foreground hover:text-destructive ml-1"
-                aria-label="Remove key"
-              >
-                <X className="h-3 w-3" />
-              </button>
+                onClick={() => updateQty(i, -1)}
+                className="w-6 h-6 rounded border text-xs flex items-center justify-center hover:bg-muted"
+                aria-label="Decrease"
+              >−</button>
+              <span className={`text-xs font-mono w-5 text-center ${entry.qty === 0 ? "text-muted-foreground" : ""}`}>{entry.qty}</span>
+              <button
+                type="button"
+                onClick={() => updateQty(i, 1)}
+                className="w-6 h-6 rounded border text-xs flex items-center justify-center hover:bg-muted"
+                aria-label="Increase"
+              >+</button>
+            </div>
+            {entry.qty === 0 && (
+              <p className="text-[11px] text-amber-700/70 mt-1 pl-1">
+                0 keys — none will be ordered
+              </p>
             )}
           </div>
         ))}
       </div>
-      <button
-        type="button"
-        onClick={addKey}
-        className="mt-2 w-full text-xs border border-dashed rounded-md py-1.5 text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-      >
-        + Add key
-      </button>
-      <p className="text-[11px] text-muted-foreground mt-1">
-        Total: {total} key{total !== 1 ? "s" : ""} at this level
-      </p>
     </div>
   );
 }
