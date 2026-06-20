@@ -125,11 +125,11 @@ function CanvasNodeImpl(props: NodeProps) {
           {hasError && <AlertCircle className="h-3 w-3 text-destructive ml-auto" />}
         </div>
 
-        <div className="font-semibold text-[13px] leading-tight mt-1 truncate">
-          {node.label || <span className="italic text-muted-foreground">Unnamed</span>}
+        <div className="font-semibold text-[13px] leading-tight mt-1 truncate" title={mainLabel}>
+          {mainLabel || <span className="italic text-muted-foreground">Unnamed</span>}
         </div>
-        {showLocation && (
-          <div className="text-[10px] font-mono text-muted-foreground truncate mt-0.5">{node.location}</div>
+        {showRefSubLabel && (
+          <div className="text-[10px] font-mono text-[hsl(var(--node-cyl))] truncate mt-0.5">{node.label}</div>
         )}
 
         {footer && <div className="text-[11px] text-muted-foreground mt-1.5">{footer}</div>}
