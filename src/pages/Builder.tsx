@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
+  Check, RotateCw,
 } from "lucide-react";
 import { BuilderCanvas, CanvasProduct } from "@/components/builder/BuilderCanvas";
 import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
@@ -73,6 +74,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const { add: addToCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "pending" | "saving" | "saved" | "error">("idle");
   const [name, setName] = useState("");
   const [reference, setReference] = useState<string | null>(null);
   const [tree, setTree] = useState<TreeData>(emptyTree());
@@ -192,22 +194,59 @@ function BuilderInner({ systemId }: { systemId: string }) {
     else toast.error(`${errors} error(s) found`);
   };
 
-  const save = async () => {
+  const saveCore = useCallback(async (opts: { auto: boolean }) => {
     setSaving(true);
+    setSaveStatus("saving");
     const doors = countDoors(tree.root);
     const { error } = await supabase.from("key_systems")
       .update({ name, tree_data: tree as any, door_count: doors, next_differ: tree.next_differ })
       .eq("id", systemId);
     setSaving(false);
-    if (error) { toast.error("Failed to save"); return; }
+    if (error) {
+      setSaveStatus("error");
+      if (!opts.auto) toast.error("Failed to save");
+      return;
+    }
     if (savedNameRef.current && savedNameRef.current !== name) {
       logAction({ system_id: systemId, action: "system_renamed", old_value: savedNameRef.current, new_value: name });
     }
     savedNameRef.current = name;
-    logAction({ system_id: systemId, action: "system_saved", metadata: { door_count: doors } });
+    logAction({ system_id: systemId, action: opts.auto ? "system_autosaved" : "system_saved", metadata: { door_count: doors } });
     dirtyRef.current = false;
-    toast.success("System saved");
-  };
+    setSaveStatus("saved");
+    if (!opts.auto) toast.success("System saved");
+  }, [name, tree, systemId]);
+
+  const save = useCallback(() => saveCore({ auto: false }), [saveCore]);
+
+  // Auto-save: debounce 1.5s after any change to tree or name
+  const firstAutosaveSkip = useRef(true);
+  useEffect(() => {
+    if (loading) return;
+    if (firstAutosaveSkip.current) { firstAutosaveSkip.current = false; return; }
+    setSaveStatus("pending");
+    const handle = setTimeout(() => { saveCore({ auto: true }); }, 1500);
+    return () => clearTimeout(handle);
+  }, [tree, name, loading, saveCore]);
+
+  // Fade "saved" indicator after 2s
+  useEffect(() => {
+    if (saveStatus !== "saved") return;
+    const t = setTimeout(() => setSaveStatus("idle"), 2000);
+    return () => clearTimeout(t);
+  }, [saveStatus]);
+
+  // Warn on unload if there are unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (saveStatus === "pending" || saveStatus === "saving") {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [saveStatus]);
 
   const exportToCart = () => {
     if (!tree.root) { toast.error("Nothing to export"); return; }
@@ -297,9 +336,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import</Link></Button>
         <Button variant="outline" onClick={() => fitViewRef.current?.()}><Maximize2 className="h-4 w-4" /> Fit view</Button>
         <Button variant="outline" onClick={runValidate}><ShieldCheck className="h-4 w-4" /> Validate</Button>
-        <Button variant="outline" onClick={save} disabled={saving}>
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
-        </Button>
+        <SaveStatusIndicator status={saveStatus} onRetry={save} />
         <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" /> Export PDF</Button>
         <Button onClick={exportToCart} className="bg-primary hover:bg-primary/90">
           <ShoppingCart className="h-4 w-4" /> Export to order
@@ -371,6 +408,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               productsByCode={productsByCode}
               onSelect={setSelectedId}
               onAddChild={handleAddChild}
+              onPaneClick={() => setSelectedId(null)}
               registerFitView={(fn) => { fitViewRef.current = fn; }}
             />
           )}
@@ -437,6 +475,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               onDelete={() => handleDelete(selected.id)}
               canAddChild={childTypeOf(selected.type) !== null}
               isRoot={tree.root?.id === selected.id}
+              onClose={() => setSelectedId(null)}
             />
           )}
         </aside>
@@ -592,12 +631,13 @@ function Legend({ type }: { type: NodeType }) {
 }
 
 function DetailPanel({
-  node, parent, trail, products, onPatch, onAddChild, onDelete, canAddChild, isRoot,
+  node, parent, trail, products, onPatch, onAddChild, onDelete, canAddChild, isRoot, onClose,
 }: {
   node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
   onAddChild: () => void; onDelete: () => void;
   canAddChild: boolean; isRoot: boolean;
+  onClose: () => void;
 }) {
   const meta = TYPE_META[node.type];
   const isCyl = node.type === "CYL";
@@ -621,8 +661,17 @@ function DetailPanel({
             D{String(node.differ).padStart(3, "0")}
           </Badge>
         )}
+        <button
+          onClick={onClose}
+          className={`${isCyl && node.differ != null ? "" : "ml-auto"} h-6 w-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors`}
+          aria-label="Close panel"
+          title="Close"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
       <h3 className="text-lg font-semibold mt-1">{node.label || "Unnamed"}</h3>
+
 
       <div className="mt-5 space-y-4">
         <div>
@@ -666,12 +715,16 @@ function DetailPanel({
               <Plus className="h-4 w-4" /> Add {CHILD_LABEL[node.type]}
             </Button>
           )}
+          <Button onClick={onClose} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full">
+            <Check className="h-4 w-4" /> Done
+          </Button>
           {!isRoot && (
             <Button variant="outline" onClick={onDelete} className="text-destructive hover:text-destructive">
               <X className="h-4 w-4" /> Delete node
             </Button>
           )}
         </div>
+
 
         {(node.type === "GMK" || node.type === "SMK" || node.type === "CK") && node.children.length > 0 && (
           <div className="pt-3 border-t">
@@ -689,4 +742,53 @@ function DetailPanel({
       </div>
     </div>
   );
+}
+
+/* ------------------------- Save Status Indicator ------------------------- */
+
+function SaveStatusIndicator({
+  status,
+  onRetry,
+}: {
+  status: "idle" | "pending" | "saving" | "saved" | "error";
+  onRetry: () => void;
+}) {
+  if (status === "pending") {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground px-2" title="Unsaved changes">
+        <span className="h-2 w-2 rounded-full bg-warning animate-pulse" />
+        Unsaved changes
+      </div>
+    );
+  }
+  if (status === "saving") {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground px-2">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        Saving…
+      </div>
+    );
+  }
+  if (status === "saved") {
+    return (
+      <div className="flex items-center gap-2 text-xs text-success px-2 transition-opacity">
+        <Check className="h-3.5 w-3.5" />
+        Saved
+      </div>
+    );
+  }
+  if (status === "error") {
+    return (
+      <button
+        onClick={onRetry}
+        className="flex items-center gap-2 text-xs text-destructive px-2 hover:underline"
+        title="Retry save"
+      >
+        <AlertCircle className="h-3.5 w-3.5" />
+        Save failed — retry
+        <RotateCw className="h-3.5 w-3.5" />
+      </button>
+    );
+  }
+  return <div className="w-[88px]" aria-hidden />;
 }

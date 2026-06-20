@@ -21,6 +21,7 @@ interface Props {
   productsByCode: Map<string, CanvasProduct>;
   onSelect: (id: string) => void;
   onAddChild: (parentId: string) => void;
+  onPaneClick?: () => void;
   registerFitView?: (fn: () => void) => void;
 }
 
@@ -72,7 +73,7 @@ function layout(root: TNode): { laid: Laid[]; width: number; height: number } {
   return { laid, width: maxX, height: maxY };
 }
 
-function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, registerFitView }: Props) {
+function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, onPaneClick, registerFitView }: Props) {
   const { fitView, setCenter } = useReactFlow();
   const lastNodeCount = useRef(0);
 
@@ -173,6 +174,7 @@ function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode,
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onNodeClick={handleNodeClick}
+      onPaneClick={onPaneClick}
       nodeTypes={nodeTypes}
       nodesDraggable={false}
       nodesConnectable={false}
