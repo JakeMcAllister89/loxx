@@ -12,6 +12,7 @@ export interface ProductFull {
   code: string;
   name: string;
   cylinder_type: string;
+  cylinder_profile?: string | null;
   pin_count: number | null;
   finish: string | null;
   size: string | null;
@@ -136,6 +137,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
               <div className="text-sm font-semibold leading-tight">{selected.name}</div>
               <div className="text-[11px] font-mono text-muted-foreground mt-0.5">{selected.code}</div>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                {selected.cylinder_profile && <Badge variant="secondary" className="text-[10px]">{selected.cylinder_profile} profile</Badge>}
                 {selected.pin_count != null && <Badge variant="secondary" className="text-[10px]">{selected.pin_count}-pin</Badge>}
                 {selected.size && <Badge variant="secondary" className="text-[10px] font-mono">{selected.size}</Badge>}
                 {selected.bs_en_1303 && (

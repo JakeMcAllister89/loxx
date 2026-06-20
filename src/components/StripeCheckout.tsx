@@ -4,20 +4,38 @@ import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import type { CartLine } from "@/contexts/CartContext";
 
+interface DeliveryAddress {
+  line1: string; line2: string; city: string; county: string; postcode: string;
+}
+interface OrderMeta {
+  customerPoRef: string;
+  notes: string;
+  delivery: DeliveryAddress;
+}
+
 interface Props {
   items: CartLine[];
   returnUrl: string;
   systemId?: string | null;
   customer?: { name?: string; company?: string };
+  meta?: OrderMeta;
   onError?: (msg: string) => void;
 }
 
-export function StripeCheckout({ items, returnUrl, systemId, customer, onError }: Props) {
+export function StripeCheckout({ items, returnUrl, systemId, customer, meta, onError }: Props) {
   const fetchClientSecret = useCallback(async (): Promise<string> => {
+    if (!items || items.length === 0) {
+      const msg = "Your basket is empty.";
+      onError?.(msg);
+      throw new Error(msg);
+    }
     const { data, error } = await supabase.functions.invoke("create-checkout", {
       body: {
         items, returnUrl, systemId, customer,
         environment: getStripeEnvironment(),
+        customerPoRef: meta?.customerPoRef,
+        notes: meta?.notes,
+        delivery: meta?.delivery,
       },
     });
     if (error || !data?.clientSecret) {
@@ -26,7 +44,7 @@ export function StripeCheckout({ items, returnUrl, systemId, customer, onError }
       throw new Error(msg);
     }
     return data.clientSecret;
-  }, [items, returnUrl, systemId, customer, onError]);
+  }, [items, returnUrl, systemId, customer, meta, onError]);
 
   return (
     <div id="checkout" className="rounded-lg overflow-hidden">

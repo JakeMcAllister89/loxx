@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Catalogue from "./pages/Catalogue";
 import Builder from "./pages/Builder";
 import Cart from "./pages/Cart";
+import CartReview from "./pages/CartReview";
 import Orders from "./pages/Orders";
 import Account from "./pages/Account";
 import CheckoutReturn from "./pages/CheckoutReturn";
@@ -40,6 +41,9 @@ const App = () => (
               <Route path="/builder" element={<ProtectedRoute><Builder /></ProtectedRoute>} />
               <Route path="/builder/:id" element={<ProtectedRoute><Builder /></ProtectedRoute>} />
               <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+              <Route path="/cart/review" element={<ProtectedRoute><CartReview /></ProtectedRoute>} />
+              <Route path="/basket" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+              <Route path="/basket/review" element={<ProtectedRoute><CartReview /></ProtectedRoute>} />
               <Route path="/checkout/return" element={<ProtectedRoute><CheckoutReturn /></ProtectedRoute>} />
               <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
               <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />

@@ -23,6 +23,7 @@ export interface AdminProduct {
   name: string;
   code: string;
   cylinder_type: string;
+  cylinder_profile: string | null;
   pin_count: number;
   finish: string;
   size: string;
@@ -35,10 +36,10 @@ export interface AdminProduct {
   is_active: boolean;
 }
 
-const TYPES = ["Single", "Double", "Oval", "Thumbturn", "Mortice"];
+interface CylinderType { id: string; name: string; sort_order: number; is_active: boolean; }
 
-const blank = (): AdminProduct => ({
-  name: "", code: "", cylinder_type: "Double", pin_count: 6, finish: "Satin Nickel",
+const blank = (defaultType = "Double"): AdminProduct => ({
+  name: "", code: "", cylinder_type: defaultType, cylinder_profile: "Euro", pin_count: 6, finish: "Satin Nickel",
   size: "35/35", price_gbp: 0, cost_price: 0, description: "", bs_en_1303: true,
   security_rating: null, image_url: null, is_active: true,
 });
@@ -56,6 +57,7 @@ function calcMargin(cost: number | null, sell: number) {
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [types, setTypes] = useState<CylinderType[]>([]);
   const [sortKey, setSortKey] = useState<keyof AdminProduct>("cylinder_type");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -67,7 +69,11 @@ export default function AdminProducts() {
     const { data } = await supabase.from("products").select("*").order("cylinder_type").order("price_gbp");
     setProducts((data ?? []) as any);
   };
-  useEffect(() => { load(); }, []);
+  const loadTypes = async () => {
+    const { data } = await supabase.from("cylinder_types").select("*").eq("is_active", true).order("sort_order");
+    setTypes((data ?? []) as any);
+  };
+  useEffect(() => { load(); loadTypes(); }, []);
 
   const sorted = useMemo(() => {
     const arr = [...products];
@@ -85,7 +91,7 @@ export default function AdminProducts() {
     else { setSortKey(k); setSortDir("asc"); }
   };
 
-  const openNew = () => { setEditing(blank()); setDrawerOpen(true); };
+  const openNew = () => { setEditing(blank(types[0]?.name ?? "Double")); setDrawerOpen(true); };
   const openEdit = (p: AdminProduct) => { setEditing({ ...p }); setDrawerOpen(true); };
 
   const confirmDelete = async () => {
@@ -120,6 +126,7 @@ export default function AdminProducts() {
                 <th className="px-3 py-2 w-14"></th>
                 {([
                   ["name","Name"],["code","Code"],["cylinder_type","Type"],["finish","Finish"],["size","Size"],
+                  ["cylinder_profile","Profile"],
                   ["cost_price","Cost"],["price_gbp","Sell"],
                 ] as [keyof AdminProduct, string][]).map(([k,l]) => (
                   <th key={k} className="px-3 py-2 text-left">
@@ -148,6 +155,7 @@ export default function AdminProducts() {
                     <td className="px-3 py-2"><Badge variant="outline">{p.cylinder_type}</Badge></td>
                     <td className="px-3 py-2">{p.finish}</td>
                     <td className="px-3 py-2 font-mono text-xs">{p.size}</td>
+                    <td className="px-3 py-2 text-xs">{p.cylinder_profile ?? <span className="text-muted-foreground">—</span>}</td>
                     <td className="px-3 py-2 font-mono text-green-700">£{Number(p.cost_price ?? 0).toFixed(2)}</td>
                     <td className="px-3 py-2 font-mono font-semibold">£{Number(p.price_gbp).toFixed(2)}</td>
                     <td className={`px-3 py-2 font-mono ${m == null ? "text-muted-foreground" : marginColor(m)}`}>{m == null ? "—" : `${m.toFixed(1)}%`}</td>
@@ -160,17 +168,20 @@ export default function AdminProducts() {
                 );
               })}
               {sorted.length === 0 && (
-                <tr><td colSpan={11} className="text-center text-muted-foreground py-10">No products yet</td></tr>
+                <tr><td colSpan={12} className="text-center text-muted-foreground py-10">No products yet</td></tr>
               )}
             </tbody>
           </table>
         </div>
+
+        <CylinderTypesSection types={types} reload={loadTypes} products={products} />
       </div>
 
       <ProductDrawer
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         product={editing}
+        types={types}
         onSaved={() => { setDrawerOpen(false); load(); }}
       />
 
@@ -194,10 +205,10 @@ export default function AdminProducts() {
   );
 }
 
-function ProductDrawer({ open, onOpenChange, product, onSaved }: {
-  open: boolean; onOpenChange: (b: boolean) => void; product: AdminProduct | null; onSaved: () => void;
+function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
+  open: boolean; onOpenChange: (b: boolean) => void; product: AdminProduct | null; types: CylinderType[]; onSaved: () => void;
 }) {
-  const [p, setP] = useState<AdminProduct>(product ?? blank());
+  const [p, setP] = useState<AdminProduct>(product ?? blank(types[0]?.name ?? "Double"));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -227,7 +238,8 @@ function ProductDrawer({ open, onOpenChange, product, onSaved }: {
     if (!p.name || !p.code) { toast.error("Name and code required"); return; }
     setSaving(true);
     const payload: any = {
-      name: p.name, code: p.code, cylinder_type: p.cylinder_type, pin_count: p.pin_count,
+      name: p.name, code: p.code, cylinder_type: p.cylinder_type, cylinder_profile: p.cylinder_profile,
+      pin_count: p.pin_count,
       finish: p.finish, size: p.size, price_gbp: p.price_gbp, cost_price: p.cost_price,
       description: p.description, bs_en_1303: p.bs_en_1303, security_rating: p.security_rating,
       image_url: p.image_url, is_active: p.is_active,
@@ -241,7 +253,7 @@ function ProductDrawer({ open, onOpenChange, product, onSaved }: {
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Product saved");
-    if (addAnother) { setP(blank()); return; }
+    if (addAnother) { setP(blank(types[0]?.name ?? "Double")); return; }
     onSaved();
   };
 
@@ -268,7 +280,7 @@ function ProductDrawer({ open, onOpenChange, product, onSaved }: {
                 <Label>Cylinder type</Label>
                 <Select value={p.cylinder_type} onValueChange={v => upd("cylinder_type", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                  <SelectContent>{types.map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
@@ -279,7 +291,11 @@ function ProductDrawer({ open, onOpenChange, product, onSaved }: {
                 </Select>
               </div>
               <div><Label>Size</Label><Input placeholder="e.g. 35/35" value={p.size} onChange={e => upd("size", e.target.value)} /></div>
-              <div><Label>Finish</Label><Input value={p.finish} onChange={e => upd("finish", e.target.value)} /></div>
+              <div>
+                <Label>Cylinder profile</Label>
+                <Input placeholder="e.g. Euro, Oval, Rim, Mortice" value={p.cylinder_profile ?? ""} onChange={e => upd("cylinder_profile", e.target.value || null)} />
+              </div>
+              <div className="col-span-2"><Label>Finish</Label><Input value={p.finish} onChange={e => upd("finish", e.target.value)} /></div>
             </div>
           </section>
 
@@ -426,5 +442,114 @@ function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpen
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CylinderTypesSection({ types, reload, products }: { types: CylinderType[]; reload: () => void; products: AdminProduct[] }) {
+  const [newName, setNewName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+
+  const usageCount = (typeName: string) => products.filter(p => p.is_active && p.cylinder_type === typeName).length;
+
+  const add = async () => {
+    const n = newName.trim();
+    if (!n) return;
+    setBusy(true);
+    const nextOrder = (types[types.length - 1]?.sort_order ?? 0) + 1;
+    const { error } = await supabase.from("cylinder_types").insert({ name: n, sort_order: nextOrder });
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    setNewName(""); reload();
+  };
+
+  const move = async (id: string, dir: -1 | 1) => {
+    const idx = types.findIndex(t => t.id === id);
+    const swap = types[idx + dir];
+    if (!swap) return;
+    await supabase.from("cylinder_types").update({ sort_order: swap.sort_order }).eq("id", id);
+    await supabase.from("cylinder_types").update({ sort_order: types[idx].sort_order }).eq("id", swap.id);
+    reload();
+  };
+
+  const saveRename = async (id: string) => {
+    const n = editName.trim();
+    if (!n) { setEditingId(null); return; }
+    const { error } = await supabase.from("cylinder_types").update({ name: n }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setEditingId(null); reload();
+  };
+
+  const remove = async (t: CylinderType) => {
+    if (usageCount(t.name) > 0) return;
+    const { error } = await supabase.from("cylinder_types").update({ is_active: false }).eq("id", t.id);
+    if (error) { toast.error(error.message); return; }
+    reload();
+  };
+
+  return (
+    <section className="mt-10">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Cylinder types</h2>
+          <p className="text-sm text-muted-foreground">Manage the cylinder type options that appear in the product form and the builder.</p>
+        </div>
+      </div>
+      <div className="rounded-[10px] border bg-card shadow-card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+            <tr>
+              <th className="px-3 py-2 text-left w-20">Order</th>
+              <th className="px-3 py-2 text-left">Name</th>
+              <th className="px-3 py-2 text-left w-32">Products</th>
+              <th className="px-3 py-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {types.map((t, i) => {
+              const count = usageCount(t.name);
+              const canDelete = count === 0;
+              return (
+                <tr key={t.id} className="border-t">
+                  <td className="px-3 py-2">
+                    <div className="inline-flex gap-1">
+                      <Button size="icon" variant="ghost" className="h-6 w-6" disabled={i === 0} onClick={() => move(t.id, -1)}>↑</Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6" disabled={i === types.length - 1} onClick={() => move(t.id, 1)}>↓</Button>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2">
+                    {editingId === t.id ? (
+                      <Input autoFocus value={editName} onChange={e => setEditName(e.target.value)} onBlur={() => saveRename(t.id)} onKeyDown={e => { if (e.key === "Enter") saveRename(t.id); if (e.key === "Escape") setEditingId(null); }} className="h-8 w-48" />
+                    ) : (
+                      <span className="font-medium">{t.name}</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-muted-foreground">{count} product{count === 1 ? "" : "s"}</td>
+                  <td className="px-3 py-2 text-right">
+                    <Button size="sm" variant="ghost" onClick={() => { setEditingId(t.id); setEditName(t.name); }}><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button size="sm" variant="ghost" disabled={!canDelete} title={canDelete ? "Remove" : `${count} products use this type`} onClick={() => remove(t)}>
+                      <Trash2 className={`h-3.5 w-3.5 ${canDelete ? "text-red-600" : "text-muted-foreground"}`} />
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })}
+            <tr className="border-t bg-muted/20">
+              <td className="px-3 py-2" colSpan={2}>
+                <div className="flex gap-2">
+                  <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Add new type, e.g. Round-key cam" className="h-8 max-w-xs" onKeyDown={e => { if (e.key === "Enter") add(); }} />
+                </div>
+              </td>
+              <td className="px-3 py-2" colSpan={2}>
+                <div className="flex justify-end">
+                  <Button size="sm" disabled={busy || !newName.trim()} onClick={add} className="bg-primary hover:bg-primary/90"><Plus className="h-3.5 w-3.5" /> Add type</Button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }

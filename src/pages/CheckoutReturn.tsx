@@ -78,7 +78,7 @@ export default function CheckoutReturn() {
               <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
               <h1 className="text-xl font-semibold mt-4">Something went wrong</h1>
               <p className="text-sm text-muted-foreground mt-2">{error}</p>
-              <Button asChild variant="outline" className="mt-6"><Link to="/cart">Return to cart</Link></Button>
+              <Button asChild variant="outline" className="mt-6"><Link to="/cart">Return to basket</Link></Button>
             </>
           )}
         </div>

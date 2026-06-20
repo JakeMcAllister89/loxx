@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string | null
+          value: string | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string | null
+          value?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -67,6 +88,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cylinder_types: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          sort_order?: number | null
+        }
+        Relationships: []
       }
       cylinders: {
         Row: {
@@ -307,9 +352,13 @@ export type Database = {
           created_at: string
           customer_email: string | null
           customer_name: string | null
+          customer_po_ref: string | null
           delivery_address: Json | null
           id: string
           notes: string | null
+          po_number: string | null
+          po_sent_at: string | null
+          po_sent_to: string | null
           purchase_order_ref: string | null
           status: string
           stripe_payment_intent: string | null
@@ -326,9 +375,13 @@ export type Database = {
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
+          customer_po_ref?: string | null
           delivery_address?: Json | null
           id?: string
           notes?: string | null
+          po_number?: string | null
+          po_sent_at?: string | null
+          po_sent_to?: string | null
           purchase_order_ref?: string | null
           status?: string
           stripe_payment_intent?: string | null
@@ -345,9 +398,13 @@ export type Database = {
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
+          customer_po_ref?: string | null
           delivery_address?: Json | null
           id?: string
           notes?: string | null
+          po_number?: string | null
+          po_sent_at?: string | null
+          po_sent_to?: string | null
           purchase_order_ref?: string | null
           status?: string
           stripe_payment_intent?: string | null
@@ -375,6 +432,7 @@ export type Database = {
           code: string
           cost_price: number | null
           created_at: string
+          cylinder_profile: string | null
           cylinder_type: string
           description: string | null
           finish: string | null
@@ -392,6 +450,7 @@ export type Database = {
           code: string
           cost_price?: number | null
           created_at?: string
+          cylinder_profile?: string | null
           cylinder_type: string
           description?: string | null
           finish?: string | null
@@ -409,6 +468,7 @@ export type Database = {
           code?: string
           cost_price?: number | null
           created_at?: string
+          cylinder_profile?: string | null
           cylinder_type?: string
           description?: string | null
           finish?: string | null
@@ -464,6 +524,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_po_number: { Args: never; Returns: string }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {

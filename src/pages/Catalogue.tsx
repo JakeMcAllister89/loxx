@@ -17,6 +17,7 @@ interface Product {
   id: string; name: string; code: string; cylinder_type: string;
   pin_count: number; finish: string; size: string; price_gbp: number;
   description: string; bs_en_1303: boolean; security_rating?: string | null;
+  cylinder_profile?: string | null; image_url?: string | null;
 }
 
 export default function Catalogue() {
@@ -60,10 +61,12 @@ export default function Catalogue() {
 
   const addToCart = (p: Product) => {
     add({
-      kind: "cylinder", product_code: p.code, cylinder_type: p.cylinder_type,
-      finish: p.finish, quantity: 1, unit_price: Number(p.price_gbp), room_label: "",
+      kind: "cylinder", product_code: p.code, product_name: p.name,
+      cylinder_type: p.cylinder_type, cylinder_profile: p.cylinder_profile ?? undefined,
+      finish: p.finish, size: p.size, image_url: p.image_url ?? undefined,
+      quantity: 1, unit_price: Number(p.price_gbp), room_label: "",
     });
-    toast.success(`${p.name} added to cart`);
+    toast.success(`${p.name} added to basket`);
   };
 
   const clearFilters = () => { setQ(""); setType("all"); setFinish("all"); setPins("all"); setSize("all"); setMaxPrice(priceCap); };
@@ -202,6 +205,7 @@ export default function Catalogue() {
                 <p className="text-sm text-muted-foreground leading-relaxed">{detail.description ?? "No description provided."}</p>
                 <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-2">
                   <dt className="text-muted-foreground">Type</dt><dd>{detail.cylinder_type}</dd>
+                  {detail.cylinder_profile && (<><dt className="text-muted-foreground">Profile</dt><dd>{detail.cylinder_profile}</dd></>)}
                   <dt className="text-muted-foreground">Pins</dt><dd className="font-mono">{detail.pin_count}</dd>
                   <dt className="text-muted-foreground">Finish</dt><dd>{detail.finish}</dd>
                   <dt className="text-muted-foreground">Size</dt><dd className="font-mono">{detail.size}</dd>
@@ -209,7 +213,7 @@ export default function Catalogue() {
                   <dt className="text-muted-foreground">Standard</dt><dd>{detail.bs_en_1303 ? "BS EN 1303" : "—"}</dd>
                 </dl>
                 <Button onClick={() => { addToCart(detail); setDetail(null); }} className="w-full bg-primary hover:bg-primary/90">
-                  <ShoppingCart className="h-4 w-4" /> Add to cart
+                  <ShoppingCart className="h-4 w-4" /> Add to basket
                 </Button>
               </div>
             </>
