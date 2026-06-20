@@ -284,7 +284,17 @@ function BuilderInner({ systemId }: { systemId: string }) {
           }
         }
         if (patch.keys !== undefined && patch.keys !== before.keys) {
-          logAction({ system_id: systemId, action: "keys_count_changed", node_type: before.type, node_label: before.label, old_value: String(before.keys ?? 1), new_value: String(patch.keys) });
+          logAction({ system_id: systemId, action: "keys_count_changed", node_type: before.type, node_label: auditLabel(before), old_value: String(before.keys ?? 1), new_value: String(patch.keys) });
+        }
+        if (patch.location !== undefined && patch.location !== before.location && (before.type === "MK" || before.type === "SMK")) {
+          logAction({
+            system_id: systemId,
+            action: "node_renamed",
+            node_type: before.type,
+            node_label: before.label,
+            old_value: before.location ?? "",
+            new_value: patch.location ?? "",
+          });
         }
       }
       return { ...prev, root };
