@@ -62,7 +62,10 @@ function CanvasNodeImpl(props: NodeProps) {
         : "ring-1 ring-border";
 
   const canAdd = (addOptions?.length ?? 0) > 0;
-  const showLocation = (node.type === "MK" || node.type === "SMK") && node.location;
+  const isMkOrSmk = node.type === "MK" || node.type === "SMK";
+  const hasLocation = isMkOrSmk && !!node.location?.trim();
+  const mainLabel = hasLocation ? node.location!.trim() : node.label;
+  const showRefSubLabel = hasLocation;
 
   // Build sub-label per type
   const mkN = d.childMkCount ?? 0;
