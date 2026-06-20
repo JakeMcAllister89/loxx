@@ -1013,13 +1013,18 @@ function DetailPanel({
           <div className="pt-3 border-t">
             <div className="text-xs font-medium text-muted-foreground mb-2">Contains</div>
             <ul className="text-sm space-y-1">
-              {node.children.map((c) => (
-                <li key={c.id} className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: TYPE_META[c.type].color }} />
-                  <span className="truncate">{c.label}</span>
-                  {c.location && <span className="text-[11px] text-muted-foreground font-mono">· {c.location}</span>}
-                </li>
-              ))}
+              {node.children.map((c) => {
+                const isMkOrSmkChild = c.type === "MK" || c.type === "SMK";
+                const main = isMkOrSmkChild && c.location?.trim() ? c.location.trim() : c.label;
+                const showRef = isMkOrSmkChild && !!c.location?.trim();
+                return (
+                  <li key={c.id} className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: TYPE_META[c.type].color }} />
+                    <span className="truncate">{main}</span>
+                    {showRef && <span className="text-[11px] text-[hsl(var(--node-cyl))] font-mono">· {c.label}</span>}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
