@@ -973,15 +973,7 @@ function DetailPanel({
         )}
 
         {(node.type === "GMK" || node.type === "MK" || node.type === "SMK") && (
-          <div>
-            <Label className="text-xs">Keys issued</Label>
-            <Input
-              type="number" min={1} max={50}
-              value={node.keys ?? (node.type === "GMK" ? 3 : 2)}
-              onChange={(e) => onPatch({ keys: Math.max(1, Number(e.target.value) || 1) })}
-            />
-            <p className="text-[11px] text-muted-foreground mt-1">How many copies of this key are required</p>
-          </div>
+          <KeyManager node={node} onPatch={onPatch} />
         )}
 
 
