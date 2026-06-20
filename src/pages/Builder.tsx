@@ -631,12 +631,13 @@ function Legend({ type }: { type: NodeType }) {
 }
 
 function DetailPanel({
-  node, parent, trail, products, onPatch, onAddChild, onDelete, canAddChild, isRoot,
+  node, parent, trail, products, onPatch, onAddChild, onDelete, canAddChild, isRoot, onClose,
 }: {
   node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
   onAddChild: () => void; onDelete: () => void;
   canAddChild: boolean; isRoot: boolean;
+  onClose: () => void;
 }) {
   const meta = TYPE_META[node.type];
   const isCyl = node.type === "CYL";
@@ -660,8 +661,17 @@ function DetailPanel({
             D{String(node.differ).padStart(3, "0")}
           </Badge>
         )}
+        <button
+          onClick={onClose}
+          className={`${isCyl && node.differ != null ? "" : "ml-auto"} h-6 w-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors`}
+          aria-label="Close panel"
+          title="Close"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
       <h3 className="text-lg font-semibold mt-1">{node.label || "Unnamed"}</h3>
+
 
       <div className="mt-5 space-y-4">
         <div>
