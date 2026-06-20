@@ -602,7 +602,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               <div className="mt-8 pt-5 border-t">
                 <h4 className="text-sm font-semibold text-foreground mb-1">Activity</h4>
                 <p className="text-[11px] text-muted-foreground mb-3">Last 20 actions on this system.</p>
-                <ActivityTimeline systemId={systemId} />
+                <ActivityTimeline systemId={systemId} showClear />
               </div>
             </div>
           ) : (
