@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
+  Check, RotateCw,
 } from "lucide-react";
 import { BuilderCanvas, CanvasProduct } from "@/components/builder/BuilderCanvas";
 import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
