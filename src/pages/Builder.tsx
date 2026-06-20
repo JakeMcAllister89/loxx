@@ -283,8 +283,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
             logAction({ system_id: systemId, action: "cylinder_finish_changed", node_type: "CYL", node_label: before.label, old_value: before.finish ?? "", new_value: patch.finish ?? "" });
           }
         }
-        if (patch.keys !== undefined && patch.keys !== before.keys) {
-          logAction({ system_id: systemId, action: "keys_count_changed", node_type: before.type, node_label: auditLabel(before), old_value: String(before.keys ?? 1), new_value: String(patch.keys) });
+        if (patch.keys !== undefined) {
+          const oldTotal = countKeys(before);
+          const newEntries = typeof patch.keys === "number"
+            ? [{ ref: before.label, qty: patch.keys }]
+            : (patch.keys ?? []);
+          const newTotal = newEntries.reduce((s, k) => s + k.qty, 0);
+          if (oldTotal !== newTotal) {
+            logAction({ system_id: systemId, action: "keys_count_changed", node_type: before.type, node_label: auditLabel(before), old_value: String(oldTotal), new_value: String(newTotal) });
+          }
         }
         if (patch.location !== undefined && patch.location !== before.location && (before.type === "MK" || before.type === "SMK")) {
           logAction({
