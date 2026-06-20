@@ -1,4 +1,4 @@
-export type NodeType = "GMK" | "SMK" | "CK" | "CYL";
+export type NodeType = "GMK" | "MK" | "SMK" | "CYL";
 
 export interface TNode {
   id: string;
@@ -10,7 +10,7 @@ export interface TNode {
   size?: string;              // CYL only — e.g. "35/35"
   quantity?: number;          // CYL only — units required at this door (default 1)
   extra_keys?: number;        // CYL only — additional keys beyond the 2 included
-  keys?: number;              // GMK/SMK/CK — copies of the key at this level
+  keys?: number;              // GMK/MK/SMK — copies of the key at this level
   children: TNode[];
 }
 
@@ -29,23 +29,24 @@ export const emptyTree = (): TreeData => ({ root: null, next_differ: 1 });
 export function createGMK(label = "Grand Master"): TNode {
   return { id: newId(), type: "GMK", label, keys: 3, children: [] };
 }
+
 export function makeChild(parentType: NodeType, index: number): TNode {
   if (parentType === "GMK") {
+    return { id: newId(), type: "MK", label: `Master Key ${ALPHABET[index] ?? index + 1}`, keys: 2, children: [] };
+  }
+  if (parentType === "MK") {
     return { id: newId(), type: "SMK", label: `Sub-master ${ALPHABET[index] ?? index + 1}`, keys: 2, children: [] };
   }
   if (parentType === "SMK") {
-    return { id: newId(), type: "CK", label: `Door Group ${index + 1}`, keys: 1, children: [] };
-  }
-  if (parentType === "CK") {
     return { id: newId(), type: "CYL", label: `Door ${index + 1}`, children: [] };
   }
   return { id: newId(), type: "CYL", label: `Door ${index + 1}`, children: [] };
 }
 
 export function childTypeOf(t: NodeType): NodeType | null {
-  if (t === "GMK") return "SMK";
-  if (t === "SMK") return "CK";
-  if (t === "CK") return "CYL";
+  if (t === "GMK") return "MK";
+  if (t === "MK") return "SMK";
+  if (t === "SMK") return "CYL";
   return null;
 }
 
@@ -147,6 +148,42 @@ export function assignNextDiffers(tree: TreeData): TreeData {
   return { root: assigned, next_differ: next };
 }
 
+/* ---------------- Legacy CK support ---------------- */
+
+/** True if the tree still contains legacy CK ("Door Group") nodes. */
+export function hasLegacyCK(root: TNode | null): boolean {
+  if (!root) return false;
+  if ((root.type as string) === "CK") return true;
+  return root.children.some(hasLegacyCK);
+}
+
+/**
+ * Remove legacy CK nodes and re-parent their CYL children up to the nearest
+ * non-CK ancestor. Other node types are preserved verbatim.
+ */
+export function flattenCK(root: TNode | null): TNode | null {
+  if (!root) return null;
+  const walk = (n: TNode): TNode => {
+    const flatChildren: TNode[] = [];
+    for (const c of n.children) {
+      const wc = walk(c);
+      if ((wc.type as string) === "CK") {
+        // Splice CK's (already-flattened) children into the parent's children
+        flatChildren.push(...wc.children);
+      } else {
+        flatChildren.push(wc);
+      }
+    }
+    return { ...n, children: flatChildren };
+  };
+  // The root itself is never CK in practice; if it somehow is, replace with first child.
+  if ((root.type as string) === "CK") {
+    const flat = walk(root);
+    return flat.children[0] ?? null;
+  }
+  return walk(root);
+}
+
 /* ---------------- Validation ---------------- */
 
 export type ValidationIssue = {
@@ -162,7 +199,7 @@ export function validate(tree: TreeData): ValidationIssue[] {
     return out;
   }
 
-  let hasCK = false;
+  let hasCyl = false;
   const walk = (n: TNode) => {
     // duplicate sibling labels
     const seen = new Map<string, number>();
@@ -173,16 +210,14 @@ export function validate(tree: TreeData): ValidationIssue[] {
       }
     });
 
-    if (n.type === "SMK" && n.children.length === 0) {
-      out.push({ level: "warning", nodeId: n.id, message: `Sub-master "${n.label}" has no door groups` });
+    if (n.type === "MK" && n.children.length === 0) {
+      out.push({ level: "warning", nodeId: n.id, message: `Master key "${n.label}" has no sub-masters` });
     }
-    if (n.type === "CK") {
-      hasCK = true;
-      if (n.children.length === 0) {
-        out.push({ level: "error", nodeId: n.id, message: `Door group "${n.label}" has no cylinder assigned` });
-      }
+    if (n.type === "SMK" && n.children.length === 0) {
+      out.push({ level: "warning", nodeId: n.id, message: `Sub-master "${n.label}" has no cylinders` });
     }
     if (n.type === "CYL") {
+      hasCyl = true;
       if (!n.cylinder_type) {
         out.push({ level: "error", nodeId: n.id, message: `Cylinder "${n.label}" has no product selected` });
       }
@@ -194,7 +229,7 @@ export function validate(tree: TreeData): ValidationIssue[] {
   };
   walk(tree.root);
 
-  if (!hasCK) out.push({ level: "warning", message: "No door groups defined yet" });
+  if (!hasCyl) out.push({ level: "warning", message: "No cylinders defined yet" });
   if (countDoors(tree.root) > 500)
     out.push({ level: "warning", message: "System is very large (>500 doors) — please double-check" });
 
