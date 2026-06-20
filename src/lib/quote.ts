@@ -1,5 +1,5 @@
 import type { CartLine } from "@/contexts/CartContext";
-import type { TNode, TreeData } from "@/lib/keytree";
+import { normaliseKeys, type TNode, type TreeData } from "@/lib/keytree";
 import type { ProductFull } from "@/components/builder/CylinderConfigurator";
 
 export interface QuoteDraftContext {
