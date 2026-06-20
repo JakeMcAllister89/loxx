@@ -97,6 +97,8 @@ function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode,
       const product = l.node.type === "CYL" && l.node.cylinder_type
         ? productsByCode.get(l.node.cylinder_type) ?? null
         : null;
+      const kids = l.node.children;
+      const addOptions = validChildTypes(l.node.type);
       return {
         id: l.id,
         type: "keynode",
@@ -109,10 +111,12 @@ function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode,
           hasError: errorIds.has(l.id),
           highlight: highlightIds?.has(l.id) ?? false,
           product,
-          childCount: l.node.children.length,
+          childMkCount:  kids.filter((c) => c.type === "MK").length,
+          childSmkCount: kids.filter((c) => c.type === "SMK").length,
+          childCylCount: kids.filter((c) => c.type === "CYL").length,
           rootDoorCount: l.node.type === "GMK" ? totalDoors : undefined,
-          canAddChild: l.node.type !== "CYL",
-          onAddChild: () => onAddChild(l.id),
+          addOptions,
+          onAddChildType: (t: NodeType) => onAddChild(l.id, t),
         },
       };
     });
