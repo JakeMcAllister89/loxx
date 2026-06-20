@@ -526,6 +526,35 @@ function BuilderInner({ systemId }: { systemId: string }) {
         </div>
       )}
 
+      {/* Legacy CK migration banner */}
+      {legacyCKDetected && (
+        <div className="border-b border-warning/40 bg-warning/10 px-6 py-3 flex items-start gap-3 no-print">
+          <Info className="h-4 w-4 text-warning mt-0.5" />
+          <div className="text-sm flex-1">
+            <span className="font-medium">This system was built with an older structure.</span>{" "}
+            Door Group nodes are no longer used — your cylinders now sit directly under their Sub Master zones. Your system still works correctly.
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setTree((cur) => {
+                const next = { ...cur, root: flattenCK(cur.root) };
+                dirtyRef.current = true;
+                return next;
+              });
+              setLegacyCKDetected(false);
+              toast.success("Structure flattened — cylinders re-parented to their Sub Masters");
+            }}
+          >
+            Flatten structure
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setLegacyCKDetected(false)}>
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+
       {/* Print header */}
       <div className="print-only px-2 py-4">
         <div className="text-2xl font-semibold">{name}</div>
