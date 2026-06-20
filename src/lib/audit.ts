@@ -88,8 +88,8 @@ export function describeAction(r: AuditRow): string {
     case "system_saved":       return `System saved${meta.door_count != null ? ` — ${meta.door_count} doors` : ""}`;
     case "node_added": {
       if (r.node_type === "GMK") return `Grand master key node created`;
+      if (r.node_type === "MK")  return `Master key added: ${r.node_label ?? ""}`;
       if (r.node_type === "SMK") return `Sub master added: ${r.node_label ?? ""}`;
-      if (r.node_type === "CK")  return `Door group added: ${r.node_label ?? ""}`;
       return `Added ${r.node_type} node: ${r.node_label ?? ""}`;
     }
     case "node_deleted":       return `Deleted ${r.node_type} node: ${r.node_label ?? ""}`;

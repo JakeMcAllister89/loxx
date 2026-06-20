@@ -18,15 +18,21 @@ export interface BuildResult {
 
 const LEVEL_ALIASES: Record<string, NodeType> = {
   gmk: "GMK", "grand master": "GMK", "grand master key": "GMK",
+  mk: "MK", "master": "MK", "master key": "MK", "building": "MK",
   smk: "SMK", "sub master": "SMK", "sub-master": "SMK", "sub master key": "SMK",
-  ck: "CK", "change key": "CK",
   cyl: "CYL", cylinder: "CYL",
 };
 
 export function normalizeLevel(raw: string): NodeType | null {
   if (!raw) return null;
   const k = raw.trim().toLowerCase();
-  return LEVEL_ALIASES[k] ?? (["GMK", "SMK", "CK", "CYL"].includes(raw.trim().toUpperCase()) ? (raw.trim().toUpperCase() as NodeType) : null);
+  if (LEVEL_ALIASES[k]) return LEVEL_ALIASES[k];
+  // Legacy CK / change key / door group rows are silently mapped to SMK so their
+  // CYL children attach directly to the nearest non-CK ancestor downstream.
+  if (k === "ck" || k === "change key" || k === "door group") return "SMK";
+  const up = raw.trim().toUpperCase();
+  if (["GMK", "MK", "SMK", "CYL"].includes(up)) return up as NodeType;
+  return null;
 }
 
 /** Build a TreeData from a flat list of parsed nodes. */
@@ -89,8 +95,8 @@ export function buildTreeFromParsed(nodes: ParsedNode[]): BuildResult {
       if (r.cylinder_type) node.cylinder_type = r.cylinder_type;
       if (r.finish) node.finish = r.finish;
     }
-    if (r.level === "CK") {
-      node.keys = r.key_qty ?? 1;
+    if (r.level === "SMK" && r.key_qty != null) {
+      node.keys = r.key_qty;
     }
 
     parent.children.push(node);
@@ -102,10 +108,10 @@ export function buildTreeFromParsed(nodes: ParsedNode[]): BuildResult {
 }
 
 export function countByType(tree: TreeData): Record<NodeType, number> {
-  const counts: Record<NodeType, number> = { GMK: 0, SMK: 0, CK: 0, CYL: 0 };
+  const counts: Record<NodeType, number> = { GMK: 0, MK: 0, SMK: 0, CYL: 0 };
   const walk = (n: TNode | null) => {
     if (!n) return;
-    counts[n.type]++;
+    if (counts[n.type] != null) counts[n.type]++;
     n.children.forEach(walk);
   };
   walk(tree.root);
@@ -124,13 +130,12 @@ export function normalizeCylinderCode(raw: string, knownCodes: string[]): { matc
 
 export const CSV_TEMPLATE = `level,label,parent_label,cylinder_type,finish,room_name,key_ref,key_qty
 GMK,Grand Master Key,,,,,GMK,10
-SMK,Floor 1,Grand Master Key,,,,SUB-F1,4
-SMK,Floor 2,Grand Master Key,,,,SUB-F2,4
-CK,Office 101,Floor 1,,,Office 101,CK-101,2
-CYL,,Office 101,EKZ-12,N.P,Room 101A,,
-CYL,,Office 101,EKZ-12,N.P,Room 101B,,
-CK,Server Room,Floor 1,,,Server Room,CK-SR,1
-CYL,,Server Room,C-KDZ36K36,S.C,Server Room Main Door,,
+MK,Building 1,Grand Master Key,,,,MK-B1,4
+SMK,Ground Floor Offices,Building 1,,,,SMK-GF,2
+CYL,,Ground Floor Offices,EKZ-12,N.P,Room 101,,
+CYL,,Ground Floor Offices,EKZ-12,N.P,Room 102,,
+SMK,First Floor,Building 1,,,,SMK-FF,2
+CYL,,First Floor,C-KDZ36K36,N.P,Server Room,,
 `;
 
 export function downloadCsvTemplate() {

@@ -219,13 +219,13 @@ function CsvCard({ onParsed }: { onParsed: (rows: ParsedNode[]) => void }) {
       </button>
       {showHelp && (
         <div className="text-[11px] text-muted-foreground mt-2 space-y-1 leading-relaxed">
-          <div><b>level</b>: GMK, SMK, CK, or CYL</div>
+          <div><b>level</b>: GMK, MK, SMK, or CYL</div>
           <div><b>label</b>: the node name (for CYL, use room_name instead)</div>
           <div><b>parent_label</b>: the label of the parent node</div>
           <div><b>cylinder_type</b>: product code for CYL rows (e.g. EKZ-12)</div>
           <div><b>finish</b>: e.g. N.P, S.C</div>
           <div><b>room_name</b>: door/room name (CYL only)</div>
-          <div><b>key_ref / key_qty</b>: key reference and copies (CK rows)</div>
+          <div><b>key_ref / key_qty</b>: key reference and copies (GMK/MK/SMK rows)</div>
         </div>
       )}
 
@@ -355,8 +355,8 @@ function ReviewStep({
 
         <div className="text-xs text-muted-foreground space-y-1">
           <div>{counts.GMK} grand master</div>
+          <div>{counts.MK} master key{counts.MK !== 1 ? "s" : ""}</div>
           <div>{counts.SMK} sub master{counts.SMK !== 1 ? "s" : ""}</div>
-          <div>{counts.CK} door group{counts.CK !== 1 ? "s" : ""}</div>
           <div>{counts.CYL} cylinder{counts.CYL !== 1 ? "s" : ""}</div>
         </div>
 
@@ -398,8 +398,8 @@ function ReviewStep({
 }
 
 function ReviewRow({ node, depth, onRename }: { node: TNode; depth: number; onRename: (id: string, label: string) => void }) {
-  const colors: Record<NodeType, string> = {
-    GMK: "hsl(var(--node-gmk))", SMK: "hsl(var(--node-smk))", CK: "hsl(var(--node-ck))", CYL: "hsl(var(--node-cyl))",
+  const colors: Record<string, string> = {
+    GMK: "hsl(var(--node-gmk))", MK: "hsl(var(--node-mk))", SMK: "hsl(var(--node-smk))", CYL: "hsl(var(--node-cyl))", CK: "hsl(var(--node-ck))",
   };
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(node.label);

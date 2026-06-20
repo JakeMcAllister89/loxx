@@ -19,8 +19,8 @@ export interface CanvasNodeData {
 
 const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string }> = {
   GMK: { label: "Grand Master", tone: "text-[hsl(var(--node-gmk))]", dot: "hsl(var(--node-gmk))", border: "hsl(var(--node-gmk))" },
+  MK:  { label: "Master Key",   tone: "text-[hsl(var(--node-mk))]",  dot: "hsl(var(--node-mk))",  border: "hsl(var(--node-mk))" },
   SMK: { label: "Sub Master",   tone: "text-[hsl(var(--node-smk))]", dot: "hsl(var(--node-smk))", border: "hsl(var(--node-smk))" },
-  CK:  { label: "Door Group",   tone: "text-[hsl(var(--node-ck))]",  dot: "hsl(var(--node-ck))",  border: "hsl(var(--node-ck))" },
   CYL: { label: "Cylinder",     tone: "text-[hsl(var(--node-cyl))]", dot: "hsl(var(--node-cyl))", border: "hsl(var(--node-cyl))" },
 };
 
@@ -31,7 +31,7 @@ function CanvasNodeImpl(props: NodeProps) {
   const d = props.data as unknown as CanvasNodeData;
   const selected = props.selected ?? d.selected;
   const { node, hasError, product, highlight, onAddChild, canAddChild } = d;
-  const meta = TYPE_META[node.type];
+  const meta = TYPE_META[node.type] ?? TYPE_META.SMK;
   const noProduct = node.type === "CYL" && !node.cylinder_type;
 
   const ringClass = highlight
@@ -80,15 +80,15 @@ function CanvasNodeImpl(props: NodeProps) {
           </div>
         )}
 
-        {node.type === "SMK" && (
+        {node.type === "MK" && (
           <div className="text-[11px] text-muted-foreground mt-1.5">
-            {d.childCount ?? 0} door group{(d.childCount ?? 0) !== 1 ? "s" : ""} · {node.keys ?? 2} key{(node.keys ?? 2) !== 1 ? "s" : ""}
+            {d.childCount ?? 0} sub-master{(d.childCount ?? 0) !== 1 ? "s" : ""} · {node.keys ?? 2} key{(node.keys ?? 2) !== 1 ? "s" : ""}
           </div>
         )}
 
-        {node.type === "CK" && (
-          <div className="text-[11px] text-muted-foreground mt-1.5 font-mono">
-            {d.childCount ?? 0} cyl · {node.keys ?? 1} key{(node.keys ?? 1) !== 1 ? "s" : ""}
+        {node.type === "SMK" && (
+          <div className="text-[11px] text-muted-foreground mt-1.5">
+            {d.childCount ?? 0} cylinder{(d.childCount ?? 0) !== 1 ? "s" : ""} · {node.keys ?? 2} key{(node.keys ?? 2) !== 1 ? "s" : ""}
           </div>
         )}
 
