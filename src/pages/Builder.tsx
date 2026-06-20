@@ -848,8 +848,11 @@ function DetailPanel({
   const isCyl = node.type === "CYL";
   const isMk = node.type === "MK";
   const isSmk = node.type === "SMK";
+  const isMkOrSmk = isMk || isSmk;
 
-  const nameLabel = isCyl
+  const displayName = (isMkOrSmk && node.location?.trim()) ? node.location.trim() : node.label;
+
+  const nameFieldLabel = isCyl
     ? "Room / door name"
     : isMk
       ? "Building / location name"
@@ -859,14 +862,14 @@ function DetailPanel({
   const namePlaceholder = isCyl
     ? "e.g. Director's Office"
     : isMk
-      ? "e.g. Main Building, North Campus, Tower Block, Building A"
+      ? "e.g. Main Building"
       : isSmk
-        ? "e.g. Ground Floor, Reception, Management Suite, IT Department, Car Park"
+        ? "e.g. Ground Floor"
         : "";
-  const locationLabel = isMk ? "Reference or zone code (optional)" : "Reference or floor code (optional)";
-  const locationPlaceholder = isMk
-    ? "e.g. Block B, Zone 2, Plot 14, MK-1"
-    : "e.g. Floor 1, Rooms 101–140, Wing C, Area 3";
+
+  const MK_SUGGESTIONS  = ["Main Building", "North Campus", "Tower Block", "Annexe", "Warehouse"];
+  const SMK_SUGGESTIONS = ["Ground Floor", "First Floor", "Reception", "Offices", "Plant Room", "Car Park", "Server Room"];
+  const suggestions = isMk ? MK_SUGGESTIONS : isSmk ? SMK_SUGGESTIONS : [];
 
   const addButtonLabel = (t: NodeType) =>
     t === "MK" ? "Add master key"
@@ -877,17 +880,25 @@ function DetailPanel({
   return (
     <div className="p-5">
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-2 flex-wrap">
-        {trail.map((t, i) => (
-          <span key={t.id} className="flex items-center gap-1">
-            {i > 0 && <ChevronRight className="h-3 w-3" />}
-            <span className="truncate max-w-[80px]">{t.label}</span>
-          </span>
-        ))}
+        {trail.map((t, i) => {
+          const label = ((t.type === "MK" || t.type === "SMK") && t.location?.trim()) ? t.location.trim() : t.label;
+          return (
+            <span key={t.id} className="flex items-center gap-1">
+              {i > 0 && <ChevronRight className="h-3 w-3" />}
+              <span className="truncate max-w-[80px]">{label}</span>
+            </span>
+          );
+        })}
       </div>
 
       <div className="flex items-center gap-2">
         <span className="h-2.5 w-2.5 rounded-full" style={{ background: meta.color }} />
         <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">{meta.label}</span>
+        {isMkOrSmk && node.location?.trim() && (
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border border-[hsl(var(--node-cyl))]/30">
+            {node.label}
+          </span>
+        )}
         {isCyl && node.differ != null && (
           <Badge className="ml-auto font-mono bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border border-[hsl(var(--node-cyl))]/30">
             D{String(node.differ).padStart(3, "0")}
@@ -902,27 +913,61 @@ function DetailPanel({
           <X className="h-4 w-4" />
         </button>
       </div>
-      <h3 className="text-lg font-semibold mt-1">{node.label || "Unnamed"}</h3>
+      <h3 className="text-lg font-semibold mt-1 truncate" title={displayName}>{displayName || "Unnamed"}</h3>
 
 
       <div className="mt-5 space-y-4">
-        <div>
-          <Label className="text-xs">{nameLabel}</Label>
-          <Input
-            value={node.label}
-            onChange={(e) => onPatch({ label: e.target.value })}
-            onFocus={(e) => { if (isMk || isSmk) e.currentTarget.select(); }}
-            placeholder={namePlaceholder}
-            className={isCyl ? "text-base font-medium" : ""}
-          />
-        </div>
-
-        {(isMk || isSmk) && (
+        {isMkOrSmk ? (
+          <>
+            <div>
+              <Label className="text-xs flex items-center gap-1.5">
+                Key reference
+                <Lock className="h-3 w-3 text-muted-foreground" />
+              </Label>
+              <div
+                className="mt-1 px-2.5 py-1.5 rounded-md bg-muted/40 font-mono text-sm text-[hsl(var(--node-cyl))] select-all"
+                title="Auto-assigned reference code — cannot be edited"
+              >
+                {node.label}
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">{nameFieldLabel}</Label>
+              <Input
+                value={node.location ?? ""}
+                onChange={(e) => onPatch({ location: e.target.value })}
+                placeholder={namePlaceholder}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Optional — helps identify this zone in large systems
+              </p>
+              {suggestions.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {suggestions.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => onPatch({ location: s })}
+                      className="text-[11px] px-2 py-0.5 rounded-full border border-border bg-muted/30 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
           <div>
-            <Label className="text-xs">{locationLabel}</Label>
+            <Label className="text-xs">{nameFieldLabel}</Label>
             <Input
-              value={node.location ?? ""}
-              onChange={(e) => onPatch({ location: e.target.value })}
+              value={node.label}
+              onChange={(e) => onPatch({ label: e.target.value })}
+              placeholder={namePlaceholder}
+              className={isCyl ? "text-base font-medium" : ""}
+            />
+          </div>
+        )}
               placeholder={locationPlaceholder}
             />
             <p className="text-[11px] text-muted-foreground mt-1">Shown as a sub-label on the canvas node</p>
