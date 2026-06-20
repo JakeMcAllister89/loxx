@@ -174,6 +174,7 @@ function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode,
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onNodeClick={handleNodeClick}
+      onPaneClick={onPaneClick}
       nodeTypes={nodeTypes}
       nodesDraggable={false}
       nodesConnectable={false}
