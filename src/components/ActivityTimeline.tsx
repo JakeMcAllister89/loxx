@@ -12,7 +12,8 @@ export function ActivityTimeline({ systemId, limit = 20, refreshMs = 30000 }: { 
       let q = (supabase.from("audit_log" as any) as any).select("*").order("created_at", { ascending: false }).limit(limit);
       if (systemId) q = q.eq("system_id", systemId);
       const { data } = await q;
-      if (active) { setRows((data as AuditRow[]) ?? []); setLoading(false); }
+      const filtered = ((data as AuditRow[]) ?? []).filter((r) => r.action !== "system_autosaved");
+      if (active) { setRows(filtered); setLoading(false); }
     };
     load();
     const iv = setInterval(load, refreshMs);
