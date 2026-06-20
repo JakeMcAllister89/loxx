@@ -92,6 +92,9 @@ export function buildTreeFromParsed(nodes: ParsedNode[]): BuildResult {
       label,
       children: [],
     };
+    if ((r.level === "MK" || r.level === "SMK") && r.location) {
+      node.location = r.location;
+    }
     if (r.level === "CYL") {
       if (r.cylinder_type) node.cylinder_type = r.cylinder_type;
       if (r.finish) node.finish = r.finish;
