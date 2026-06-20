@@ -1,5 +1,10 @@
 export type NodeType = "GMK" | "MK" | "SMK" | "CYL";
 
+export interface KeyEntry {
+  ref: string;
+  qty: number;
+}
+
 export interface TNode {
   id: string;
   type: NodeType;
@@ -11,13 +16,32 @@ export interface TNode {
   size?: string;              // CYL only — e.g. "35/35"
   quantity?: number;          // CYL only — units required at this door (default 1)
   extra_keys?: number;        // CYL only — additional keys beyond the 2 included
-  keys?: number;              // GMK/MK/SMK — copies of the key at this level
+  /** GMK/MK/SMK — copies of the key(s) at this level.
+   *  Legacy: a single number meant "n copies of one key labelled by node.label".
+   *  Current: an array of KeyEntry — multiple key refs each with their own qty. */
+  keys?: number | KeyEntry[];
   children: TNode[];
 }
 
 export interface TreeData {
   root: TNode | null;
   next_differ: number;
+}
+
+/** Normalise a node's keys field to an array of KeyEntry, handling legacy number form. */
+export function normaliseKeys(node: TNode): KeyEntry[] {
+  if (node.keys == null) {
+    return [{ ref: node.label, qty: node.type === "GMK" ? 3 : 2 }];
+  }
+  if (typeof node.keys === "number") {
+    return [{ ref: node.label, qty: node.keys }];
+  }
+  return node.keys.length > 0 ? node.keys : [{ ref: node.label, qty: 1 }];
+}
+
+/** Total key qty across all entries at this level. */
+export function countKeys(node: TNode): number {
+  return normaliseKeys(node).reduce((s, k) => s + k.qty, 0);
 }
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -28,7 +52,7 @@ export const newId = () =>
 export const emptyTree = (): TreeData => ({ root: null, next_differ: 1 });
 
 export function createGMK(label = "Grand Master"): TNode {
-  return { id: newId(), type: "GMK", label, keys: 3, children: [] };
+  return { id: newId(), type: "GMK", label, keys: [{ ref: "GMK", qty: 3 }], children: [] };
 }
 
 /**
@@ -46,13 +70,15 @@ export function makeChild(parentType: NodeType, index: number, childType?: NodeT
   const t: NodeType = childType ?? (validChildTypes(parentType)[0] ?? "CYL");
   if (t === "MK") {
     const letter = ALPHABET[index] ?? String(index + 1);
-    return { id: newId(), type: "MK", label: `MK-${letter}`, keys: 2, children: [] };
+    const label = `MK-${letter}`;
+    return { id: newId(), type: "MK", label, keys: [{ ref: label, qty: 2 }], children: [] };
   }
   if (t === "SMK") {
     const parentLetter = parentLabel?.startsWith("MK-")
       ? parentLabel.slice(3)
       : ALPHABET[0];
-    return { id: newId(), type: "SMK", label: `SMK-${parentLetter}${index + 1}`, keys: 2, children: [] };
+    const label = `SMK-${parentLetter}${index + 1}`;
+    return { id: newId(), type: "SMK", label, keys: [{ ref: label, qty: 2 }], children: [] };
   }
   return { id: newId(), type: "CYL", label: `Door ${index + 1}`, children: [] };
 }

@@ -27,8 +27,8 @@ interface Props {
 
 const nodeTypes = { keynode: CanvasNode };
 
-const HGAP = 32;
-const VGAP = 80;
+const HGAP = 20;
+const VGAP = 60;
 
 interface Laid {
   id: string;

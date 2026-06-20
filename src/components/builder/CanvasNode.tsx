@@ -19,11 +19,11 @@ export interface CanvasNodeData {
   onAddChildType?: (t: NodeType) => void;
 }
 
-const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string }> = {
-  GMK: { label: "Grand Master", tone: "text-[hsl(var(--node-gmk))]", dot: "hsl(var(--node-gmk))", border: "hsl(var(--node-gmk))" },
-  MK:  { label: "Master Key",   tone: "text-[hsl(var(--node-mk))]",  dot: "hsl(var(--node-mk))",  border: "hsl(var(--node-mk))" },
-  SMK: { label: "Sub Master",   tone: "text-[hsl(var(--node-smk))]", dot: "hsl(var(--node-smk))", border: "hsl(var(--node-smk))" },
-  CYL: { label: "Cylinder",     tone: "text-[hsl(var(--node-cyl))]", dot: "hsl(var(--node-cyl))", border: "hsl(var(--node-cyl))" },
+const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string; tintHsl: string }> = {
+  GMK: { label: "Grand Master", tone: "text-[hsl(var(--node-gmk))]", dot: "hsl(var(--node-gmk))", border: "hsl(var(--node-gmk))", tintHsl: "var(--node-gmk)" },
+  MK:  { label: "Master Key",   tone: "text-[hsl(var(--node-mk))]",  dot: "hsl(var(--node-mk))",  border: "hsl(var(--node-mk))",  tintHsl: "var(--node-mk)"  },
+  SMK: { label: "Sub Master",   tone: "text-[hsl(var(--node-smk))]", dot: "hsl(var(--node-smk))", border: "hsl(var(--node-smk))", tintHsl: "var(--node-smk)" },
+  CYL: { label: "Cylinder",     tone: "text-[hsl(var(--node-cyl))]", dot: "hsl(var(--node-cyl))", border: "hsl(var(--node-cyl))", tintHsl: "var(--node-cyl)" },
 };
 
 const ADD_LABEL: Record<NodeType, string> = {
@@ -33,15 +33,18 @@ const ADD_LABEL: Record<NodeType, string> = {
   CYL: "Add cylinder",
 };
 
-export const NODE_WIDTH = 260;
-export const NODE_HEIGHT = 104;
+/** Layout/Sizing — kept compact so medium systems fit on screen. */
+export const NODE_WIDTH = 180;
+export const NODE_HEIGHT = 72;
 
 function CanvasNodeImpl(props: NodeProps) {
   const d = props.data as unknown as CanvasNodeData;
   const selected = props.selected ?? d.selected;
   const { node, hasError, product, highlight, addOptions, onAddChildType } = d;
   const meta = TYPE_META[node.type] ?? TYPE_META.SMK;
+  const isCyl = node.type === "CYL";
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -67,6 +70,13 @@ function CanvasNodeImpl(props: NodeProps) {
   const mainLabel = hasLocation ? node.location!.trim() : node.label;
   const showRefSubLabel = hasLocation;
 
+  // Total keys (supports both legacy number and KeyEntry[] formats)
+  const totalKeys: number = typeof node.keys === "number"
+    ? node.keys
+    : Array.isArray(node.keys)
+      ? node.keys.reduce((s: number, k: any) => s + (k?.qty ?? 0), 0)
+      : (node.type === "GMK" ? 3 : 2);
+
   // Build sub-label per type
   const mkN = d.childMkCount ?? 0;
   const smkN = d.childSmkCount ?? 0;
@@ -76,88 +86,123 @@ function CanvasNodeImpl(props: NodeProps) {
   if (node.type === "GMK") {
     const parts: string[] = [];
     if (mkN > 0) parts.push(`${mkN} building${mkN !== 1 ? "s" : ""}`);
-    if (cylN > 0) parts.push(`${cylN} cylinder${cylN !== 1 ? "s" : ""}`);
-    const total = d.rootDoorCount ?? 0;
-    if (parts.length === 0) parts.push(`${total} door${total !== 1 ? "s" : ""}`);
-    parts.push(`${node.keys ?? 3} key${(node.keys ?? 3) !== 1 ? "s" : ""}`);
+    if (cylN > 0) parts.push(`${cylN} cyl${cylN !== 1 ? "s" : ""}`);
+    if (parts.length === 0) {
+      const total = d.rootDoorCount ?? 0;
+      parts.push(`${total} door${total !== 1 ? "s" : ""}`);
+    }
+    parts.push(`${totalKeys} key${totalKeys !== 1 ? "s" : ""}`);
     footer = parts.join(" · ");
   } else if (node.type === "MK") {
     const parts: string[] = [`${smkN} zone${smkN !== 1 ? "s" : ""}`];
-    if (cylN > 0) parts.push(`${cylN} cylinder${cylN !== 1 ? "s" : ""}`);
-    parts.push(`${node.keys ?? 2} key${(node.keys ?? 2) !== 1 ? "s" : ""}`);
+    if (cylN > 0) parts.push(`${cylN} cyl${cylN !== 1 ? "s" : ""}`);
+    parts.push(`${totalKeys} key${totalKeys !== 1 ? "s" : ""}`);
     footer = parts.join(" · ");
   } else if (node.type === "SMK") {
-    footer = `${cylN} cylinder${cylN !== 1 ? "s" : ""} · ${node.keys ?? 2} key${(node.keys ?? 2) !== 1 ? "s" : ""}`;
+    footer = `${cylN} cyl${cylN !== 1 ? "s" : ""} · ${totalKeys} key${totalKeys !== 1 ? "s" : ""}`;
   }
 
   const handlePlusClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!addOptions || addOptions.length === 0) return;
-    if (addOptions.length === 1) {
-      onAddChildType?.(addOptions[0]);
-    } else {
-      setPopoverOpen((v) => !v);
-    }
+    if (addOptions.length === 1) onAddChildType?.(addOptions[0]);
+    else setPopoverOpen((v) => !v);
   };
+
+  const cardWidth = isCyl ? 160 : 180;
+  const padding = isCyl ? "px-2.5 py-2" : "px-3 py-2";
 
   return (
     <div
-      className={`relative bg-card rounded-[10px] shadow-card hover:shadow-elevated transition-shadow ${ringClass}`}
-      style={{ width: NODE_WIDTH, minHeight: NODE_HEIGHT, borderLeft: `4px solid ${meta.border}` }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={`relative bg-card rounded-lg cursor-pointer transition-[box-shadow,background-color] duration-150 ${ringClass}`}
+      style={{
+        width: cardWidth,
+        borderLeft: `3px solid ${meta.border}`,
+        boxShadow: hovered || selected ? "0 4px 14px rgba(0,0,0,0.10)" : "0 1px 2px rgba(0,0,0,0.04)",
+        background: hovered ? `hsl(${meta.tintHsl} / 0.03)` : undefined,
+      }}
     >
       {node.type !== "GMK" && <Handle type="target" position={Position.Top} className="!bg-border !w-2 !h-2" />}
       {node.type !== "CYL" && <Handle type="source" position={Position.Bottom} className="!bg-border !w-2 !h-2" />}
 
-      <div className="px-3 py-2">
-        <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full shrink-0" style={{ background: meta.dot }} />
-          <span className={`text-[10px] font-mono uppercase tracking-wider ${meta.tone}`}>{meta.label}</span>
-          {node.type === "CYL" && (node.extra_keys ?? 0) > 0 && (
-            <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]" title={`${node.extra_keys} extra key(s)`}>
-              <Key className="h-2.5 w-2.5" />+{node.extra_keys}
-            </span>
-          )}
-          {node.type === "CYL" && node.differ != null && (
-            <span className={`${(node.extra_keys ?? 0) > 0 ? "" : "ml-auto"} text-[10px] font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]`}>
-              D{String(node.differ).padStart(3, "0")}
-            </span>
-          )}
-          {hasError && <AlertCircle className="h-3 w-3 text-destructive ml-auto" />}
+      <div className={`${padding} text-center`}>
+        {/* Row 1 — type label */}
+        <div
+          className={`font-mono uppercase ${meta.tone}`}
+          style={{ fontSize: 9, letterSpacing: "0.08em", marginBottom: 3 }}
+        >
+          {meta.label}
         </div>
 
-        <div className="font-semibold text-[13px] leading-tight mt-1 truncate" title={mainLabel}>
+        {/* Row 2 — main label */}
+        <div
+          className="font-semibold leading-tight truncate"
+          style={{ fontSize: 13, maxWidth: "100%" }}
+          title={mainLabel}
+        >
           {mainLabel || <span className="italic text-muted-foreground">Unnamed</span>}
         </div>
+
+        {/* Row 3 — reference code (MK/SMK only, when location set) */}
         {showRefSubLabel && (
-          <div className="text-[10px] font-mono text-[hsl(var(--node-cyl))] truncate mt-0.5">{node.label}</div>
+          <div className="font-mono text-[hsl(var(--node-cyl))] truncate" style={{ fontSize: 10, marginTop: 1 }}>
+            {node.label}
+          </div>
         )}
 
-        {footer && <div className="text-[11px] text-muted-foreground mt-1.5">{footer}</div>}
+        {/* Row 3 — CYL differ + extras badges, inline centred */}
+        {isCyl && (node.differ != null || (node.extra_keys ?? 0) > 0) && (
+          <div className="flex items-center justify-center gap-1 mt-1">
+            {node.differ != null && (
+              <span className="font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]" style={{ fontSize: 9 }}>
+                D{String(node.differ).padStart(3, "0")}
+              </span>
+            )}
+            {(node.extra_keys ?? 0) > 0 && (
+              <span
+                className="inline-flex items-center gap-0.5 font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]"
+                style={{ fontSize: 9 }}
+                title={`${node.extra_keys} extra key(s)`}
+              >
+                <Key className="h-2 w-2" />+{node.extra_keys}
+              </span>
+            )}
+          </div>
+        )}
 
-        {node.type === "CYL" && (
-          <div className="mt-1.5 flex items-center gap-2">
+        {/* Row 4 — sub-label / stats (non-CYL) */}
+        {!isCyl && footer && (
+          <div className="text-muted-foreground" style={{ fontSize: 10, marginTop: 2 }}>{footer}</div>
+        )}
+
+        {/* Row 4 — CYL product or NO PRODUCT warning */}
+        {isCyl && (
+          <div className="mt-1 flex items-center justify-center gap-1.5">
             {product ? (
               <>
-                <div className="h-5 w-5 rounded bg-muted shrink-0 overflow-hidden flex items-center justify-center">
-                  {product.image_url
-                    ? <img src={product.image_url} alt="" className="h-full w-full object-cover" />
-                    : <div className="h-full w-full bg-muted" />}
-                </div>
-                <span className="text-[11px] truncate flex-1" title={product.name}>{product.name}</span>
                 {node.finish && (
                   <span
-                    className="h-3 w-3 rounded-full shrink-0 border"
+                    className="h-2.5 w-2.5 rounded-full shrink-0 border"
                     style={{ background: colorForFinish(node.finish), borderColor: "hsl(var(--border))" }}
                     title={node.finish}
                   />
                 )}
+                <span className="text-muted-foreground truncate" style={{ fontSize: 10 }} title={product.name}>
+                  {product.name}
+                </span>
               </>
             ) : (
-              <span className="text-[10px] font-medium uppercase tracking-wide px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/30">
+              <span className="font-medium uppercase tracking-wide px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/30" style={{ fontSize: 9 }}>
                 No product
               </span>
             )}
           </div>
+        )}
+
+        {hasError && (
+          <AlertCircle className="absolute top-1 right-1 h-3 w-3 text-destructive" />
         )}
       </div>
 
@@ -165,9 +210,9 @@ function CanvasNodeImpl(props: NodeProps) {
         <div ref={popRef} className="absolute -bottom-3 left-1/2 -translate-x-1/2 nodrag">
           <button
             onClick={handlePlusClick}
-            className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 opacity-0 hover:opacity-100 transition-opacity"
+            className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-opacity"
             title="Add child"
-            style={{ opacity: selected || popoverOpen ? 1 : undefined }}
+            style={{ opacity: selected || popoverOpen || hovered ? 1 : 0 }}
           >
             <Plus className="h-3.5 w-3.5" />
           </button>

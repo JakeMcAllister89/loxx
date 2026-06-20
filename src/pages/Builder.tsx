@@ -22,11 +22,11 @@ import {
 import { BuilderCanvas, CanvasProduct } from "@/components/builder/BuilderCanvas";
 import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
 import {
-  TNode, TreeData, NodeType,
+  TNode, TreeData, NodeType, KeyEntry,
   emptyTree, createGMK, makeChild, childTypeOf, validChildTypes,
   findNode, findParent, updateNode, addChild, removeNode,
   countDoors, assignNextDiffers, pathOf, validate, ValidationIssue,
-  hasLegacyCK, flattenCK,
+  hasLegacyCK, flattenCK, normaliseKeys, countKeys,
 } from "@/lib/keytree";
 import { logAction } from "@/lib/audit";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
@@ -283,8 +283,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
             logAction({ system_id: systemId, action: "cylinder_finish_changed", node_type: "CYL", node_label: before.label, old_value: before.finish ?? "", new_value: patch.finish ?? "" });
           }
         }
-        if (patch.keys !== undefined && patch.keys !== before.keys) {
-          logAction({ system_id: systemId, action: "keys_count_changed", node_type: before.type, node_label: auditLabel(before), old_value: String(before.keys ?? 1), new_value: String(patch.keys) });
+        if (patch.keys !== undefined) {
+          const oldTotal = countKeys(before);
+          const newEntries = typeof patch.keys === "number"
+            ? [{ ref: before.label, qty: patch.keys }]
+            : (patch.keys ?? []);
+          const newTotal = newEntries.reduce((s, k) => s + k.qty, 0);
+          if (oldTotal !== newTotal) {
+            logAction({ system_id: systemId, action: "keys_count_changed", node_type: before.type, node_label: auditLabel(before), old_value: String(oldTotal), new_value: String(newTotal) });
+          }
         }
         if (patch.location !== undefined && patch.location !== before.location && (before.type === "MK" || before.type === "SMK")) {
           logAction({
@@ -397,6 +404,21 @@ function BuilderInner({ systemId }: { systemId: string }) {
     let total = 0;
     const sys = { system_id: systemId, system_name: name, system_reference: reference };
     const walk = (n: TNode) => {
+      if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
+        normaliseKeys(n).forEach((k) => {
+          if (k.qty > 0) {
+            lines.push({
+              kind: "key",
+              key_reference: k.ref,
+              room_label: n.location || n.label,
+              quantity: k.qty,
+              unit_price: 12,
+              ...sys,
+            });
+            total += 12 * k.qty;
+          }
+        });
+      }
       if (n.type === "CYL" && n.cylinder_type) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
@@ -776,9 +798,12 @@ function TreeRow({
         {node.type === "CYL" && !node.cylinder_type && (
           <span className="text-[11px] text-destructive">· no product</span>
         )}
-        {(node.type === "MK" || node.type === "SMK") && node.keys != null && (
-          <span className="text-[11px] font-mono text-muted-foreground">· {node.keys} key{node.keys !== 1 ? "s" : ""}</span>
-        )}
+        {(node.type === "MK" || node.type === "SMK") && node.keys != null && (() => {
+          const total = countKeys(node);
+          return (
+            <span className="text-[11px] font-mono text-muted-foreground">· {total} key{total !== 1 ? "s" : ""}</span>
+          );
+        })()}
 
         <div className="flex-1" />
 
@@ -970,15 +995,7 @@ function DetailPanel({
         )}
 
         {(node.type === "GMK" || node.type === "MK" || node.type === "SMK") && (
-          <div>
-            <Label className="text-xs">Keys issued</Label>
-            <Input
-              type="number" min={1} max={50}
-              value={node.keys ?? (node.type === "GMK" ? 3 : 2)}
-              onChange={(e) => onPatch({ keys: Math.max(1, Number(e.target.value) || 1) })}
-            />
-            <p className="text-[11px] text-muted-foreground mt-1">How many copies of this key are required</p>
-          </div>
+          <KeyManager node={node} onPatch={onPatch} />
         )}
 
 
@@ -1080,4 +1097,82 @@ function SaveStatusIndicator({
     );
   }
   return <div className="w-[88px]" aria-hidden />;
+}
+
+/* ------------------------- Key Manager ------------------------- */
+
+function KeyManager({ node, onPatch }: { node: TNode; onPatch: (p: Partial<TNode>) => void }) {
+  const entries = normaliseKeys(node);
+  const update = (next: KeyEntry[]) => onPatch({ keys: next });
+
+  const updateRef = (i: number, ref: string) =>
+    update(entries.map((e, idx) => (idx === i ? { ...e, ref } : e)));
+
+  const updateQty = (i: number, delta: number) =>
+    update(entries.map((e, idx) => (idx === i ? { ...e, qty: Math.max(1, e.qty + delta) } : e)));
+
+  const removeKey = (i: number) => {
+    if (entries.length <= 1) return;
+    update(entries.filter((_, idx) => idx !== i));
+  };
+
+  const addKey = () =>
+    update([...entries, { ref: `${node.label}-${entries.length + 1}`, qty: 1 }]);
+
+  const total = entries.reduce((s, k) => s + k.qty, 0);
+
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 mb-2">
+        <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-xs font-medium">Keys</span>
+      </div>
+      <div className="flex flex-col gap-2">
+        {entries.map((entry, i) => (
+          <div key={i} className="flex items-center gap-2 p-2 rounded-md border bg-muted/30">
+            <KeyRound className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+            <input
+              className="flex-1 min-w-0 text-xs font-mono bg-transparent border-none outline-none text-amber-700 font-medium"
+              value={entry.ref}
+              onChange={(e) => updateRef(i, e.target.value)}
+              placeholder="Key reference"
+            />
+            <button
+              type="button"
+              onClick={() => updateQty(i, -1)}
+              className="w-6 h-6 rounded border text-xs flex items-center justify-center hover:bg-muted"
+              aria-label="Decrease"
+            >−</button>
+            <span className="text-xs font-mono w-5 text-center">{entry.qty}</span>
+            <button
+              type="button"
+              onClick={() => updateQty(i, 1)}
+              className="w-6 h-6 rounded border text-xs flex items-center justify-center hover:bg-muted"
+              aria-label="Increase"
+            >+</button>
+            {entries.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeKey(i)}
+                className="text-muted-foreground hover:text-destructive ml-1"
+                aria-label="Remove key"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={addKey}
+        className="mt-2 w-full text-xs border border-dashed rounded-md py-1.5 text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+      >
+        + Add key
+      </button>
+      <p className="text-[11px] text-muted-foreground mt-1">
+        Total: {total} key{total !== 1 ? "s" : ""} at this level
+      </p>
+    </div>
+  );
 }

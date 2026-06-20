@@ -1,5 +1,5 @@
 import type { CartLine } from "@/contexts/CartContext";
-import type { TNode, TreeData } from "@/lib/keytree";
+import { normaliseKeys, type TNode, type TreeData } from "@/lib/keytree";
 import type { ProductFull } from "@/components/builder/CylinderConfigurator";
 
 export interface QuoteDraftContext {
@@ -21,6 +21,20 @@ export function treeToQuoteItems(
   const productByCode = new Map(products.map((p) => [p.code, p]));
   const out: CartLine[] = [];
   const walk = (n: TNode) => {
+    if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
+      normaliseKeys(n).forEach((k) => {
+        if (k.qty > 0) {
+          out.push({
+            kind: "key",
+            key_reference: k.ref,
+            room_label: n.location || n.label,
+            quantity: k.qty,
+            unit_price: 12,
+            ...sys,
+          });
+        }
+      });
+    }
     if (n.type === "CYL" && n.cylinder_type) {
       const p = productByCode.get(n.cylinder_type);
       const unit = Number(p?.price_gbp ?? 0);
