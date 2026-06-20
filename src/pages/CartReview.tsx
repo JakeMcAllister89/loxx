@@ -232,16 +232,29 @@ function Stepper({ step }: { step: 0 | 1 | 2 }) {
 
 const TYPE_PILL: Record<string, string> = {
   GMK: "bg-violet-100 text-violet-800 border-violet-200",
+  MK:  "bg-teal-100 text-teal-800 border-teal-200",
   SMK: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  CK: "bg-sky-100 text-sky-800 border-sky-200",
+  CK:  "bg-sky-100 text-sky-800 border-sky-200",
   CYL: "bg-amber-100 text-amber-900 border-amber-200",
 };
 
+/** Visually flatten legacy CK nodes when summarising for the customer. */
+function flattenCKForDisplay(n: TNode): TNode {
+  const kids: TNode[] = [];
+  for (const c of n.children) {
+    const fc = flattenCKForDisplay(c);
+    if ((fc.type as string) === "CK") kids.push(...fc.children);
+    else kids.push(fc);
+  }
+  return { ...n, children: kids };
+}
+
 function HierarchyView({ root }: { root: TNode }) {
+  const view = flattenCKForDisplay(root);
   const renderNode = (n: TNode, depth: number) => (
     <div key={n.id}>
       <div className="flex items-center gap-2 py-1 text-sm" style={{ paddingLeft: depth * 18 }}>
-        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${TYPE_PILL[n.type]}`}>{n.type}</span>
+        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${TYPE_PILL[n.type] ?? TYPE_PILL.SMK}`}>{n.type}</span>
         <span className={n.type === "CYL" ? "" : "font-medium"}>{n.label}</span>
         {n.type === "CYL" && (
           <span className="text-xs text-muted-foreground ml-1">
@@ -254,21 +267,21 @@ function HierarchyView({ root }: { root: TNode }) {
       {n.children.map(c => renderNode(c, depth + 1))}
     </div>
   );
-  return <div>{renderNode(root, 0)}</div>;
+  return <div>{renderNode(view, 0)}</div>;
 }
 
 function HierarchyFooter({ root }: { root: TNode }) {
-  let smk = 0, ck = 0, cyl = 0;
+  let mk = 0, smk = 0, cyl = 0;
   const walk = (n: TNode) => {
+    if (n.type === "MK") mk++;
     if (n.type === "SMK") smk++;
-    if (n.type === "CK") ck++;
     if (n.type === "CYL") cyl++;
     n.children.forEach(walk);
   };
   walk(root);
   return (
     <div className="text-xs text-muted-foreground mt-3 pt-3 border-t">
-      {smk} sub master{smk === 1 ? "" : "s"} · {ck} door group{ck === 1 ? "" : "s"} · {cyl} cylinder{cyl === 1 ? "" : "s"}
+      {mk} master key{mk === 1 ? "" : "s"} · {smk} sub master{smk === 1 ? "" : "s"} · {cyl} cylinder{cyl === 1 ? "" : "s"}
     </div>
   );
 }

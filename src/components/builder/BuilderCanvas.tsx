@@ -195,8 +195,8 @@ function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode,
           const t = (n.data as any)?.node?.type as NodeType | undefined;
           if (!t) return "hsl(var(--border))";
           if (t === "GMK") return "hsl(var(--node-gmk))";
+          if (t === "MK")  return "hsl(var(--node-mk))";
           if (t === "SMK") return "hsl(var(--node-smk))";
-          if (t === "CK")  return "hsl(var(--node-ck))";
           return "hsl(var(--node-cyl))";
         }}
         maskColor="hsl(var(--background) / 0.6)"

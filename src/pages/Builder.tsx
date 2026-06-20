@@ -26,6 +26,7 @@ import {
   emptyTree, createGMK, makeChild, childTypeOf,
   findNode, findParent, updateNode, addChild, removeNode,
   countDoors, assignNextDiffers, pathOf, validate, ValidationIssue,
+  hasLegacyCK, flattenCK,
 } from "@/lib/keytree";
 import { logAction } from "@/lib/audit";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
@@ -33,15 +34,15 @@ import { stashQuoteDraft, treeToQuoteItems } from "@/lib/quote";
 
 const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }> = {
   GMK: { label: "Grand Master",  color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30" },
+  MK:  { label: "Master Key",    color: "hsl(var(--node-mk))",  pill: "bg-[hsl(178_70%_94%)] text-[hsl(var(--node-mk))] border-[hsl(var(--node-mk))]/30" },
   SMK: { label: "Sub-master",    color: "hsl(var(--node-smk))", pill: "bg-[hsl(154_60%_95%)] text-[hsl(var(--node-smk))] border-[hsl(var(--node-smk))]/30" },
-  CK:  { label: "Door Group",    color: "hsl(var(--node-ck))",  pill: "bg-[hsl(210_75%_96%)] text-[hsl(var(--node-ck))] border-[hsl(var(--node-ck))]/30" },
   CYL: { label: "Cylinder",      color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30" },
 };
 
 const CHILD_LABEL: Record<NodeType, string> = {
-  GMK: "Sub-master",
-  SMK: "Door Group",
-  CK: "Cylinder",
+  GMK: "Master Key",
+  MK:  "Sub-master",
+  SMK: "Cylinder",
   CYL: "",
 };
 
@@ -87,6 +88,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [legacyCKDetected, setLegacyCKDetected] = useState(false);
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
@@ -184,6 +186,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setReference(data.reference);
       const raw = (data.tree_data as unknown as TreeData) ?? emptyTree();
       const loaded = raw?.root !== undefined ? raw : emptyTree();
+      setLegacyCKDetected(hasLegacyCK(loaded.root));
       setTree(loaded.root ? assignNextDiffers(loaded) : loaded);
       setLoading(false);
     });
@@ -271,7 +274,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           }
         }
         if (patch.keys !== undefined && patch.keys !== before.keys) {
-          logAction({ system_id: systemId, action: "keys_count_changed", node_type: "CK", node_label: before.label, old_value: String(before.keys ?? 1), new_value: String(patch.keys) });
+          logAction({ system_id: systemId, action: "keys_count_changed", node_type: before.type, node_label: before.label, old_value: String(before.keys ?? 1), new_value: String(patch.keys) });
         }
       }
       return { ...prev, root };
@@ -523,6 +526,35 @@ function BuilderInner({ systemId }: { systemId: string }) {
         </div>
       )}
 
+      {/* Legacy CK migration banner */}
+      {legacyCKDetected && (
+        <div className="border-b border-warning/40 bg-warning/10 px-6 py-3 flex items-start gap-3 no-print">
+          <Info className="h-4 w-4 text-warning mt-0.5" />
+          <div className="text-sm flex-1">
+            <span className="font-medium">This system was built with an older structure.</span>{" "}
+            Door Group nodes are no longer used — your cylinders now sit directly under their Sub Master zones. Your system still works correctly.
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setTree((cur) => {
+                const next = { ...cur, root: flattenCK(cur.root) };
+                dirtyRef.current = true;
+                return next;
+              });
+              setLegacyCKDetected(false);
+              toast.success("Structure flattened — cylinders re-parented to their Sub Masters");
+            }}
+          >
+            Flatten structure
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setLegacyCKDetected(false)}>
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+
       {/* Print header */}
       <div className="print-only px-2 py-4">
         <div className="text-2xl font-semibold">{name}</div>
@@ -543,7 +575,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 </div>
                 <h3 className="text-lg font-semibold">Start your hierarchy</h3>
                 <p className="text-sm text-muted-foreground mt-1 mb-4">
-                  Every master-key system begins with a Grand Master Key. Add one to start branching into sub-masters, door groups and cylinders.
+                  Every master-key system begins with a Grand Master Key. Add one to start branching into master keys, sub-masters and cylinders.
                 </p>
                 <Button onClick={addRoot} className="bg-primary hover:bg-primary/90">
                   <Plus className="h-4 w-4" /> Add Grand Master
@@ -607,7 +639,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               <h3 className="text-base font-semibold text-foreground mb-1">Details</h3>
               <p>Click any row to edit its properties, or hover and tap <kbd className="px-1 rounded bg-muted text-xs">+</kbd> to add a child.</p>
               <div className="mt-6 space-y-2 text-xs">
-                <Legend type="GMK" /><Legend type="SMK" /><Legend type="CK" /><Legend type="CYL" />
+                <Legend type="GMK" /><Legend type="MK" /><Legend type="SMK" /><Legend type="CYL" />
               </div>
               <div className="mt-8 pt-5 border-t">
                 <h4 className="text-sm font-semibold text-foreground mb-1">Activity</h4>
@@ -724,8 +756,8 @@ function TreeRow({
         {node.type === "CYL" && !node.cylinder_type && (
           <span className="text-[11px] text-destructive">· no product</span>
         )}
-        {node.type === "CK" && (
-          <span className="text-[11px] font-mono text-muted-foreground">· {node.keys ?? 1} key{(node.keys ?? 1) !== 1 ? "s" : ""}</span>
+        {(node.type === "MK" || node.type === "SMK") && node.keys != null && (
+          <span className="text-[11px] font-mono text-muted-foreground">· {node.keys} key{node.keys !== 1 ? "s" : ""}</span>
         )}
 
         <div className="flex-1" />
@@ -847,13 +879,6 @@ function DetailPanel({
           </div>
         )}
 
-        {node.type === "CK" && (
-          <div>
-            <Label className="text-xs">Number of keys (copies)</Label>
-            <Input type="number" min={1} max={50} value={node.keys ?? 1}
-              onChange={(e) => onPatch({ keys: Math.max(1, Number(e.target.value) || 1) })} />
-          </div>
-        )}
 
         {isCyl && (
           <CylinderConfigurator node={node} products={products} onPatch={onPatch} />
@@ -877,7 +902,7 @@ function DetailPanel({
         </div>
 
 
-        {(node.type === "GMK" || node.type === "SMK" || node.type === "CK") && node.children.length > 0 && (
+        {(node.type === "GMK" || node.type === "MK" || node.type === "SMK") && node.children.length > 0 && (
           <div className="pt-3 border-t">
             <div className="text-xs font-medium text-muted-foreground mb-2">Contains</div>
             <ul className="text-sm space-y-1">

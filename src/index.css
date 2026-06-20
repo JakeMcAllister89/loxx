@@ -48,10 +48,11 @@
     --sidebar-ring: 33 91% 44%;
 
     /* Node colours */
-    --node-gmk: 245 60% 67%;           /* #7f77dd */
-    --node-smk: 154 71% 36%;           /* #1d9e75 */
-    --node-ck: 210 73% 54%;            /* #378add */
-    --node-cyl: 33 91% 44%;            /* amber */
+   --node-gmk: 245 60% 67%;           /* purple — Grand Master */
+   --node-mk:  178 60% 38%;           /* teal — Master Key */
+   --node-smk: 154 71% 36%;           /* green — Sub Master */
+   --node-ck:  210 73% 54%;           /* legacy — Door Group (kept for back-compat) */
+   --node-cyl: 33 91% 44%;            /* amber — Cylinder */
 
     --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
 
