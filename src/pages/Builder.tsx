@@ -26,6 +26,7 @@ import {
   emptyTree, createGMK, makeChild, childTypeOf,
   findNode, findParent, updateNode, addChild, removeNode,
   countDoors, assignNextDiffers, pathOf, validate, ValidationIssue,
+  hasLegacyCK, flattenCK,
 } from "@/lib/keytree";
 import { logAction } from "@/lib/audit";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
@@ -33,15 +34,15 @@ import { stashQuoteDraft, treeToQuoteItems } from "@/lib/quote";
 
 const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }> = {
   GMK: { label: "Grand Master",  color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30" },
+  MK:  { label: "Master Key",    color: "hsl(var(--node-mk))",  pill: "bg-[hsl(178_70%_94%)] text-[hsl(var(--node-mk))] border-[hsl(var(--node-mk))]/30" },
   SMK: { label: "Sub-master",    color: "hsl(var(--node-smk))", pill: "bg-[hsl(154_60%_95%)] text-[hsl(var(--node-smk))] border-[hsl(var(--node-smk))]/30" },
-  CK:  { label: "Door Group",    color: "hsl(var(--node-ck))",  pill: "bg-[hsl(210_75%_96%)] text-[hsl(var(--node-ck))] border-[hsl(var(--node-ck))]/30" },
   CYL: { label: "Cylinder",      color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30" },
 };
 
 const CHILD_LABEL: Record<NodeType, string> = {
-  GMK: "Sub-master",
-  SMK: "Door Group",
-  CK: "Cylinder",
+  GMK: "Master Key",
+  MK:  "Sub-master",
+  SMK: "Cylinder",
   CYL: "",
 };
 
@@ -271,7 +272,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           }
         }
         if (patch.keys !== undefined && patch.keys !== before.keys) {
-          logAction({ system_id: systemId, action: "keys_count_changed", node_type: "CK", node_label: before.label, old_value: String(before.keys ?? 1), new_value: String(patch.keys) });
+          logAction({ system_id: systemId, action: "keys_count_changed", node_type: before.type, node_label: before.label, old_value: String(before.keys ?? 1), new_value: String(patch.keys) });
         }
       }
       return { ...prev, root };
@@ -607,7 +608,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               <h3 className="text-base font-semibold text-foreground mb-1">Details</h3>
               <p>Click any row to edit its properties, or hover and tap <kbd className="px-1 rounded bg-muted text-xs">+</kbd> to add a child.</p>
               <div className="mt-6 space-y-2 text-xs">
-                <Legend type="GMK" /><Legend type="SMK" /><Legend type="CK" /><Legend type="CYL" />
+                <Legend type="GMK" /><Legend type="MK" /><Legend type="SMK" /><Legend type="CYL" />
               </div>
               <div className="mt-8 pt-5 border-t">
                 <h4 className="text-sm font-semibold text-foreground mb-1">Activity</h4>
@@ -724,8 +725,8 @@ function TreeRow({
         {node.type === "CYL" && !node.cylinder_type && (
           <span className="text-[11px] text-destructive">· no product</span>
         )}
-        {node.type === "CK" && (
-          <span className="text-[11px] font-mono text-muted-foreground">· {node.keys ?? 1} key{(node.keys ?? 1) !== 1 ? "s" : ""}</span>
+        {(node.type === "MK" || node.type === "SMK") && node.keys != null && (
+          <span className="text-[11px] font-mono text-muted-foreground">· {node.keys} key{node.keys !== 1 ? "s" : ""}</span>
         )}
 
         <div className="flex-1" />
@@ -847,13 +848,6 @@ function DetailPanel({
           </div>
         )}
 
-        {node.type === "CK" && (
-          <div>
-            <Label className="text-xs">Number of keys (copies)</Label>
-            <Input type="number" min={1} max={50} value={node.keys ?? 1}
-              onChange={(e) => onPatch({ keys: Math.max(1, Number(e.target.value) || 1) })} />
-          </div>
-        )}
 
         {isCyl && (
           <CylinderConfigurator node={node} products={products} onPatch={onPatch} />
@@ -877,7 +871,7 @@ function DetailPanel({
         </div>
 
 
-        {(node.type === "GMK" || node.type === "SMK" || node.type === "CK") && node.children.length > 0 && (
+        {(node.type === "GMK" || node.type === "MK" || node.type === "SMK") && node.children.length > 0 && (
           <div className="pt-3 border-t">
             <div className="text-xs font-medium text-muted-foreground mb-2">Contains</div>
             <ul className="text-sm space-y-1">
