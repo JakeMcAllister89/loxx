@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
-import { AuditRow, describeAction, timeAgo } from "@/lib/audit";
+import { AuditRow, describeAction, timeAgo, formatTableTimestamp } from "@/lib/audit";
 import { Link } from "react-router-dom";
 
 const ACTION_TYPES = [
@@ -38,9 +38,17 @@ export default function Account() {
       if (data) { setName(data.name ?? ""); setCompany(data.company ?? ""); setPhone(data.phone ?? ""); }
     });
     supabase.from("key_systems").select("id,name").order("name").then(({ data }) => setSystems(data ?? []));
-    (supabase.from("audit_log" as any) as any).select("*").order("created_at", { ascending: false }).limit(1000).then(({ data }: any) => {
-      setRows((data as AuditRow[]) ?? []);
-    });
+    (supabase.from("audit_log" as any) as any)
+      .select("*")
+      .not("action", "eq", "system_autosaved")
+      .order("created_at", { ascending: false })
+      .limit(1000)
+      .then(({ data }: any) => {
+        const rows = ((data as AuditRow[]) ?? []).filter(
+          (r) => !(r.action === "node_added" && r.node_type === "CYL"),
+        );
+        setRows(rows);
+      });
   }, [user]);
 
   const save = async () => {
@@ -133,26 +141,38 @@ export default function Account() {
                   <thead className="bg-muted/40 text-left text-xs uppercase text-muted-foreground">
                     <tr>
                       <th className="px-4 py-2">When</th>
+                      <th className="px-4 py-2">User</th>
                       <th className="px-4 py-2">System</th>
                       <th className="px-4 py-2">Action</th>
+                      <th className="px-4 py-2">Detail</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((r) => (
-                      <tr key={r.id} className="border-t">
-                        <td className="px-4 py-2 text-xs text-muted-foreground whitespace-nowrap" title={new Date(r.created_at).toLocaleString("en-GB")}>
-                          {timeAgo(r.created_at)}
-                        </td>
-                        <td className="px-4 py-2 text-xs">
-                          {r.system_id ? (
-                            <Link className="text-primary hover:underline" to={`/builder/${r.system_id}`}>
-                              {systemName.get(r.system_id) ?? r.system_id.slice(0, 8)}
-                            </Link>
-                          ) : <span className="text-muted-foreground">—</span>}
-                        </td>
-                        <td className="px-4 py-2">{describeAction(r)}</td>
-                      </tr>
-                    ))}
+                    {filtered.map((r) => {
+                      const isMe = user && r.user_id === user.id;
+                      const displayUser = isMe ? "You" : (r.user_name ?? "Unknown user");
+                      return (
+                        <tr key={r.id} className="border-t align-top">
+                          <td
+                            className="px-4 py-2 text-xs font-mono text-muted-foreground whitespace-nowrap"
+                            title={new Date(r.created_at).toISOString()}
+                          >
+                            <div>{formatTableTimestamp(r.created_at)}</div>
+                            <div className="text-[10px] opacity-70">{timeAgo(r.created_at)}</div>
+                          </td>
+                          <td className="px-4 py-2 text-xs whitespace-nowrap">{displayUser}</td>
+                          <td className="px-4 py-2 text-xs">
+                            {r.system_id ? (
+                              <Link className="text-primary hover:underline" to={`/builder/${r.system_id}`}>
+                                {systemName.get(r.system_id) ?? r.system_id.slice(0, 8)}
+                              </Link>
+                            ) : <span className="text-muted-foreground">—</span>}
+                          </td>
+                          <td className="px-4 py-2">{describeAction(r)}</td>
+                          <td className="px-4 py-2 text-xs font-mono text-muted-foreground">{r.new_value ?? ""}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               )}

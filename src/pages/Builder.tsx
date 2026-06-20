@@ -125,6 +125,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
     });
   }, [systemId]);
 
+  const productsRef = useRef<Product[]>([]);
+  useEffect(() => { productsRef.current = products; }, [products]);
+
   const flushCylConfig = useCallback(() => {
     const c = cylConfigRef.current;
     if (!c) return;
@@ -132,21 +135,28 @@ function BuilderInner({ systemId }: { systemId: string }) {
     setTree((cur) => {
       const n = findNode(cur.root, c.nodeId);
       if (n && n.type === "CYL") {
-        const parts = [n.cylinder_type, n.finish, n.size].filter(Boolean);
+        const prod = productsRef.current.find((p) => p.code === n.cylinder_type);
+        const profile = (prod as any)?.cylinder_profile ?? null;
+        const size = n.size ?? (prod as any)?.size ?? null;
+        const productName = prod?.name ?? null;
         const differRef = `D${String(n.differ ?? 0).padStart(3, "0")}`;
+        const specParts = [n.cylinder_type, profile, n.finish, size].filter(Boolean);
         logAction({
           system_id: systemId,
           action: "cylinder_configured",
           node_type: "CYL",
           node_label: n.label,
-          new_value: parts.join(" · "),
+          new_value: specParts.join(" · "),
           metadata: {
             differ_ref: differRef,
             room_name: n.label,
             product: n.cylinder_type ?? null,
+            product_name: productName,
+            profile,
             finish: n.finish ?? null,
-            size: n.size ?? null,
+            size,
             extra_keys: n.extra_keys ?? 0,
+            quantity: 1,
           },
         });
       }

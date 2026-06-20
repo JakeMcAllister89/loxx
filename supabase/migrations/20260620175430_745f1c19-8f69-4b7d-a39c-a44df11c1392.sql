@@ -1,0 +1,1 @@
+ALTER TABLE public.audit_log ADD COLUMN IF NOT EXISTS user_name text;
