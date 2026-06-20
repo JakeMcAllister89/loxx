@@ -185,6 +185,7 @@ function CsvCard({ onParsed }: { onParsed: (rows: ParsedNode[]) => void }) {
         const rows: ParsedNode[] = res.data.map((r) => ({
           level: (r.level ?? "").trim() as NodeType,
           label: (r.label ?? "").trim(),
+          location: (r.location ?? "").trim() || null,
           parent_label: (r.parent_label ?? "").trim() || null,
           cylinder_type: (r.cylinder_type ?? "").trim() || null,
           finish: (r.finish ?? "").trim() || null,
