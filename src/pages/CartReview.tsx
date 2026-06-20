@@ -256,6 +256,9 @@ function HierarchyView({ root }: { root: TNode }) {
       <div className="flex items-center gap-2 py-1 text-sm" style={{ paddingLeft: depth * 18 }}>
         <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${TYPE_PILL[n.type] ?? TYPE_PILL.SMK}`}>{n.type}</span>
         <span className={n.type === "CYL" ? "" : "font-medium"}>{n.label}</span>
+        {(n.type === "MK" || n.type === "SMK") && n.location && (
+          <span className="text-xs text-muted-foreground">({n.location})</span>
+        )}
         {n.type === "CYL" && (
           <span className="text-xs text-muted-foreground ml-1">
             {n.differ != null && <span className="font-mono mr-2">D{String(n.differ).padStart(3, "0")}</span>}
