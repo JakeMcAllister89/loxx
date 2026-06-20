@@ -9,13 +9,20 @@ import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
 interface CartLine {
   kind: "cylinder" | "key";
   product_code?: string;
+  product_name?: string;
   cylinder_type?: string;
+  cylinder_profile?: string;
   finish?: string;
+  size?: string;
   room_label?: string;
   differ_ref?: string;
   key_reference?: string;
   quantity: number;
   unit_price: number; // GBP
+}
+
+interface DeliveryAddress {
+  line1?: string; line2?: string; city?: string; county?: string; postcode?: string;
 }
 
 interface CheckoutBody {
@@ -24,8 +31,10 @@ interface CheckoutBody {
   environment: StripeEnv;
   systemId?: string | null;
   customer?: { name?: string; company?: string };
+  customerPoRef?: string;
   poRef?: string;
   notes?: string;
+  delivery?: DeliveryAddress;
 }
 
 const supabase = createClient(
@@ -35,7 +44,7 @@ const supabase = createClient(
 
 const PHYSICAL_GOODS_TAX_CODE = "txcd_99999999";
 
-function badRequest(message: string, status = 400) {
+function jsonError(message: string, status = 400) {
   return new Response(JSON.stringify({ error: message }), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -44,18 +53,23 @@ function badRequest(message: string, status = 400) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return badRequest("Method not allowed", 405);
+  if (req.method !== "POST") return jsonError("Method not allowed", 405);
 
   try {
     const token = req.headers.get("Authorization")?.replace("Bearer ", "");
-    if (!token) return badRequest("Unauthorized", 401);
+    if (!token) return jsonError("Unauthorized — please sign in again", 401);
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
-    if (authErr || !user) return badRequest("Unauthorized", 401);
+    if (authErr || !user) return jsonError("Unauthorized — please sign in again", 401);
 
-    const body = (await req.json()) as CheckoutBody;
-    if (!Array.isArray(body.items) || body.items.length === 0) return badRequest("Cart is empty");
-    if (!body.returnUrl) return badRequest("returnUrl is required");
-    if (body.environment !== "sandbox" && body.environment !== "live") return badRequest("Invalid environment");
+    let body: CheckoutBody;
+    try { body = (await req.json()) as CheckoutBody; }
+    catch { return jsonError("Invalid request body"); }
+
+    if (!Array.isArray(body.items) || body.items.length === 0) {
+      return jsonError("Your basket is empty — please add items before checking out");
+    }
+    if (!body.returnUrl) return jsonError("returnUrl is required");
+    if (body.environment !== "sandbox" && body.environment !== "live") return jsonError("Invalid environment");
 
     // Sanitise + price guard (in pence) — never trust client unit_price for >£1000.
     const items = body.items.map((it) => ({
@@ -65,26 +79,42 @@ Deno.serve(async (req) => {
     }));
 
     const subtotal = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+    if (subtotal <= 0) return jsonError("Order total must be greater than zero");
+
+    const deliveryText = body.delivery ? [
+      body.delivery.line1, body.delivery.line2, body.delivery.city,
+      body.delivery.county, body.delivery.postcode,
+    ].filter(Boolean).join(", ") : null;
+
+    const combinedNotes = [
+      body.notes,
+      deliveryText ? `Delivery: ${deliveryText}` : null,
+      body.customerPoRef ? `Customer PO: ${body.customerPoRef}` : null,
+    ].filter(Boolean).join(" | ") || null;
 
     // Create pending order. VAT is finalised on verify-checkout from the real session amounts.
+    const orderInsert: Record<string, unknown> = {
+      user_id: user.id,
+      status: "pending",
+      subtotal,
+      vat: 0,
+      total: subtotal,
+      customer_email: user.email,
+      customer_name: body.customer?.name ?? null,
+      company: body.customer?.company ?? null,
+      system_id: body.systemId ?? null,
+      purchase_order_ref: body.poRef ?? body.customerPoRef ?? null,
+      notes: combinedNotes,
+    };
+    // optional columns added by recent migrations
+    if (body.customerPoRef !== undefined) orderInsert.customer_po_ref = body.customerPoRef || null;
+
     const { data: order, error: orderErr } = await supabase
       .from("orders")
-      .insert({
-        user_id: user.id,
-        status: "pending",
-        subtotal,
-        vat: 0,
-        total: subtotal,
-        customer_email: user.email,
-        customer_name: body.customer?.name ?? null,
-        company: body.customer?.company ?? null,
-        system_id: body.systemId ?? null,
-        purchase_order_ref: body.poRef ?? null,
-        notes: body.notes ?? null,
-      })
+      .insert(orderInsert)
       .select("id")
       .single();
-    if (orderErr || !order) return badRequest(`Failed to create order: ${orderErr?.message}`, 500);
+    if (orderErr || !order) return jsonError(`Failed to create order: ${orderErr?.message}`, 500);
 
     const itemRows = items.map((it) => ({
       order_id: order.id,
@@ -99,7 +129,7 @@ Deno.serve(async (req) => {
       line_total: it.quantity * it.unit_price,
     }));
     const { error: itemsErr } = await supabase.from("order_items").insert(itemRows);
-    if (itemsErr) return badRequest(`Failed to write order items: ${itemsErr.message}`, 500);
+    if (itemsErr) return jsonError(`Failed to write order items: ${itemsErr.message}`, 500);
 
     const stripe = createStripeClient(body.environment);
 
@@ -107,17 +137,19 @@ Deno.serve(async (req) => {
       const isKey = it.kind === "key";
       const name = isKey
         ? `Key — ${it.key_reference ?? "blank"}`
-        : `${it.product_code ?? "Cylinder"}${it.room_label ? ` · ${it.room_label}` : ""}`;
+        : `${it.product_name ?? it.product_code ?? "Cylinder"}${it.room_label ? ` · ${it.room_label}` : ""}`;
       const description = [
         it.differ_ref,
+        it.cylinder_profile,
         it.cylinder_type,
         it.finish,
+        it.size,
       ].filter(Boolean).join(" · ") || undefined;
       return {
         quantity: it.quantity,
         price_data: {
           currency: "gbp",
-          unit_amount: Math.round(it.unit_price * 100), // £ → pence
+          unit_amount: Math.round(it.unit_price * 100),
           tax_behavior: "exclusive" as const,
           product_data: {
             name: name.slice(0, 250),
@@ -147,6 +179,7 @@ Deno.serve(async (req) => {
       metadata: {
         userId: user.id,
         orderId: order.id,
+        ...(body.customerPoRef ? { customerPoRef: body.customerPoRef.slice(0, 100) } : {}),
       },
     });
 
@@ -161,6 +194,6 @@ Deno.serve(async (req) => {
     );
   } catch (e) {
     console.error("create-checkout error", e);
-    return badRequest((e as Error).message ?? "Server error", 500);
+    return jsonError((e as Error).message ?? "Server error", 500);
   }
 });
