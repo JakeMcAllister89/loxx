@@ -55,14 +55,17 @@
 
     --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
 
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 }
 
 @layer base {
   * { @apply border-border; }
   html, body { @apply bg-background text-foreground antialiased; }
-  body { font-family: 'DM Sans', system-ui, sans-serif; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
   .font-mono, code, pre, .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 }
 
