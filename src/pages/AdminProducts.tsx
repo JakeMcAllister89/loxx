@@ -444,3 +444,112 @@ function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpen
     </Dialog>
   );
 }
+
+function CylinderTypesSection({ types, reload, products }: { types: CylinderType[]; reload: () => void; products: AdminProduct[] }) {
+  const [newName, setNewName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+
+  const usageCount = (typeName: string) => products.filter(p => p.is_active && p.cylinder_type === typeName).length;
+
+  const add = async () => {
+    const n = newName.trim();
+    if (!n) return;
+    setBusy(true);
+    const nextOrder = (types[types.length - 1]?.sort_order ?? 0) + 1;
+    const { error } = await supabase.from("cylinder_types").insert({ name: n, sort_order: nextOrder });
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    setNewName(""); reload();
+  };
+
+  const move = async (id: string, dir: -1 | 1) => {
+    const idx = types.findIndex(t => t.id === id);
+    const swap = types[idx + dir];
+    if (!swap) return;
+    await supabase.from("cylinder_types").update({ sort_order: swap.sort_order }).eq("id", id);
+    await supabase.from("cylinder_types").update({ sort_order: types[idx].sort_order }).eq("id", swap.id);
+    reload();
+  };
+
+  const saveRename = async (id: string) => {
+    const n = editName.trim();
+    if (!n) { setEditingId(null); return; }
+    const { error } = await supabase.from("cylinder_types").update({ name: n }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setEditingId(null); reload();
+  };
+
+  const remove = async (t: CylinderType) => {
+    if (usageCount(t.name) > 0) return;
+    const { error } = await supabase.from("cylinder_types").update({ is_active: false }).eq("id", t.id);
+    if (error) { toast.error(error.message); return; }
+    reload();
+  };
+
+  return (
+    <section className="mt-10">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Cylinder types</h2>
+          <p className="text-sm text-muted-foreground">Manage the cylinder type options that appear in the product form and the builder.</p>
+        </div>
+      </div>
+      <div className="rounded-[10px] border bg-card shadow-card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+            <tr>
+              <th className="px-3 py-2 text-left w-20">Order</th>
+              <th className="px-3 py-2 text-left">Name</th>
+              <th className="px-3 py-2 text-left w-32">Products</th>
+              <th className="px-3 py-2 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {types.map((t, i) => {
+              const count = usageCount(t.name);
+              const canDelete = count === 0;
+              return (
+                <tr key={t.id} className="border-t">
+                  <td className="px-3 py-2">
+                    <div className="inline-flex gap-1">
+                      <Button size="icon" variant="ghost" className="h-6 w-6" disabled={i === 0} onClick={() => move(t.id, -1)}>↑</Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6" disabled={i === types.length - 1} onClick={() => move(t.id, 1)}>↓</Button>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2">
+                    {editingId === t.id ? (
+                      <Input autoFocus value={editName} onChange={e => setEditName(e.target.value)} onBlur={() => saveRename(t.id)} onKeyDown={e => { if (e.key === "Enter") saveRename(t.id); if (e.key === "Escape") setEditingId(null); }} className="h-8 w-48" />
+                    ) : (
+                      <span className="font-medium">{t.name}</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-muted-foreground">{count} product{count === 1 ? "" : "s"}</td>
+                  <td className="px-3 py-2 text-right">
+                    <Button size="sm" variant="ghost" onClick={() => { setEditingId(t.id); setEditName(t.name); }}><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button size="sm" variant="ghost" disabled={!canDelete} title={canDelete ? "Remove" : `${count} products use this type`} onClick={() => remove(t)}>
+                      <Trash2 className={`h-3.5 w-3.5 ${canDelete ? "text-red-600" : "text-muted-foreground"}`} />
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })}
+            <tr className="border-t bg-muted/20">
+              <td className="px-3 py-2" colSpan={2}>
+                <div className="flex gap-2">
+                  <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Add new type, e.g. Round-key cam" className="h-8 max-w-xs" onKeyDown={e => { if (e.key === "Enter") add(); }} />
+                </div>
+              </td>
+              <td className="px-3 py-2" colSpan={2}>
+                <div className="flex justify-end">
+                  <Button size="sm" disabled={busy || !newName.trim()} onClick={add} className="bg-primary hover:bg-primary/90"><Plus className="h-3.5 w-3.5" /> Add type</Button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
