@@ -52,7 +52,7 @@ export const newId = () =>
 export const emptyTree = (): TreeData => ({ root: null, next_differ: 1 });
 
 export function createGMK(label = "Grand Master"): TNode {
-  return { id: newId(), type: "GMK", label, keys: 3, children: [] };
+  return { id: newId(), type: "GMK", label, keys: [{ ref: "GMK", qty: 3 }], children: [] };
 }
 
 /**
@@ -70,13 +70,15 @@ export function makeChild(parentType: NodeType, index: number, childType?: NodeT
   const t: NodeType = childType ?? (validChildTypes(parentType)[0] ?? "CYL");
   if (t === "MK") {
     const letter = ALPHABET[index] ?? String(index + 1);
-    return { id: newId(), type: "MK", label: `MK-${letter}`, keys: 2, children: [] };
+    const label = `MK-${letter}`;
+    return { id: newId(), type: "MK", label, keys: [{ ref: label, qty: 2 }], children: [] };
   }
   if (t === "SMK") {
     const parentLetter = parentLabel?.startsWith("MK-")
       ? parentLabel.slice(3)
       : ALPHABET[0];
-    return { id: newId(), type: "SMK", label: `SMK-${parentLetter}${index + 1}`, keys: 2, children: [] };
+    const label = `SMK-${parentLetter}${index + 1}`;
+    return { id: newId(), type: "SMK", label, keys: [{ ref: label, qty: 2 }], children: [] };
   }
   return { id: newId(), type: "CYL", label: `Door ${index + 1}`, children: [] };
 }
