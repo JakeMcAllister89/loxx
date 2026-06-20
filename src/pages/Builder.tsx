@@ -48,6 +48,14 @@ const CHILD_LABEL: Record<NodeType, string> = {
 
 interface Product extends ProductFull {}
 
+/** Human-friendly label for audit entries: "Main Building (MK-A)" or just "MK-A". */
+function auditLabel(n: TNode): string {
+  if ((n.type === "MK" || n.type === "SMK") && n.location?.trim()) {
+    return `${n.location.trim()} (${n.label})`;
+  }
+  return n.label;
+}
+
 export default function Builder() {
   const { id } = useParams();
   if (!id) {
