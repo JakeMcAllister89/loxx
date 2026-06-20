@@ -743,3 +743,52 @@ function DetailPanel({
     </div>
   );
 }
+
+/* ------------------------- Save Status Indicator ------------------------- */
+
+function SaveStatusIndicator({
+  status,
+  onRetry,
+}: {
+  status: "idle" | "pending" | "saving" | "saved" | "error";
+  onRetry: () => void;
+}) {
+  if (status === "pending") {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground px-2" title="Unsaved changes">
+        <span className="h-2 w-2 rounded-full bg-warning animate-pulse" />
+        Unsaved changes
+      </div>
+    );
+  }
+  if (status === "saving") {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground px-2">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        Saving…
+      </div>
+    );
+  }
+  if (status === "saved") {
+    return (
+      <div className="flex items-center gap-2 text-xs text-success px-2 transition-opacity">
+        <Check className="h-3.5 w-3.5" />
+        Saved
+      </div>
+    );
+  }
+  if (status === "error") {
+    return (
+      <button
+        onClick={onRetry}
+        className="flex items-center gap-2 text-xs text-destructive px-2 hover:underline"
+        title="Retry save"
+      >
+        <AlertCircle className="h-3.5 w-3.5" />
+        Save failed — retry
+        <RotateCw className="h-3.5 w-3.5" />
+      </button>
+    );
+  }
+  return <div className="w-[88px]" aria-hidden />;
+}
