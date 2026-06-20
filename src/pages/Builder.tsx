@@ -22,11 +22,11 @@ import {
 import { BuilderCanvas, CanvasProduct } from "@/components/builder/BuilderCanvas";
 import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
 import {
-  TNode, TreeData, NodeType,
+  TNode, TreeData, NodeType, KeyEntry,
   emptyTree, createGMK, makeChild, childTypeOf, validChildTypes,
   findNode, findParent, updateNode, addChild, removeNode,
   countDoors, assignNextDiffers, pathOf, validate, ValidationIssue,
-  hasLegacyCK, flattenCK,
+  hasLegacyCK, flattenCK, normaliseKeys, countKeys,
 } from "@/lib/keytree";
 import { logAction } from "@/lib/audit";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
