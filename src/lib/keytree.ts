@@ -1,5 +1,10 @@
 export type NodeType = "GMK" | "MK" | "SMK" | "CYL";
 
+export interface KeyEntry {
+  ref: string;
+  qty: number;
+}
+
 export interface TNode {
   id: string;
   type: NodeType;
@@ -11,13 +16,32 @@ export interface TNode {
   size?: string;              // CYL only — e.g. "35/35"
   quantity?: number;          // CYL only — units required at this door (default 1)
   extra_keys?: number;        // CYL only — additional keys beyond the 2 included
-  keys?: number;              // GMK/MK/SMK — copies of the key at this level
+  /** GMK/MK/SMK — copies of the key(s) at this level.
+   *  Legacy: a single number meant "n copies of one key labelled by node.label".
+   *  Current: an array of KeyEntry — multiple key refs each with their own qty. */
+  keys?: number | KeyEntry[];
   children: TNode[];
 }
 
 export interface TreeData {
   root: TNode | null;
   next_differ: number;
+}
+
+/** Normalise a node's keys field to an array of KeyEntry, handling legacy number form. */
+export function normaliseKeys(node: TNode): KeyEntry[] {
+  if (node.keys == null) {
+    return [{ ref: node.label, qty: node.type === "GMK" ? 3 : 2 }];
+  }
+  if (typeof node.keys === "number") {
+    return [{ ref: node.label, qty: node.keys }];
+  }
+  return node.keys.length > 0 ? node.keys : [{ ref: node.label, qty: 1 }];
+}
+
+/** Total key qty across all entries at this level. */
+export function countKeys(node: TNode): number {
+  return normaliseKeys(node).reduce((s, k) => s + k.qty, 0);
 }
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
