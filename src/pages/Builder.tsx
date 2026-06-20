@@ -162,6 +162,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   useEffect(() => {
     setLoading(true);
+    setExportedAt(null);
+    setLastSavedAt(null);
+    labelAuditRef.current && clearTimeout(labelAuditRef.current.timer);
+    labelAuditRef.current = null;
+    cylConfigRef.current = null;
     supabase.from("key_systems").select("*").eq("id", systemId).single().then(({ data, error }) => {
       if (error || !data) { toast.error("System not found"); navigate("/dashboard"); return; }
       setName(data.name);
@@ -174,6 +179,17 @@ function BuilderInner({ systemId }: { systemId: string }) {
     });
     supabase.from("products").select("id,code,name,cylinder_type,cylinder_profile,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as any));
   }, [systemId, navigate]);
+
+  // Flush pending debounced audits when selectedId changes
+  const prevSelectedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const prev = prevSelectedRef.current;
+    if (prev && prev !== selectedId) {
+      if (labelAuditRef.current && labelAuditRef.current.nodeId === prev) flushLabelAudit();
+      if (cylConfigRef.current && cylConfigRef.current.nodeId === prev) flushCylConfig();
+    }
+    prevSelectedRef.current = selectedId;
+  }, [selectedId, flushLabelAudit, flushCylConfig]);
 
   const mutate = (updater: (t: TreeData) => TreeData) => {
     setTree((prev) => { const next = updater(prev); dirtyRef.current = true; return next; });
@@ -194,6 +210,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setSelectedId(child.id);
       setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
       logAction({ system_id: systemId, action: "node_added", node_type: child.type, node_label: child.label });
+      if (child.type === "CYL") {
+        cylConfigRef.current = { nodeId: child.id, originalLabel: child.label };
+      }
       return next;
     });
   }, [systemId]);
@@ -205,24 +224,41 @@ function BuilderInner({ systemId }: { systemId: string }) {
       dirtyRef.current = true;
       return { ...prev, root: removeNode(prev.root, nodeId) };
     });
+    if (labelAuditRef.current?.nodeId === nodeId) { clearTimeout(labelAuditRef.current.timer); labelAuditRef.current = null; }
+    if (cylConfigRef.current?.nodeId === nodeId) cylConfigRef.current = null;
     setSelectedId((s) => (s === nodeId ? null : s));
   }, [systemId]);
 
   const patchSelected = (patch: Partial<TNode>) => {
     if (!selectedId) return;
+    const inCylConfig = cylConfigRef.current?.nodeId === selectedId;
     setTree((prev) => {
       const before = findNode(prev.root, selectedId);
       const root = updateNode(prev.root, selectedId, patch);
       dirtyRef.current = true;
       if (before) {
-        if (patch.label !== undefined && patch.label !== before.label) {
-          logAction({ system_id: systemId, action: "node_renamed", node_type: before.type, node_label: patch.label, old_value: before.label, new_value: patch.label });
+        // Label edits: debounce; suppress entirely while configuring a CYL
+        if (patch.label !== undefined && patch.label !== before.label && !inCylConfig) {
+          const existing = labelAuditRef.current;
+          if (existing && existing.nodeId === selectedId) {
+            clearTimeout(existing.timer);
+            existing.timer = setTimeout(() => flushLabelAudit(), 2000);
+          } else {
+            if (existing) flushLabelAudit();
+            const original = before.label;
+            const nodeType = before.type;
+            const timer = setTimeout(() => flushLabelAudit(), 2000);
+            labelAuditRef.current = { nodeId: selectedId, original, nodeType, timer };
+          }
         }
-        if (patch.cylinder_type !== undefined && patch.cylinder_type !== before.cylinder_type) {
-          logAction({ system_id: systemId, action: "cylinder_assigned", node_type: "CYL", node_label: before.label, old_value: before.cylinder_type ?? "", new_value: patch.cylinder_type ?? "" });
-        }
-        if (patch.finish !== undefined && patch.finish !== before.finish) {
-          logAction({ system_id: systemId, action: "cylinder_finish_changed", node_type: "CYL", node_label: before.label, old_value: before.finish ?? "", new_value: patch.finish ?? "" });
+        // Cylinder configuration fields: suppress individual entries while in config session
+        if (!inCylConfig) {
+          if (patch.cylinder_type !== undefined && patch.cylinder_type !== before.cylinder_type) {
+            logAction({ system_id: systemId, action: "cylinder_assigned", node_type: "CYL", node_label: before.label, old_value: before.cylinder_type ?? "", new_value: patch.cylinder_type ?? "" });
+          }
+          if (patch.finish !== undefined && patch.finish !== before.finish) {
+            logAction({ system_id: systemId, action: "cylinder_finish_changed", node_type: "CYL", node_label: before.label, old_value: before.finish ?? "", new_value: patch.finish ?? "" });
+          }
         }
         if (patch.keys !== undefined && patch.keys !== before.keys) {
           logAction({ system_id: systemId, action: "keys_count_changed", node_type: "CK", node_label: before.label, old_value: String(before.keys ?? 1), new_value: String(patch.keys) });
