@@ -45,6 +45,7 @@ interface CartCtx {
   updateQty: (i: number, q: number) => void;
   clear: () => void;
   replace: (items: CartLine[]) => void;
+  replaceBySystem: (systemId: string, newItems: CartLine[]) => void;
   meta: OrderMeta;
   setMeta: (m: Partial<OrderMeta>) => void;
   subtotal: number;
