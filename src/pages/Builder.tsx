@@ -72,10 +72,12 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const imported = searchParams.get("imported") === "1";
   const [showOnlyUnassigned, setShowOnlyUnassigned] = useState(false);
-  const { add: addToCart } = useCart();
+  const { add: addToCart, replaceBySystem } = useCart();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "pending" | "saving" | "saved" | "error">("idle");
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [exportedAt, setExportedAt] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [reference, setReference] = useState<string | null>(null);
   const [tree, setTree] = useState<TreeData>(emptyTree());
@@ -88,6 +90,70 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
+
+  // Debounced audit refs
+  const labelAuditRef = useRef<{
+    nodeId: string;
+    original: string;
+    nodeType: string;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
+  const cylConfigRef = useRef<{
+    nodeId: string;
+    originalLabel: string;
+  } | null>(null);
+
+  const flushLabelAudit = useCallback(() => {
+    const p = labelAuditRef.current;
+    if (!p) return;
+    clearTimeout(p.timer);
+    labelAuditRef.current = null;
+    // Read latest label from tree via state setter trick
+    setTree((cur) => {
+      const n = findNode(cur.root, p.nodeId);
+      if (n && n.label !== p.original) {
+        logAction({
+          system_id: systemId,
+          action: "node_renamed",
+          node_type: p.nodeType,
+          node_label: n.label,
+          old_value: p.original,
+          new_value: n.label,
+        });
+      }
+      return cur;
+    });
+  }, [systemId]);
+
+  const flushCylConfig = useCallback(() => {
+    const c = cylConfigRef.current;
+    if (!c) return;
+    cylConfigRef.current = null;
+    setTree((cur) => {
+      const n = findNode(cur.root, c.nodeId);
+      if (n && n.type === "CYL") {
+        const parts = [n.cylinder_type, n.finish, n.size].filter(Boolean);
+        const differRef = `D${String(n.differ ?? 0).padStart(3, "0")}`;
+        logAction({
+          system_id: systemId,
+          action: "cylinder_configured",
+          node_type: "CYL",
+          node_label: n.label,
+          new_value: parts.join(" · "),
+          metadata: {
+            differ_ref: differRef,
+            room_name: n.label,
+            product: n.cylinder_type ?? null,
+            finish: n.finish ?? null,
+            size: n.size ?? null,
+            extra_keys: n.extra_keys ?? 0,
+          },
+        });
+      }
+      return cur;
+    });
+  }, [systemId]);
+
   const productsByCode = useMemo(() => {
     const m = new Map<string, CanvasProduct>();
     products.forEach((p) => m.set(p.code, { code: p.code, name: p.name, image_url: p.image_url }));
