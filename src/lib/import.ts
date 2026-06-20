@@ -3,6 +3,7 @@ import { TreeData, TNode, NodeType, newId, assignNextDiffers } from "./keytree";
 export interface ParsedNode {
   level: NodeType;
   label: string;
+  location?: string | null;
   parent_label?: string | null;
   cylinder_type?: string | null;
   finish?: string | null;
