@@ -194,22 +194,59 @@ function BuilderInner({ systemId }: { systemId: string }) {
     else toast.error(`${errors} error(s) found`);
   };
 
-  const save = async () => {
+  const saveCore = useCallback(async (opts: { auto: boolean }) => {
     setSaving(true);
+    setSaveStatus("saving");
     const doors = countDoors(tree.root);
     const { error } = await supabase.from("key_systems")
       .update({ name, tree_data: tree as any, door_count: doors, next_differ: tree.next_differ })
       .eq("id", systemId);
     setSaving(false);
-    if (error) { toast.error("Failed to save"); return; }
+    if (error) {
+      setSaveStatus("error");
+      if (!opts.auto) toast.error("Failed to save");
+      return;
+    }
     if (savedNameRef.current && savedNameRef.current !== name) {
       logAction({ system_id: systemId, action: "system_renamed", old_value: savedNameRef.current, new_value: name });
     }
     savedNameRef.current = name;
-    logAction({ system_id: systemId, action: "system_saved", metadata: { door_count: doors } });
+    logAction({ system_id: systemId, action: opts.auto ? "system_autosaved" : "system_saved", metadata: { door_count: doors } });
     dirtyRef.current = false;
-    toast.success("System saved");
-  };
+    setSaveStatus("saved");
+    if (!opts.auto) toast.success("System saved");
+  }, [name, tree, systemId]);
+
+  const save = useCallback(() => saveCore({ auto: false }), [saveCore]);
+
+  // Auto-save: debounce 1.5s after any change to tree or name
+  const firstAutosaveSkip = useRef(true);
+  useEffect(() => {
+    if (loading) return;
+    if (firstAutosaveSkip.current) { firstAutosaveSkip.current = false; return; }
+    setSaveStatus("pending");
+    const handle = setTimeout(() => { saveCore({ auto: true }); }, 1500);
+    return () => clearTimeout(handle);
+  }, [tree, name, loading, saveCore]);
+
+  // Fade "saved" indicator after 2s
+  useEffect(() => {
+    if (saveStatus !== "saved") return;
+    const t = setTimeout(() => setSaveStatus("idle"), 2000);
+    return () => clearTimeout(t);
+  }, [saveStatus]);
+
+  // Warn on unload if there are unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (saveStatus === "pending" || saveStatus === "saving") {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [saveStatus]);
 
   const exportToCart = () => {
     if (!tree.root) { toast.error("Nothing to export"); return; }
