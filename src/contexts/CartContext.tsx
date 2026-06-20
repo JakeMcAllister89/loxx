@@ -82,6 +82,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((p) => p.map((it, idx) => (idx === i ? { ...it, quantity: Math.max(1, q) } : it)));
   const clear = () => { setItems([]); setMetaState(blankMeta()); };
   const replace = (next: CartLine[]) => setItems(next);
+  const replaceBySystem = (systemId: string, newItems: CartLine[]) =>
+    setItems((prev) => [...prev.filter((item) => item.system_id !== systemId), ...newItems]);
   const setMeta = (m: Partial<OrderMeta>) => setMetaState((prev) => ({ ...prev, ...m, delivery: { ...prev.delivery, ...(m.delivery ?? {}) } }));
 
   const cylindersSubtotal = items.filter(i => i.kind === "cylinder").reduce((s, i) => s + i.quantity * i.unit_price, 0);
@@ -92,7 +94,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const count = items.reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <Ctx.Provider value={{ items, add, remove, updateQty, clear, replace, meta, setMeta, subtotal, cylindersSubtotal, keysSubtotal, vat, total, count }}>
+    <Ctx.Provider value={{ items, add, remove, updateQty, clear, replace, replaceBySystem, meta, setMeta, subtotal, cylindersSubtotal, keysSubtotal, vat, total, count }}>
       {children}
     </Ctx.Provider>
   );
