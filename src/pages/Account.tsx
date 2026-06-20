@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Download } from "lucide-react";
-import { AuditRow, describeAction, timeAgo } from "@/lib/audit";
+import { AuditRow, describeAction, timeAgo, formatTableTimestamp } from "@/lib/audit";
 import { Link } from "react-router-dom";
 
 const ACTION_TYPES = [
