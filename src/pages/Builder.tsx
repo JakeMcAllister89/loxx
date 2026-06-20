@@ -475,6 +475,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               onDelete={() => handleDelete(selected.id)}
               canAddChild={childTypeOf(selected.type) !== null}
               isRoot={tree.root?.id === selected.id}
+              onClose={() => setSelectedId(null)}
             />
           )}
         </aside>
