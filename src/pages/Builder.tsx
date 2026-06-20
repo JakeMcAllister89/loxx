@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
-  Check, RotateCw,
+  Check, RotateCw, FileText,
 } from "lucide-react";
 import { BuilderCanvas, CanvasProduct } from "@/components/builder/BuilderCanvas";
 import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
@@ -29,6 +29,7 @@ import {
 } from "@/lib/keytree";
 import { logAction } from "@/lib/audit";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
+import { stashQuoteDraft, treeToQuoteItems } from "@/lib/quote";
 
 const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }> = {
   GMK: { label: "Grand Master",  color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30" },
@@ -338,8 +339,17 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <Button variant="outline" onClick={runValidate}><ShieldCheck className="h-4 w-4" /> Validate</Button>
         <SaveStatusIndicator status={saveStatus} onRetry={save} />
         <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" /> Export PDF</Button>
+        <Button variant="outline" onClick={() => {
+          if (!tree.root) { toast.error("Nothing to quote"); return; }
+          const items = treeToQuoteItems(tree, products as any, { system_id: systemId, system_name: name, system_reference: reference });
+          if (items.length === 0) { toast.error("Add at least one configured cylinder before requesting a quote."); return; }
+          stashQuoteDraft({ system_id: systemId, system_name: name, system_reference: reference, tree_snapshot: tree, items });
+          navigate("/quotes/new");
+        }}>
+          <FileText className="h-4 w-4" /> Get quote
+        </Button>
         <Button onClick={exportToCart} className="bg-primary hover:bg-primary/90">
-          <ShoppingCart className="h-4 w-4" /> Export to order
+          <ShoppingCart className="h-4 w-4" /> Add to basket
         </Button>
       </div>
 
