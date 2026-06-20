@@ -255,6 +255,7 @@ function PdfCard({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: str
       const nodes: ParsedNode[] = (data?.nodes ?? []).map((n: any) => ({
         level: (n.level ?? "").toUpperCase() as NodeType,
         label: n.label ?? "",
+        location: n.location ?? null,
         parent_label: n.parent_label ?? null,
         cylinder_type: n.cylinder_type ?? null,
         finish: n.finish ?? null,
