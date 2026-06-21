@@ -149,6 +149,28 @@ function BuilderInner({ systemId }: { systemId: string }) {
     });
   }, [systemId]);
 
+  const flushLocationAudit = useCallback(() => {
+    const p = locationAuditRef.current;
+    if (!p) return;
+    clearTimeout(p.timer);
+    locationAuditRef.current = null;
+    setTree((cur) => {
+      const n = findNode(cur.root, p.nodeId);
+      const newLoc = n?.location ?? "";
+      if (n && newLoc !== p.original) {
+        logAction({
+          system_id: systemId,
+          action: "node_renamed",
+          node_type: p.nodeType,
+          node_label: p.nodeLabel,
+          old_value: p.original,
+          new_value: newLoc,
+        });
+      }
+      return cur;
+    });
+  }, [systemId]);
+
   const productsRef = useRef<Product[]>([]);
   useEffect(() => { productsRef.current = products; }, [products]);
 
