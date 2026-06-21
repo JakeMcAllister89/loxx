@@ -445,6 +445,7 @@ export type Database = {
           name: string
           pin_count: number
           price_gbp: number
+          product_description: string | null
           security_rating: string | null
           size: string | null
         }
@@ -463,6 +464,7 @@ export type Database = {
           name: string
           pin_count?: number
           price_gbp: number
+          product_description?: string | null
           security_rating?: string | null
           size?: string | null
         }
@@ -481,6 +483,7 @@ export type Database = {
           name?: string
           pin_count?: number
           price_gbp?: number
+          product_description?: string | null
           security_rating?: string | null
           size?: string | null
         }

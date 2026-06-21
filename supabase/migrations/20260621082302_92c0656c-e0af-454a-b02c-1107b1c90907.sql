@@ -1,0 +1,2 @@
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS product_description text;
+UPDATE public.products SET product_description = COALESCE(NULLIF(description, ''), name) WHERE product_description IS NULL OR product_description = '';

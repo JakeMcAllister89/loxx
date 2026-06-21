@@ -148,7 +148,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         const prod = productsRef.current.find((p) => p.code === n.cylinder_type);
         const profile = (prod as any)?.cylinder_profile ?? null;
         const size = n.size ?? (prod as any)?.size ?? null;
-        const productName = prod?.name ?? null;
+        const productName = (prod as any)?.product_description ?? prod?.name ?? null;
         const differRef = `D${String(n.differ ?? 0).padStart(3, "0")}`;
         const specParts = [n.cylinder_type, profile, n.finish, size].filter(Boolean);
         logAction({
@@ -176,7 +176,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   const productsByCode = useMemo(() => {
     const m = new Map<string, CanvasProduct>();
-    products.forEach((p) => m.set(p.code, { code: p.code, name: p.name, image_url: p.image_url }));
+    products.forEach((p) => m.set(p.code, { code: p.code, name: (p as any).product_description ?? p.name, image_url: p.image_url }));
     return m;
   }, [products]);
 
@@ -198,7 +198,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setTree(loaded.root ? assignNextDiffers(loaded) : loaded);
       setLoading(false);
     });
-    supabase.from("products").select("id,code,name,cylinder_type,cylinder_profile,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as any));
+    supabase.from("products").select("id,code,name,product_description,cylinder_type,cylinder_profile,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as any));
   }, [systemId, navigate]);
 
   // Flush pending debounced audits when selectedId changes
@@ -427,7 +427,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         lines.push({
           kind: "cylinder",
           product_code: n.cylinder_type,
-          product_name: p?.name,
+          product_name: (p as any)?.product_description ?? p?.name,
           cylinder_type: p?.cylinder_type,
           cylinder_profile: (p as any)?.cylinder_profile ?? undefined,
           finish: n.finish ?? p?.finish ?? undefined,

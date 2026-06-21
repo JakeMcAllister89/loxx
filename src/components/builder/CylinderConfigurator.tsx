@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck } from "lucide-react";
+
 import { colorForFinish, FINISH_BORDER } from "@/lib/finishes";
 
 export interface ProductFull {
@@ -19,6 +19,7 @@ export interface ProductFull {
   price_gbp: number;
   bs_en_1303: boolean | null;
   description: string | null;
+  product_description: string | null;
   image_url: string | null;
 }
 
@@ -134,24 +135,15 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
               {selected.image_url && <img src={selected.image_url} alt={selected.name} className="h-full w-full object-cover" loading="lazy" />}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold leading-tight">{selected.name}</div>
+              <div className="text-sm font-semibold leading-tight">{selected.product_description ?? selected.name}</div>
               <div className="text-[11px] font-mono text-muted-foreground mt-0.5">{selected.code}</div>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 {selected.cylinder_profile && <Badge variant="secondary" className="text-[10px]">{selected.cylinder_profile} profile</Badge>}
-                {selected.pin_count != null && <Badge variant="secondary" className="text-[10px]">{selected.pin_count}-pin</Badge>}
                 {selected.size && <Badge variant="secondary" className="text-[10px] font-mono">{selected.size}</Badge>}
-                {selected.bs_en_1303 && (
-                  <Badge variant="outline" className="text-[10px] gap-1 border-success text-success">
-                    <ShieldCheck className="h-3 w-3" /> BS EN 1303
-                  </Badge>
-                )}
               </div>
               <div className="text-lg font-bold text-[hsl(var(--node-cyl))] mt-1.5">£{Number(selected.price_gbp).toFixed(2)}</div>
             </div>
           </div>
-          {selected.description && (
-            <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">{selected.description}</p>
-          )}
         </div>
       )}
 

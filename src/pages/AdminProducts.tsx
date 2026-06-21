@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,7 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Check, Minus, ArrowUpDown, Upload, FileDown, ImageIcon, X } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowUpDown, Upload, FileDown, ImageIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import Papa from "papaparse";
 
@@ -24,14 +23,12 @@ export interface AdminProduct {
   code: string;
   cylinder_type: string;
   cylinder_profile: string | null;
-  pin_count: number;
   finish: string;
   size: string;
   price_gbp: number;
   cost_price: number | null;
+  product_description: string | null;
   description: string | null;
-  bs_en_1303: boolean;
-  security_rating: string | null;
   image_url: string | null;
   is_active: boolean;
 }
@@ -39,9 +36,9 @@ export interface AdminProduct {
 interface CylinderType { id: string; name: string; sort_order: number; is_active: boolean; }
 
 const blank = (defaultType = "Double"): AdminProduct => ({
-  name: "", code: "", cylinder_type: defaultType, cylinder_profile: "Euro", pin_count: 6, finish: "Satin Nickel",
-  size: "35/35", price_gbp: 0, cost_price: 0, description: "", bs_en_1303: true,
-  security_rating: null, image_url: null, is_active: true,
+  name: "", code: "", cylinder_type: defaultType, cylinder_profile: "Euro", finish: "Satin Nickel",
+  size: "35/35", price_gbp: 0, cost_price: 0, product_description: "", description: "",
+  image_url: null, is_active: true,
 });
 
 function marginColor(m: number) {
@@ -136,7 +133,6 @@ export default function AdminProducts() {
                   </th>
                 ))}
                 <th className="px-3 py-2 text-left">Margin</th>
-                <th className="px-3 py-2 text-left">BS EN 1303</th>
                 <th className="px-3 py-2 text-right">Actions</th>
               </tr>
             </thead>
@@ -150,7 +146,7 @@ export default function AdminProducts() {
                         ? <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover bg-muted" />
                         : <div className="h-10 w-10 rounded bg-muted flex items-center justify-center"><ImageIcon className="h-4 w-4 text-muted-foreground" /></div>}
                     </td>
-                    <td className="px-3 py-2 font-medium">{p.name}{!p.is_active && <span className="ml-2 text-xs text-muted-foreground">(inactive)</span>}</td>
+                    <td className="px-3 py-2 font-medium">{p.product_description ?? p.name}{!p.is_active && <span className="ml-2 text-xs text-muted-foreground">(inactive)</span>}</td>
                     <td className="px-3 py-2 font-mono text-xs">{p.code}</td>
                     <td className="px-3 py-2"><Badge variant="outline">{p.cylinder_type}</Badge></td>
                     <td className="px-3 py-2">{p.finish}</td>
@@ -159,7 +155,6 @@ export default function AdminProducts() {
                     <td className="px-3 py-2 font-mono text-green-700">£{Number(p.cost_price ?? 0).toFixed(2)}</td>
                     <td className="px-3 py-2 font-mono font-semibold">£{Number(p.price_gbp).toFixed(2)}</td>
                     <td className={`px-3 py-2 font-mono ${m == null ? "text-muted-foreground" : marginColor(m)}`}>{m == null ? "—" : `${m.toFixed(1)}%`}</td>
-                    <td className="px-3 py-2">{p.bs_en_1303 ? <Check className="h-4 w-4 text-green-600" /> : <Minus className="h-4 w-4 text-muted-foreground" />}</td>
                     <td className="px-3 py-2 text-right">
                       <Button size="sm" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
                       <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(p)}><Trash2 className="h-4 w-4 text-red-600" /></Button>
@@ -168,7 +163,7 @@ export default function AdminProducts() {
                 );
               })}
               {sorted.length === 0 && (
-                <tr><td colSpan={12} className="text-center text-muted-foreground py-10">No products yet</td></tr>
+                <tr><td colSpan={11} className="text-center text-muted-foreground py-10">No products yet</td></tr>
               )}
             </tbody>
           </table>
@@ -188,7 +183,7 @@ export default function AdminProducts() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {deleteTarget?.name}?</AlertDialogTitle>
+            <AlertDialogTitle>Delete {deleteTarget?.product_description ?? deleteTarget?.name}?</AlertDialogTitle>
             <AlertDialogDescription>
               This will remove it from the catalogue. Any systems currently using this product code will not be affected — the cylinder type will remain on existing nodes but the product will no longer be selectable for new cylinders.
             </AlertDialogDescription>
@@ -235,13 +230,15 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
   };
 
   const save = async (addAnother = false) => {
-    if (!p.name || !p.code) { toast.error("Name and code required"); return; }
+    if (!p.product_description || !p.code) { toast.error("Product description and code required"); return; }
     setSaving(true);
+    const derivedName = (p.product_description ?? "").slice(0, 80) || p.code;
     const payload: any = {
-      name: p.name, code: p.code, cylinder_type: p.cylinder_type, cylinder_profile: p.cylinder_profile,
-      pin_count: p.pin_count,
+      name: derivedName,
+      code: p.code, cylinder_type: p.cylinder_type, cylinder_profile: p.cylinder_profile,
+      pin_count: 6,
       finish: p.finish, size: p.size, price_gbp: p.price_gbp, cost_price: p.cost_price,
-      description: p.description, bs_en_1303: p.bs_en_1303, security_rating: p.security_rating,
+      product_description: p.product_description,
       image_url: p.image_url, is_active: p.is_active,
     };
     let error;
@@ -268,9 +265,17 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
         <div className="space-y-5 py-6">
           <section className="space-y-3">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Basic info</div>
-            <div><Label>Product name *</Label><Input value={p.name} onChange={e => upd("name", e.target.value)} /></div>
+            <div>
+              <Label>Product description *</Label>
+              <Textarea
+                rows={3}
+                placeholder="e.g. Double cylinder, keyed both sides, suitable for doors requiring key access from both sides"
+                value={p.product_description ?? ""}
+                onChange={e => upd("product_description", e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">Appears on the catalogue, order confirmations and purchase orders</p>
+            </div>
             <div><Label>Product code *</Label><Input className="font-mono" placeholder="e.g. EKZ-12" value={p.code} onChange={e => upd("code", e.target.value)} /></div>
-            <div><Label>Description</Label><Textarea value={p.description ?? ""} onChange={e => upd("description", e.target.value)} /></div>
           </section>
 
           <section className="space-y-3">
@@ -283,19 +288,12 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
                   <SelectContent>{types.map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Pin count</Label>
-                <Select value={String(p.pin_count)} onValueChange={v => upd("pin_count", Number(v))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="5">5</SelectItem><SelectItem value="6">6</SelectItem></SelectContent>
-                </Select>
-              </div>
               <div><Label>Size</Label><Input placeholder="e.g. 35/35" value={p.size} onChange={e => upd("size", e.target.value)} /></div>
               <div>
                 <Label>Cylinder profile</Label>
                 <Input placeholder="e.g. Euro, Oval, Rim, Mortice" value={p.cylinder_profile ?? ""} onChange={e => upd("cylinder_profile", e.target.value || null)} />
               </div>
-              <div className="col-span-2"><Label>Finish</Label><Input value={p.finish} onChange={e => upd("finish", e.target.value)} /></div>
+              <div><Label>Finish</Label><Input value={p.finish} onChange={e => upd("finish", e.target.value)} /></div>
             </div>
           </section>
 
@@ -319,15 +317,6 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
               </div>
               <div className="text-xs text-muted-foreground mt-1">Suggested sell price at 50% margin: £{suggested.toFixed(2)}</div>
             </div>
-          </section>
-
-          <section className="space-y-3">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Compliance</div>
-            <div className="flex items-center justify-between">
-              <Label>BS EN 1303 compliant</Label>
-              <Switch checked={p.bs_en_1303} onCheckedChange={v => upd("bs_en_1303", v)} />
-            </div>
-            <div><Label>Security rating</Label><Input value={p.security_rating ?? ""} onChange={e => upd("security_rating", e.target.value)} /></div>
           </section>
 
           <section className="space-y-3">
@@ -363,14 +352,14 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
   );
 }
 
-const CSV_HEADERS = ["name","code","cylinder_type","pin_count","finish","size","cost_price","price_gbp","description","bs_en_1303"];
+const CSV_HEADERS = ["product_description","code","cylinder_type","finish","size","cost_price","price_gbp"];
 
 function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenChange: (b: boolean) => void; onDone: () => void }) {
   const [rows, setRows] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
 
   const downloadTemplate = () => {
-    const csv = Papa.unparse([CSV_HEADERS, ["Example Cylinder","EX-12","Double","6","Satin Nickel","35/35","18.50","42.00","","true"]]);
+    const csv = Papa.unparse([CSV_HEADERS, ["Example double cylinder, keyed both sides","EX-12","Double","Satin Nickel","35/35","18.50","42.00"]]);
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "products-template.csv"; a.click();
@@ -388,13 +377,14 @@ function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpen
     setBusy(true);
     let inserted = 0, updated = 0, errors = 0;
     for (const r of rows) {
+      const desc = r.product_description || "";
       const payload: any = {
-        name: r.name, code: r.code, cylinder_type: r.cylinder_type,
-        pin_count: Number(r.pin_count) || 6, finish: r.finish, size: r.size,
+        name: (desc || r.code).slice(0, 80),
+        code: r.code, cylinder_type: r.cylinder_type,
+        pin_count: 6, finish: r.finish, size: r.size,
         cost_price: r.cost_price ? Number(r.cost_price) : null,
         price_gbp: Number(r.price_gbp) || 0,
-        description: r.description || null,
-        bs_en_1303: String(r.bs_en_1303).toLowerCase() === "true",
+        product_description: desc || null,
         is_active: true,
       };
       const { data: existing } = await supabase.from("products").select("id").eq("code", r.code).maybeSingle();
