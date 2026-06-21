@@ -120,23 +120,31 @@ export default function Cart() {
                           </div>
                         </>
                       ) : (
-                        <>
-                          <div className="h-12 w-12 rounded bg-amber-50 flex items-center justify-center shrink-0">
-                            <KeyRound className="h-5 w-5 text-amber-600" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm">{line.key_reference}</div>
-                            {line.key_type_label && (
-                              <div className="text-xs text-muted-foreground mt-0.5">{line.key_type_label}</div>
-                            )}
-                            {line.location && (
-                              <div className="text-xs text-muted-foreground mt-0.5">{line.location}</div>
-                            )}
-                            <div className="text-[11px] font-mono text-amber-700 mt-1">
-                              {[line.system_reference, ...(line.hierarchy_refs ?? [line.key_reference])].filter(Boolean).join(" · ")}
-                            </div>
-                          </div>
-                        </>
+                        (() => {
+                          const ref = line.key_reference ?? "";
+                          const derivedLabel = line.key_type_label
+                            ?? (ref === "GMK" || ref.startsWith("GMK") ? "Grand Master Key"
+                              : ref.startsWith("MK-") ? "Master Key"
+                              : ref.startsWith("SMK-") ? "Sub Master Key"
+                              : "Key");
+                          return (
+                            <>
+                              <div className="h-12 w-12 rounded bg-amber-50 flex items-center justify-center shrink-0">
+                                <KeyRound className="h-5 w-5 text-amber-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-sm font-mono">{ref}</div>
+                                <div className="text-xs text-muted-foreground mt-0.5">{derivedLabel}</div>
+                                {line.location && (
+                                  <div className="text-xs text-muted-foreground italic mt-0.5">{line.location}</div>
+                                )}
+                                <div className="text-[11px] font-mono text-amber-700 mt-1">
+                                  {[line.system_reference, ...(line.hierarchy_refs ?? (ref ? [ref] : []))].filter(Boolean).join(" · ")}
+                                </div>
+                              </div>
+                            </>
+                          );
+                        })()
                       )}
 
 
