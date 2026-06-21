@@ -120,23 +120,31 @@ export default function Cart() {
                           </div>
                         </>
                       ) : (
-                        <>
-                          <div className="h-12 w-12 rounded bg-amber-50 flex items-center justify-center shrink-0">
-                            <KeyRound className="h-5 w-5 text-amber-600" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm">{line.key_reference}</div>
-                            {line.key_type_label && (
-                              <div className="text-xs text-muted-foreground mt-0.5">{line.key_type_label}</div>
-                            )}
-                            {line.location && (
-                              <div className="text-xs text-muted-foreground mt-0.5">{line.location}</div>
-                            )}
-                            <div className="text-[11px] font-mono text-amber-700 mt-1">
-                              {[line.system_reference, ...(line.hierarchy_refs ?? [line.key_reference])].filter(Boolean).join(" · ")}
-                            </div>
-                          </div>
-                        </>
+                        (() => {
+                          const ref = line.key_reference ?? "";
+                          const derivedLabel = line.key_type_label
+                            ?? (ref === "GMK" || ref.startsWith("GMK") ? "Grand Master Key"
+                              : ref.startsWith("MK-") ? "Master Key"
+                              : ref.startsWith("SMK-") ? "Sub Master Key"
+                              : "Key");
+                          return (
+                            <>
+                              <div className="h-12 w-12 rounded bg-amber-50 flex items-center justify-center shrink-0">
+                                <KeyRound className="h-5 w-5 text-amber-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-sm font-mono">{ref}</div>
+                                <div className="text-xs text-muted-foreground mt-0.5">{derivedLabel}</div>
+                                {line.location && (
+                                  <div className="text-xs text-muted-foreground italic mt-0.5">{line.location}</div>
+                                )}
+                                <div className="text-[11px] font-mono text-amber-700 mt-1">
+                                  {[line.system_reference, ...(line.hierarchy_refs ?? (ref ? [ref] : []))].filter(Boolean).join(" · ")}
+                                </div>
+                              </div>
+                            </>
+                          );
+                        })()
                       )}
 
 
@@ -144,15 +152,15 @@ export default function Cart() {
                         <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(index, line.quantity - 1)} disabled={line.quantity <= 1}>
                           <Minus className="h-3 w-3" />
                         </Button>
-                        <Input type="number" min={1} value={line.quantity} onChange={(e) => updateQty(index, parseInt(e.target.value) || 1)} className="h-8 w-14 text-center font-mono" />
+                        <Input type="number" min={1} value={line.quantity} onChange={(e) => updateQty(index, parseInt(e.target.value) || 1)} className="h-8 w-14 text-center" />
                         <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(index, line.quantity + 1)}>
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>
 
                       <div className="text-right shrink-0 w-24">
-                        <div className="text-xs text-muted-foreground font-mono">£{line.unit_price.toFixed(2)}</div>
-                        <div className="font-mono font-semibold">£{(line.unit_price * line.quantity).toFixed(2)}</div>
+                        <div className="text-xs text-muted-foreground">£{line.unit_price.toFixed(2)}</div>
+                        <div className="font-semibold">£{(line.unit_price * line.quantity).toFixed(2)}</div>
                       </div>
 
                       <Button size="icon" variant="ghost" onClick={() => remove(index)} className="shrink-0">
@@ -182,7 +190,7 @@ export default function Cart() {
                 onChange={(e) => setMeta({ customerPoRef: e.target.value })}
                 placeholder="e.g. PO-2024-001 or your internal reference"
               />
-              <p className="text-[11px] text-muted-foreground mt-1">This appears on your order confirmation and on our purchase order to the supplier.</p>
+              <p className="text-[11px] text-muted-foreground mt-1">This will appear on your order confirmation.</p>
 
               {systemRefs.length > 0 && (
                 <div className="mt-4 pt-4 border-t">
@@ -201,7 +209,7 @@ export default function Cart() {
 
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Pricing</h2>
-              <div className="space-y-1 text-sm font-mono">
+              <div className="space-y-1 text-sm">
                 <div className="flex justify-between text-muted-foreground"><span>Cylinders</span><span>£{cylindersSubtotal.toFixed(2)}</span></div>
                 {keysSubtotal > 0 && <div className="flex justify-between text-muted-foreground"><span>Extra keys</span><span>£{keysSubtotal.toFixed(2)}</span></div>}
                 <div className="flex justify-between border-t pt-2 mt-2"><span>Subtotal (ex VAT)</span><span>£{subtotal.toFixed(2)}</span></div>

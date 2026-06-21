@@ -119,6 +119,13 @@ function BuilderInner({ systemId }: { systemId: string }) {
     nodeId: string;
     originalLabel: string;
   } | null>(null);
+  const locationAuditRef = useRef<{
+    nodeId: string;
+    original: string;
+    nodeType: string;
+    nodeLabel: string;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
 
   const flushLabelAudit = useCallback(() => {
     const p = labelAuditRef.current;
@@ -136,6 +143,28 @@ function BuilderInner({ systemId }: { systemId: string }) {
           node_label: n.label,
           old_value: p.original,
           new_value: n.label,
+        });
+      }
+      return cur;
+    });
+  }, [systemId]);
+
+  const flushLocationAudit = useCallback(() => {
+    const p = locationAuditRef.current;
+    if (!p) return;
+    clearTimeout(p.timer);
+    locationAuditRef.current = null;
+    setTree((cur) => {
+      const n = findNode(cur.root, p.nodeId);
+      const newLoc = n?.location ?? "";
+      if (n && newLoc !== p.original) {
+        logAction({
+          system_id: systemId,
+          action: "node_renamed",
+          node_type: p.nodeType,
+          node_label: p.nodeLabel,
+          old_value: p.original,
+          new_value: newLoc,
         });
       }
       return cur;
@@ -193,6 +222,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
     setLastSavedAt(null);
     labelAuditRef.current && clearTimeout(labelAuditRef.current.timer);
     labelAuditRef.current = null;
+    locationAuditRef.current && clearTimeout(locationAuditRef.current.timer);
+    locationAuditRef.current = null;
     cylConfigRef.current = null;
     supabase.from("key_systems").select("*").eq("id", systemId).single().then(({ data, error }) => {
       if (error || !data) { toast.error("System not found"); navigate("/dashboard"); return; }
@@ -214,10 +245,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
     const prev = prevSelectedRef.current;
     if (prev && prev !== selectedId) {
       if (labelAuditRef.current && labelAuditRef.current.nodeId === prev) flushLabelAudit();
+      if (locationAuditRef.current && locationAuditRef.current.nodeId === prev) flushLocationAudit();
       if (cylConfigRef.current && cylConfigRef.current.nodeId === prev) flushCylConfig();
     }
     prevSelectedRef.current = selectedId;
-  }, [selectedId, flushLabelAudit, flushCylConfig]);
+  }, [selectedId, flushLabelAudit, flushLocationAudit, flushCylConfig]);
 
   const mutate = (updater: (t: TreeData) => TreeData) => {
     setTree((prev) => { const next = updater(prev); dirtyRef.current = true; return next; });
@@ -255,6 +287,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       return { ...prev, root: removeNode(prev.root, nodeId) };
     });
     if (labelAuditRef.current?.nodeId === nodeId) { clearTimeout(labelAuditRef.current.timer); labelAuditRef.current = null; }
+    if (locationAuditRef.current?.nodeId === nodeId) { clearTimeout(locationAuditRef.current.timer); locationAuditRef.current = null; }
     if (cylConfigRef.current?.nodeId === nodeId) cylConfigRef.current = null;
     setSelectedId((s) => (s === nodeId ? null : s));
   }, [systemId]);
@@ -301,14 +334,18 @@ function BuilderInner({ systemId }: { systemId: string }) {
           }
         }
         if (patch.location !== undefined && patch.location !== before.location && (before.type === "MK" || before.type === "SMK")) {
-          logAction({
-            system_id: systemId,
-            action: "node_renamed",
-            node_type: before.type,
-            node_label: before.label,
-            old_value: before.location ?? "",
-            new_value: patch.location ?? "",
-          });
+          const existing = locationAuditRef.current;
+          if (existing && existing.nodeId === selectedId) {
+            clearTimeout(existing.timer);
+            existing.timer = setTimeout(() => flushLocationAudit(), 2000);
+          } else {
+            if (existing) flushLocationAudit();
+            const original = before.location ?? "";
+            const nodeType = before.type;
+            const nodeLabel = before.label;
+            const timer = setTimeout(() => flushLocationAudit(), 2000);
+            locationAuditRef.current = { nodeId: selectedId, original, nodeType, nodeLabel, timer };
+          }
         }
       }
       return { ...prev, root };
@@ -403,6 +440,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
     if (!tree.root) { toast.error("Nothing to export"); return; }
     // Flush pending audits so room name / cylinder config is captured before export
     if (labelAuditRef.current) flushLabelAudit();
+    if (locationAuditRef.current) flushLocationAudit();
     if (cylConfigRef.current) flushCylConfig();
     const errs = validate(tree).filter((i) => i.level === "error");
     if (errs.length) { toast.error("Fix validation errors before exporting"); setIssues(validate(tree)); setValidateOpen(true); return; }

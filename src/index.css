@@ -72,8 +72,8 @@
     font-family: var(--font-sans);
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
-  .font-mono, code, pre, kbd, samp, [class*="mono"] {
-    font-family: var(--font-mono) !important;
+  .font-mono, code, pre, kbd, samp {
+    font-family: var(--font-mono);
   }
 }
 
