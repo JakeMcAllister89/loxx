@@ -152,15 +152,15 @@ export default function Cart() {
                         <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(index, line.quantity - 1)} disabled={line.quantity <= 1}>
                           <Minus className="h-3 w-3" />
                         </Button>
-                        <Input type="number" min={1} value={line.quantity} onChange={(e) => updateQty(index, parseInt(e.target.value) || 1)} className="h-8 w-14 text-center font-mono" />
+                        <Input type="number" min={1} value={line.quantity} onChange={(e) => updateQty(index, parseInt(e.target.value) || 1)} className="h-8 w-14 text-center" />
                         <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(index, line.quantity + 1)}>
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>
 
                       <div className="text-right shrink-0 w-24">
-                        <div className="text-xs text-muted-foreground font-mono">£{line.unit_price.toFixed(2)}</div>
-                        <div className="font-mono font-semibold">£{(line.unit_price * line.quantity).toFixed(2)}</div>
+                        <div className="text-xs text-muted-foreground">£{line.unit_price.toFixed(2)}</div>
+                        <div className="font-semibold">£{(line.unit_price * line.quantity).toFixed(2)}</div>
                       </div>
 
                       <Button size="icon" variant="ghost" onClick={() => remove(index)} className="shrink-0">
