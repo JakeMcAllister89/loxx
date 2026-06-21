@@ -11,7 +11,14 @@ interface AuthCtx {
   signOut: () => Promise<void>;
 }
 
-const Ctx = createContext<AuthCtx>({ user: null, session: null, loading: true, isAdmin: false, isAdminLoading: true, signOut: async () => {} });
+const Ctx = createContext<AuthCtx>({
+  user: null,
+  session: null,
+  loading: true,
+  isAdmin: false,
+  isAdminLoading: true,
+  signOut: async () => {},
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -34,9 +41,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!user) { setIsAdmin(false); setIsAdminLoading(false); return; }
+    if (!user) {
+      setIsAdmin(false);
+      setIsAdminLoading(false);
+      return;
+    }
     setIsAdminLoading(true);
-    supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+    supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .maybeSingle()
       .then(({ data }) => {
         setIsAdmin(!!(data as any)?.is_admin);
         setIsAdminLoading(false);
