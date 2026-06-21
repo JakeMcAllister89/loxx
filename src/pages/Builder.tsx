@@ -287,6 +287,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       return { ...prev, root: removeNode(prev.root, nodeId) };
     });
     if (labelAuditRef.current?.nodeId === nodeId) { clearTimeout(labelAuditRef.current.timer); labelAuditRef.current = null; }
+    if (locationAuditRef.current?.nodeId === nodeId) { clearTimeout(locationAuditRef.current.timer); locationAuditRef.current = null; }
     if (cylConfigRef.current?.nodeId === nodeId) cylConfigRef.current = null;
     setSelectedId((s) => (s === nodeId ? null : s));
   }, [systemId]);
