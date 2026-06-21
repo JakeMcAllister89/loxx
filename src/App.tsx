@@ -19,8 +19,10 @@ import Orders from "./pages/Orders";
 import Account from "./pages/Account";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import ImportPage from "./pages/Import";
-import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/AdminDashboard";
 import AdminProducts from "./pages/AdminProducts";
+import AdminOrders from "./pages/AdminOrders";
+import AdminSettings from "./pages/AdminSettings";
 import Quotes from "./pages/Quotes";
 import QuoteNew from "./pages/QuoteNew";
 import QuoteDetail from "./pages/QuoteDetail";
@@ -51,8 +53,10 @@ const App = () => (
               <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
               <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
               <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
-              <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
               <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+              <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
               <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
               <Route path="/quotes/new" element={<ProtectedRoute><QuoteNew /></ProtectedRoute>} />
               <Route path="/quotes/:id" element={<ProtectedRoute><QuoteDetail /></ProtectedRoute>} />
