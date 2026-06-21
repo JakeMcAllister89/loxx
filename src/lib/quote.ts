@@ -43,7 +43,7 @@ export function treeToQuoteItems(
       out.push({
         kind: "cylinder",
         product_code: n.cylinder_type,
-        product_name: p?.name,
+        product_name: (p as any)?.product_description ?? p?.name,
         cylinder_type: p?.cylinder_type,
         cylinder_profile: (p as any)?.cylinder_profile ?? undefined,
         finish: n.finish ?? p?.finish ?? undefined,
