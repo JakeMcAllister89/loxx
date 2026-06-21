@@ -301,14 +301,18 @@ function BuilderInner({ systemId }: { systemId: string }) {
           }
         }
         if (patch.location !== undefined && patch.location !== before.location && (before.type === "MK" || before.type === "SMK")) {
-          logAction({
-            system_id: systemId,
-            action: "node_renamed",
-            node_type: before.type,
-            node_label: before.label,
-            old_value: before.location ?? "",
-            new_value: patch.location ?? "",
-          });
+          const existing = locationAuditRef.current;
+          if (existing && existing.nodeId === selectedId) {
+            clearTimeout(existing.timer);
+            existing.timer = setTimeout(() => flushLocationAudit(), 2000);
+          } else {
+            if (existing) flushLocationAudit();
+            const original = before.location ?? "";
+            const nodeType = before.type;
+            const nodeLabel = before.label;
+            const timer = setTimeout(() => flushLocationAudit(), 2000);
+            locationAuditRef.current = { nodeId: selectedId, original, nodeType, nodeLabel, timer };
+          }
         }
       }
       return { ...prev, root };
