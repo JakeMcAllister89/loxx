@@ -440,6 +440,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
     if (!tree.root) { toast.error("Nothing to export"); return; }
     // Flush pending audits so room name / cylinder config is captured before export
     if (labelAuditRef.current) flushLabelAudit();
+    if (locationAuditRef.current) flushLocationAudit();
     if (cylConfigRef.current) flushCylConfig();
     const errs = validate(tree).filter((i) => i.level === "error");
     if (errs.length) { toast.error("Fix validation errors before exporting"); setIssues(validate(tree)); setValidateOpen(true); return; }
