@@ -222,7 +222,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const mutate = (updater: (t: TreeData) => TreeData) => {
     setTree((prev) => { const next = updater(prev); dirtyRef.current = true; return next; });
   };
-  const addRoot = () => mutate((t) => ({ ...t, root: createGMK() }));
+  const addRoot = () => mutate((t) => ({ ...t, root: createGMK(), next_differ: 1 }));
 
   const handleAddChild = useCallback((parentId: string, childType?: NodeType) => {
     setTree((prev) => {
@@ -410,14 +410,20 @@ function BuilderInner({ systemId }: { systemId: string }) {
     const lines: import("@/contexts/CartContext").CartLine[] = [];
     let total = 0;
     const sys = { system_id: systemId, system_name: name, system_reference: reference };
-    const walk = (n: TNode) => {
+    const walk = (n: TNode, ancestors: TNode[]) => {
+      // Collect MK/SMK ancestor refs for hierarchy display
+      const hierarchy_refs = ancestors.filter(a => a.type === "MK" || a.type === "SMK").map(a => a.label);
       if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
         normaliseKeys(n).forEach((k) => {
           if (k.qty > 0) {
             lines.push({
               kind: "key",
               key_reference: k.ref,
+              node_type: n.type,
+              key_type_label: KEY_TYPE_LABEL[n.type],
+              location: (n.type === "MK" || n.type === "SMK") ? (n.location ?? undefined) : undefined,
               room_label: n.location || n.label,
+              hierarchy_refs: [...hierarchy_refs.filter(r => r !== n.label), n.label],
               quantity: k.qty,
               unit_price: 12,
               ...sys,
@@ -442,6 +448,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           image_url: p?.image_url ?? undefined,
           room_label: n.label,
           differ_ref: differRef,
+          hierarchy_refs,
           quantity: qty,
           unit_price: unit,
           ...sys,
@@ -454,6 +461,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
             key_reference: `Extra keys — ${n.label} (${differRef})`,
             room_label: n.label,
             differ_ref: differRef,
+            is_extra_key: true,
+            hierarchy_refs,
             quantity: extra,
             unit_price: 12,
             ...sys,
@@ -461,9 +470,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
           total += 12 * extra;
         }
       }
-      n.children.forEach(walk);
+      n.children.forEach((c) => walk(c, [...ancestors, n]));
     };
-    walk(tree.root);
+    walk(tree.root, []);
+
     replaceBySystem(systemId, lines);
     logAction({ system_id: systemId, action: "exported_to_cart", metadata: { line_count: lines.length, total_value: total } });
     setExportedAt(Date.now());
