@@ -222,6 +222,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
     setLastSavedAt(null);
     labelAuditRef.current && clearTimeout(labelAuditRef.current.timer);
     labelAuditRef.current = null;
+    locationAuditRef.current && clearTimeout(locationAuditRef.current.timer);
+    locationAuditRef.current = null;
     cylConfigRef.current = null;
     supabase.from("key_systems").select("*").eq("id", systemId).single().then(({ data, error }) => {
       if (error || !data) { toast.error("System not found"); navigate("/dashboard"); return; }
