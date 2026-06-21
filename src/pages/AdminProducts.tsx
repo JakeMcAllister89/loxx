@@ -13,7 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Check, Minus, ArrowUpDown, Upload, FileDown, ImageIcon, X } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowUpDown, Upload, FileDown, ImageIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import Papa from "papaparse";
 
