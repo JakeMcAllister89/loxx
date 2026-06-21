@@ -108,38 +108,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {isAdmin && catStats && (
-          <div className="rounded-[10px] border bg-card p-5 shadow-card mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-amber-600" />
-                <h2 className="text-sm font-semibold uppercase tracking-wide">Catalogue stats</h2>
-              </div>
-              <Link to="/admin/products" className="text-xs text-primary hover:underline">Manage products →</Link>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <div className="text-xs text-muted-foreground uppercase">Average margin</div>
-                <div className="text-2xl font-semibold font-mono mt-1">{catStats.avg.toFixed(1)}%</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground uppercase">Highest margin</div>
-                <div className="font-semibold mt-1 truncate">{catStats.high?.name ?? "—"}</div>
-                <div className="text-xs text-green-600 font-mono">{catStats.high ? `${catStats.high.m.toFixed(1)}%` : ""}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground uppercase">Lowest margin</div>
-                <div className="font-semibold mt-1 truncate">{catStats.low?.name ?? "—"}</div>
-                <div className="text-xs text-amber-600 font-mono">{catStats.low ? `${catStats.low.m.toFixed(1)}%` : ""}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground uppercase">Below 30%</div>
-                <div className={`text-2xl font-semibold font-mono mt-1 ${catStats.lowCount > 0 ? "text-red-600" : ""}`}>{catStats.lowCount}</div>
-                {catStats.lowCount > 0 && <div className="text-xs text-red-600">Review pricing</div>}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Start options */}
         <div className="grid md:grid-cols-2 gap-4 mb-8">
