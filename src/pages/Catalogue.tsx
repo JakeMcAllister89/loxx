@@ -13,7 +13,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Lock, Info, X, ArrowRight } from "lucide-react";
+import { Lock, Info, X, ArrowRight, KeyRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Product {
@@ -194,9 +194,14 @@ export default function Catalogue() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mt-3">
           {filtered.map((fam) => (
-            <FamilyCard key={fam.type} fam={fam} systems={systems} onDetails={() => setDetail(fam)} onUseInBuilder={(sysId) => navigate(sysId ? `/builder/${sysId}` : "/builder/new")} />
+            fam.type === "Key" ? (
+              <KeysFamilyCard key={fam.type} fam={fam} systems={systems} onDetails={() => setDetail(fam)} onUseInBuilder={(sysId) => navigate(sysId ? `/builder/${sysId}` : "/builder/new")} />
+            ) : (
+              <FamilyCard key={fam.type} fam={fam} systems={systems} onDetails={() => setDetail(fam)} onUseInBuilder={(sysId) => navigate(sysId ? `/builder/${sysId}` : "/builder/new")} />
+            )
           ))}
         </div>
+
         {filtered.length === 0 && (
           <div className="text-muted-foreground text-center py-16 border rounded-[10px] mt-3 bg-card">
             No families match. <button onClick={clearFilters} className="text-primary hover:underline">Clear filters</button>
@@ -206,9 +211,13 @@ export default function Catalogue() {
 
       <Sheet open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          {detail && <DetailDrawer fam={detail} systems={systems} onUseInBuilder={(sysId) => { setDetail(null); navigate(sysId ? `/builder/${sysId}` : "/builder/new"); }} />}
+          {detail && (detail.type === "Key"
+            ? <KeysDetailDrawer fam={detail} systems={systems} onUseInBuilder={(sysId) => { setDetail(null); navigate(sysId ? `/builder/${sysId}` : "/builder/new"); }} />
+            : <DetailDrawer fam={detail} systems={systems} onUseInBuilder={(sysId) => { setDetail(null); navigate(sysId ? `/builder/${sysId}` : "/builder/new"); }} />
+          )}
         </SheetContent>
       </Sheet>
+
     </DashboardLayout>
   );
 }
