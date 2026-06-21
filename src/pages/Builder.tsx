@@ -245,10 +245,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
     const prev = prevSelectedRef.current;
     if (prev && prev !== selectedId) {
       if (labelAuditRef.current && labelAuditRef.current.nodeId === prev) flushLabelAudit();
+      if (locationAuditRef.current && locationAuditRef.current.nodeId === prev) flushLocationAudit();
       if (cylConfigRef.current && cylConfigRef.current.nodeId === prev) flushCylConfig();
     }
     prevSelectedRef.current = selectedId;
-  }, [selectedId, flushLabelAudit, flushCylConfig]);
+  }, [selectedId, flushLabelAudit, flushLocationAudit, flushCylConfig]);
 
   const mutate = (updater: (t: TreeData) => TreeData) => {
     setTree((prev) => { const next = updater(prev); dirtyRef.current = true; return next; });
