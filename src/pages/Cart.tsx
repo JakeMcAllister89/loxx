@@ -182,7 +182,7 @@ export default function Cart() {
                 onChange={(e) => setMeta({ customerPoRef: e.target.value })}
                 placeholder="e.g. PO-2024-001 or your internal reference"
               />
-              <p className="text-[11px] text-muted-foreground mt-1">This appears on your order confirmation and on our purchase order to the supplier.</p>
+              <p className="text-[11px] text-muted-foreground mt-1">This will appear on your order confirmation.</p>
 
               {systemRefs.length > 0 && (
                 <div className="mt-4 pt-4 border-t">
