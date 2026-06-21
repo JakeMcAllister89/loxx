@@ -864,6 +864,13 @@ function TreeRow({
 
 /* ------------------------- Detail Panel ------------------------- */
 
+const LEGEND_DESC: Record<NodeType, string> = {
+  GMK: "opens all",
+  MK:  "opens one building",
+  SMK: "opens a zone",
+  CYL: "physical hardware",
+};
+
 function Legend({ type }: { type: NodeType }) {
   const m = TYPE_META[type];
   return (
@@ -871,9 +878,11 @@ function Legend({ type }: { type: NodeType }) {
       <span className="h-2.5 w-2.5 rounded-full" style={{ background: m.color }} />
       <span className="font-mono uppercase text-[10px] tracking-wider text-muted-foreground">{type}</span>
       <span>{m.label}</span>
+      <span className="text-muted-foreground">— {LEGEND_DESC[type]}</span>
     </div>
   );
 }
+
 
 function DetailPanel({
   node, parent, trail, products, onPatch, addOptions, onAddChildType, onDelete, isRoot, onClose,
