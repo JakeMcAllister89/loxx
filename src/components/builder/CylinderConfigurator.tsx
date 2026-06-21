@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck } from "lucide-react";
+
 import { colorForFinish, FINISH_BORDER } from "@/lib/finishes";
 
 export interface ProductFull {
