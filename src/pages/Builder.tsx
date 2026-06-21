@@ -119,6 +119,13 @@ function BuilderInner({ systemId }: { systemId: string }) {
     nodeId: string;
     originalLabel: string;
   } | null>(null);
+  const locationAuditRef = useRef<{
+    nodeId: string;
+    original: string;
+    nodeType: string;
+    nodeLabel: string;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
 
   const flushLabelAudit = useCallback(() => {
     const p = labelAuditRef.current;
