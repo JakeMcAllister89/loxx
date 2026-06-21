@@ -4,11 +4,16 @@
 
 @layer base {
   :root {
+    /* Font stacks — must be set so shadcn/ui components inherit Inter */
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
     /* LOXX design tokens — all HSL */
     --background: 45 14% 95%;          /* #f5f4f1 */
     --foreground: 240 4% 11%;          /* #1a1a1c */
     --card: 0 0% 100%;                 /* #ffffff */
     --card-foreground: 240 4% 11%;
+
     --popover: 0 0% 100%;
     --popover-foreground: 240 4% 11%;
 
@@ -61,14 +66,17 @@
 }
 
 @layer base {
-  * { @apply border-border; }
+  * { @apply border-border; font-family: var(--font-sans); }
   html, body { @apply bg-background text-foreground antialiased; }
   body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
-  .font-mono, code, pre, .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  .font-mono, code, pre, kbd, samp, [class*="mono"] {
+    font-family: var(--font-mono) !important;
+  }
 }
+
 
 @layer utilities {
   .shadow-card { box-shadow: var(--shadow-card); }

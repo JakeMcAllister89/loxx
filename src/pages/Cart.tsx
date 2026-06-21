@@ -98,9 +98,25 @@ export default function Cart() {
                             <div className="text-xs text-muted-foreground mt-0.5">
                               {[line.cylinder_profile, line.finish, line.size].filter(Boolean).join(" · ") || line.cylinder_type}
                             </div>
-                            <div className="text-[11px] text-muted-foreground font-mono mt-0.5">
-                              {line.product_name} · {line.product_code}
+                            {line.product_name && (
+                              <div className="text-[11px] text-muted-foreground mt-0.5">{line.product_name}</div>
+                            )}
+                            <div className="text-[11px] font-mono text-amber-700 mt-1">
+                              {[line.system_reference, ...(line.hierarchy_refs ?? []), line.differ_ref].filter(Boolean).join(" · ")}
                             </div>
+                            <div className="text-[11px] italic text-muted-foreground mt-0.5">Includes 2 standard differ keys</div>
+                          </div>
+                        </>
+                      ) : line.is_extra_key || line.key_reference?.startsWith("Extra keys") ? (
+                        <>
+                          <div className="h-12 w-12 rounded bg-amber-50 flex items-center justify-center shrink-0">
+                            <KeyRound className="h-5 w-5 text-amber-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm">
+                              Extra keys — {line.room_label}{line.differ_ref ? ` (${line.differ_ref})` : ""}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-0.5">Additional keys beyond the 2 standard included</div>
                           </div>
                         </>
                       ) : (
@@ -109,11 +125,20 @@ export default function Cart() {
                             <KeyRound className="h-5 w-5 text-amber-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm">{line.key_reference ?? `Extra keys${line.differ_ref ? ` (${line.differ_ref})` : ""}`}</div>
-                            <div className="text-xs text-muted-foreground mt-0.5">2 standard keys are included per cylinder</div>
+                            <div className="font-semibold text-sm">{line.key_reference}</div>
+                            {line.key_type_label && (
+                              <div className="text-xs text-muted-foreground mt-0.5">{line.key_type_label}</div>
+                            )}
+                            {line.location && (
+                              <div className="text-xs text-muted-foreground mt-0.5">{line.location}</div>
+                            )}
+                            <div className="text-[11px] font-mono text-amber-700 mt-1">
+                              {[line.system_reference, ...(line.hierarchy_refs ?? [line.key_reference])].filter(Boolean).join(" · ")}
+                            </div>
                           </div>
                         </>
                       )}
+
 
                       <div className="flex items-center gap-1 shrink-0">
                         <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(index, line.quantity - 1)} disabled={line.quantity <= 1}>

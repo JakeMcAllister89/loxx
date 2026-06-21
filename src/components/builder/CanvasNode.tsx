@@ -20,18 +20,19 @@ export interface CanvasNodeData {
 }
 
 const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string; tintHsl: string }> = {
-  GMK: { label: "Grand Master", tone: "text-[hsl(var(--node-gmk))]", dot: "hsl(var(--node-gmk))", border: "hsl(var(--node-gmk))", tintHsl: "var(--node-gmk)" },
-  MK:  { label: "Master Key",   tone: "text-[hsl(var(--node-mk))]",  dot: "hsl(var(--node-mk))",  border: "hsl(var(--node-mk))",  tintHsl: "var(--node-mk)"  },
-  SMK: { label: "Sub Master",   tone: "text-[hsl(var(--node-smk))]", dot: "hsl(var(--node-smk))", border: "hsl(var(--node-smk))", tintHsl: "var(--node-smk)" },
-  CYL: { label: "Cylinder",     tone: "text-[hsl(var(--node-cyl))]", dot: "hsl(var(--node-cyl))", border: "hsl(var(--node-cyl))", tintHsl: "var(--node-cyl)" },
+  GMK: { label: "Grand Master Key", tone: "text-[hsl(var(--node-gmk))]", dot: "hsl(var(--node-gmk))", border: "hsl(var(--node-gmk))", tintHsl: "var(--node-gmk)" },
+  MK:  { label: "Master Key",       tone: "text-[hsl(var(--node-mk))]",  dot: "hsl(var(--node-mk))",  border: "hsl(var(--node-mk))",  tintHsl: "var(--node-mk)"  },
+  SMK: { label: "Sub Master Key",   tone: "text-[hsl(var(--node-smk))]", dot: "hsl(var(--node-smk))", border: "hsl(var(--node-smk))", tintHsl: "var(--node-smk)" },
+  CYL: { label: "Cylinder",         tone: "text-[hsl(var(--node-cyl))]", dot: "hsl(var(--node-cyl))", border: "hsl(var(--node-cyl))", tintHsl: "var(--node-cyl)" },
 };
 
 const ADD_LABEL: Record<NodeType, string> = {
-  GMK: "Add grand master",
+  GMK: "Add grand master key",
   MK:  "Add master key",
-  SMK: "Add sub-master",
+  SMK: "Add sub master key",
   CYL: "Add cylinder",
 };
+
 
 /** Layout/Sizing — kept compact so medium systems fit on screen. */
 export const NODE_WIDTH = 180;

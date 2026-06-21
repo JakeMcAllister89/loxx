@@ -15,6 +15,12 @@ export interface CartLine {
   room_label?: string;
   // Key-only
   key_reference?: string;
+  node_type?: string;          // "GMK" | "MK" | "SMK" — for keys
+  key_type_label?: string;     // "Grand Master Key" / "Master Key" / "Sub Master Key"
+  location?: string;           // MK/SMK location/zone
+  is_extra_key?: boolean;      // distinguishes extra keys from level keys
+  // Hierarchy
+  hierarchy_refs?: string[];   // e.g. ["MK-A", "SMK-A1"]
   // System grouping
   system_id?: string | null;
   system_name?: string | null;
@@ -23,6 +29,7 @@ export interface CartLine {
   quantity: number;
   unit_price: number;
 }
+
 
 export interface DeliveryAddress {
   line1: string;

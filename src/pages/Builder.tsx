@@ -33,18 +33,25 @@ import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { stashQuoteDraft, treeToQuoteItems } from "@/lib/quote";
 
 const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }> = {
-  GMK: { label: "Grand Master",  color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30" },
-  MK:  { label: "Master Key",    color: "hsl(var(--node-mk))",  pill: "bg-[hsl(178_70%_94%)] text-[hsl(var(--node-mk))] border-[hsl(var(--node-mk))]/30" },
-  SMK: { label: "Sub-master",    color: "hsl(var(--node-smk))", pill: "bg-[hsl(154_60%_95%)] text-[hsl(var(--node-smk))] border-[hsl(var(--node-smk))]/30" },
-  CYL: { label: "Cylinder",      color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30" },
+  GMK: { label: "Grand Master Key", color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30" },
+  MK:  { label: "Master Key",       color: "hsl(var(--node-mk))",  pill: "bg-[hsl(178_70%_94%)] text-[hsl(var(--node-mk))] border-[hsl(var(--node-mk))]/30" },
+  SMK: { label: "Sub Master Key",   color: "hsl(var(--node-smk))", pill: "bg-[hsl(154_60%_95%)] text-[hsl(var(--node-smk))] border-[hsl(var(--node-smk))]/30" },
+  CYL: { label: "Cylinder",         color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30" },
+};
+
+const KEY_TYPE_LABEL: Record<string, string> = {
+  GMK: "Grand Master Key",
+  MK:  "Master Key",
+  SMK: "Sub Master Key",
 };
 
 const CHILD_LABEL: Record<NodeType, string> = {
   GMK: "Master Key",
-  MK:  "Sub-master",
+  MK:  "Sub Master Key",
   SMK: "Cylinder",
   CYL: "",
 };
+
 
 interface Product extends ProductFull {}
 
@@ -215,7 +222,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const mutate = (updater: (t: TreeData) => TreeData) => {
     setTree((prev) => { const next = updater(prev); dirtyRef.current = true; return next; });
   };
-  const addRoot = () => mutate((t) => ({ ...t, root: createGMK() }));
+  const addRoot = () => mutate((t) => ({ ...t, root: createGMK(), next_differ: 1 }));
 
   const handleAddChild = useCallback((parentId: string, childType?: NodeType) => {
     setTree((prev) => {
@@ -403,14 +410,20 @@ function BuilderInner({ systemId }: { systemId: string }) {
     const lines: import("@/contexts/CartContext").CartLine[] = [];
     let total = 0;
     const sys = { system_id: systemId, system_name: name, system_reference: reference };
-    const walk = (n: TNode) => {
+    const walk = (n: TNode, ancestors: TNode[]) => {
+      // Collect MK/SMK ancestor refs for hierarchy display
+      const hierarchy_refs = ancestors.filter(a => a.type === "MK" || a.type === "SMK").map(a => a.label);
       if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
         normaliseKeys(n).forEach((k) => {
           if (k.qty > 0) {
             lines.push({
               kind: "key",
               key_reference: k.ref,
+              node_type: n.type,
+              key_type_label: KEY_TYPE_LABEL[n.type],
+              location: (n.type === "MK" || n.type === "SMK") ? (n.location ?? undefined) : undefined,
               room_label: n.location || n.label,
+              hierarchy_refs: [...hierarchy_refs.filter(r => r !== n.label), n.label],
               quantity: k.qty,
               unit_price: 12,
               ...sys,
@@ -435,6 +448,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           image_url: p?.image_url ?? undefined,
           room_label: n.label,
           differ_ref: differRef,
+          hierarchy_refs,
           quantity: qty,
           unit_price: unit,
           ...sys,
@@ -447,6 +461,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
             key_reference: `Extra keys — ${n.label} (${differRef})`,
             room_label: n.label,
             differ_ref: differRef,
+            is_extra_key: true,
+            hierarchy_refs,
             quantity: extra,
             unit_price: 12,
             ...sys,
@@ -454,9 +470,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
           total += 12 * extra;
         }
       }
-      n.children.forEach(walk);
+      n.children.forEach((c) => walk(c, [...ancestors, n]));
     };
-    walk(tree.root);
+    walk(tree.root, []);
+
     replaceBySystem(systemId, lines);
     logAction({ system_id: systemId, action: "exported_to_cart", metadata: { line_count: lines.length, total_value: total } });
     setExportedAt(Date.now());
@@ -847,6 +864,13 @@ function TreeRow({
 
 /* ------------------------- Detail Panel ------------------------- */
 
+const LEGEND_DESC: Record<NodeType, string> = {
+  GMK: "opens all",
+  MK:  "opens one building",
+  SMK: "opens a zone",
+  CYL: "physical hardware",
+};
+
 function Legend({ type }: { type: NodeType }) {
   const m = TYPE_META[type];
   return (
@@ -854,9 +878,11 @@ function Legend({ type }: { type: NodeType }) {
       <span className="h-2.5 w-2.5 rounded-full" style={{ background: m.color }} />
       <span className="font-mono uppercase text-[10px] tracking-wider text-muted-foreground">{type}</span>
       <span>{m.label}</span>
+      <span className="text-muted-foreground">— {LEGEND_DESC[type]}</span>
     </div>
   );
 }
+
 
 function DetailPanel({
   node, parent, trail, products, onPatch, addOptions, onAddChildType, onDelete, isRoot, onClose,

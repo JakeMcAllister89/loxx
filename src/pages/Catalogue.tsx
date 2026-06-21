@@ -13,7 +13,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Lock, Info, X, ArrowRight } from "lucide-react";
+import { Lock, Info, X, ArrowRight, KeyRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Product {
@@ -194,9 +194,14 @@ export default function Catalogue() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mt-3">
           {filtered.map((fam) => (
-            <FamilyCard key={fam.type} fam={fam} systems={systems} onDetails={() => setDetail(fam)} onUseInBuilder={(sysId) => navigate(sysId ? `/builder/${sysId}` : "/builder/new")} />
+            fam.type === "Key" ? (
+              <KeysFamilyCard key={fam.type} fam={fam} systems={systems} onDetails={() => setDetail(fam)} onUseInBuilder={(sysId) => navigate(sysId ? `/builder/${sysId}` : "/builder/new")} />
+            ) : (
+              <FamilyCard key={fam.type} fam={fam} systems={systems} onDetails={() => setDetail(fam)} onUseInBuilder={(sysId) => navigate(sysId ? `/builder/${sysId}` : "/builder/new")} />
+            )
           ))}
         </div>
+
         {filtered.length === 0 && (
           <div className="text-muted-foreground text-center py-16 border rounded-[10px] mt-3 bg-card">
             No families match. <button onClick={clearFilters} className="text-primary hover:underline">Clear filters</button>
@@ -206,9 +211,13 @@ export default function Catalogue() {
 
       <Sheet open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          {detail && <DetailDrawer fam={detail} systems={systems} onUseInBuilder={(sysId) => { setDetail(null); navigate(sysId ? `/builder/${sysId}` : "/builder/new"); }} />}
+          {detail && (detail.type === "Key"
+            ? <KeysDetailDrawer fam={detail} systems={systems} onUseInBuilder={(sysId) => { setDetail(null); navigate(sysId ? `/builder/${sysId}` : "/builder/new"); }} />
+            : <DetailDrawer fam={detail} systems={systems} onUseInBuilder={(sysId) => { setDetail(null); navigate(sysId ? `/builder/${sysId}` : "/builder/new"); }} />
+          )}
         </SheetContent>
       </Sheet>
+
     </DashboardLayout>
   );
 }
@@ -420,6 +429,116 @@ function DetailDrawer({ fam, systems, onUseInBuilder }: {
           Cylinders are ordered through your system builder. Assign this product to a door in your system and it will be included in your order automatically.
         </p>
 
+        <UseInBuilderButton systems={systems} onPick={onUseInBuilder} fullWidth />
+      </div>
+    </>
+  );
+}
+
+/* -------------------- KEYS family card -------------------- */
+
+const KEY_TYPES = [
+  { code: "KEY-DIFFER", label: "Differ key", price: 12, opens: "Opens one specific door" },
+  { code: "KEY-SMK",    label: "Sub-master key", price: 14, opens: "Opens all cylinders in a zone" },
+  { code: "KEY-MK",     label: "Master key", price: 16, opens: "Opens all cylinders in a building" },
+  { code: "KEY-GMK",    label: "Grand master key", price: 18, opens: "Opens all cylinders across the entire system" },
+];
+
+function KeysFamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
+  fam: Family; systems: KeySystem[]; onDetails: () => void; onUseInBuilder: (sysId: string | null) => void;
+}) {
+  const [selCode, setSelCode] = useState<string>("KEY-DIFFER");
+  const variantByCode = useMemo(() => new Map(fam.variants.map(v => [v.code, v])), [fam]);
+  const selected = variantByCode.get(selCode);
+  const selectedMeta = KEY_TYPES.find(k => k.code === selCode)!;
+  const price = selected ? Number(selected.price_gbp) : selectedMeta.price;
+  const desc = selected?.product_description ?? selected?.description ?? selectedMeta.opens;
+
+  return (
+    <div className="rounded-[10px] border-2 border-amber-200 bg-gradient-to-br from-amber-50/60 to-card shadow-card overflow-hidden flex flex-col relative">
+      <KeyRound className="absolute right-3 top-3 h-20 w-20 text-amber-200/40 -rotate-12 pointer-events-none" />
+      <button onClick={onDetails} className="h-36 bg-amber-100/40 flex items-center justify-center hover:bg-amber-100/60 transition-colors relative">
+        <KeyRound className="h-16 w-16 text-amber-600/80" />
+      </button>
+      <div className="p-5 flex-1 flex flex-col gap-3 relative">
+        <div>
+          <h3 className="font-semibold leading-tight text-lg">Cut Keys</h3>
+          <p className="text-xs text-amber-700/80 mt-0.5">For master key systems</p>
+          <p className="text-xs text-muted-foreground mt-1.5">Replacement and additional cut keys for every level of your master key system. Priced per key.</p>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {KEY_TYPES.filter(k => variantByCode.has(k.code)).map(k => {
+            const active = selCode === k.code;
+            return (
+              <button
+                key={k.code}
+                onClick={() => setSelCode(k.code)}
+                className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${
+                  active ? "bg-amber-500 text-white border-amber-500" : "bg-card text-foreground border-amber-200 hover:border-amber-400"
+                }`}
+              >{k.label} · £{(variantByCode.get(k.code) ? Number(variantByCode.get(k.code)!.price_gbp) : k.price).toFixed(0)}</button>
+            );
+          })}
+        </div>
+
+        <div className="mt-1">
+          <div className="font-semibold text-sm">{selectedMeta.label}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">{desc}</div>
+        </div>
+
+        <div className="text-2xl font-semibold text-amber-600 mt-auto font-mono">£{price.toFixed(2)}</div>
+        <p className="text-[11px] text-muted-foreground -mt-1">2 keys included with every new cylinder</p>
+
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="flex-1" onClick={onDetails}><Info className="h-3.5 w-3.5" /> View details</Button>
+          <UseInBuilderButton systems={systems} onPick={onUseInBuilder} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KeysDetailDrawer({ fam, systems, onUseInBuilder }: {
+  fam: Family; systems: KeySystem[]; onUseInBuilder: (sysId: string | null) => void;
+}) {
+  const variantByCode = new Map(fam.variants.map(v => [v.code, v]));
+  return (
+    <>
+      <SheetHeader>
+        <SheetTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5 text-amber-600" /> Cut Keys</SheetTitle>
+        <SheetDescription>For master key systems</SheetDescription>
+      </SheetHeader>
+      <div className="mt-6 space-y-5">
+        <div className="h-40 rounded-md bg-amber-100/40 flex items-center justify-center">
+          <KeyRound className="h-20 w-20 text-amber-600/80" />
+        </div>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          All keys are cut to your specific master key system code. Each key type opens a different level of your system hierarchy.
+        </p>
+        <div className="rounded-md border bg-card overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+              <tr><th className="text-left px-3 py-2">Type</th><th className="text-left px-3 py-2">What it opens</th><th className="text-right px-3 py-2">Price</th></tr>
+            </thead>
+            <tbody>
+              {KEY_TYPES.map(k => {
+                const v = variantByCode.get(k.code);
+                return (
+                  <tr key={k.code} className="border-t">
+                    <td className="px-3 py-2 font-medium">{k.label}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{k.opens}</td>
+                    <td className="px-3 py-2 text-right font-mono">£{(v ? Number(v.price_gbp) : k.price).toFixed(2)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div className="rounded-md border border-amber-200 bg-amber-50/60 p-3 text-xs text-amber-900">
+          2 standard keys are included with every cylinder ordered.
+        </div>
+        <p className="text-[11px] text-muted-foreground">Additional keys can be ordered per cylinder in the system builder.</p>
         <UseInBuilderButton systems={systems} onPick={onUseInBuilder} fullWidth />
       </div>
     </>
