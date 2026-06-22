@@ -1235,6 +1235,27 @@ function DetailPanel({
           <Button onClick={onClose} variant="outline" className="w-full">
             <Check className="h-4 w-4" /> Done
           </Button>
+          {isCyl && !node.decommissioned_at && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className={isFulfilled ? "" : "cursor-not-allowed"}>
+                    <Button
+                      variant="outline"
+                      onClick={isFulfilled ? onReplace : undefined}
+                      disabled={!isFulfilled}
+                      className="w-full text-muted-foreground hover:text-foreground"
+                    >
+                      <Replace className="h-4 w-4" /> Replace cylinder
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!isFulfilled && (
+                  <TooltipContent>Available once your system has been supplied.</TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {!isRoot && (
             <Button variant="outline" onClick={onDelete} className="text-destructive hover:text-destructive">
               <X className="h-4 w-4" /> Delete node
