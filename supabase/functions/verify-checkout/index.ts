@@ -56,18 +56,24 @@ Deno.serve(async (req) => {
     const subtotalPence = session.amount_subtotal ?? 0;
     const taxPence = session.total_details?.amount_tax ?? Math.max(0, totalPence - subtotalPence);
 
+    // Preserve the basket-entered delivery address (with contact_name/contact_phone).
+    // Only fall back to Stripe shipping_details if the order has no delivery address.
     const shippingDetails = (session as any).shipping_details ?? (session as any).collected_information?.shipping_details ?? null;
-    const address = shippingDetails?.address
-      ? {
-          name: shippingDetails.name ?? null,
-          line1: shippingDetails.address.line1 ?? null,
-          line2: shippingDetails.address.line2 ?? null,
-          city: shippingDetails.address.city ?? null,
-          postal_code: shippingDetails.address.postal_code ?? null,
-          state: shippingDetails.address.state ?? null,
-          country: shippingDetails.address.country ?? null,
-        }
-      : order.delivery_address;
+    const existing = order.delivery_address;
+    const hasExisting = existing && typeof existing === "object" && (existing.line1 || existing.contact_name);
+    const address = hasExisting
+      ? existing
+      : (shippingDetails?.address
+        ? {
+            contact_name: shippingDetails.name ?? null,
+            line1: shippingDetails.address.line1 ?? null,
+            line2: shippingDetails.address.line2 ?? null,
+            city: shippingDetails.address.city ?? null,
+            postcode: shippingDetails.address.postal_code ?? null,
+            county: shippingDetails.address.state ?? null,
+            country: shippingDetails.address.country ?? null,
+          }
+        : order.delivery_address);
 
     const piId = typeof session.payment_intent === "string"
       ? session.payment_intent

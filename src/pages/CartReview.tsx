@@ -155,14 +155,16 @@ export default function CartReview() {
                   <Link to="/cart" className="text-xs text-primary hover:underline">Edit</Link>
                 </div>
                 <div className="text-sm text-muted-foreground space-y-0.5">
-                  {meta.delivery.line1 ? (
+                  {meta.delivery.line1 && meta.delivery.contact_name && meta.delivery.contact_phone ? (
                     <>
-                      <div>{meta.delivery.line1}</div>
+                      <div className="text-foreground font-medium">{meta.delivery.contact_name}</div>
+                      <div className="font-mono text-xs">{meta.delivery.contact_phone}</div>
+                      <div className="pt-1">{meta.delivery.line1}</div>
                       {meta.delivery.line2 && <div>{meta.delivery.line2}</div>}
                       <div>{[meta.delivery.city, meta.delivery.county].filter(Boolean).join(", ")}</div>
                       <div className="font-mono">{meta.delivery.postcode}</div>
                     </>
-                  ) : <div className="text-destructive text-xs">No delivery address set</div>}
+                  ) : <div className="text-destructive text-xs">Delivery contact and address required</div>}
                 </div>
               </div>
 
@@ -198,15 +200,21 @@ export default function CartReview() {
             </div>
 
             <div className="space-y-2">
-              <Button onClick={() => setCheckout(true)} disabled={!meta.delivery.line1 || !meta.delivery.city || !meta.delivery.postcode} className="w-full bg-amber-500 hover:bg-amber-600 text-white text-base h-12">
-                Confirm and pay → £{total.toFixed(2)} <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-              {(!meta.delivery.line1 || !meta.delivery.city || !meta.delivery.postcode) && (
-                <p className="text-xs text-destructive text-center">Add a delivery address in the basket first.</p>
-              )}
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/cart"><ArrowLeft className="h-4 w-4" /> Edit basket</Link>
-              </Button>
+              {(() => {
+                const d = meta.delivery;
+                const ready = !!(d.contact_name && d.contact_phone && d.line1 && d.city && d.postcode);
+                return <>
+                  <Button onClick={() => setCheckout(true)} disabled={!ready} className="w-full bg-amber-500 hover:bg-amber-600 text-white text-base h-12">
+                    Confirm and pay → £{total.toFixed(2)} <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                  {!ready && (
+                    <p className="text-xs text-destructive text-center">Complete delivery contact and address in the basket first.</p>
+                  )}
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/cart"><ArrowLeft className="h-4 w-4" /> Edit basket</Link>
+                  </Button>
+                </>;
+              })()}
             </div>
           </aside>
         </div>

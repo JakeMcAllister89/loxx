@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { CartLine } from "@/contexts/CartContext";
 
 interface DeliveryAddress {
+  contact_name: string; contact_phone: string;
   line1: string; line2: string; city: string; county: string; postcode: string;
 }
 interface OrderMeta {
