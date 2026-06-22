@@ -187,6 +187,13 @@ export default function Cart() {
           <aside className="space-y-4">
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Order details</h2>
+              <Label className="text-xs">Company name *</Label>
+              <Input
+                value={meta.companyName}
+                onChange={(e) => setMeta({ companyName: e.target.value })}
+                placeholder="Your company / organisation"
+                className="mb-3"
+              />
               <Label className="text-xs">Your PO / order reference (optional)</Label>
               <Input
                 value={meta.customerPoRef}
