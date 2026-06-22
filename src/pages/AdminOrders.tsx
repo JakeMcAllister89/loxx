@@ -201,7 +201,7 @@ export default function AdminOrders() {
       setProgress((p) => p.map((x, idx) => idx === i ? {
         ...x,
         status: res.ok ? "done" : "error",
-        po_number: res.po_number,
+        poNumber: res.po_number,
         error: res.error,
       } : x));
       if (res.ok) sent++;
@@ -217,7 +217,7 @@ export default function AdminOrders() {
     setProgress((p) => p.map((x, i) => i === idx ? {
       ...x,
       status: res.ok ? "done" : "error",
-      po_number: res.po_number,
+      poNumber: res.po_number,
       error: res.error,
     } : x));
     if (res.ok) reload();
@@ -411,7 +411,7 @@ export default function AdminOrders() {
                 <span className="font-mono w-20">{p.ref}</span>
                 {p.status === "pending" && <span className="text-muted-foreground">Queued…</span>}
                 {p.status === "sending" && <span className="inline-flex items-center gap-1 text-amber-700"><Loader2 className="h-3 w-3 animate-spin" /> Sending…</span>}
-                {p.status === "done" && <span className="inline-flex items-center gap-1 text-green-700"><Check className="h-3 w-3" /> Sent as {p.po_number}</span>}
+                {p.status === "done" && <span className="inline-flex items-center gap-1 text-green-700"><Check className="h-3 w-3" /> Sent as {p.poNumber}</span>}
                 {p.status === "error" && (
                   <span className="inline-flex items-center gap-2 text-red-600">
                     {p.error ?? "Failed"}
