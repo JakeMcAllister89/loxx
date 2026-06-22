@@ -653,6 +653,19 @@ function BuilderInner({ systemId }: { systemId: string }) {
         </div>
       )}
 
+      {/* Re-order banner */}
+      {reorderBanner && (
+        <div className="border-b bg-blue-50 border-blue-200 px-6 py-3 flex items-center gap-3 no-print">
+          <Info className="h-4 w-4 text-blue-600" />
+          <div className="text-sm flex-1 text-blue-900">
+            This system was loaded from a previous order. Review specifications and quantities before placing a new order.
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => { setReorderBanner(false); searchParams.delete("reorder"); setSearchParams(searchParams); }}>
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+
       {/* Legacy CK migration banner */}
       {legacyCKDetected && (
         <div className="border-b border-warning/40 bg-warning/10 px-6 py-3 flex items-start gap-3 no-print">
