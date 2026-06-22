@@ -114,6 +114,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const imported = searchParams.get("imported") === "1";
+  const reorderInitial = searchParams.get("reorder") === "1";
+  const [reorderBanner, setReorderBanner] = useState(reorderInitial);
+
   const [showOnlyUnassigned, setShowOnlyUnassigned] = useState(false);
   const { add: addToCart, replaceBySystem } = useCart();
   const [loading, setLoading] = useState(true);
