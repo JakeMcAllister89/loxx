@@ -56,6 +56,25 @@ export default function Account() {
         );
         setRows(rows);
       });
+
+    supabase.from("orders").select("id,created_at,status,total,system_id,customer_po_ref").order("created_at", { ascending: false }).then(async ({ data }) => {
+      const orders = data ?? [];
+      setInvoiceOrders(orders);
+      const ids = orders.map((o: any) => o.id);
+      if (ids.length) {
+        const { data: its } = await supabase.from("order_items").select("order_id,quantity").in("order_id", ids);
+        const counts: Record<string, number> = {};
+        (its ?? []).forEach((r: any) => { counts[r.order_id] = (counts[r.order_id] ?? 0) + Number(r.quantity || 0); });
+        setItemCounts(counts);
+      }
+      const sysIds = Array.from(new Set(orders.map((o: any) => o.system_id).filter(Boolean)));
+      if (sysIds.length) {
+        const { data: sys } = await supabase.from("key_systems").select("id,reference").in("id", sysIds);
+        const m: Record<string, string | null> = {};
+        (sys ?? []).forEach((r: any) => { m[r.id] = r.reference; });
+        setSysRefMap(m);
+      }
+    });
   }, [user]);
 
   const save = async () => {
