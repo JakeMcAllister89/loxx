@@ -100,7 +100,7 @@ function CanvasNodeImpl(props: NodeProps) {
     parts.push(`${totalKeys} key${totalKeys !== 1 ? "s" : ""}`);
     footer = parts.join(" · ");
   } else if (node.type === "SMK") {
-    footer = `${cylN} cyl${cylN !== 1 ? "s" : ""} · ${totalKeys} key${totalKeys !== 1 ? "s" : ""}`;
+    footer = `${cylN} cylinder${cylN !== 1 ? "s" : ""}`;
   }
 
   const handlePlusClick = (e: React.MouseEvent) => {
