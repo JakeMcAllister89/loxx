@@ -10,10 +10,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { presetRange, RangePreset } from "@/lib/dateRanges";
 import { toast } from "sonner";
-import { Send, Download, X, ExternalLink } from "lucide-react";
+import { Send, Download, X, ExternalLink, Loader2, Check } from "lucide-react";
 
 interface OrderRow {
   id: string;
@@ -56,6 +57,14 @@ const statusColor: Record<string, string> = {
 };
 const gbp = (n: number) => `£${n.toFixed(2)}`;
 
+interface SendProgress {
+  orderId: string;
+  ref: string;
+  status: "pending" | "sending" | "done" | "error";
+  poNumber?: string | null;
+  error?: string;
+}
+
 export default function AdminOrders() {
   const initial = presetRange("month");
   const [from, setFrom] = useState<Date>(initial.from);
@@ -72,6 +81,12 @@ export default function AdminOrders() {
   const [productMap, setProductMap] = useState<Record<string, { description: string; profile: string | null; size: string | null }>>({});
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [openId, setOpenId] = useState<string | null>(null);
+  const [supplierEmail, setSupplierEmail] = useState<string>("");
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [progressOpen, setProgressOpen] = useState(false);
+  const [progress, setProgress] = useState<SendProgress[]>([]);
+  const [singleSending, setSingleSending] = useState<string | null>(null);
 
   const reload = async () => {
     let q = supabase
@@ -116,6 +131,8 @@ export default function AdminOrders() {
       });
       setCostMap(cMap);
       setProductMap(dMap);
+      const { data: se } = await supabase.from("admin_settings").select("value").eq("key", "supplier_email").maybeSingle();
+      setSupplierEmail((se?.value as string) ?? "");
     })();
   }, []);
 
@@ -161,6 +178,76 @@ export default function AdminOrders() {
     reload();
   };
 
+  const refLabel = (o: OrderRow) => o.id.slice(0, 8).toUpperCase();
+
+  const sendOne = async (orderId: string): Promise<{ ok: boolean; po_number?: string | null; error?: string }> => {
+    const { data, error } = await supabase.functions.invoke("send-purchase-order", { body: { order_id: orderId } });
+    if (error || (data as any)?.error) return { ok: false, error: (data as any)?.error ?? error?.message ?? "Failed" };
+    return { ok: true, po_number: (data as any)?.po_number };
+  };
+
+  const runBulkSend = async () => {
+    const list: SendProgress[] = Array.from(selected).map((id) => {
+      const o = orders.find((x) => x.id === id)!;
+      return { orderId: id, ref: refLabel(o), status: "pending" };
+    });
+    setProgress(list);
+    setConfirmOpen(false);
+    setProgressOpen(true);
+    let sent = 0;
+    for (let i = 0; i < list.length; i++) {
+      setProgress((p) => p.map((x, idx) => idx === i ? { ...x, status: "sending" } : x));
+      const res = await sendOne(list[i].orderId);
+      setProgress((p) => p.map((x, idx) => idx === i ? {
+        ...x,
+        status: res.ok ? "done" : "error",
+        po_number: res.po_number,
+        error: res.error,
+      } : x));
+      if (res.ok) sent++;
+    }
+    toast.success(`${sent} of ${list.length} purchase orders sent to ${supplierEmail}`);
+    setSelected(new Set());
+    reload();
+  };
+
+  const retryOne = async (idx: number) => {
+    setProgress((p) => p.map((x, i) => i === idx ? { ...x, status: "sending", error: undefined } : x));
+    const res = await sendOne(progress[idx].orderId);
+    setProgress((p) => p.map((x, i) => i === idx ? {
+      ...x,
+      status: res.ok ? "done" : "error",
+      po_number: res.po_number,
+      error: res.error,
+    } : x));
+    if (res.ok) reload();
+  };
+
+  const runDownload = async (ids: string[]) => {
+    for (const id of ids) {
+      const { data, error } = await supabase.functions.invoke("send-purchase-order", { body: { order_id: id, download_only: true } });
+      if (error || (data as any)?.error) {
+        toast.error((data as any)?.error ?? error?.message ?? "Failed to generate PO");
+        continue;
+      }
+      const html = (data as any)?.html as string;
+      if (html) {
+        const blob = new Blob([html], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank");
+      }
+    }
+  };
+
+  const sendSingle = async (orderId: string) => {
+    setSingleSending(orderId);
+    const res = await sendOne(orderId);
+    setSingleSending(null);
+    if (!res.ok) return toast.error(res.error ?? "Failed");
+    toast.success(`Sent as ${res.po_number}`);
+    reload();
+  };
+
   return (
     <DashboardLayout>
       <div className="p-8 max-w-[1400px]">
@@ -188,8 +275,8 @@ export default function AdminOrders() {
         {selected.size > 0 && (
           <div className="rounded-[10px] border bg-amber-50 border-amber-200 p-3 mb-4 flex items-center gap-3">
             <span className="text-sm font-medium">{selected.size} orders selected</span>
-            <Button size="sm" className="bg-amber-600 hover:bg-amber-700" onClick={() => toast("Generate & send POs coming soon")}><Send className="h-3.5 w-3.5" /> Generate & send POs</Button>
-            <Button size="sm" variant="outline" onClick={() => toast("Download POs coming soon")}><Download className="h-3.5 w-3.5" /> Download POs</Button>
+            <Button size="sm" className="bg-amber-600 hover:bg-amber-700" onClick={() => setConfirmOpen(true)}><Send className="h-3.5 w-3.5" /> Generate & send POs</Button>
+            <Button size="sm" variant="outline" onClick={() => runDownload(Array.from(selected))}><Download className="h-3.5 w-3.5" /> Download POs</Button>
             <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}><X className="h-3.5 w-3.5" /> Clear</Button>
           </div>
         )}
@@ -228,6 +315,7 @@ export default function AdminOrders() {
                 const margin = Number(o.total) > 0 ? (profit / Number(o.total)) * 100 : 0;
                 const marginCls = margin < 30 ? "text-red-600" : margin < 40 ? "text-amber-600" : "text-green-600";
                 const canSelect = o.status === "paid" && !o.po_number;
+                const sending = singleSending === o.id;
                 return (
                   <TableRow key={o.id}>
                     <TableCell>
@@ -237,7 +325,7 @@ export default function AdminOrders() {
                         <Tooltip><TooltipTrigger asChild><span><Checkbox disabled /></span></TooltipTrigger><TooltipContent>{o.po_number ? "PO already sent" : "Not eligible"}</TooltipContent></Tooltip>
                       )}
                     </TableCell>
-                    <TableCell className="font-mono text-amber-700">{o.id.slice(0, 8).toUpperCase()}</TableCell>
+                    <TableCell className="font-mono text-amber-700">{refLabel(o)}</TableCell>
                     <TableCell>{o.customer_name ?? profileMap[o.user_id]?.name ?? "—"}</TableCell>
                     <TableCell>{o.company ?? profileMap[o.user_id]?.company ?? "—"}</TableCell>
                     <TableCell className="text-xs">
@@ -255,12 +343,18 @@ export default function AdminOrders() {
                     <TableCell className="text-green-600 font-bold">{gbp(profit)}</TableCell>
                     <TableCell className={`font-semibold ${marginCls}`}>{margin.toFixed(1)}%</TableCell>
                     <TableCell><Badge className={statusColor[o.status] ?? ""}>{o.status}</Badge></TableCell>
-                    <TableCell className="font-mono text-xs">{o.po_number ?? "—"}</TableCell>
+                    <TableCell className="font-mono text-xs text-amber-700">{o.po_number ?? "—"}</TableCell>
                     <TableCell className="flex gap-1">
                       <Button size="sm" variant="outline" onClick={() => setOpenId(o.id)}>View</Button>
-                      <Button size="sm" className={o.po_number ? "bg-muted text-muted-foreground" : "bg-amber-600 hover:bg-amber-700"} disabled={!!o.po_number} onClick={() => toast("Send PO coming soon")}>
-                        <Send className="h-3.5 w-3.5" />
-                      </Button>
+                      {o.po_number ? (
+                        <Badge variant="outline" className="bg-muted text-muted-foreground text-[10px]">
+                          Sent {o.po_sent_at ? new Date(o.po_sent_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : ""}
+                        </Badge>
+                      ) : (
+                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700" disabled={sending} onClick={() => sendSingle(o.id)}>
+                          {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 );
@@ -282,13 +376,64 @@ export default function AdminOrders() {
         )}
       </div>
 
+      {/* Bulk confirm dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send {selected.size} purchase orders to {supplierEmail || "(no supplier email set)"}?</DialogTitle>
+            <DialogDescription>
+              Each order will be sent as a separate email. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="text-xs font-mono max-h-48 overflow-auto bg-muted/30 rounded p-2 space-y-0.5">
+            {Array.from(selected).map((id) => {
+              const o = orders.find((x) => x.id === id); if (!o) return null;
+              return <li key={id}>{refLabel(o)}</li>;
+            })}
+          </ul>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button className="bg-amber-600 hover:bg-amber-700" disabled={!supplierEmail} onClick={runBulkSend}>Send all {selected.size} orders</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Progress dialog */}
+      <Dialog open={progressOpen} onOpenChange={setProgressOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sending purchase orders</DialogTitle>
+            <DialogDescription>Live progress — do not close until all complete.</DialogDescription>
+          </DialogHeader>
+          <ul className="space-y-1.5 max-h-72 overflow-auto">
+            {progress.map((p, i) => (
+              <li key={p.orderId} className="flex items-center gap-2 text-sm">
+                <span className="font-mono w-20">{p.ref}</span>
+                {p.status === "pending" && <span className="text-muted-foreground">Queued…</span>}
+                {p.status === "sending" && <span className="inline-flex items-center gap-1 text-amber-700"><Loader2 className="h-3 w-3 animate-spin" /> Sending…</span>}
+                {p.status === "done" && <span className="inline-flex items-center gap-1 text-green-700"><Check className="h-3 w-3" /> Sent as {p.po_number}</span>}
+                {p.status === "error" && (
+                  <span className="inline-flex items-center gap-2 text-red-600">
+                    {p.error ?? "Failed"}
+                    <Button size="sm" variant="outline" onClick={() => retryOne(i)}>Retry</Button>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProgressOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Sheet open={!!openId} onOpenChange={(o) => !o && setOpenId(null)}>
         <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
           {open && (
             <>
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <span className="font-mono text-amber-700">{open.id.slice(0, 8).toUpperCase()}</span>
+                  <span className="font-mono text-amber-700">{refLabel(open)}</span>
                   <Badge className={statusColor[open.status] ?? ""}>{open.status}</Badge>
                 </SheetTitle>
               </SheetHeader>
@@ -312,8 +457,22 @@ export default function AdminOrders() {
 
                 {open.customer_po_ref && <Block title="Customer reference">{open.customer_po_ref}</Block>}
                 {open.delivery_address && (
-                  <Block title="Delivery address">
-                    <pre className="text-xs whitespace-pre-wrap font-sans">{typeof open.delivery_address === "string" ? open.delivery_address : Object.values(open.delivery_address).filter(Boolean).join(", ")}</pre>
+                  <Block title="Delivery">
+                    {(() => {
+                      const d = open.delivery_address as any;
+                      if (typeof d === "string") return <pre className="text-xs whitespace-pre-wrap font-sans">{d}</pre>;
+                      const contact = d.contact_name ?? d.name;
+                      const phone = d.contact_phone;
+                      const addr = [d.line1, d.line2, d.city, d.county, d.postcode].filter(Boolean).join(", ");
+                      return <>
+                        {(contact || phone) && (
+                          <div className="font-semibold">
+                            Contact: {contact ?? "—"}{phone ? ` · ${phone}` : ""}
+                          </div>
+                        )}
+                        <div className="text-muted-foreground mt-1">{addr || "—"}</div>
+                      </>;
+                    })()}
                   </Block>
                 )}
                 {open.notes && <Block title="Notes">{open.notes}</Block>}
@@ -394,11 +553,18 @@ export default function AdminOrders() {
 
                 <Block title="Purchase order">
                   {open.po_number ? (
-                    <div className="text-xs">PO <span className="font-mono">{open.po_number}</span> sent {open.po_sent_at ? new Date(open.po_sent_at).toLocaleString("en-GB") : ""} {open.po_sent_to ? `to ${open.po_sent_to}` : ""}</div>
+                    <div className="text-xs">PO <span className="font-mono text-amber-700">{open.po_number}</span> sent {open.po_sent_at ? new Date(open.po_sent_at).toLocaleString("en-GB") : ""} {open.po_sent_to ? `to ${open.po_sent_to}` : ""}</div>
                   ) : (
                     <div className="text-xs text-muted-foreground">PO not yet sent</div>
                   )}
-                  <Button size="sm" className="bg-amber-600 hover:bg-amber-700 mt-2" disabled={!!open.po_number} onClick={() => toast("Send PO coming soon")}><Send className="h-3.5 w-3.5" /> Send PO</Button>
+                  <div className="flex gap-2 mt-2">
+                    <Button size="sm" className="bg-amber-600 hover:bg-amber-700" disabled={!!open.po_number || singleSending === open.id} onClick={() => sendSingle(open.id)}>
+                      {singleSending === open.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />} Send PO
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => runDownload([open.id])}>
+                      <Download className="h-3.5 w-3.5" /> Download
+                    </Button>
+                  </div>
                 </Block>
 
                 <div className="flex gap-2">
