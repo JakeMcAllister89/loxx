@@ -181,7 +181,7 @@ export function assignNextDiffers(tree: TreeData): TreeData {
   if (!tree.root) return { root: null, next_differ: 1 };
   let counter = 1;
   const assigned = mapTree(tree.root, (n) => {
-    if (n.type === "CYL") return { ...n, differ: counter++ };
+    if (n.type === "CYL" && !n.decommissioned_at) return { ...n, differ: counter++ };
     return n;
   });
   return { root: assigned, next_differ: counter };
