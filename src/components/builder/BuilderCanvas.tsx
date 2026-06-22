@@ -192,6 +192,14 @@ function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode,
     >
       <Background gap={20} size={1} color="hsl(var(--border))" />
       <Controls showInteractive={false} className="!shadow-card !rounded-[10px] !border" />
+      <button
+        type="button"
+        onClick={() => fitView({ padding: 0.2, duration: 400 })}
+        className="absolute bottom-2 right-2 z-10 text-[10px] font-medium px-2 py-1 rounded bg-card border shadow-card text-muted-foreground hover:text-foreground"
+        title="Zoom to fit entire system in view"
+      >
+        Zoom to fit
+      </button>
       <MiniMap
         pannable zoomable
         className="!rounded-[10px] !border !shadow-card"
