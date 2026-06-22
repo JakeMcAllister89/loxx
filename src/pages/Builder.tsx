@@ -292,6 +292,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setLoading(false);
     });
     supabase.from("products").select("id,code,name,product_description,cylinder_type,cylinder_profile,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as any));
+    // Determine if this system has been supplied/delivered — enables the "Replace cylinder" action.
+    supabase.from("orders").select("status").eq("system_id", systemId).then(({ data }) => {
+      const fulfilledStatuses = new Set(["delivered", "fulfilled", "shipped", "complete", "completed"]);
+      setIsFulfilled((data ?? []).some((o: any) => fulfilledStatuses.has(String(o.status).toLowerCase())));
+    });
   }, [systemId, navigate]);
 
   // Flush pending debounced audits when selectedId changes
