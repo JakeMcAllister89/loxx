@@ -139,6 +139,72 @@ export default function Account() {
             </div>
           </TabsContent>
 
+          <TabsContent value="invoices">
+            <div className="mt-4 rounded-[10px] border bg-card shadow-card overflow-hidden">
+              {invoiceOrders.length === 0 ? (
+                <div className="p-10 text-sm text-muted-foreground text-center">
+                  <FileText className="h-8 w-8 mx-auto mb-3 opacity-50" />
+                  No orders yet.
+                </div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 text-left text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-2">Invoice ref</th>
+                      <th className="px-4 py-2">Order date</th>
+                      <th className="px-4 py-2">System</th>
+                      <th className="px-4 py-2">Items</th>
+                      <th className="px-4 py-2">Total inc VAT</th>
+                      <th className="px-4 py-2">Status</th>
+                      <th className="px-4 py-2 text-right">Download</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoiceOrders.map((o) => {
+                      const ready = ["processing", "shipped", "delivered"].includes(o.status);
+                      return (
+                        <tr key={o.id} className="border-t">
+                          <td className="px-4 py-2 font-mono text-amber-700 text-xs">{invoiceRef(o.id)}</td>
+                          <td className="px-4 py-2 text-xs">{new Date(o.created_at).toLocaleDateString("en-GB")}</td>
+                          <td className="px-4 py-2 text-xs font-mono">{o.system_id ? (sysRefMap[o.system_id] ?? "—") : "—"}</td>
+                          <td className="px-4 py-2 text-xs">{itemCounts[o.id] ?? 0}</td>
+                          <td className="px-4 py-2 font-mono text-xs">£{Number(o.total).toFixed(2)}</td>
+                          <td className="px-4 py-2 text-xs">
+                            {ready ? (
+                              <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-800">{o.status}</span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground">Pending</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            {ready ? (
+                              <Button size="sm" variant="outline" onClick={() => downloadInvoice(o.id)}>
+                                <Download className="h-3.5 w-3.5" /> Download
+                              </Button>
+                            ) : (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-block">
+                                      <Button size="sm" variant="outline" disabled className="opacity-50">
+                                        <Download className="h-3.5 w-3.5" /> Download
+                                      </Button>
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Invoice available once order is confirmed</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </TabsContent>
+
           <TabsContent value="audit">
             <div className="mt-4 rounded-[10px] border bg-card shadow-card overflow-hidden">
               <div className="p-4 border-b flex flex-wrap items-center gap-3">
