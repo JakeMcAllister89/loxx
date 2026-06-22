@@ -904,6 +904,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
               onDelete={() => handleDelete(selected.id)}
               isRoot={tree.root?.id === selected.id}
               onClose={() => setSelectedId(null)}
+              isFulfilled={isFulfilled}
+              onReplace={() => openReplaceFlow(selected.id)}
             />
           )}
         </aside>
