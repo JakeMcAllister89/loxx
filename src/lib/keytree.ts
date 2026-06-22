@@ -129,6 +129,17 @@ export function addChild(root: TNode | null, parentId: string, child: TNode): TN
   return mapTree(root, (n) => (n.id === parentId ? { ...n, children: [...n.children, child] } : n));
 }
 
+/** Insert a new node as a sibling immediately after the node with id `afterId`. */
+export function insertSiblingAfter(root: TNode | null, afterId: string, sibling: TNode): TNode | null {
+  return mapTree(root, (n) => {
+    const idx = n.children.findIndex((c) => c.id === afterId);
+    if (idx < 0) return n;
+    const next = [...n.children];
+    next.splice(idx + 1, 0, sibling);
+    return { ...n, children: next };
+  });
+}
+
 export function removeNode(root: TNode | null, id: string): TNode | null {
   if (!root) return null;
   if (root.id === id) return null;
