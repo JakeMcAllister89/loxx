@@ -16,6 +16,12 @@ export interface TNode {
   size?: string;              // CYL only — e.g. "35/35"
   quantity?: number;          // CYL only — units required at this door (default 1)
   extra_keys?: number;        // CYL only — additional keys beyond the 2 included
+  is_common_entrance?: boolean; // CYL only — common entrance cylinder (multiple keys operate same lock)
+  // Decommissioned cylinder fields — once a cylinder is replaced, the original is preserved in-tree
+  decommissioned_at?: string;            // ISO date
+  decommissioned_reason?: "lost_key" | "faulty";
+  replaced_by_differ?: number;           // differ of the replacement cylinder
+  replaced_by_node_id?: string;          // id of the replacement node
   /** GMK/MK/SMK — copies of the key(s) at this level.
    *  Legacy: a single number meant "n copies of one key labelled by node.label".
    *  Current: an array of KeyEntry — multiple key refs each with their own qty. */
@@ -123,6 +129,17 @@ export function addChild(root: TNode | null, parentId: string, child: TNode): TN
   return mapTree(root, (n) => (n.id === parentId ? { ...n, children: [...n.children, child] } : n));
 }
 
+/** Insert a new node as a sibling immediately after the node with id `afterId`. */
+export function insertSiblingAfter(root: TNode | null, afterId: string, sibling: TNode): TNode | null {
+  return mapTree(root, (n) => {
+    const idx = n.children.findIndex((c) => c.id === afterId);
+    if (idx < 0) return n;
+    const next = [...n.children];
+    next.splice(idx + 1, 0, sibling);
+    return { ...n, children: next };
+  });
+}
+
 export function removeNode(root: TNode | null, id: string): TNode | null {
   if (!root) return null;
   if (root.id === id) return null;
@@ -175,7 +192,7 @@ export function assignNextDiffers(tree: TreeData): TreeData {
   if (!tree.root) return { root: null, next_differ: 1 };
   let counter = 1;
   const assigned = mapTree(tree.root, (n) => {
-    if (n.type === "CYL") return { ...n, differ: counter++ };
+    if (n.type === "CYL" && !n.decommissioned_at) return { ...n, differ: counter++ };
     return n;
   });
   return { root: assigned, next_differ: counter };

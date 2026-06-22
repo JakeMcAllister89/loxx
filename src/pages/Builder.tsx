@@ -17,14 +17,21 @@ import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
-  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock,
+  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert,
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { BuilderCanvas, CanvasProduct } from "@/components/builder/BuilderCanvas";
 import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
 import {
   TNode, TreeData, NodeType, KeyEntry,
-  emptyTree, createGMK, makeChild, childTypeOf, validChildTypes,
-  findNode, findParent, updateNode, addChild, removeNode,
+  emptyTree, createGMK, makeChild, childTypeOf, validChildTypes, newId,
+  findNode, findParent, updateNode, addChild, removeNode, insertSiblingAfter,
   countDoors, assignNextDiffers, pathOf, validate, ValidationIssue,
   hasLegacyCK, flattenCK, normaliseKeys, countKeys,
 } from "@/lib/keytree";
@@ -146,6 +153,12 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [legacyCKDetected, setLegacyCKDetected] = useState(false);
+  const [isFulfilled, setIsFulfilled] = useState(false);
+  // Replace-cylinder modal state: target node id + current step
+  const [replaceState, setReplaceState] = useState<
+    | { open: false }
+    | { open: true; nodeId: string; step: "reason" | "lost_warning" }
+  >({ open: false });
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
@@ -279,6 +292,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setLoading(false);
     });
     supabase.from("products").select("id,code,name,product_description,cylinder_type,cylinder_profile,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as any));
+    // Determine if this system has been supplied/delivered — enables the "Replace cylinder" action.
+    supabase.from("orders").select("status").eq("system_id", systemId).then(({ data }) => {
+      const fulfilledStatuses = new Set(["delivered", "fulfilled", "shipped", "complete", "completed"]);
+      setIsFulfilled((data ?? []).some((o: any) => fulfilledStatuses.has(String(o.status).toLowerCase())));
+    });
   }, [systemId, navigate]);
 
   // Flush pending debounced audits when selectedId changes
@@ -333,6 +351,81 @@ function BuilderInner({ systemId }: { systemId: string }) {
     if (cylConfigRef.current?.nodeId === nodeId) cylConfigRef.current = null;
     setSelectedId((s) => (s === nodeId ? null : s));
   }, [systemId]);
+
+  /** Open the "Replace cylinder" flow for a CYL node. */
+  const openReplaceFlow = useCallback((nodeId: string) => {
+    setReplaceState({ open: true, nodeId, step: "reason" });
+  }, []);
+
+  /** Commit a replacement: clone the original cylinder as a new sibling and mark the original decommissioned. */
+  const commitReplacement = useCallback((targetId: string, reason: "lost_key" | "faulty") => {
+    setTree((prev) => {
+      const original = findNode(prev.root, targetId);
+      const parent = findParent(prev.root, targetId);
+      if (!original || !parent || original.type !== "CYL") return prev;
+      const newNodeId = newId();
+      // Clone specs; reset extras; new differ will be auto-assigned by assignNextDiffers
+      const replacement: TNode = {
+        id: newNodeId,
+        type: "CYL",
+        label: original.label,
+        cylinder_type: original.cylinder_type,
+        finish: original.finish,
+        size: original.size,
+        quantity: original.quantity ?? 1,
+        extra_keys: 0,
+        is_common_entrance: original.is_common_entrance,
+        children: [],
+      };
+      const decommissionedRoot = updateNode(prev.root, targetId, {
+        decommissioned_at: new Date().toISOString(),
+        decommissioned_reason: reason,
+        replaced_by_node_id: newNodeId,
+      });
+      const withSibling = insertSiblingAfter(decommissionedRoot, targetId, replacement);
+      const next = assignNextDiffers({ ...prev, root: withSibling });
+      // Backfill replaced_by_differ on the original now that the new differ is assigned
+      const newDiffer = findNode(next.root, newNodeId)?.differ;
+      const finalRoot = updateNode(next.root, targetId, { replaced_by_differ: newDiffer });
+      dirtyRef.current = true;
+      logAction({
+        system_id: systemId,
+        action: "cylinder_replaced",
+        node_type: "CYL",
+        node_label: original.label,
+        metadata: {
+          reason,
+          old_differ: original.differ,
+          new_differ: newDiffer,
+        },
+      });
+      setSelectedId(newNodeId);
+      return { ...next, root: finalRoot };
+    });
+    setReplaceState({ open: false });
+    toast.success("Cylinder replaced — review specs in the right panel");
+  }, [systemId]);
+
+  /** "Order replacement key only" — bump extra_keys by 1 on the original, no new differ. */
+  const orderReplacementKey = useCallback((targetId: string) => {
+    setTree((prev) => {
+      const original = findNode(prev.root, targetId);
+      if (!original || original.type !== "CYL") return prev;
+      const root = updateNode(prev.root, targetId, { extra_keys: (original.extra_keys ?? 0) + 1 });
+      dirtyRef.current = true;
+      logAction({
+        system_id: systemId,
+        action: "replacement_key_ordered",
+        node_type: "CYL",
+        node_label: original.label,
+        metadata: { differ: original.differ },
+      });
+      return { ...prev, root };
+    });
+    setReplaceState({ open: false });
+    toast.success("Replacement key added — export to basket when ready");
+  }, [systemId]);
+
 
   const patchSelected = (patch: Partial<TNode>) => {
     if (!selectedId) return;
@@ -811,6 +904,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
               onDelete={() => handleDelete(selected.id)}
               isRoot={tree.root?.id === selected.id}
               onClose={() => setSelectedId(null)}
+              isFulfilled={isFulfilled}
+              onReplace={() => openReplaceFlow(selected.id)}
             />
           )}
         </aside>
@@ -838,6 +933,75 @@ function BuilderInner({ systemId }: { systemId: string }) {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Replace cylinder modal — reason picker → lost-key warning */}
+      <AlertDialog
+        open={replaceState.open}
+        onOpenChange={(o) => { if (!o) setReplaceState({ open: false }); }}
+      >
+        <AlertDialogContent>
+          {replaceState.open && replaceState.step === "reason" && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Why are you replacing this cylinder?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Choose the reason so we can recommend the right course of action.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex flex-col gap-2 my-2">
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3"
+                  onClick={() => setReplaceState((s) => s.open ? { ...s, step: "lost_warning" } : s)}
+                >
+                  <KeyRound className="h-4 w-4 mr-2 shrink-0" />
+                  <span className="text-left">A key has been lost or not returned</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3"
+                  onClick={() => replaceState.open && commitReplacement(replaceState.nodeId, "faulty")}
+                >
+                  <AlertTriangle className="h-4 w-4 mr-2 shrink-0" />
+                  <span className="text-left">The cylinder is faulty or damaged</span>
+                </Button>
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+              </AlertDialogFooter>
+            </>
+          )}
+          {replaceState.open && replaceState.step === "lost_warning" && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <ShieldAlert className="h-5 w-5 text-destructive" /> Security risk
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  The security of this door may be compromised. We strongly recommend replacing the cylinder under a new differ to prevent unauthorised access with the lost key.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex flex-col gap-2 my-2">
+                <Button
+                  className="bg-primary hover:bg-primary/90"
+                  onClick={() => replaceState.open && commitReplacement(replaceState.nodeId, "lost_key")}
+                >
+                  <Replace className="h-4 w-4 mr-2" /> Replace with new differ (recommended)
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => replaceState.open && orderReplacementKey(replaceState.nodeId)}
+                >
+                  <KeyRound className="h-4 w-4 mr-2" /> Order replacement key only (I understand the risk)
+                </Button>
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+              </AlertDialogFooter>
+            </>
+          )}
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -979,6 +1143,7 @@ function Legend({ type }: { type: NodeType }) {
 
 function DetailPanel({
   node, parent, trail, products, onPatch, addOptions, onAddChildType, onDelete, isRoot, onClose,
+  isFulfilled, onReplace,
 }: {
   node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
@@ -987,6 +1152,8 @@ function DetailPanel({
   onDelete: () => void;
   isRoot: boolean;
   onClose: () => void;
+  isFulfilled: boolean;
+  onReplace: () => void;
 }) {
   const meta = TYPE_META[node.type];
   const isCyl = node.type === "CYL";
@@ -1137,6 +1304,27 @@ function DetailPanel({
           <Button onClick={onClose} variant="outline" className="w-full">
             <Check className="h-4 w-4" /> Done
           </Button>
+          {isCyl && !node.decommissioned_at && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className={isFulfilled ? "" : "cursor-not-allowed"}>
+                    <Button
+                      variant="outline"
+                      onClick={isFulfilled ? onReplace : undefined}
+                      disabled={!isFulfilled}
+                      className="w-full text-muted-foreground hover:text-foreground"
+                    >
+                      <Replace className="h-4 w-4" /> Replace cylinder
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!isFulfilled && (
+                  <TooltipContent>Available once your system has been supplied.</TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {!isRoot && (
             <Button variant="outline" onClick={onDelete} className="text-destructive hover:text-destructive">
               <X className="h-4 w-4" /> Delete node
