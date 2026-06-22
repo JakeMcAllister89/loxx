@@ -130,15 +130,17 @@ export default function Dashboard() {
 
         {/* Recent systems */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-3">Your systems</h2>
+          <Link to="/systems" className="inline-flex items-center gap-1 text-lg font-semibold mb-3 hover:text-primary">
+            My systems <ArrowRight className="h-4 w-4" />
+          </Link>
           {systems.length === 0 ? (
             <div className="rounded-[10px] border-dashed border-2 bg-card p-10 text-center">
               <p className="text-muted-foreground text-sm">You haven't built a system yet.</p>
-              <Button onClick={newSystem} className="mt-4 bg-primary hover:bg-primary/90">Start your first system</Button>
+              <Button onClick={newSystem} disabled={creating} className="mt-4 bg-primary hover:bg-primary/90">Start your first system</Button>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
-              {systems.map((s) => (
+              {systems.slice(0, 4).map((s) => (
                 <div key={s.id} className="rounded-[10px] border bg-card p-5 shadow-card flex items-start justify-between">
                   <div>
                     <div className="font-semibold">{s.name}</div>
