@@ -89,11 +89,13 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
       cylinder_type: first.code,
       finish: first.finish ?? undefined,
       size: first.size ?? undefined,
+      is_common_entrance: false,
     });
   };
 
   const activeFinish = node.finish ?? selected?.finish ?? null;
   const activeSize = node.size ?? selected?.size ?? null;
+  const isCommonEntrance = !!node.is_common_entrance;
 
   return (
     <div className="space-y-4">
@@ -102,7 +104,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
         <Label className="text-xs">Cylinder type</Label>
         <div className="grid grid-cols-2 gap-2 mt-1.5">
           {Array.from(families.keys()).map((fam) => {
-            const isActive = fam === activeFamily;
+            const isActive = !isCommonEntrance && fam === activeFamily;
             const exemplar = families.get(fam)![0];
             return (
               <button
@@ -124,7 +126,27 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
               </button>
             );
           })}
+          {/* Virtual: Common Entrance */}
+          <button
+            onClick={() => onPatch({ is_common_entrance: true })}
+            className={`text-left rounded-[10px] border p-2.5 transition-colors ${
+              isCommonEntrance ? "border-primary bg-accent-light" : "border-border bg-card hover:border-primary/50"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded bg-muted shrink-0 flex items-center justify-center text-[10px] font-semibold text-muted-foreground">CE</div>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold truncate">Common Entrance</div>
+                <div className="text-[10px] text-muted-foreground">Shared access</div>
+              </div>
+            </div>
+          </button>
         </div>
+        {isCommonEntrance && (
+          <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed bg-muted/40 border rounded-md p-2">
+            A common entrance cylinder allows multiple different keys to operate the same lock — typically used on shared building entrances where individual residents each hold their own key.
+          </p>
+        )}
       </div>
 
       {/* Selected product card */}
