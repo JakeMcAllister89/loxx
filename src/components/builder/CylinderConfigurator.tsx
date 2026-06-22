@@ -206,14 +206,13 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
             className="h-9 w-16 text-center font-mono"
           />
           <Button size="sm" variant="outline" className="h-9 w-9 p-0" onClick={() => onPatch({ quantity: Math.min(20, (node.quantity ?? 1) + 1) })}>+</Button>
-          <span className="text-[11px] text-muted-foreground ml-1">Double doors usually need 2</span>
         </div>
       </div>
 
       {/* Additional keys */}
       <div className="pt-3 border-t">
         <Label className="text-xs">Additional keys</Label>
-        <p className="text-[11px] text-muted-foreground mt-0.5">2 keys are included as standard with every cylinder.</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">2x differ keys are included as standard with each cylinder</p>
         <div className="mt-2">
           <Label htmlFor="extra-keys" className="text-[11px] text-muted-foreground">Extra keys required</Label>
           <Input
