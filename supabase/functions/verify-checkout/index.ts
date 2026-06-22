@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
 
     const stripe = createStripeClient(environment as StripeEnv);
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ["payment_intent", "total_details", "shipping_details"],
+      expand: ["payment_intent", "total_details"],
     });
 
     const orderId = session.metadata?.orderId;
