@@ -153,6 +153,12 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [legacyCKDetected, setLegacyCKDetected] = useState(false);
+  const [isFulfilled, setIsFulfilled] = useState(false);
+  // Replace-cylinder modal state: target node id + current step
+  const [replaceState, setReplaceState] = useState<
+    | { open: false }
+    | { open: true; nodeId: string; step: "reason" | "lost_warning" }
+  >({ open: false });
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
