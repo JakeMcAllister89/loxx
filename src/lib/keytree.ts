@@ -166,29 +166,19 @@ export function countDoors(root: TNode | null): number {
   return n;
 }
 
+/**
+ * Renumber ALL cylinders sequentially from 1 based on their current tree
+ * position (depth-first, top-to-bottom, left-to-right). The counter has no
+ * memory of deleted nodes — differs always reflect the live tree.
+ */
 export function assignNextDiffers(tree: TreeData): TreeData {
-  if (!tree.root) return { ...tree, next_differ: Math.max(1, tree.next_differ ?? 1) };
-  const used = new Set<number>();
-  let maxUsed = 0;
-  const w = (n: TNode) => {
-    if (n.type === "CYL" && n.differ != null) {
-      used.add(n.differ);
-      if (n.differ > maxUsed) maxUsed = n.differ;
-    }
-    n.children.forEach(w);
-  };
-  w(tree.root);
-  // Start counter from 1, ignoring any stale stored next_differ for systems that have no cylinders yet.
-  let next = used.size === 0 ? 1 : Math.max(1, maxUsed + 1);
+  if (!tree.root) return { root: null, next_differ: 1 };
+  let counter = 1;
   const assigned = mapTree(tree.root, (n) => {
-    if (n.type === "CYL" && (n.differ === undefined || n.differ === null)) {
-      while (used.has(next)) next++;
-      used.add(next);
-      return { ...n, differ: next++ };
-    }
+    if (n.type === "CYL") return { ...n, differ: counter++ };
     return n;
   });
-  return { root: assigned, next_differ: next };
+  return { root: assigned, next_differ: counter };
 }
 
 

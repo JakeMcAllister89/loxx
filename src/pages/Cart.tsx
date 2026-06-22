@@ -48,6 +48,10 @@ export default function Cart() {
   const canReview = items.length > 0;
   const proceed = () => {
     const d = meta.delivery;
+    if (!meta.companyName.trim()) {
+      toast.error("Please enter your company name");
+      return;
+    }
     if (!d.contact_name || !d.contact_phone || !d.line1 || !d.city || !d.postcode) {
       toast.error("Please complete all required delivery fields including contact name and telephone");
       return;
@@ -187,6 +191,13 @@ export default function Cart() {
           <aside className="space-y-4">
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Order details</h2>
+              <Label className="text-xs">Company name *</Label>
+              <Input
+                value={meta.companyName}
+                onChange={(e) => setMeta({ companyName: e.target.value })}
+                placeholder="Your company / organisation"
+                className="mb-3"
+              />
               <Label className="text-xs">Your PO / order reference (optional)</Label>
               <Input
                 value={meta.customerPoRef}
@@ -212,13 +223,19 @@ export default function Cart() {
 
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Pricing</h2>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between text-muted-foreground"><span>Cylinders</span><span>£{cylindersSubtotal.toFixed(2)}</span></div>
-                {keysSubtotal > 0 && <div className="flex justify-between text-muted-foreground"><span>Extra keys</span><span>£{keysSubtotal.toFixed(2)}</span></div>}
-                <div className="flex justify-between border-t pt-2 mt-2"><span>Subtotal (ex VAT)</span><span>£{subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-muted-foreground"><span>VAT (20%)</span><span>£{vat.toFixed(2)}</span></div>
-                <div className="flex justify-between text-lg font-bold text-amber-600 border-t pt-2 mt-2"><span>Total inc VAT</span><span>£{total.toFixed(2)}</span></div>
-              </div>
+              {(() => {
+                const cylQty = items.filter(i => i.kind === "cylinder").reduce((s, i) => s + i.quantity, 0);
+                const keyQty = items.filter(i => i.kind === "key").reduce((s, i) => s + i.quantity, 0);
+                return (
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between text-muted-foreground"><span>Cylinders ×{cylQty}</span><span>£{cylindersSubtotal.toFixed(2)}</span></div>
+                    {keysSubtotal > 0 && <div className="flex justify-between text-muted-foreground"><span>Keys ×{keyQty}</span><span>£{keysSubtotal.toFixed(2)}</span></div>}
+                    <div className="flex justify-between border-t pt-2 mt-2"><span>Subtotal (ex VAT)</span><span>£{subtotal.toFixed(2)}</span></div>
+                    <div className="flex justify-between text-muted-foreground"><span>VAT (20%)</span><span>£{vat.toFixed(2)}</span></div>
+                    <div className="flex justify-between text-lg font-bold text-amber-600 border-t pt-2 mt-2"><span>Total inc VAT</span><span>£{total.toFixed(2)}</span></div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="rounded-[10px] border bg-card shadow-card p-5">

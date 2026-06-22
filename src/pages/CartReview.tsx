@@ -18,7 +18,7 @@ interface SystemSummary {
 }
 
 export default function CartReview() {
-  const { items, meta, cylindersSubtotal, keysSubtotal, subtotal, vat, total } = useCart();
+  const { items, meta, setMeta, cylindersSubtotal, keysSubtotal, subtotal, vat, total } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [systems, setSystems] = useState<SystemSummary[]>([]);
@@ -141,10 +141,19 @@ export default function CartReview() {
           <aside className="space-y-4">
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Customer</h2>
-              <div className="text-sm space-y-0.5">
+              <div className="text-sm space-y-2">
                 {profile.name && <div>{profile.name}</div>}
-                {profile.company && <div className="text-muted-foreground">{profile.company}</div>}
-                <div className="text-muted-foreground">{user?.email}</div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Company name *</label>
+                  <input
+                    type="text"
+                    value={meta.companyName}
+                    onChange={(e) => setMeta({ companyName: e.target.value })}
+                    placeholder="Your company / organisation"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                  />
+                </div>
+                <div className="text-muted-foreground text-xs">{user?.email}</div>
               </div>
             </div>
 
@@ -186,16 +195,11 @@ export default function CartReview() {
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Pricing</h2>
               <div className="space-y-1 text-sm font-mono">
-                <div className="flex justify-between text-muted-foreground"><span>Cylinders</span><span>£{cylindersSubtotal.toFixed(2)}</span></div>
-                {keysSubtotal > 0 && <div className="flex justify-between text-muted-foreground"><span>Extra keys</span><span>£{keysSubtotal.toFixed(2)}</span></div>}
+                <div className="flex justify-between text-muted-foreground"><span>Cylinders ×{cylinderCount}</span><span>£{cylindersSubtotal.toFixed(2)}</span></div>
+                {keysSubtotal > 0 && <div className="flex justify-between text-muted-foreground"><span>Keys ×{extraKeys}</span><span>£{keysSubtotal.toFixed(2)}</span></div>}
                 <div className="flex justify-between border-t pt-2 mt-2"><span>Subtotal (ex VAT)</span><span>£{subtotal.toFixed(2)}</span></div>
                 <div className="flex justify-between text-muted-foreground"><span>VAT (20%)</span><span>£{vat.toFixed(2)}</span></div>
                 <div className="flex justify-between text-lg font-bold text-amber-600 border-t pt-2 mt-2"><span>Total inc VAT</span><span>£{total.toFixed(2)}</span></div>
-              </div>
-              <div className="text-xs text-muted-foreground mt-3 pt-3 border-t space-y-0.5">
-                <div>{cylinderCount} cylinders across {systems.length || 1} system{systems.length === 1 ? "" : "s"}</div>
-                <div>{extraKeys} additional key{extraKeys === 1 ? "" : "s"} ordered</div>
-                <div>2 standard keys included per cylinder (not shown separately)</div>
               </div>
             </div>
 
