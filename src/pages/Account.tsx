@@ -125,6 +125,7 @@ export default function Account() {
         <Tabs defaultValue="profile" className="mt-6">
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="invoices">Invoices</TabsTrigger>
             <TabsTrigger value="audit">Audit log</TabsTrigger>
           </TabsList>
 
