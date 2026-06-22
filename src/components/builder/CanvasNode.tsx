@@ -112,17 +112,26 @@ function CanvasNodeImpl(props: NodeProps) {
 
   const cardWidth = isCyl ? 160 : 180;
   const padding = isCyl ? "px-2.5 py-2" : "px-3 py-2";
+  const isDecommissioned = isCyl && !!node.decommissioned_at;
+  const decommTooltip = isDecommissioned
+    ? `This differ was decommissioned on ${new Date(node.decommissioned_at!).toLocaleDateString("en-GB")}${
+        node.replaced_by_differ != null ? ` — replaced by D${String(node.replaced_by_differ).padStart(3, "0")}` : ""
+      } due to ${node.decommissioned_reason === "lost_key" ? "lost key" : "faulty cylinder"}`
+    : undefined;
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`relative bg-card rounded-lg cursor-pointer transition-[box-shadow,background-color] duration-150 ${ringClass}`}
+      title={decommTooltip}
+      className={`relative rounded-lg cursor-pointer transition-[box-shadow,background-color] duration-150 ${ringClass} ${
+        isDecommissioned ? "bg-muted/60 opacity-80" : "bg-card"
+      }`}
       style={{
         width: cardWidth,
-        borderLeft: `3px solid ${meta.border}`,
+        borderLeft: `3px solid ${isDecommissioned ? "hsl(var(--muted-foreground))" : meta.border}`,
         boxShadow: hovered || selected ? "0 4px 14px rgba(0,0,0,0.10)" : "0 1px 2px rgba(0,0,0,0.04)",
-        background: hovered ? `hsl(${meta.tintHsl} / 0.03)` : undefined,
+        background: isDecommissioned ? undefined : hovered ? `hsl(${meta.tintHsl} / 0.03)` : undefined,
       }}
     >
       {node.type !== "GMK" && <Handle type="target" position={Position.Top} className="!bg-border !w-2 !h-2" />}
@@ -154,14 +163,29 @@ function CanvasNodeImpl(props: NodeProps) {
         )}
 
         {/* Row 3 — CYL differ + extras badges, inline centred */}
-        {isCyl && (node.differ != null || (node.extra_keys ?? 0) > 0) && (
+        {isCyl && (node.differ != null || (node.extra_keys ?? 0) > 0 || isDecommissioned) && (
           <div className="flex items-center justify-center gap-1 mt-1">
             {node.differ != null && (
-              <span className="font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]" style={{ fontSize: 9 }}>
+              <span
+                className={`font-mono px-1.5 py-0.5 rounded ${
+                  isDecommissioned
+                    ? "bg-destructive/10 text-destructive line-through"
+                    : "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]"
+                }`}
+                style={{ fontSize: 9 }}
+              >
                 D{String(node.differ).padStart(3, "0")}
               </span>
             )}
-            {(node.extra_keys ?? 0) > 0 && (
+            {isDecommissioned && (
+              <span
+                className="font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground"
+                style={{ fontSize: 8, letterSpacing: "0.08em" }}
+              >
+                Replaced
+              </span>
+            )}
+            {!isDecommissioned && (node.extra_keys ?? 0) > 0 && (
               <span
                 className="inline-flex items-center gap-0.5 font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]"
                 style={{ fontSize: 9 }}
