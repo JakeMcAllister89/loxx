@@ -31,6 +31,8 @@ import {
 import { logAction } from "@/lib/audit";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { stashQuoteDraft, treeToQuoteItems } from "@/lib/quote";
+import { useAuth } from "@/lib/auth";
+import { createSystem } from "@/lib/createSystem";
 
 const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }> = {
   GMK: { label: "Grand Master Key", color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30" },
