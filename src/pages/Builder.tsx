@@ -30,8 +30,8 @@ import { BuilderCanvas, CanvasProduct } from "@/components/builder/BuilderCanvas
 import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
 import {
   TNode, TreeData, NodeType, KeyEntry,
-  emptyTree, createGMK, makeChild, childTypeOf, validChildTypes,
-  findNode, findParent, updateNode, addChild, removeNode,
+  emptyTree, createGMK, makeChild, childTypeOf, validChildTypes, newId,
+  findNode, findParent, updateNode, addChild, removeNode, insertSiblingAfter,
   countDoors, assignNextDiffers, pathOf, validate, ValidationIssue,
   hasLegacyCK, flattenCK, normaliseKeys, countKeys,
 } from "@/lib/keytree";
