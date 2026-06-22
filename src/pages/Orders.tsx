@@ -2,6 +2,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
@@ -9,6 +10,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ClipboardList, FileText, RotateCw } from "lucide-react";
 import { toast } from "sonner";
+import { downloadInvoice } from "@/lib/invoice";
+import { logAction } from "@/lib/audit";
 
 const statusVariant: Record<string, { className: string; label: string }> = {
   pending:    { className: "bg-muted text-foreground", label: "Pending payment" },
