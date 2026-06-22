@@ -212,13 +212,19 @@ export default function Cart() {
 
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Pricing</h2>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between text-muted-foreground"><span>Cylinders</span><span>£{cylindersSubtotal.toFixed(2)}</span></div>
-                {keysSubtotal > 0 && <div className="flex justify-between text-muted-foreground"><span>Extra keys</span><span>£{keysSubtotal.toFixed(2)}</span></div>}
-                <div className="flex justify-between border-t pt-2 mt-2"><span>Subtotal (ex VAT)</span><span>£{subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between text-muted-foreground"><span>VAT (20%)</span><span>£{vat.toFixed(2)}</span></div>
-                <div className="flex justify-between text-lg font-bold text-amber-600 border-t pt-2 mt-2"><span>Total inc VAT</span><span>£{total.toFixed(2)}</span></div>
-              </div>
+              {(() => {
+                const cylQty = items.filter(i => i.kind === "cylinder").reduce((s, i) => s + i.quantity, 0);
+                const keyQty = items.filter(i => i.kind === "key").reduce((s, i) => s + i.quantity, 0);
+                return (
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between text-muted-foreground"><span>Cylinders ×{cylQty}</span><span>£{cylindersSubtotal.toFixed(2)}</span></div>
+                    {keysSubtotal > 0 && <div className="flex justify-between text-muted-foreground"><span>Keys ×{keyQty}</span><span>£{keysSubtotal.toFixed(2)}</span></div>}
+                    <div className="flex justify-between border-t pt-2 mt-2"><span>Subtotal (ex VAT)</span><span>£{subtotal.toFixed(2)}</span></div>
+                    <div className="flex justify-between text-muted-foreground"><span>VAT (20%)</span><span>£{vat.toFixed(2)}</span></div>
+                    <div className="flex justify-between text-lg font-bold text-amber-600 border-t pt-2 mt-2"><span>Total inc VAT</span><span>£{total.toFixed(2)}</span></div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="rounded-[10px] border bg-card shadow-card p-5">
