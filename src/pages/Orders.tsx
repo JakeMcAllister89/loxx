@@ -194,10 +194,10 @@ export default function Orders() {
                 )}
 
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" className="flex-1" onClick={() => toast.info("PDF invoices coming soon")}>
-                    <FileText className="h-4 w-4" /> Invoice
+                  <Button variant="outline" className="flex-1" onClick={() => invoice(selected)}>
+                    <FileText className="h-4 w-4" /> Download invoice
                   </Button>
-                  <Button variant="outline" className="flex-1" onClick={() => toast.info("Re-order coming soon")}>
+                  <Button variant="outline" className="flex-1" disabled={busy} onClick={() => reorder(selected)}>
                     <RotateCw className="h-4 w-4" /> Re-order
                   </Button>
                 </div>
