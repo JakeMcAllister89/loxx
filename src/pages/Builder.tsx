@@ -352,6 +352,81 @@ function BuilderInner({ systemId }: { systemId: string }) {
     setSelectedId((s) => (s === nodeId ? null : s));
   }, [systemId]);
 
+  /** Open the "Replace cylinder" flow for a CYL node. */
+  const openReplaceFlow = useCallback((nodeId: string) => {
+    setReplaceState({ open: true, nodeId, step: "reason" });
+  }, []);
+
+  /** Commit a replacement: clone the original cylinder as a new sibling and mark the original decommissioned. */
+  const commitReplacement = useCallback((targetId: string, reason: "lost_key" | "faulty") => {
+    setTree((prev) => {
+      const original = findNode(prev.root, targetId);
+      const parent = findParent(prev.root, targetId);
+      if (!original || !parent || original.type !== "CYL") return prev;
+      const newNodeId = newId();
+      // Clone specs; reset extras; new differ will be auto-assigned by assignNextDiffers
+      const replacement: TNode = {
+        id: newNodeId,
+        type: "CYL",
+        label: original.label,
+        cylinder_type: original.cylinder_type,
+        finish: original.finish,
+        size: original.size,
+        quantity: original.quantity ?? 1,
+        extra_keys: 0,
+        is_common_entrance: original.is_common_entrance,
+        children: [],
+      };
+      const decommissionedRoot = updateNode(prev.root, targetId, {
+        decommissioned_at: new Date().toISOString(),
+        decommissioned_reason: reason,
+        replaced_by_node_id: newNodeId,
+      });
+      const withSibling = insertSiblingAfter(decommissionedRoot, targetId, replacement);
+      const next = assignNextDiffers({ ...prev, root: withSibling });
+      // Backfill replaced_by_differ on the original now that the new differ is assigned
+      const newDiffer = findNode(next.root, newNodeId)?.differ;
+      const finalRoot = updateNode(next.root, targetId, { replaced_by_differ: newDiffer });
+      dirtyRef.current = true;
+      logAction({
+        system_id: systemId,
+        action: "cylinder_replaced",
+        node_type: "CYL",
+        node_label: original.label,
+        metadata: {
+          reason,
+          old_differ: original.differ,
+          new_differ: newDiffer,
+        },
+      });
+      setSelectedId(newNodeId);
+      return { ...next, root: finalRoot };
+    });
+    setReplaceState({ open: false });
+    toast.success("Cylinder replaced — review specs in the right panel");
+  }, [systemId]);
+
+  /** "Order replacement key only" — bump extra_keys by 1 on the original, no new differ. */
+  const orderReplacementKey = useCallback((targetId: string) => {
+    setTree((prev) => {
+      const original = findNode(prev.root, targetId);
+      if (!original || original.type !== "CYL") return prev;
+      const root = updateNode(prev.root, targetId, { extra_keys: (original.extra_keys ?? 0) + 1 });
+      dirtyRef.current = true;
+      logAction({
+        system_id: systemId,
+        action: "replacement_key_ordered",
+        node_type: "CYL",
+        node_label: original.label,
+        metadata: { differ: original.differ },
+      });
+      return { ...prev, root };
+    });
+    setReplaceState({ open: false });
+    toast.success("Replacement key added — export to basket when ready");
+  }, [systemId]);
+
+
   const patchSelected = (patch: Partial<TNode>) => {
     if (!selectedId) return;
     const inCylConfig = cylConfigRef.current?.nodeId === selectedId;
