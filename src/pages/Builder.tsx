@@ -933,6 +933,75 @@ function BuilderInner({ systemId }: { systemId: string }) {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Replace cylinder modal — reason picker → lost-key warning */}
+      <AlertDialog
+        open={replaceState.open}
+        onOpenChange={(o) => { if (!o) setReplaceState({ open: false }); }}
+      >
+        <AlertDialogContent>
+          {replaceState.open && replaceState.step === "reason" && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Why are you replacing this cylinder?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Choose the reason so we can recommend the right course of action.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex flex-col gap-2 my-2">
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3"
+                  onClick={() => setReplaceState((s) => s.open ? { ...s, step: "lost_warning" } : s)}
+                >
+                  <KeyRound className="h-4 w-4 mr-2 shrink-0" />
+                  <span className="text-left">A key has been lost or not returned</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3"
+                  onClick={() => replaceState.open && commitReplacement(replaceState.nodeId, "faulty")}
+                >
+                  <AlertTriangle className="h-4 w-4 mr-2 shrink-0" />
+                  <span className="text-left">The cylinder is faulty or damaged</span>
+                </Button>
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+              </AlertDialogFooter>
+            </>
+          )}
+          {replaceState.open && replaceState.step === "lost_warning" && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <ShieldAlert className="h-5 w-5 text-destructive" /> Security risk
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  The security of this door may be compromised. We strongly recommend replacing the cylinder under a new differ to prevent unauthorised access with the lost key.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex flex-col gap-2 my-2">
+                <Button
+                  className="bg-primary hover:bg-primary/90"
+                  onClick={() => replaceState.open && commitReplacement(replaceState.nodeId, "lost_key")}
+                >
+                  <Replace className="h-4 w-4 mr-2" /> Replace with new differ (recommended)
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => replaceState.open && orderReplacementKey(replaceState.nodeId)}
+                >
+                  <KeyRound className="h-4 w-4 mr-2" /> Order replacement key only (I understand the risk)
+                </Button>
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+              </AlertDialogFooter>
+            </>
+          )}
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
