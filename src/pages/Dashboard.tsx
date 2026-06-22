@@ -96,7 +96,7 @@ export default function Dashboard() {
             <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground text-sm">Your master key systems and recent activity.</p>
           </div>
-          <Button onClick={newSystem} className="bg-primary hover:bg-primary/90"><Plus className="h-4 w-4" /> New system</Button>
+          <Button onClick={newSystem} disabled={creating} className="bg-primary hover:bg-primary/90">{creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} New system</Button>
         </div>
 
         {/* Stats */}
