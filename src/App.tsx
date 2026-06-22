@@ -11,6 +11,7 @@ import { AdminRoute } from "@/components/AdminRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Systems from "./pages/Systems";
 import Catalogue from "./pages/Catalogue";
 import Builder from "./pages/Builder";
 import Cart from "./pages/Cart";
