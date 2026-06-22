@@ -16,6 +16,12 @@ export interface TNode {
   size?: string;              // CYL only — e.g. "35/35"
   quantity?: number;          // CYL only — units required at this door (default 1)
   extra_keys?: number;        // CYL only — additional keys beyond the 2 included
+  is_common_entrance?: boolean; // CYL only — common entrance cylinder (multiple keys operate same lock)
+  // Decommissioned cylinder fields — once a cylinder is replaced, the original is preserved in-tree
+  decommissioned_at?: string;            // ISO date
+  decommissioned_reason?: "lost_key" | "faulty";
+  replaced_by_differ?: number;           // differ of the replacement cylinder
+  replaced_by_node_id?: string;          // id of the replacement node
   /** GMK/MK/SMK — copies of the key(s) at this level.
    *  Legacy: a single number meant "n copies of one key labelled by node.label".
    *  Current: an array of KeyEntry — multiple key refs each with their own qty. */
