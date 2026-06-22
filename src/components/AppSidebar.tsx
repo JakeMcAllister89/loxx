@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/systems", label: "My Systems", icon: LayoutGrid },
-  { to: "/builder", label: "System Builder", icon: Network },
+  { to: "/builder", label: "System Builder", icon: Network, builder: true },
   { to: "/catalogue", label: "Product Catalogue", icon: Package },
   { to: "/quotes", label: "My Quotes", icon: FileText },
   { to: "/cart", label: "Basket", icon: ShoppingCart, basket: true },
@@ -58,10 +58,11 @@ export function AppSidebar() {
       <nav className="flex-1 px-3 py-4 space-y-1">
         {nav.map((item) => {
           const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
+          const to = item.builder && systems.length > 0 ? `/builder/${systems[0].id}` : item.to;
           return (
             <NavLink
               key={item.to}
-              to={item.to}
+              to={to}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                 active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
               }`}

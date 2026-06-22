@@ -31,6 +31,8 @@ import {
 import { logAction } from "@/lib/audit";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { stashQuoteDraft, treeToQuoteItems } from "@/lib/quote";
+import { useAuth } from "@/lib/auth";
+import { createSystem } from "@/lib/createSystem";
 
 const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }> = {
   GMK: { label: "Grand Master Key", color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30" },
@@ -81,16 +83,25 @@ export default function Builder() {
 
 function BuilderEmptyState() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [creating, setCreating] = useState(false);
   const onNew = async () => {
+    if (creating) return;
+    if (!user) { toast.error("Please sign in"); return; }
     setCreating(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setCreating(false); toast.error("Please sign in"); return; }
-    const { createSystem } = await import("@/lib/createSystem");
-    const newId = await createSystem(user.id);
-    setCreating(false);
-    if (newId) navigate(`/builder/${newId}`);
-    else toast.error("Could not create system");
+    try {
+      const newId = await createSystem(user.id);
+      if (newId) {
+        navigate(`/builder/${newId}`);
+      } else {
+        toast.error("Failed to create system — please try again");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to create system — please try again");
+    } finally {
+      setCreating(false);
+    }
   };
   return (
     <div className="flex flex-col items-center justify-center text-center px-6 py-20 max-w-xl mx-auto">
@@ -98,7 +109,7 @@ function BuilderEmptyState() {
       <h2 className="text-2xl font-semibold mt-5">Build your master key system</h2>
       <p className="text-sm text-muted-foreground mt-2">Start from scratch or import your existing lockchart</p>
       <div className="flex gap-3 mt-6">
-        <Button size="lg" onClick={onNew} disabled={creating} className="bg-amber-500 hover:bg-amber-600 text-white">
+        <Button size="lg" onClick={onNew} disabled={creating || !user} className="bg-amber-500 hover:bg-amber-600 text-white">
           {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} New system
         </Button>
         <Button size="lg" variant="outline" onClick={() => navigate("/import")}>
@@ -109,6 +120,7 @@ function BuilderEmptyState() {
     </div>
   );
 }
+
 
 function BuilderInner({ systemId }: { systemId: string }) {
   const navigate = useNavigate();
