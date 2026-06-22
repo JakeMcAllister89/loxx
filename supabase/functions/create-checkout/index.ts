@@ -22,6 +22,7 @@ interface CartLine {
 }
 
 interface DeliveryAddress {
+  contact_name?: string; contact_phone?: string;
   line1?: string; line2?: string; city?: string; county?: string; postcode?: string;
 }
 
@@ -105,6 +106,7 @@ Deno.serve(async (req) => {
       system_id: body.systemId ?? null,
       purchase_order_ref: body.poRef ?? body.customerPoRef ?? null,
       notes: combinedNotes,
+      delivery_address: body.delivery ?? null,
     };
     // optional columns added by recent migrations
     if (body.customerPoRef !== undefined) orderInsert.customer_po_ref = body.customerPoRef || null;
