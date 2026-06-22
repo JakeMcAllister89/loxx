@@ -11,6 +11,7 @@ import { AdminRoute } from "@/components/AdminRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Systems from "./pages/Systems";
 import Catalogue from "./pages/Catalogue";
 import Builder from "./pages/Builder";
 import Cart from "./pages/Cart";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/systems" element={<ProtectedRoute><Systems /></ProtectedRoute>} />
               <Route path="/catalogue" element={<ProtectedRoute><Catalogue /></ProtectedRoute>} />
               <Route path="/builder" element={<ProtectedRoute><Builder /></ProtectedRoute>} />
               <Route path="/builder/:id" element={<ProtectedRoute><Builder /></ProtectedRoute>} />

@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { Download, FileText } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { downloadInvoice, invoiceRef, orderRef } from "@/lib/invoice";
 import { AuditRow, describeAction, timeAgo, formatTableTimestamp } from "@/lib/audit";
 import { Link } from "react-router-dom";
 
@@ -32,6 +34,11 @@ export default function Account() {
   const [systemFilter, setSystemFilter] = useState<string>("all");
   const [actionFilter, setActionFilter] = useState<string>("all");
 
+  // Invoices
+  const [invoiceOrders, setInvoiceOrders] = useState<any[]>([]);
+  const [itemCounts, setItemCounts] = useState<Record<string, number>>({});
+  const [sysRefMap, setSysRefMap] = useState<Record<string, string | null>>({});
+
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("*").eq("id", user.id).single().then(({ data }) => {
@@ -49,6 +56,25 @@ export default function Account() {
         );
         setRows(rows);
       });
+
+    supabase.from("orders").select("id,created_at,status,total,system_id,customer_po_ref").order("created_at", { ascending: false }).then(async ({ data }) => {
+      const orders = data ?? [];
+      setInvoiceOrders(orders);
+      const ids = orders.map((o: any) => o.id);
+      if (ids.length) {
+        const { data: its } = await supabase.from("order_items").select("order_id,quantity").in("order_id", ids);
+        const counts: Record<string, number> = {};
+        (its ?? []).forEach((r: any) => { counts[r.order_id] = (counts[r.order_id] ?? 0) + Number(r.quantity || 0); });
+        setItemCounts(counts);
+      }
+      const sysIds = Array.from(new Set(orders.map((o: any) => o.system_id).filter(Boolean)));
+      if (sysIds.length) {
+        const { data: sys } = await supabase.from("key_systems").select("id,reference").in("id", sysIds);
+        const m: Record<string, string | null> = {};
+        (sys ?? []).forEach((r: any) => { m[r.id] = r.reference; });
+        setSysRefMap(m);
+      }
+    });
   }, [user]);
 
   const save = async () => {
@@ -99,6 +125,7 @@ export default function Account() {
         <Tabs defaultValue="profile" className="mt-6">
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="invoices">Invoices</TabsTrigger>
             <TabsTrigger value="audit">Audit log</TabsTrigger>
           </TabsList>
 
@@ -109,6 +136,72 @@ export default function Account() {
               <div><Label htmlFor="company">Company</Label><Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} /></div>
               <div><Label htmlFor="phone">Phone</Label><Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
               <Button onClick={save} disabled={busy} className="bg-primary hover:bg-primary/90">Save</Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="invoices">
+            <div className="mt-4 rounded-[10px] border bg-card shadow-card overflow-hidden">
+              {invoiceOrders.length === 0 ? (
+                <div className="p-10 text-sm text-muted-foreground text-center">
+                  <FileText className="h-8 w-8 mx-auto mb-3 opacity-50" />
+                  No orders yet.
+                </div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 text-left text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-2">Invoice ref</th>
+                      <th className="px-4 py-2">Order date</th>
+                      <th className="px-4 py-2">System</th>
+                      <th className="px-4 py-2">Items</th>
+                      <th className="px-4 py-2">Total inc VAT</th>
+                      <th className="px-4 py-2">Status</th>
+                      <th className="px-4 py-2 text-right">Download</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoiceOrders.map((o) => {
+                      const ready = ["processing", "shipped", "delivered"].includes(o.status);
+                      return (
+                        <tr key={o.id} className="border-t">
+                          <td className="px-4 py-2 font-mono text-amber-700 text-xs">{invoiceRef(o.id)}</td>
+                          <td className="px-4 py-2 text-xs">{new Date(o.created_at).toLocaleDateString("en-GB")}</td>
+                          <td className="px-4 py-2 text-xs font-mono">{o.system_id ? (sysRefMap[o.system_id] ?? "—") : "—"}</td>
+                          <td className="px-4 py-2 text-xs">{itemCounts[o.id] ?? 0}</td>
+                          <td className="px-4 py-2 font-mono text-xs">£{Number(o.total).toFixed(2)}</td>
+                          <td className="px-4 py-2 text-xs">
+                            {ready ? (
+                              <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-800">{o.status}</span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground">Pending</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            {ready ? (
+                              <Button size="sm" variant="outline" onClick={() => downloadInvoice(o.id)}>
+                                <Download className="h-3.5 w-3.5" /> Download
+                              </Button>
+                            ) : (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-block">
+                                      <Button size="sm" variant="outline" disabled className="opacity-50">
+                                        <Download className="h-3.5 w-3.5" /> Download
+                                      </Button>
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Invoice available once order is confirmed</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
             </div>
           </TabsContent>
 

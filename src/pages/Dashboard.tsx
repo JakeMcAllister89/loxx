@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useIsAdmin } from "@/lib/auth";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, Copy, ExternalLink, Upload, Shield } from "lucide-react";
+import { Plus, Copy, ExternalLink, Upload, Shield, ArrowRight, Loader2 } from "lucide-react";
 import { logAction } from "@/lib/audit";
+import { createSystem } from "@/lib/createSystem";
 
 interface Sys { id: string; name: string; reference: string | null; door_count: number; updated_at: string; }
 interface Ord { id: string; status: string; total: number; created_at: string; }
@@ -55,15 +56,15 @@ export default function Dashboard() {
   }, [user]);
 
 
+  const [creating, setCreating] = useState(false);
   const newSystem = async () => {
-    if (!user) return;
-    const ref = `SYS-${Math.floor(1000 + Math.random() * 9000)}`;
-    const { data } = await supabase.from("key_systems").insert({ user_id: user.id, name: "Untitled system", reference: ref, tree_data: { root: null } }).select("id,name").single();
-    if (data) {
-      logAction({ system_id: data.id, action: "system_created", node_label: data.name });
-      navigate(`/builder/${data.id}`);
-    }
+    if (!user || creating) return;
+    setCreating(true);
+    const id = await createSystem(user.id);
+    setCreating(false);
+    if (id) navigate(`/builder/${id}`);
   };
+
 
   const dup = async (s: Sys) => {
     if (!user) return;
@@ -95,7 +96,7 @@ export default function Dashboard() {
             <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground text-sm">Your master key systems and recent activity.</p>
           </div>
-          <Button onClick={newSystem} className="bg-primary hover:bg-primary/90"><Plus className="h-4 w-4" /> New system</Button>
+          <Button onClick={newSystem} disabled={creating} className="bg-primary hover:bg-primary/90">{creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} New system</Button>
         </div>
 
         {/* Stats */}
@@ -129,15 +130,17 @@ export default function Dashboard() {
 
         {/* Recent systems */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-3">Your systems</h2>
+          <Link to="/systems" className="inline-flex items-center gap-1 text-lg font-semibold mb-3 hover:text-primary">
+            My systems <ArrowRight className="h-4 w-4" />
+          </Link>
           {systems.length === 0 ? (
             <div className="rounded-[10px] border-dashed border-2 bg-card p-10 text-center">
               <p className="text-muted-foreground text-sm">You haven't built a system yet.</p>
-              <Button onClick={newSystem} className="mt-4 bg-primary hover:bg-primary/90">Start your first system</Button>
+              <Button onClick={newSystem} disabled={creating} className="mt-4 bg-primary hover:bg-primary/90">Start your first system</Button>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
-              {systems.map((s) => (
+              {systems.slice(0, 4).map((s) => (
                 <div key={s.id} className="rounded-[10px] border bg-card p-5 shadow-card flex items-start justify-between">
                   <div>
                     <div className="font-semibold">{s.name}</div>

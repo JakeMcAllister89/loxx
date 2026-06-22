@@ -1,17 +1,20 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Network, Package, ShoppingCart, ClipboardList, Settings, Plus, LogOut, Shield, FileText, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, Network, Package, ShoppingCart, ClipboardList, Settings, Plus, LogOut, Shield, FileText, ShoppingBag, LayoutGrid, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useIsAdmin } from "@/lib/auth";
+import { useCart } from "@/contexts/CartContext";
+import { createSystem } from "@/lib/createSystem";
 import { LoxxLogo } from "./LoxxLogo";
 import { Button } from "@/components/ui/button";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/systems", label: "My Systems", icon: LayoutGrid },
   { to: "/builder", label: "System Builder", icon: Network },
   { to: "/catalogue", label: "Product Catalogue", icon: Package },
   { to: "/quotes", label: "My Quotes", icon: FileText },
-  { to: "/cart", label: "Basket", icon: ShoppingCart },
+  { to: "/cart", label: "Basket", icon: ShoppingCart, basket: true },
   { to: "/orders", label: "My Orders", icon: ClipboardList },
   { to: "/account", label: "Account", icon: Settings },
 ];
@@ -21,7 +24,10 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const isAdmin = useIsAdmin();
+  const { items } = useCart();
+  const basketCount = items.length;
   const [systems, setSystems] = useState<{ id: string; name: string; door_count: number }[]>([]);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -34,14 +40,11 @@ export function AppSidebar() {
   }, [user, pathname]);
 
   const newSystem = async () => {
-    if (!user) return;
-    const ref = `SYS-${Math.floor(1000 + Math.random() * 9000)}`;
-    const { data, error } = await supabase
-      .from("key_systems")
-      .insert({ user_id: user.id, name: "Untitled system", reference: ref, tree_data: { root: null } })
-      .select("id")
-      .single();
-    if (!error && data) navigate(`/builder/${data.id}`);
+    if (!user || creating) return;
+    setCreating(true);
+    const id = await createSystem(user.id);
+    setCreating(false);
+    if (id) navigate(`/builder/${id}`);
   };
 
   return (
@@ -64,7 +67,15 @@ export function AppSidebar() {
               }`}
             >
               <item.icon className="h-4 w-4" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.basket && basketCount > 0 && (
+                <span
+                  className="inline-flex items-center justify-center rounded-full text-white text-[11px] font-medium leading-none"
+                  style={{ background: "#d4820a", width: 18, height: 18 }}
+                >
+                  {basketCount > 99 ? "99+" : basketCount}
+                </span>
+              )}
             </NavLink>
           );
         })}
@@ -103,8 +114,8 @@ export function AppSidebar() {
             ))}
           </div>
         )}
-        <Button onClick={newSystem} className="w-full bg-primary hover:bg-primary/90">
-          <Plus className="h-4 w-4" /> New System
+        <Button onClick={newSystem} disabled={creating} className="w-full bg-primary hover:bg-primary/90">
+          {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} New System
         </Button>
         <button
           onClick={async () => { await signOut(); navigate("/"); }}
