@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Trash2, KeyRound, ArrowLeft, Lock, ShieldCheck, Truck, Minus, Plus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMemo } from "react";
+import { toast } from "sonner";
 
 interface GroupKey { system_id: string | null | undefined; system_name: string | null | undefined; system_reference: string | null | undefined }
 
@@ -46,8 +47,10 @@ export default function Cart() {
 
   const canReview = items.length > 0;
   const proceed = () => {
-    if (!meta.delivery.line1 || !meta.delivery.city || !meta.delivery.postcode) {
-      // soft-allow review even without address, but show inline below
+    const d = meta.delivery;
+    if (!d.contact_name || !d.contact_phone || !d.line1 || !d.city || !d.postcode) {
+      toast.error("Please complete all required delivery fields including contact name and telephone");
+      return;
     }
     navigate("/cart/review");
   };
@@ -221,6 +224,8 @@ export default function Cart() {
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Delivery address</h2>
               <div className="space-y-2">
+                <div><Label className="text-xs">Delivery contact name *</Label><Input placeholder="e.g. John Smith" value={meta.delivery.contact_name} onChange={(e) => setMeta({ delivery: { ...meta.delivery, contact_name: e.target.value } })} /></div>
+                <div><Label className="text-xs">Contact telephone *</Label><Input type="tel" placeholder="e.g. 07700 900000" value={meta.delivery.contact_phone} onChange={(e) => setMeta({ delivery: { ...meta.delivery, contact_phone: e.target.value } })} /></div>
                 <div><Label className="text-xs">Address line 1 *</Label><Input value={meta.delivery.line1} onChange={(e) => setMeta({ delivery: { ...meta.delivery, line1: e.target.value } })} /></div>
                 <div><Label className="text-xs">Address line 2</Label><Input value={meta.delivery.line2} onChange={(e) => setMeta({ delivery: { ...meta.delivery, line2: e.target.value } })} /></div>
                 <div className="grid grid-cols-2 gap-2">
