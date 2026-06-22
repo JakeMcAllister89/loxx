@@ -43,6 +43,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/systems" element={<ProtectedRoute><Systems /></ProtectedRoute>} />
               <Route path="/catalogue" element={<ProtectedRoute><Catalogue /></ProtectedRoute>} />
               <Route path="/builder" element={<ProtectedRoute><Builder /></ProtectedRoute>} />
               <Route path="/builder/:id" element={<ProtectedRoute><Builder /></ProtectedRoute>} />
