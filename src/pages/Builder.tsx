@@ -68,11 +68,7 @@ export default function Builder() {
   if (!id) {
     return (
       <DashboardLayout>
-        <div className="p-12 text-center max-w-md mx-auto mt-24">
-          <KeyRound className="h-12 w-12 mx-auto text-muted-foreground" />
-          <h2 className="text-xl font-semibold mt-4">Open a system to start building</h2>
-          <p className="text-sm text-muted-foreground mt-1">Select a system from the sidebar or click <em>New System</em>.</p>
-        </div>
+        <BuilderEmptyState />
       </DashboardLayout>
     );
   }
@@ -80,6 +76,37 @@ export default function Builder() {
     <DashboardLayout>
       <BuilderInner systemId={id} />
     </DashboardLayout>
+  );
+}
+
+function BuilderEmptyState() {
+  const navigate = useNavigate();
+  const [creating, setCreating] = useState(false);
+  const onNew = async () => {
+    setCreating(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setCreating(false); toast.error("Please sign in"); return; }
+    const { createSystem } = await import("@/lib/createSystem");
+    const newId = await createSystem(user.id);
+    setCreating(false);
+    if (newId) navigate(`/builder/${newId}`);
+    else toast.error("Could not create system");
+  };
+  return (
+    <div className="flex flex-col items-center justify-center text-center px-6 py-20 max-w-xl mx-auto">
+      <KeyRound className="h-12 w-12 text-amber-500" strokeWidth={2.2} />
+      <h2 className="text-2xl font-semibold mt-5">Build your master key system</h2>
+      <p className="text-sm text-muted-foreground mt-2">Start from scratch or import your existing lockchart</p>
+      <div className="flex gap-3 mt-6">
+        <Button size="lg" onClick={onNew} disabled={creating} className="bg-amber-500 hover:bg-amber-600 text-white">
+          {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} New system
+        </Button>
+        <Button size="lg" variant="outline" onClick={() => navigate("/import")}>
+          <Upload className="h-4 w-4" /> Import existing
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground mt-4">Or select a system from the sidebar</p>
+    </div>
   );
 }
 
