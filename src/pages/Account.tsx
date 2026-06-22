@@ -34,6 +34,11 @@ export default function Account() {
   const [systemFilter, setSystemFilter] = useState<string>("all");
   const [actionFilter, setActionFilter] = useState<string>("all");
 
+  // Invoices
+  const [invoiceOrders, setInvoiceOrders] = useState<any[]>([]);
+  const [itemCounts, setItemCounts] = useState<Record<string, number>>({});
+  const [sysRefMap, setSysRefMap] = useState<Record<string, string | null>>({});
+
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("*").eq("id", user.id).single().then(({ data }) => {
