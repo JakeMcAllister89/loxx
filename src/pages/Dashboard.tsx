@@ -56,15 +56,15 @@ export default function Dashboard() {
   }, [user]);
 
 
+  const [creating, setCreating] = useState(false);
   const newSystem = async () => {
-    if (!user) return;
-    const ref = `SYS-${Math.floor(1000 + Math.random() * 9000)}`;
-    const { data } = await supabase.from("key_systems").insert({ user_id: user.id, name: "Untitled system", reference: ref, tree_data: { root: null } }).select("id,name").single();
-    if (data) {
-      logAction({ system_id: data.id, action: "system_created", node_label: data.name });
-      navigate(`/builder/${data.id}`);
-    }
+    if (!user || creating) return;
+    setCreating(true);
+    const id = await createSystem(user.id);
+    setCreating(false);
+    if (id) navigate(`/builder/${id}`);
   };
+
 
   const dup = async (s: Sys) => {
     if (!user) return;
