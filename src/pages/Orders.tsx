@@ -35,10 +35,12 @@ interface OrderItem {
 
 export default function Orders() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selected, setSelected] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -52,6 +54,38 @@ export default function Orders() {
     setSelected(o);
     const { data } = await supabase.from("order_items").select("*").eq("order_id", o.id);
     setItems((data ?? []) as OrderItem[]);
+  };
+
+  const reorder = async (o: Order) => {
+    if (!user || busy) return;
+    setBusy(true);
+    try {
+      const { data: src } = await supabase.from("orders").select("tree_snapshot, system_id").eq("id", o.id).single();
+      if (!src?.tree_snapshot) { toast.error("No system snapshot on this order"); setBusy(false); return; }
+      let origName = "Order";
+      if (src.system_id) {
+        const { data: sys } = await supabase.from("key_systems").select("name").eq("id", src.system_id).single();
+        if (sys?.name) origName = sys.name;
+      }
+      const today = new Date().toLocaleDateString("en-GB");
+      const ref = `SYS-${Math.floor(1000 + Math.random() * 9000)}`;
+      const { data: created, error } = await supabase.from("key_systems").insert({
+        user_id: user.id,
+        name: `Re-order — ${origName} (${today})`,
+        reference: ref,
+        tree_data: src.tree_snapshot,
+      }).select("id").single();
+      if (error || !created) { toast.error("Could not create system"); setBusy(false); return; }
+      try { logAction({ system_id: created.id, action: "system_created", node_label: `Re-order from ${o.id.slice(0, 8)}` }); } catch {}
+      toast.success("System loaded — review and export to basket when ready");
+      navigate(`/builder/${created.id}?reorder=1`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const invoice = async (o: Order) => {
+    try { await downloadInvoice(o.id); } catch (e: any) { toast.error(e.message || "Could not generate invoice"); }
   };
 
   return (
