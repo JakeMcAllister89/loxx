@@ -17,8 +17,15 @@ import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
-  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock,
+  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert,
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { BuilderCanvas, CanvasProduct } from "@/components/builder/BuilderCanvas";
 import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
 import {
