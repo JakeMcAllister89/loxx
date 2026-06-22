@@ -48,6 +48,10 @@ export default function Cart() {
   const canReview = items.length > 0;
   const proceed = () => {
     const d = meta.delivery;
+    if (!meta.companyName.trim()) {
+      toast.error("Please enter your company name");
+      return;
+    }
     if (!d.contact_name || !d.contact_phone || !d.line1 || !d.city || !d.postcode) {
       toast.error("Please complete all required delivery fields including contact name and telephone");
       return;
