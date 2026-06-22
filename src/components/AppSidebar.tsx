@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/systems", label: "My Systems", icon: LayoutGrid },
-  { to: "/builder", label: "System Builder", icon: Network },
+  { to: "/builder", label: "System Builder", icon: Network, builder: true },
   { to: "/catalogue", label: "Product Catalogue", icon: Package },
   { to: "/quotes", label: "My Quotes", icon: FileText },
   { to: "/cart", label: "Basket", icon: ShoppingCart, basket: true },
