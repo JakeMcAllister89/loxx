@@ -25,7 +25,7 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const isAdmin = useIsAdmin();
   const { items } = useCart();
-  const basketCount = items.length;
+  const basketCount = items.reduce((s, i) => s + (i.quantity ?? 0), 0);
   const [systems, setSystems] = useState<{ id: string; name: string; door_count: number }[]>([]);
   const [creating, setCreating] = useState(false);
 
