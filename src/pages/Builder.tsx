@@ -326,7 +326,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       const target = findNode(prev.root, nodeId);
       if (target) logAction({ system_id: systemId, action: "node_deleted", node_type: target.type, node_label: auditLabel(target) });
       dirtyRef.current = true;
-      return { ...prev, root: removeNode(prev.root, nodeId) };
+      return assignNextDiffers({ ...prev, root: removeNode(prev.root, nodeId) });
     });
     if (labelAuditRef.current?.nodeId === nodeId) { clearTimeout(labelAuditRef.current.timer); labelAuditRef.current = null; }
     if (locationAuditRef.current?.nodeId === nodeId) { clearTimeout(locationAuditRef.current.timer); locationAuditRef.current = null; }
