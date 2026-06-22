@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { Download, FileText } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { downloadInvoice, invoiceRef, orderRef } from "@/lib/invoice";
 import { AuditRow, describeAction, timeAgo, formatTableTimestamp } from "@/lib/audit";
 import { Link } from "react-router-dom";
 
