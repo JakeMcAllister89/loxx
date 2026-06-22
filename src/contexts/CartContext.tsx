@@ -32,6 +32,8 @@ export interface CartLine {
 
 
 export interface DeliveryAddress {
+  contact_name: string;
+  contact_phone: string;
   line1: string;
   line2: string;
   city: string;
@@ -70,7 +72,7 @@ const META_KEY = "loxx_cart_meta_v1";
 const blankMeta = (): OrderMeta => ({
   customerPoRef: "",
   notes: "",
-  delivery: { line1: "", line2: "", city: "", county: "", postcode: "" },
+  delivery: { contact_name: "", contact_phone: "", line1: "", line2: "", city: "", county: "", postcode: "" },
 });
 
 export function CartProvider({ children }: { children: ReactNode }) {
