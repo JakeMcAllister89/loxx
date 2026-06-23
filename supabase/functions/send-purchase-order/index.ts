@@ -113,19 +113,19 @@ Deno.serve(async (req) => {
     }
     const displayPo = poNumber ?? "(preview)";
 
-    // Build hierarchy refs from order_items.notes is not present; rely on differ + system
-    const cyls = (items ?? []).filter((i: any) => i.item_type === "cylinder");
-    const keys = (items ?? []).filter((i: any) => i.item_type === "key");
+    // Build hierarchy map from tree snapshot and extra keys map from line items
+    const hierarchyMap = buildDifferHierarchyMap((order as any).tree_snapshot?.root ?? null);
+    const extraKeysMap = buildDifferExtraKeysMap(items ?? []);
 
-    const lineCost = (i: any) => {
-      const cost = Number(productMap[i.product_code]?.cost_price ?? 0);
-      return { cost, total: cost * Number(i.quantity) };
-    };
-    const cylSubtotal = cyls.reduce((s: number, i: any) => s + lineCost(i).total, 0);
-    const keySubtotal = keys.reduce((s: number, i: any) => s + lineCost(i).total, 0);
-    const exVat = cylSubtotal + keySubtotal;
-    const vatRate = Number(S.vat_rate || "20");
-    const vat = +(exVat * (vatRate / 100)).toFixed(2);
+    const combinedSubtotal = (items ?? [])
+      .filter((i: any) => i.item_type === "cylinder")
+      .reduce((sum: number, i: any) => {
+        const unitCost = Number(productMap[i.product_code]?.cost_price ?? 0);
+        return sum + unitCost * Number(i.quantity);
+      }, 0);
+    const exVat = combinedSubtotal;
+    const vatRate = Number(S.vat_rate ?? 20);
+    const vat = +(exVat * vatRate / 100).toFixed(2);
     const inc = +(exVat + vat).toFixed(2);
 
     const d = (order.delivery_address ?? {}) as any;
@@ -135,46 +135,47 @@ Deno.serve(async (req) => {
 
     const today = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
 
-    const cylRows = cyls.map((i: any) => {
-      const p = productMap[i.product_code] ?? {};
-      const { cost, total } = lineCost(i);
-      const hierarchy = [systemRef !== "—" ? systemRef : null, i.differ_ref].filter(Boolean).join(" · ");
-      return `<tr>
-        <td style="font-family:monospace">${esc(i.differ_ref ?? "—")}</td>
-        <td>${esc(i.room_label ?? "—")}</td>
-        <td style="font-family:monospace;font-size:11px;color:#92400e">${esc(hierarchy)}</td>
-        <td>${esc(p.product_description ?? p.name ?? i.product_code ?? "—")}</td>
-        <td>${esc(p.cylinder_profile ?? "—")}</td>
-        <td>${esc(i.finish ?? p.finish ?? "—")}</td>
-        <td>${esc(p.size ?? "—")}</td>
-        <td style="text-align:right">${i.quantity}</td>
-        <td style="text-align:right;font-family:monospace">${fmt(cost)}</td>
-        <td style="text-align:right;font-family:monospace">${fmt(total)}</td>
-      </tr>`;
-    }).join("");
-
-    const keyRows = keys.map((i: any) => {
-      const { cost, total } = lineCost(i);
-      return `<tr>
-        <td style="font-family:monospace">${esc(i.differ_ref ?? i.product_code ?? "—")}</td>
-        <td>${esc(i.product_code ?? "Key")}</td>
-        <td>${esc(i.room_label ?? "—")}</td>
-        <td style="text-align:right">${i.quantity}</td>
-        <td style="text-align:right;font-family:monospace">${fmt(cost)}</td>
-        <td style="text-align:right;font-family:monospace">${fmt(total)}</td>
-      </tr>`;
-    }).join("");
+    const differRows = (items ?? [])
+      .filter((i: any) => i.item_type === "cylinder")
+      .sort((a: any, b: any) => (a.differ_ref ?? "").localeCompare(b.differ_ref ?? ""))
+      .map((i: any) => {
+        const p = productMap[i.product_code] ?? {};
+        const hierarchy = hierarchyMap[i.differ_ref ?? ""] ?? { gmk: "—", mk: "—", smk: "—" };
+        const extraKeys = extraKeysMap[i.differ_ref ?? ""] ?? 0;
+        const unitCost = Number(p.cost_price ?? 0);
+        const totalCost = unitCost * Number(i.quantity);
+        return `<tr>
+          <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-weight:600">${esc(i.differ_ref ?? "—")}</td>
+          <td>${esc(i.room_label ?? "—")}</td>
+          <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px">${esc(hierarchy.gmk)}</td>
+          <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px">${esc(hierarchy.mk)}</td>
+          <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px">${esc(hierarchy.smk)}</td>
+          <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#92400e">${esc(i.product_code ?? "—")}</td>
+          <td>${esc(p.product_description ?? p.name ?? (i as any).cylinder_type ?? "—")}</td>
+          <td>${esc(p.cylinder_profile ?? "—")}</td>
+          <td>${esc(i.finish ?? p.finish ?? "—")}</td>
+          <td>${esc(p.size ?? "—")}</td>
+          <td style="text-align:right">${i.quantity}</td>
+          <td style="text-align:right">2</td>
+          <td style="text-align:right">${extraKeys > 0 ? extraKeys : "—"}</td>
+          <td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(unitCost)}</td>
+          <td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(totalCost)}</td>
+        </tr>`;
+      }).join("");
 
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(displayPo)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-body{font-family:-apple-system,Segoe UI,Arial,sans-serif;color:#0f172a;padding:32px;max-width:900px;margin:0 auto}
+body{font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;color:#0f172a;padding:32px;max-width:960px;margin:0 auto;font-size:13px}
 h1{margin:0;font-size:24px}
 table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
 th,td{padding:6px 8px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}
 th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5px;color:#475569}
 .warn{background:#fef3c7;border:1px solid #fcd34d;padding:8px 12px;border-radius:6px;font-size:12px;color:#92400e;margin:16px 0}
 .muted{color:#64748b;font-size:12px}
-.po{font-family:monospace;color:#b45309;font-size:18px}
+.po{font-family:'IBM Plex Mono',ui-monospace,monospace;color:#b45309;font-size:18px}
 .block{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-top:12px}
 .label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:4px}
 .totals{margin-top:12px;width:300px;margin-left:auto}
@@ -207,9 +208,9 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 <div style="display:flex;gap:16px">
   <div class="block" style="flex:1">
     <div class="label">Order reference</div>
-    <div><strong>PO Number:</strong> <span style="font-family:monospace">${esc(displayPo)}</span></div>
+    <div><strong>PO Number:</strong> <span style="font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(displayPo)}</span></div>
     <div><strong>Date:</strong> ${esc(today)}</div>
-    <div><strong>System reference:</strong> <span style="font-family:monospace">${esc(systemRef)}</span>${systemName ? ` <span class="muted">${esc(systemName)}</span>` : ""}</div>
+    <div><strong>System reference:</strong> <span style="font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(systemRef)}</span>${systemName ? ` <span class="muted">${esc(systemName)}</span>` : ""}</div>
     <div><strong>Customer PO reference:</strong> ${esc(order.customer_po_ref || "—")}</div>
   </div>
   <div class="block" style="flex:1">
@@ -220,31 +221,33 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
   </div>
 </div>
 
-${cyls.length ? `<h3 style="margin-top:24px">Cylinders</h3>
+<h3 style="margin-top:24px;margin-bottom:8px">Differ Schedule</h3>
 <table>
   <thead><tr>
-    <th>Differ</th><th>Room / Door</th><th>System Ref</th><th>Description</th>
-    <th>Profile</th><th>Finish</th><th>Size</th>
-    <th style="text-align:right">Qty</th><th style="text-align:right">Unit cost</th><th style="text-align:right">Total</th>
+    <th>Differ</th>
+    <th>Room / Door</th>
+    <th>GMK</th>
+    <th>MK</th>
+    <th>SMK</th>
+    <th>Product Code</th>
+    <th>Description</th>
+    <th>Profile</th>
+    <th>Finish</th>
+    <th>Size</th>
+    <th style="text-align:right">Qty</th>
+    <th style="text-align:right">Keys (inc.)</th>
+    <th style="text-align:right">Extra Keys</th>
+    <th style="text-align:right">Unit Cost</th>
+    <th style="text-align:right">Total Cost</th>
   </tr></thead>
-  <tbody>${cylRows}</tbody>
-</table>` : ""}
-
-${keys.length ? `<h3 style="margin-top:24px">Keys</h3>
-<table>
-  <thead><tr>
-    <th>Key reference</th><th>Type</th><th>Location</th>
-    <th style="text-align:right">Qty</th><th style="text-align:right">Unit cost</th><th style="text-align:right">Total</th>
-  </tr></thead>
-  <tbody>${keyRows}</tbody>
-</table>` : ""}
+  <tbody>${differRows}</tbody>
+</table>
 
 <table class="totals">
-  <tr><td>Cylinders subtotal (cost)</td><td style="text-align:right;font-family:monospace">${fmt(cylSubtotal)}</td></tr>
-  ${keys.length ? `<tr><td>Keys subtotal (cost)</td><td style="text-align:right;font-family:monospace">${fmt(keySubtotal)}</td></tr>` : ""}
-  <tr><td>Subtotal ex VAT</td><td style="text-align:right;font-family:monospace">${fmt(exVat)}</td></tr>
-  <tr><td>VAT at ${esc(vatRate)}%</td><td style="text-align:right;font-family:monospace">${fmt(vat)}</td></tr>
-  <tr class="grand"><td>Total inc VAT</td><td style="text-align:right;font-family:monospace">${fmt(inc)}</td></tr>
+  <tr><td>Subtotal (cost)</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(combinedSubtotal)}</td></tr>
+  <tr><td>Subtotal ex VAT</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(exVat)}</td></tr>
+  <tr><td>VAT at ${esc(String(vatRate))}%</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(vat)}</td></tr>
+  <tr class="grand"><td>Total inc VAT</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(inc)}</td></tr>
 </table>
 
 <div class="block" style="margin-top:24px;background:#f8fafc">
