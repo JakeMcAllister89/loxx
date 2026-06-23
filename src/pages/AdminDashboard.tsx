@@ -21,6 +21,8 @@ interface OrderRow {
   company: string | null;
   po_number: string | null;
   system_id: string | null;
+  payment_status: string;
+  paid_at: string | null;
 }
 interface ItemRow {
   order_id: string;
