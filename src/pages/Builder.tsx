@@ -1040,7 +1040,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         </SheetContent>
       </Sheet>
 
-      {/* Replace cylinder modal — reason picker → lost-key warning */}
+      {/* Replace cylinder modal — reason → (lost warning →) note → commit */}
       <AlertDialog
         open={replaceState.open}
         onOpenChange={(o) => { if (!o) setReplaceState({ open: false }); }}
@@ -1066,7 +1066,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 <Button
                   variant="outline"
                   className="justify-start h-auto py-3"
-                  onClick={() => replaceState.open && commitReplacement(replaceState.nodeId, "faulty")}
+                  onClick={() => setReplaceState((s) => s.open ? { ...s, step: "note", reason: "faulty" } : s)}
                 >
                   <AlertTriangle className="h-4 w-4 mr-2 shrink-0" />
                   <span className="text-left">The cylinder is faulty or damaged</span>
@@ -1090,7 +1090,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               <div className="flex flex-col gap-2 my-2">
                 <Button
                   className="bg-primary hover:bg-primary/90"
-                  onClick={() => replaceState.open && commitReplacement(replaceState.nodeId, "lost_key")}
+                  onClick={() => setReplaceState((s) => s.open ? { ...s, step: "note", reason: "lost_key" } : s)}
                 >
                   <Replace className="h-4 w-4 mr-2" /> Replace with new differ (recommended)
                 </Button>
@@ -1106,6 +1106,170 @@ function BuilderInner({ systemId }: { systemId: string }) {
               </AlertDialogFooter>
             </>
           )}
+          {replaceState.open && replaceState.step === "note" && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Add a note (optional)</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Captured against this replacement event for the audit trail.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <Textarea
+                value={replaceState.note}
+                onChange={(e) =>
+                  setReplaceState((s) => s.open ? { ...s, note: e.target.value } : s)
+                }
+                placeholder="e.g. Key lost by John Smith, reported 23 Jun 2026"
+                rows={3}
+                className="my-2"
+              />
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Button
+                  className="bg-primary hover:bg-primary/90"
+                  onClick={() => replaceState.open && replaceState.reason && commitReplacement(replaceState.nodeId, replaceState.reason, replaceState.note)}
+                >
+                  Confirm replacement
+                </Button>
+              </AlertDialogFooter>
+            </>
+          )}
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Additional keys modal */}
+      <AlertDialog
+        open={addKeysState.open}
+        onOpenChange={(o) => { if (!o) setAddKeysState({ open: false }); }}
+      >
+        <AlertDialogContent>
+          {addKeysState.open && (() => {
+            const node = findNode(tree.root, addKeysState.nodeId);
+            const ref = node?.type === "CYL"
+              ? `D${String(node.differ ?? 0).padStart(3, "0")}`
+              : node?.label ?? "";
+            const isHighLevel = node?.type === "GMK" || node?.type === "MK";
+            if (addKeysState.step === "why") {
+              return (
+                <>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Why do you need additional keys?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      For {KEY_TYPE_LABEL[node?.type as string] ?? "this node"} — {ref}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="flex flex-col gap-2 my-2">
+                    <Button
+                      variant="outline"
+                      className="justify-start h-auto py-3"
+                      onClick={() => setAddKeysState((s) => s.open ? { ...s, step: "order" } : s)}
+                    >
+                      <Plus className="h-4 w-4 mr-2 shrink-0" />
+                      <span className="text-left">I need more copies</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="justify-start h-auto py-3"
+                      onClick={() => setAddKeysState((s) => s.open ? { ...s, step: "lost_warning" } : s)}
+                    >
+                      <ShieldAlert className="h-4 w-4 mr-2 shrink-0" />
+                      <span className="text-left">A key has been lost or not returned</span>
+                    </Button>
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  </AlertDialogFooter>
+                </>
+              );
+            }
+            if (addKeysState.step === "lost_warning") {
+              return (
+                <>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <ShieldAlert className="h-5 w-5 text-destructive" /> Security risk
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      A lost key means unauthorised access to all areas this key opens.{" "}
+                      {isHighLevel && <strong>This is a {node?.type} key — it opens multiple zones, so the risk is elevated.</strong>}{" "}
+                      We strongly recommend replacing the affected cylinder(s) under a new differ rather than ordering a replacement key.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="flex flex-col gap-2 my-2">
+                    {node?.type === "CYL" && (
+                      <Button
+                        className="bg-primary hover:bg-primary/90"
+                        onClick={() => {
+                          const id = addKeysState.nodeId;
+                          setAddKeysState({ open: false });
+                          openReplaceFlow(id);
+                        }}
+                      >
+                        <Replace className="h-4 w-4 mr-2" /> Replace cylinder(s) with new differ (recommended)
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      onClick={() => setAddKeysState((s) => s.open ? { ...s, step: "order" } : s)}
+                    >
+                      <KeyRound className="h-4 w-4 mr-2" /> Order replacement key only (I understand the risk)
+                    </Button>
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  </AlertDialogFooter>
+                </>
+              );
+            }
+            // step === "order"
+            return (
+              <>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Order additional keys — {ref}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Ordering additional keys increases the number of people with access to this area. Please ensure this request has been authorised by the appropriate person responsible for site security.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="space-y-4 my-2">
+                  <div className="flex items-center gap-3">
+                    <Label className="text-sm w-24">Quantity</Label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setAddKeysState((s) => s.open ? { ...s, quantity: Math.max(1, s.quantity - 1) } : s)}
+                        className="h-8 w-8 rounded border hover:bg-muted"
+                      >−</button>
+                      <span className="font-mono w-8 text-center">{addKeysState.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => setAddKeysState((s) => s.open ? { ...s, quantity: s.quantity + 1 } : s)}
+                        className="h-8 w-8 rounded border hover:bg-muted"
+                      >+</button>
+                    </div>
+                  </div>
+                  <label className="flex items-start gap-2 text-sm cursor-pointer">
+                    <Checkbox
+                      checked={addKeysState.authorised}
+                      onCheckedChange={(v) =>
+                        setAddKeysState((s) => s.open ? { ...s, authorised: !!v } : s)
+                      }
+                    />
+                    <span>I confirm this key order has been authorised</span>
+                  </label>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <Button
+                    disabled={!addKeysState.authorised}
+                    className="bg-primary hover:bg-primary/90"
+                    onClick={() => commitAdditionalKeys(addKeysState.nodeId, addKeysState.quantity)}
+                  >
+                    Add to basket
+                  </Button>
+                </AlertDialogFooter>
+              </>
+            );
+          })()}
         </AlertDialogContent>
       </AlertDialog>
     </div>
