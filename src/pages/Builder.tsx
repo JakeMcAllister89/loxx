@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
-  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert,
+  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert, History,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
