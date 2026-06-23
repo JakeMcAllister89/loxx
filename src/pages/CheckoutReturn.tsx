@@ -56,8 +56,7 @@ export default function CheckoutReturn() {
                 Reference <span className="font-mono">#{order.id.slice(0, 8).toUpperCase()}</span> · £{order.total.toFixed(2)}
               </p>
               <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
-                Thanks for your order. We've passed your key codes and shipping details to the manufacturer.
-                You'll receive dispatch updates by email.
+                Your master key system is now in production. Our team will prepare your cylinders and keys to your exact specification and be in touch with dispatch details shortly.
               </p>
               <div className="flex gap-2 justify-center mt-6">
                 <Button variant="outline" asChild><Link to="/orders"><Package className="h-4 w-4" /> View orders</Link></Button>
