@@ -23,6 +23,13 @@ interface Props {
   onAddChild: (parentId: string, childType?: NodeType) => void;
   onPaneClick?: () => void;
   registerFitView?: (fn: () => void) => void;
+  /** Parent ids known to have decommissioned CYL children (e.g. SMK). */
+  parentsWithDecomm?: Set<string>;
+  /** Parent ids whose decommissioned children are currently revealed. */
+  revealedDecomm?: Set<string>;
+  onToggleReveal?: (parentId: string) => void;
+  /** Returns extra non-type actions to append to a node's +-popover. */
+  getExtraAddActions?: (node: TNode) => { id: string; label: string; onClick: () => void }[];
 }
 
 const nodeTypes = { keynode: CanvasNode };
@@ -73,23 +80,16 @@ function layout(root: TNode): { laid: Laid[]; width: number; height: number } {
   return { laid, width: maxX, height: maxY };
 }
 
-function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, onPaneClick, registerFitView }: Props) {
+function CanvasInner({
+  tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, onPaneClick, registerFitView,
+  parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions,
+}: Props) {
   const { fitView, setCenter } = useReactFlow();
   const lastNodeCount = useRef(0);
 
   const { nodes, edges } = useMemo(() => {
     if (!tree.root) return { nodes: [] as Node[], edges: [] as Edge[] };
     const { laid } = layout(tree.root);
-
-    const childCountByParent = new Map<string, number>();
-    const findParent = (n: TNode, target: string, parent: TNode | null = null): TNode | null => {
-      if (n.id === target) return parent;
-      for (const c of n.children) {
-        const r = findParent(c, target, n);
-        if (r) return r;
-      }
-      return null;
-    };
 
     const totalDoors = countDoors(tree.root);
 
@@ -113,10 +113,14 @@ function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode,
           product,
           childMkCount:  kids.filter((c) => c.type === "MK").length,
           childSmkCount: kids.filter((c) => c.type === "SMK").length,
-          childCylCount: kids.filter((c) => c.type === "CYL").length,
+          childCylCount: kids.filter((c) => c.type === "CYL" && !c.decommissioned_at).length,
           rootDoorCount: l.node.type === "GMK" ? totalDoors : undefined,
           addOptions,
           onAddChildType: (t: NodeType) => onAddChild(l.id, t),
+          extraAddActions: getExtraAddActions?.(l.node) ?? [],
+          hasDecommissionedChildren: parentsWithDecomm?.has(l.id) ?? false,
+          revealDecommissioned: revealedDecomm?.has(l.id) ?? false,
+          onToggleRevealDecommissioned: () => onToggleReveal?.(l.id),
         },
       };
     });
@@ -136,7 +140,7 @@ function CanvasInner({ tree, selectedId, errorIds, highlightIds, productsByCode,
     };
     if (tree.root) collectEdges(tree.root);
     return { nodes, edges };
-  }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild]);
+  }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions]);
 
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState(nodes);
   const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState(edges);

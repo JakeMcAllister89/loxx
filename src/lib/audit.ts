@@ -104,6 +104,26 @@ export function describeAction(r: AuditRow): string {
     case "validation_run":            return `Validation run — ${meta.errors ?? 0} error(s), ${meta.warnings ?? 0} warning(s)`;
     case "exported_to_cart":          return `Exported to basket — ${meta.line_count ?? 0} lines${meta.cylinder_count != null ? `, ${meta.cylinder_count} cylinders` : ""}`;
     case "order_placed":              return `Order placed — £${Number(meta.total ?? 0).toFixed(2)}`;
+    case "cylinder_replaced": {
+      const oldRef = meta.old_differ != null ? `D${String(meta.old_differ).padStart(3, "0")}` : "—";
+      const newRef = meta.new_differ != null ? `D${String(meta.new_differ).padStart(3, "0")}` : oldRef;
+      const reason = meta.reason === "lost_key" ? "lost key" : meta.reason === "faulty" ? "faulty cylinder" : (meta.reason ?? "—");
+      const room = r.node_label ? ` · ${r.node_label}` : "";
+      const arrow = meta.reason === "faulty" ? oldRef : `${oldRef} → ${newRef}`;
+      const note = meta.note ? ` · Note: ${meta.note}` : "";
+      return `Cylinder replaced: ${arrow}${room} · Reason: ${reason}${note}`;
+    }
+    case "replacement_key_ordered": {
+      const ref = meta.differ != null ? `D${String(meta.differ).padStart(3, "0")}` : (r.node_label ?? "");
+      const who = r.user_name ? ` · Risk acknowledged by ${r.user_name}` : "";
+      return `Replacement key ordered: ${ref}${who}`;
+    }
+    case "additional_keys_ordered": {
+      const qty = meta.quantity ?? 1;
+      const ref = meta.key_reference ?? r.node_label ?? "";
+      const who = r.user_name ? ` · Authorised by ${r.user_name}` : "";
+      return `Additional keys ordered: ${qty} × ${ref}${who}`;
+    }
     default:                          return r.action;
   }
 }

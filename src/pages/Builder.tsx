@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
-  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert,
+  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert, History,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -34,7 +34,10 @@ import {
   findNode, findParent, updateNode, addChild, removeNode, insertSiblingAfter,
   countDoors, assignNextDiffers, pathOf, validate, ValidationIssue,
   hasLegacyCK, flattenCK, normaliseKeys, countKeys,
+  filterDecommissioned, parentsWithDecommissionedChildren,
 } from "@/lib/keytree";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { logAction } from "@/lib/audit";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { stashQuoteDraft, treeToQuoteItems } from "@/lib/quote";
@@ -154,11 +157,20 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [legacyCKDetected, setLegacyCKDetected] = useState(false);
   const [isFulfilled, setIsFulfilled] = useState(false);
-  // Replace-cylinder modal state: target node id + current step
+  // Replace-cylinder modal state: target node id + current step + draft note
   const [replaceState, setReplaceState] = useState<
     | { open: false }
-    | { open: true; nodeId: string; step: "reason" | "lost_warning" }
+    | { open: true; nodeId: string; step: "reason" | "lost_warning" | "note"; reason?: "lost_key" | "faulty"; note: string }
   >({ open: false });
+  // Additional-keys modal state
+  const [addKeysState, setAddKeysState] = useState<
+    | { open: false }
+    | { open: true; nodeId: string; step: "why" | "lost_warning" | "order"; quantity: number; authorised: boolean }
+  >({ open: false });
+  // Global toggle to reveal all decommissioned nodes
+  const [showAllDecomm, setShowAllDecomm] = useState(false);
+  // Per-SMK reveal of decommissioned children
+  const [revealedDecomm, setRevealedDecomm] = useState<Set<string>>(new Set());
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
@@ -354,17 +366,40 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   /** Open the "Replace cylinder" flow for a CYL node. */
   const openReplaceFlow = useCallback((nodeId: string) => {
-    setReplaceState({ open: true, nodeId, step: "reason" });
+    setReplaceState({ open: true, nodeId, step: "reason", note: "" });
   }, []);
 
-  /** Commit a replacement: clone the original cylinder as a new sibling and mark the original decommissioned. */
-  const commitReplacement = useCallback((targetId: string, reason: "lost_key" | "faulty") => {
+  /**
+   * Commit a replacement.
+   *  - reason="lost_key": clone original as new sibling, mark original decommissioned, new differ.
+   *  - reason="faulty":   in-place — keep same differ, room name, all properties. No decommission, no REPLACED badge.
+   */
+  const commitReplacement = useCallback((targetId: string, reason: "lost_key" | "faulty", note: string) => {
     setTree((prev) => {
       const original = findNode(prev.root, targetId);
       const parent = findParent(prev.root, targetId);
       if (!original || !parent || original.type !== "CYL") return prev;
+
+      if (reason === "faulty") {
+        // In-place — no structural change. Log only.
+        dirtyRef.current = true;
+        logAction({
+          system_id: systemId,
+          action: "cylinder_replaced",
+          node_type: "CYL",
+          node_label: original.label,
+          metadata: {
+            reason,
+            old_differ: original.differ,
+            new_differ: original.differ,
+            note: note || undefined,
+          },
+        });
+        return prev;
+      }
+
+      // lost_key: clone as new sibling, decommission original
       const newNodeId = newId();
-      // Clone specs; reset extras; new differ will be auto-assigned by assignNextDiffers
       const replacement: TNode = {
         id: newNodeId,
         type: "CYL",
@@ -384,7 +419,6 @@ function BuilderInner({ systemId }: { systemId: string }) {
       });
       const withSibling = insertSiblingAfter(decommissionedRoot, targetId, replacement);
       const next = assignNextDiffers({ ...prev, root: withSibling });
-      // Backfill replaced_by_differ on the original now that the new differ is assigned
       const newDiffer = findNode(next.root, newNodeId)?.differ;
       const finalRoot = updateNode(next.root, targetId, { replaced_by_differ: newDiffer });
       dirtyRef.current = true;
@@ -397,13 +431,16 @@ function BuilderInner({ systemId }: { systemId: string }) {
           reason,
           old_differ: original.differ,
           new_differ: newDiffer,
+          note: note || undefined,
         },
       });
       setSelectedId(newNodeId);
       return { ...next, root: finalRoot };
     });
     setReplaceState({ open: false });
-    toast.success("Cylinder replaced — review specs in the right panel");
+    toast.success(reason === "faulty"
+      ? "Faulty replacement logged — same differ retained"
+      : "Cylinder replaced — review specs in the right panel");
   }, [systemId]);
 
   /** "Order replacement key only" — bump extra_keys by 1 on the original, no new differ. */
@@ -425,6 +462,45 @@ function BuilderInner({ systemId }: { systemId: string }) {
     setReplaceState({ open: false });
     toast.success("Replacement key added — export to basket when ready");
   }, [systemId]);
+
+  /** Open the "Order additional keys" flow for any GMK/MK/SMK/CYL node. */
+  const openAddKeysFlow = useCallback((nodeId: string) => {
+    setAddKeysState({ open: true, nodeId, step: "why", quantity: 1, authorised: false });
+  }, []);
+
+  /** Commit additional-keys order: push a key line to the basket and log. */
+  const commitAdditionalKeys = useCallback((targetId: string, quantity: number) => {
+    const n = findNode(tree.root, targetId);
+    if (!n) return;
+    const sys = { system_id: systemId, system_name: name, system_reference: reference };
+    const ref = n.type === "CYL"
+      ? `D${String(n.differ ?? 0).padStart(3, "0")}`
+      : n.label;
+    const roomLabel = (n.type === "MK" || n.type === "SMK") ? (n.location || n.label) : n.label;
+    addToCart({
+      kind: "key",
+      key_reference: n.type === "CYL" ? `Additional keys — ${n.label} (${ref})` : ref,
+      node_type: n.type,
+      key_type_label: KEY_TYPE_LABEL[n.type as string],
+      room_label: roomLabel,
+      differ_ref: n.type === "CYL" ? ref : undefined,
+      is_extra_key: true,
+      quantity,
+      unit_price: 12,
+      ...sys,
+    });
+    logAction({
+      system_id: systemId,
+      action: "additional_keys_ordered",
+      node_type: n.type,
+      node_label: n.label,
+      metadata: { quantity, key_reference: ref },
+    });
+    setAddKeysState({ open: false });
+    toast.success(`${quantity} × ${ref} added to basket`);
+  }, [tree, systemId, name, reference, addToCart]);
+
+
 
 
   const patchSelected = (patch: Partial<TNode>) => {
@@ -668,6 +744,27 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const confirmedCount = allCyls.filter((c) => !!c.cylinder_type).length;
   const unassignedIds = useMemo(() => new Set(allCyls.filter((c) => !c.cylinder_type).map((c) => c.id)), [allCyls]);
 
+  // Build filtered view-tree for the canvas: hide decommissioned by default
+  const decommParents = useMemo(() => parentsWithDecommissionedChildren(tree.root), [tree]);
+  const hasAnyDecomm = decommParents.size > 0;
+  const viewTree: TreeData = useMemo(() => ({
+    ...tree,
+    root: filterDecommissioned(tree.root, { showAll: showAllDecomm, revealParentIds: revealedDecomm }),
+  }), [tree, showAllDecomm, revealedDecomm]);
+
+  const toggleRevealParent = useCallback((id: string) => {
+    setRevealedDecomm((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }, []);
+
+  const getExtraAddActions = useCallback((n: TNode) => {
+    if (!isFulfilled) return [];
+    return [{
+      id: "order-additional-keys",
+      label: "Order additional keys",
+      onClick: () => openAddKeysFlow(n.id),
+    }];
+  }, [isFulfilled, openAddKeysFlow]);
+
   if (loading) {
     return <div className="h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   }
@@ -689,6 +786,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import</Link></Button>
         <Button variant="outline" onClick={() => fitViewRef.current?.()}><Maximize2 className="h-4 w-4" /> Fit view</Button>
         <Button variant="outline" onClick={runValidate}><ShieldCheck className="h-4 w-4" /> Validate</Button>
+        {hasAnyDecomm && (
+          <Button
+            variant={showAllDecomm ? "default" : "outline"}
+            onClick={() => setShowAllDecomm((v) => !v)}
+            title="Toggle visibility of decommissioned (replaced) cylinders across the whole tree"
+          >
+            <History className="h-4 w-4" /> {showAllDecomm ? "Hide replaced" : "Show replaced cylinders"}
+          </Button>
+        )}
         <SaveStatusIndicator status={saveStatus} onRetry={save} />
         <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" /> Export PDF</Button>
         <Button variant="outline" onClick={() => {
@@ -829,7 +935,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
             </div>
           ) : (
             <BuilderCanvas
-              tree={tree}
+              tree={viewTree}
               selectedId={selectedId}
               errorIds={errorIds}
               highlightIds={showOnlyUnassigned ? unassignedIds : undefined}
@@ -838,6 +944,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
               onAddChild={handleAddChild}
               onPaneClick={() => setSelectedId(null)}
               registerFitView={(fn) => { fitViewRef.current = fn; }}
+              parentsWithDecomm={decommParents}
+              revealedDecomm={revealedDecomm}
+              onToggleReveal={toggleRevealParent}
+              getExtraAddActions={getExtraAddActions}
             />
           )}
         </div>
@@ -934,7 +1044,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         </SheetContent>
       </Sheet>
 
-      {/* Replace cylinder modal — reason picker → lost-key warning */}
+      {/* Replace cylinder modal — reason → (lost warning →) note → commit */}
       <AlertDialog
         open={replaceState.open}
         onOpenChange={(o) => { if (!o) setReplaceState({ open: false }); }}
@@ -960,7 +1070,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 <Button
                   variant="outline"
                   className="justify-start h-auto py-3"
-                  onClick={() => replaceState.open && commitReplacement(replaceState.nodeId, "faulty")}
+                  onClick={() => setReplaceState((s) => s.open ? { ...s, step: "note", reason: "faulty" } : s)}
                 >
                   <AlertTriangle className="h-4 w-4 mr-2 shrink-0" />
                   <span className="text-left">The cylinder is faulty or damaged</span>
@@ -984,7 +1094,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               <div className="flex flex-col gap-2 my-2">
                 <Button
                   className="bg-primary hover:bg-primary/90"
-                  onClick={() => replaceState.open && commitReplacement(replaceState.nodeId, "lost_key")}
+                  onClick={() => setReplaceState((s) => s.open ? { ...s, step: "note", reason: "lost_key" } : s)}
                 >
                   <Replace className="h-4 w-4 mr-2" /> Replace with new differ (recommended)
                 </Button>
@@ -1000,6 +1110,170 @@ function BuilderInner({ systemId }: { systemId: string }) {
               </AlertDialogFooter>
             </>
           )}
+          {replaceState.open && replaceState.step === "note" && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Add a note (optional)</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Captured against this replacement event for the audit trail.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <Textarea
+                value={replaceState.note}
+                onChange={(e) =>
+                  setReplaceState((s) => s.open ? { ...s, note: e.target.value } : s)
+                }
+                placeholder="e.g. Key lost by John Smith, reported 23 Jun 2026"
+                rows={3}
+                className="my-2"
+              />
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Button
+                  className="bg-primary hover:bg-primary/90"
+                  onClick={() => replaceState.open && replaceState.reason && commitReplacement(replaceState.nodeId, replaceState.reason, replaceState.note)}
+                >
+                  Confirm replacement
+                </Button>
+              </AlertDialogFooter>
+            </>
+          )}
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Additional keys modal */}
+      <AlertDialog
+        open={addKeysState.open}
+        onOpenChange={(o) => { if (!o) setAddKeysState({ open: false }); }}
+      >
+        <AlertDialogContent>
+          {addKeysState.open && (() => {
+            const node = findNode(tree.root, addKeysState.nodeId);
+            const ref = node?.type === "CYL"
+              ? `D${String(node.differ ?? 0).padStart(3, "0")}`
+              : node?.label ?? "";
+            const isHighLevel = node?.type === "GMK" || node?.type === "MK";
+            if (addKeysState.step === "why") {
+              return (
+                <>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Why do you need additional keys?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      For {KEY_TYPE_LABEL[node?.type as string] ?? "this node"} — {ref}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="flex flex-col gap-2 my-2">
+                    <Button
+                      variant="outline"
+                      className="justify-start h-auto py-3"
+                      onClick={() => setAddKeysState((s) => s.open ? { ...s, step: "order" } : s)}
+                    >
+                      <Plus className="h-4 w-4 mr-2 shrink-0" />
+                      <span className="text-left">I need more copies</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="justify-start h-auto py-3"
+                      onClick={() => setAddKeysState((s) => s.open ? { ...s, step: "lost_warning" } : s)}
+                    >
+                      <ShieldAlert className="h-4 w-4 mr-2 shrink-0" />
+                      <span className="text-left">A key has been lost or not returned</span>
+                    </Button>
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  </AlertDialogFooter>
+                </>
+              );
+            }
+            if (addKeysState.step === "lost_warning") {
+              return (
+                <>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <ShieldAlert className="h-5 w-5 text-destructive" /> Security risk
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      A lost key means unauthorised access to all areas this key opens.{" "}
+                      {isHighLevel && <strong>This is a {node?.type} key — it opens multiple zones, so the risk is elevated.</strong>}{" "}
+                      We strongly recommend replacing the affected cylinder(s) under a new differ rather than ordering a replacement key.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="flex flex-col gap-2 my-2">
+                    {node?.type === "CYL" && (
+                      <Button
+                        className="bg-primary hover:bg-primary/90"
+                        onClick={() => {
+                          const id = addKeysState.nodeId;
+                          setAddKeysState({ open: false });
+                          openReplaceFlow(id);
+                        }}
+                      >
+                        <Replace className="h-4 w-4 mr-2" /> Replace cylinder(s) with new differ (recommended)
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      onClick={() => setAddKeysState((s) => s.open ? { ...s, step: "order" } : s)}
+                    >
+                      <KeyRound className="h-4 w-4 mr-2" /> Order replacement key only (I understand the risk)
+                    </Button>
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  </AlertDialogFooter>
+                </>
+              );
+            }
+            // step === "order"
+            return (
+              <>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Order additional keys — {ref}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Ordering additional keys increases the number of people with access to this area. Please ensure this request has been authorised by the appropriate person responsible for site security.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="space-y-4 my-2">
+                  <div className="flex items-center gap-3">
+                    <Label className="text-sm w-24">Quantity</Label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setAddKeysState((s) => s.open ? { ...s, quantity: Math.max(1, s.quantity - 1) } : s)}
+                        className="h-8 w-8 rounded border hover:bg-muted"
+                      >−</button>
+                      <span className="font-mono w-8 text-center">{addKeysState.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => setAddKeysState((s) => s.open ? { ...s, quantity: s.quantity + 1 } : s)}
+                        className="h-8 w-8 rounded border hover:bg-muted"
+                      >+</button>
+                    </div>
+                  </div>
+                  <label className="flex items-start gap-2 text-sm cursor-pointer">
+                    <Checkbox
+                      checked={addKeysState.authorised}
+                      onCheckedChange={(v) =>
+                        setAddKeysState((s) => s.open ? { ...s, authorised: !!v } : s)
+                      }
+                    />
+                    <span>I confirm this key order has been authorised</span>
+                  </label>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <Button
+                    disabled={!addKeysState.authorised}
+                    className="bg-primary hover:bg-primary/90"
+                    onClick={() => commitAdditionalKeys(addKeysState.nodeId, addKeysState.quantity)}
+                  >
+                    Add to basket
+                  </Button>
+                </AlertDialogFooter>
+              </>
+            );
+          })()}
         </AlertDialogContent>
       </AlertDialog>
     </div>
