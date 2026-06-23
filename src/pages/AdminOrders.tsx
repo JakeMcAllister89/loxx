@@ -367,6 +367,16 @@ export default function AdminOrders() {
                     <TableCell>{o.customer_name ?? profileMap[o.user_id]?.name ?? "—"}</TableCell>
                     <TableCell>{o.company ?? profileMap[o.user_id]?.company ?? "—"}</TableCell>
                     <TableCell className="text-xs">
+                      {o.payment_status === "paid" ? (
+                        <div className="flex flex-col gap-0.5">
+                          <Badge className="bg-green-100 text-green-800 border-green-300 w-fit">Paid ✓</Badge>
+                          <span className="text-[10px] text-muted-foreground font-mono">{fmtPaidAt(o.paid_at)}</span>
+                        </div>
+                      ) : (
+                        <Badge className="bg-amber-100 text-amber-800 border-amber-300">Unpaid</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs">
                       {o.system_id ? (
                         <div>
                           <div>{systemMap[o.system_id]?.name ?? "—"}</div>
