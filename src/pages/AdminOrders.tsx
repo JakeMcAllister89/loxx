@@ -357,18 +357,39 @@ export default function AdminOrders() {
                     <TableCell className="text-muted-foreground">{gbp(cost)}</TableCell>
                     <TableCell className="text-green-600 font-bold">{gbp(profit)}</TableCell>
                     <TableCell className={`font-semibold ${marginCls}`}>{margin.toFixed(1)}%</TableCell>
-                    <TableCell><Badge className={statusColor[o.status] ?? ""}>{o.status}</Badge></TableCell>
+                    <TableCell>
+                      <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
+                        <SelectTrigger className={`h-7 text-xs px-2 py-0 w-auto min-w-[100px] border ${statusColor[o.status] ?? ""}`}>
+                          <SelectValue>{statusLabel[o.status] ?? o.status}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STATUS_OPTIONS.map((s) => (
+                            <SelectItem key={s} value={s}>{statusLabel[s] ?? s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell className="font-mono text-xs text-amber-700">{o.po_number ?? "—"}</TableCell>
                     <TableCell className="flex gap-1">
                       <Button size="sm" variant="outline" onClick={() => setOpenId(o.id)}>View</Button>
                       {o.po_number ? (
-                        <Badge variant="outline" className="bg-muted text-muted-foreground text-[10px]">
-                          Sent {o.po_sent_at ? new Date(o.po_sent_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : ""}
-                        </Badge>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="outline" className="bg-muted text-muted-foreground text-[10px]">
+                              Sent {o.po_sent_at ? new Date(o.po_sent_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : ""}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">PO already sent — click View to see details</TooltipContent>
+                        </Tooltip>
                       ) : (
-                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700" disabled={sending} onClick={() => sendSingle(o.id)}>
-                          {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="sm" className="bg-amber-600 hover:bg-amber-700" disabled={sending} onClick={() => sendSingle(o.id)}>
+                              {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">Send purchase order to supplier</TooltipContent>
+                        </Tooltip>
                       )}
                     </TableCell>
                   </TableRow>
