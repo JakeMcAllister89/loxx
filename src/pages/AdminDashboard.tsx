@@ -250,7 +250,16 @@ export default function AdminDashboard() {
                   <TableCell className="text-xs font-mono">{o.system_id ? systemMap[o.system_id]?.reference ?? "—" : "—"}</TableCell>
                   <TableCell className="text-xs">{new Date(o.created_at).toLocaleDateString("en-GB")}</TableCell>
                   <TableCell className="font-semibold">{gbp(Number(o.total))}</TableCell>
-                  <TableCell><Badge className={statusColor[o.status] ?? ""}>{o.status}</Badge></TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <Badge className={statusColor[o.status] ?? ""}>{o.status}</Badge>
+                      {o.payment_status === "paid" ? (
+                        <Badge className="bg-green-100 text-green-800 border-green-300 text-[10px]">Paid ✓</Badge>
+                      ) : (
+                        <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-[10px]">Unpaid</Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell><Link to="/admin/orders" className="text-primary text-xs hover:underline">View</Link></TableCell>
                 </TableRow>
               ))}
