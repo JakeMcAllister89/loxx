@@ -259,7 +259,12 @@ function CanvasNodeImpl(props: NodeProps) {
       </div>
 
       {canAdd && (
-        <div ref={popRef} className="absolute -bottom-3 left-1/2 -translate-x-1/2 nodrag group/add">
+        <div
+          ref={popRef}
+          onMouseEnter={() => setPopoverOpen(true)}
+          onMouseLeave={() => setPopoverOpen(false)}
+          className="absolute -bottom-3 left-1/2 -translate-x-1/2 nodrag group/add"
+        >
           <button
             onClick={handlePlusClick}
             className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90"
