@@ -64,14 +64,6 @@ function CanvasNodeImpl(props: NodeProps) {
   const [hovered, setHovered] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!popoverOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (popRef.current && !popRef.current.contains(e.target as Node)) setPopoverOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [popoverOpen]);
 
   const ringClass = highlight
     ? "ring-2 ring-[hsl(var(--node-cyl))]"
