@@ -54,7 +54,10 @@ export const NODE_HEIGHT = 72;
 function CanvasNodeImpl(props: NodeProps) {
   const d = props.data as unknown as CanvasNodeData;
   const selected = props.selected ?? d.selected;
-  const { node, hasError, product, highlight, addOptions, onAddChildType } = d;
+  const {
+    node, hasError, product, highlight, addOptions, onAddChildType,
+    extraAddActions, hasDecommissionedChildren, revealDecommissioned, onToggleRevealDecommissioned,
+  } = d;
   const meta = TYPE_META[node.type] ?? TYPE_META.SMK;
   const isCyl = node.type === "CYL";
   const [popoverOpen, setPopoverOpen] = useState(false);
