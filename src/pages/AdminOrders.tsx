@@ -35,6 +35,8 @@ interface OrderRow {
   system_id: string | null;
   delivery_address: any;
   notes: string | null;
+  payment_status: string;
+  paid_at: string | null;
 }
 interface ItemRow {
   id: string;
