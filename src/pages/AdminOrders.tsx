@@ -261,6 +261,22 @@ export default function AdminOrders() {
     reload();
   };
 
+  const doDeleteOrder = async () => {
+    if (!deleteId) return;
+    const ref = orders.find((o) => o.id === deleteId);
+    const refLbl = ref ? refLabel(ref) : deleteId.slice(0, 8).toUpperCase();
+    const { error } = await supabase.from("orders").delete().eq("id", deleteId);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setDeleteId(null);
+    setOpenId(null);
+    toast.success("Order deleted");
+    reload();
+    void refLbl;
+  };
+
   return (
     <DashboardLayout>
       <div className="p-8 max-w-[1400px]">
@@ -603,10 +619,13 @@ export default function AdminOrders() {
                   </div>
                 </Block>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {open.status === "paid" && <Button size="sm" variant="outline" onClick={() => updateStatus(open.id, "processing")}>Mark processing</Button>}
                   {open.status !== "shipped" && open.status !== "delivered" && <Button size="sm" variant="outline" onClick={() => updateStatus(open.id, "shipped")}>Mark shipped</Button>}
                   {open.status !== "delivered" && <Button size="sm" variant="outline" onClick={() => updateStatus(open.id, "delivered")}>Mark delivered</Button>}
+                  <Button size="sm" variant="outline" className="ml-auto text-destructive border-destructive/40 hover:bg-destructive/10" onClick={() => setDeleteId(open.id)}>
+                    <Trash2 className="h-3.5 w-3.5" /> Delete order
+                  </Button>
                 </div>
               </div>
             </>
