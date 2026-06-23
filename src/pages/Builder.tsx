@@ -157,11 +157,20 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [legacyCKDetected, setLegacyCKDetected] = useState(false);
   const [isFulfilled, setIsFulfilled] = useState(false);
-  // Replace-cylinder modal state: target node id + current step
+  // Replace-cylinder modal state: target node id + current step + draft note
   const [replaceState, setReplaceState] = useState<
     | { open: false }
-    | { open: true; nodeId: string; step: "reason" | "lost_warning" }
+    | { open: true; nodeId: string; step: "reason" | "lost_warning" | "note"; reason?: "lost_key" | "faulty"; note: string }
   >({ open: false });
+  // Additional-keys modal state
+  const [addKeysState, setAddKeysState] = useState<
+    | { open: false }
+    | { open: true; nodeId: string; step: "why" | "lost_warning" | "order"; quantity: number; authorised: boolean }
+  >({ open: false });
+  // Global toggle to reveal all decommissioned nodes
+  const [showAllDecomm, setShowAllDecomm] = useState(false);
+  // Per-SMK reveal of decommissioned children
+  const [revealedDecomm, setRevealedDecomm] = useState<Set<string>>(new Set());
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
