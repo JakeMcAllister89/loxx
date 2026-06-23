@@ -20,6 +20,33 @@ const esc = (s: unknown) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 const fmt = (n: number) => `£${(Math.round(n * 100) / 100).toFixed(2)}`;
 
+function buildDifferHierarchyMap(root: any): Record<string, { gmk: string; mk: string; smk: string }> {
+  const map: Record<string, { gmk: string; mk: string; smk: string }> = {};
+  const walk = (node: any, trail: any[]) => {
+    if (node.type === "CYL" && node.differ != null) {
+      const ref = `D${String(node.differ).padStart(3, "0")}`;
+      map[ref] = {
+        gmk: trail.find(n => n.type === "GMK")?.label ?? "—",
+        mk:  trail.find(n => n.type === "MK")?.label  ?? "—",
+        smk: trail.find(n => n.type === "SMK")?.label ?? "—",
+      };
+    }
+    for (const child of node.children ?? []) {
+      walk(child, [...trail, node]);
+    }
+  };
+  if (root) walk(root, []);
+  return map;
+}
+
+function buildDifferExtraKeysMap(items: any[]): Record<string, number> {
+  const map: Record<string, number> = {};
+  items.filter(i => i.item_type === "key" && i.differ_ref).forEach(i => {
+    map[i.differ_ref] = (map[i.differ_ref] ?? 0) + Number(i.quantity);
+  });
+  return map;
+}
+
 interface SendBody { order_id?: string; download_only?: boolean }
 
 Deno.serve(async (req) => {
