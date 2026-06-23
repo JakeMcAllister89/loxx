@@ -81,7 +81,8 @@ function CanvasNodeImpl(props: NodeProps) {
         ? "ring-2 ring-destructive/60"
         : "ring-1 ring-border";
 
-  const canAdd = (addOptions?.length ?? 0) > 0;
+  const hasExtras = (extraAddActions?.length ?? 0) > 0;
+  const canAdd = (addOptions?.length ?? 0) > 0 || hasExtras;
   const isMkOrSmk = node.type === "MK" || node.type === "SMK";
   const hasLocation = isMkOrSmk && !!node.location?.trim();
   const mainLabel = hasLocation ? node.location!.trim() : node.label;
