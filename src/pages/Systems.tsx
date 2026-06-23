@@ -169,12 +169,12 @@ export default function Systems() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this system?</AlertDialogTitle>
             <AlertDialogDescription>
-              "{deleteOf?.name}" will be permanently removed. This cannot be undone.
+              This will permanently delete "{deleteOf?.name}" including all nodes, cylinder assignments, and key specifications. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={doDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+            <AlertDialogAction onClick={doDelete} className="bg-destructive hover:bg-destructive/90 text-white">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
