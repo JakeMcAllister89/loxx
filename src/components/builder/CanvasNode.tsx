@@ -247,6 +247,19 @@ function CanvasNodeImpl(props: NodeProps) {
         {hasError && (
           <AlertCircle className="absolute top-1 right-1 h-3 w-3 text-destructive" />
         )}
+
+        {hasDecommissionedChildren && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onToggleRevealDecommissioned?.(); }}
+            title={revealDecommissioned ? "Hide replaced cylinders" : "Show replaced cylinders"}
+            className={`nodrag absolute top-1 right-1 h-5 w-5 rounded-full flex items-center justify-center border ${
+              revealDecommissioned ? "bg-destructive/10 border-destructive/40 text-destructive" : "bg-muted border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <History className="h-3 w-3" />
+          </button>
+        )}
       </div>
 
       {canAdd && (
@@ -260,8 +273,8 @@ function CanvasNodeImpl(props: NodeProps) {
             <Plus className="h-3.5 w-3.5" />
           </button>
           {popoverOpen && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[160px] z-10">
-              {addOptions!.map((t) => (
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-10">
+              {addOptions?.map((t) => (
                 <button
                   key={t}
                   onClick={(e) => { e.stopPropagation(); setPopoverOpen(false); onAddChildType?.(t); }}
@@ -269,6 +282,17 @@ function CanvasNodeImpl(props: NodeProps) {
                 >
                   <span className="h-2 w-2 rounded-full shrink-0" style={{ background: TYPE_META[t].dot }} />
                   <span>{ADD_LABEL[t]}</span>
+                </button>
+              ))}
+              {hasExtras && (addOptions?.length ?? 0) > 0 && <div className="my-1 border-t" />}
+              {extraAddActions?.map((a) => (
+                <button
+                  key={a.id}
+                  onClick={(e) => { e.stopPropagation(); setPopoverOpen(false); a.onClick(); }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted text-left"
+                >
+                  <KeyRound className="h-3 w-3 shrink-0 text-amber-600" />
+                  <span>{a.label}</span>
                 </button>
               ))}
             </div>
