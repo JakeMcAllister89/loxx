@@ -184,18 +184,62 @@ export function countDoors(root: TNode | null): number {
 }
 
 /**
- * Renumber ALL cylinders sequentially from 1 based on their current tree
- * position (depth-first, top-to-bottom, left-to-right). The counter has no
- * memory of deleted nodes — differs always reflect the live tree.
+ * Renumber active cylinders. Decommissioned cylinders permanently retain their
+ * original differ number — that number is treated as "used" and never reassigned
+ * or reused. Active cylinders take the next available numbers from 1 upward,
+ * skipping any number occupied by a decommissioned cylinder.
  */
 export function assignNextDiffers(tree: TreeData): TreeData {
   if (!tree.root) return { root: null, next_differ: 1 };
+  const used = new Set<number>();
+  const collect = (n: TNode) => {
+    if (n.type === "CYL" && n.decommissioned_at && n.differ != null) used.add(n.differ);
+    n.children.forEach(collect);
+  };
+  collect(tree.root);
   let counter = 1;
+  const nextFree = () => {
+    while (used.has(counter)) counter++;
+    const v = counter;
+    counter++;
+    return v;
+  };
   const assigned = mapTree(tree.root, (n) => {
-    if (n.type === "CYL" && !n.decommissioned_at) return { ...n, differ: counter++ };
+    if (n.type === "CYL" && !n.decommissioned_at) return { ...n, differ: nextFree() };
     return n;
   });
-  return { root: assigned, next_differ: counter };
+  const max = Math.max(counter - 1, ...Array.from(used), 0);
+  return { root: assigned, next_differ: max + 1 };
+}
+
+/** Returns a new tree with decommissioned cylinders filtered out, optionally keeping those whose parent SMK is in `revealSmkIds`. */
+export function filterDecommissioned(
+  root: TNode | null,
+  opts: { showAll?: boolean; revealParentIds?: Set<string> } = {},
+): TNode | null {
+  if (!root) return null;
+  const walk = (n: TNode): TNode => {
+    const keepChild = (c: TNode): boolean => {
+      if (c.type !== "CYL" || !c.decommissioned_at) return true;
+      if (opts.showAll) return true;
+      if (opts.revealParentIds?.has(n.id)) return true;
+      return false;
+    };
+    return { ...n, children: n.children.filter(keepChild).map(walk) };
+  };
+  return walk(root);
+}
+
+/** Returns set of parent node ids that have at least one decommissioned CYL child. */
+export function parentsWithDecommissionedChildren(root: TNode | null): Set<string> {
+  const out = new Set<string>();
+  if (!root) return out;
+  const walk = (n: TNode) => {
+    if (n.children.some((c) => c.type === "CYL" && c.decommissioned_at)) out.add(n.id);
+    n.children.forEach(walk);
+  };
+  walk(root);
+  return out;
 }
 
 
