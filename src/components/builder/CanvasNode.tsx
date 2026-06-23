@@ -142,7 +142,10 @@ function CanvasNodeImpl(props: NodeProps) {
         width: cardWidth,
         borderLeft: `3px solid ${isDecommissioned ? "hsl(var(--muted-foreground))" : meta.border}`,
         boxShadow: hovered || selected ? "0 4px 14px rgba(0,0,0,0.10)" : "0 1px 2px rgba(0,0,0,0.04)",
-        background: isDecommissioned ? undefined : hovered ? `hsl(${meta.tintHsl} / 0.03)` : undefined,
+        background: isDecommissioned ? undefined
+          : selected ? `hsl(${meta.tintHsl} / 0.18)`
+          : hovered ? `hsl(${meta.tintHsl} / 0.10)`
+          : undefined,
       }}
     >
       {node.type !== "GMK" && <Handle type="target" position={Position.Top} className="!bg-border !w-2 !h-2" />}
