@@ -92,7 +92,7 @@ export default function AdminDashboard() {
     (async () => {
       const { data: cur } = await supabase
         .from("orders")
-        .select("id,user_id,status,total,subtotal,created_at,customer_name,company,po_number,system_id")
+        .select("id,user_id,status,total,subtotal,created_at,customer_name,company,po_number,system_id,payment_status,paid_at")
         .gte("created_at", from.toISOString())
         .lte("created_at", to.toISOString())
         .order("created_at", { ascending: false });
