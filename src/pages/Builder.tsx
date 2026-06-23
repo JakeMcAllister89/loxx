@@ -786,6 +786,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import</Link></Button>
         <Button variant="outline" onClick={() => fitViewRef.current?.()}><Maximize2 className="h-4 w-4" /> Fit view</Button>
         <Button variant="outline" onClick={runValidate}><ShieldCheck className="h-4 w-4" /> Validate</Button>
+        {hasAnyDecomm && (
+          <Button
+            variant={showAllDecomm ? "default" : "outline"}
+            onClick={() => setShowAllDecomm((v) => !v)}
+            title="Toggle visibility of decommissioned (replaced) cylinders across the whole tree"
+          >
+            <History className="h-4 w-4" /> {showAllDecomm ? "Hide replaced" : "Show replaced cylinders"}
+          </Button>
+        )}
         <SaveStatusIndicator status={saveStatus} onRetry={save} />
         <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" /> Export PDF</Button>
         <Button variant="outline" onClick={() => {
