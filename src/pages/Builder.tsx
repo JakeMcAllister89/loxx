@@ -935,7 +935,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
             </div>
           ) : (
             <BuilderCanvas
-              tree={tree}
+              tree={viewTree}
               selectedId={selectedId}
               errorIds={errorIds}
               highlightIds={showOnlyUnassigned ? unassignedIds : undefined}
@@ -944,6 +944,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
               onAddChild={handleAddChild}
               onPaneClick={() => setSelectedId(null)}
               registerFitView={(fn) => { fitViewRef.current = fn; }}
+              parentsWithDecomm={decommParents}
+              revealedDecomm={revealedDecomm}
+              onToggleReveal={toggleRevealParent}
+              getExtraAddActions={getExtraAddActions}
             />
           )}
         </div>
