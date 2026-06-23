@@ -366,17 +366,40 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   /** Open the "Replace cylinder" flow for a CYL node. */
   const openReplaceFlow = useCallback((nodeId: string) => {
-    setReplaceState({ open: true, nodeId, step: "reason" });
+    setReplaceState({ open: true, nodeId, step: "reason", note: "" });
   }, []);
 
-  /** Commit a replacement: clone the original cylinder as a new sibling and mark the original decommissioned. */
-  const commitReplacement = useCallback((targetId: string, reason: "lost_key" | "faulty") => {
+  /**
+   * Commit a replacement.
+   *  - reason="lost_key": clone original as new sibling, mark original decommissioned, new differ.
+   *  - reason="faulty":   in-place — keep same differ, room name, all properties. No decommission, no REPLACED badge.
+   */
+  const commitReplacement = useCallback((targetId: string, reason: "lost_key" | "faulty", note: string) => {
     setTree((prev) => {
       const original = findNode(prev.root, targetId);
       const parent = findParent(prev.root, targetId);
       if (!original || !parent || original.type !== "CYL") return prev;
+
+      if (reason === "faulty") {
+        // In-place — no structural change. Log only.
+        dirtyRef.current = true;
+        logAction({
+          system_id: systemId,
+          action: "cylinder_replaced",
+          node_type: "CYL",
+          node_label: original.label,
+          metadata: {
+            reason,
+            old_differ: original.differ,
+            new_differ: original.differ,
+            note: note || undefined,
+          },
+        });
+        return prev;
+      }
+
+      // lost_key: clone as new sibling, decommission original
       const newNodeId = newId();
-      // Clone specs; reset extras; new differ will be auto-assigned by assignNextDiffers
       const replacement: TNode = {
         id: newNodeId,
         type: "CYL",
@@ -396,7 +419,6 @@ function BuilderInner({ systemId }: { systemId: string }) {
       });
       const withSibling = insertSiblingAfter(decommissionedRoot, targetId, replacement);
       const next = assignNextDiffers({ ...prev, root: withSibling });
-      // Backfill replaced_by_differ on the original now that the new differ is assigned
       const newDiffer = findNode(next.root, newNodeId)?.differ;
       const finalRoot = updateNode(next.root, targetId, { replaced_by_differ: newDiffer });
       dirtyRef.current = true;
@@ -409,13 +431,16 @@ function BuilderInner({ systemId }: { systemId: string }) {
           reason,
           old_differ: original.differ,
           new_differ: newDiffer,
+          note: note || undefined,
         },
       });
       setSelectedId(newNodeId);
       return { ...next, root: finalRoot };
     });
     setReplaceState({ open: false });
-    toast.success("Cylinder replaced — review specs in the right panel");
+    toast.success(reason === "faulty"
+      ? "Faulty replacement logged — same differ retained"
+      : "Cylinder replaced — review specs in the right panel");
   }, [systemId]);
 
   /** "Order replacement key only" — bump extra_keys by 1 on the original, no new differ. */
@@ -437,6 +462,45 @@ function BuilderInner({ systemId }: { systemId: string }) {
     setReplaceState({ open: false });
     toast.success("Replacement key added — export to basket when ready");
   }, [systemId]);
+
+  /** Open the "Order additional keys" flow for any GMK/MK/SMK/CYL node. */
+  const openAddKeysFlow = useCallback((nodeId: string) => {
+    setAddKeysState({ open: true, nodeId, step: "why", quantity: 1, authorised: false });
+  }, []);
+
+  /** Commit additional-keys order: push a key line to the basket and log. */
+  const commitAdditionalKeys = useCallback((targetId: string, quantity: number) => {
+    const n = findNode(tree.root, targetId);
+    if (!n) return;
+    const sys = { system_id: systemId, system_name: name, system_reference: reference };
+    const ref = n.type === "CYL"
+      ? `D${String(n.differ ?? 0).padStart(3, "0")}`
+      : n.label;
+    const roomLabel = (n.type === "MK" || n.type === "SMK") ? (n.location || n.label) : n.label;
+    addToCart({
+      kind: "key",
+      key_reference: n.type === "CYL" ? `Additional keys — ${n.label} (${ref})` : ref,
+      node_type: n.type,
+      key_type_label: KEY_TYPE_LABEL[n.type as string],
+      room_label: roomLabel,
+      differ_ref: n.type === "CYL" ? ref : undefined,
+      is_extra_key: true,
+      quantity,
+      unit_price: 12,
+      ...sys,
+    });
+    logAction({
+      system_id: systemId,
+      action: "additional_keys_ordered",
+      node_type: n.type,
+      node_label: n.label,
+      metadata: { quantity, key_reference: ref },
+    });
+    setAddKeysState({ open: false });
+    toast.success(`${quantity} × ${ref} added to basket`);
+  }, [tree, systemId, name, reference, addToCart]);
+
+
 
 
   const patchSelected = (patch: Partial<TNode>) => {
