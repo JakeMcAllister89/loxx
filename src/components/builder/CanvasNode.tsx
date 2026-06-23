@@ -1,8 +1,14 @@
 import { memo, useState, useRef, useEffect } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
-import { AlertCircle, Plus, Key } from "lucide-react";
+import { AlertCircle, Plus, Key, History, KeyRound } from "lucide-react";
 import { NodeType, TNode } from "@/lib/keytree";
 import { colorForFinish } from "@/lib/finishes";
+
+export interface ExtraAddAction {
+  id: string;
+  label: string;
+  onClick: () => void;
+}
 
 export interface CanvasNodeData {
   node: TNode;
@@ -17,6 +23,13 @@ export interface CanvasNodeData {
   /** Valid child types this node can spawn — drives the +-button popover */
   addOptions?: NodeType[];
   onAddChildType?: (t: NodeType) => void;
+  /** Extra non-type actions appended to the +-popover (e.g. "Order additional keys") */
+  extraAddActions?: ExtraAddAction[];
+  /** SMK only — whether any direct CYL child is decommissioned */
+  hasDecommissionedChildren?: boolean;
+  /** SMK only — whether the per-branch reveal is on */
+  revealDecommissioned?: boolean;
+  onToggleRevealDecommissioned?: () => void;
 }
 
 const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string; tintHsl: string }> = {
