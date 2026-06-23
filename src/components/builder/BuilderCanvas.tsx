@@ -23,6 +23,13 @@ interface Props {
   onAddChild: (parentId: string, childType?: NodeType) => void;
   onPaneClick?: () => void;
   registerFitView?: (fn: () => void) => void;
+  /** Parent ids known to have decommissioned CYL children (e.g. SMK). */
+  parentsWithDecomm?: Set<string>;
+  /** Parent ids whose decommissioned children are currently revealed. */
+  revealedDecomm?: Set<string>;
+  onToggleReveal?: (parentId: string) => void;
+  /** Returns extra non-type actions to append to a node's +-popover. */
+  getExtraAddActions?: (node: TNode) => { id: string; label: string; onClick: () => void }[];
 }
 
 const nodeTypes = { keynode: CanvasNode };
