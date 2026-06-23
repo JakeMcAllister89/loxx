@@ -81,7 +81,7 @@ export default function AdminDashboard() {
 
       const { data: rec } = await supabase
         .from("orders")
-        .select("id,user_id,status,total,subtotal,created_at,customer_name,company,po_number,system_id")
+        .select("id,user_id,status,total,subtotal,created_at,customer_name,company,po_number,system_id,payment_status,paid_at")
         .order("created_at", { ascending: false })
         .limit(10);
       setRecent((rec ?? []) as OrderRow[]);
