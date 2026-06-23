@@ -115,9 +115,10 @@ function CanvasNodeImpl(props: NodeProps) {
   const handlePlusClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const total = (addOptions?.length ?? 0) + (extraAddActions?.length ?? 0);
-    if (total === 0) return;
-    if (total === 1 && (addOptions?.length ?? 0) === 1) onAddChildType?.(addOptions![0]);
-    else setPopoverOpen((v) => !v);
+    if (total === 1 && (addOptions?.length ?? 0) === 1) {
+      onAddChildType?.(addOptions![0]);
+      setPopoverOpen(false);
+    }
   };
 
   const cardWidth = isCyl ? 160 : 180;
