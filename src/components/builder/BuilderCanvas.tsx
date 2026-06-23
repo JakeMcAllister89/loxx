@@ -4,6 +4,7 @@ import {
   useReactFlow, Node, Edge, useNodesState, useEdgesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { Maximize2 } from "lucide-react";
 import { TNode, TreeData, NodeType, countDoors, validChildTypes } from "@/lib/keytree";
 import { CanvasNode, NODE_WIDTH, NODE_HEIGHT } from "./CanvasNode";
 
@@ -199,9 +200,10 @@ function CanvasInner({
       <button
         type="button"
         onClick={() => fitView({ padding: 0.2, duration: 400 })}
-        className="absolute bottom-2 right-2 z-10 text-[10px] font-medium px-2 py-1 rounded bg-card border shadow-card text-muted-foreground hover:text-foreground"
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 text-xs font-semibold px-4 py-2 rounded-full bg-card border border-border shadow-md text-foreground hover:bg-muted"
         title="Zoom to fit entire system in view"
       >
+        <Maximize2 className="h-3.5 w-3.5 mr-1.5 inline-block" />
         Zoom to fit
       </button>
       <MiniMap
