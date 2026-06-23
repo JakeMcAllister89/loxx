@@ -11,10 +11,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { presetRange, RangePreset } from "@/lib/dateRanges";
 import { toast } from "sonner";
-import { Send, Download, X, ExternalLink, Loader2, Check } from "lucide-react";
+import { Send, Download, X, ExternalLink, Loader2, Check, Trash2 } from "lucide-react";
 
 interface OrderRow {
   id: string;
@@ -50,11 +51,22 @@ interface ItemRow {
 }
 
 const statusColor: Record<string, string> = {
-  paid: "bg-amber-100 text-amber-800",
-  processing: "bg-blue-100 text-blue-800",
-  shipped: "bg-green-100 text-green-800",
-  delivered: "bg-green-200 text-green-900",
+  pending: "bg-amber-100 text-amber-800 border-amber-300",
+  paid: "bg-blue-100 text-blue-800 border-blue-300",
+  processing: "bg-indigo-100 text-indigo-800 border-indigo-300",
+  shipped: "bg-teal-100 text-teal-800 border-teal-300",
+  delivered: "bg-green-100 text-green-800 border-green-300",
+  cancelled: "bg-red-100 text-red-800 border-red-300",
 };
+const statusLabel: Record<string, string> = {
+  pending: "pending",
+  paid: "Paid ✓",
+  processing: "processing",
+  shipped: "shipped",
+  delivered: "delivered",
+  cancelled: "cancelled",
+};
+const STATUS_OPTIONS = ["pending", "paid", "processing", "shipped", "delivered", "cancelled"];
 const gbp = (n: number) => `£${n.toFixed(2)}`;
 
 interface SendProgress {
