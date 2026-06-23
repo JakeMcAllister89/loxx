@@ -1313,7 +1313,7 @@ function TreeRow({
         onClick={() => onSelect(node.id)}
         className={`group row flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer transition-colors ${
           isHighlighted ? "bg-primary/15 ring-1 ring-primary/40" :
-          isSelected ? "bg-accent-light" : isMatch ? "bg-warning/10" : "hover:bg-muted/40"
+          isSelected ? "bg-primary/15 ring-1 ring-primary/40" : isMatch ? "bg-warning/10" : "hover:bg-muted/40"
         } ${hasError ? "ring-1 ring-destructive/40" : ""}`}
         style={{ paddingLeft: `${depth * 20 + 8}px` }}
       >
