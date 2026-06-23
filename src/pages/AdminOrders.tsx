@@ -632,6 +632,21 @@ export default function AdminOrders() {
           )}
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete order {deleteId ? (orders.find((o) => o.id === deleteId) ? refLabel(orders.find((o) => o.id === deleteId)!) : "") : ""}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the order and all its line items. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doDeleteOrder} className="bg-destructive hover:bg-destructive/90 text-white">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
