@@ -296,12 +296,20 @@ export function validate(tree: TreeData): ValidationIssue[] {
 
   let hasCyl = false;
   const walk = (n: TNode) => {
-    // duplicate sibling labels
-    const seen = new Map<string, number>();
-    n.children.forEach((c) => seen.set(c.label.trim().toLowerCase(), (seen.get(c.label.trim().toLowerCase()) ?? 0) + 1));
+    // duplicate sibling labels — report each duplicated label group only once,
+    // attached to the first occurrence under this parent.
+    const groups = new Map<string, TNode[]>();
     n.children.forEach((c) => {
-      if ((seen.get(c.label.trim().toLowerCase()) ?? 0) > 1) {
-        out.push({ level: "error", nodeId: c.id, message: `Duplicate label "${c.label}" under "${n.label}"` });
+      const key = c.label.trim().toLowerCase();
+      if (!key) return;
+      const arr = groups.get(key) ?? [];
+      arr.push(c);
+      groups.set(key, arr);
+    });
+    groups.forEach((siblings) => {
+      if (siblings.length > 1) {
+        const first = siblings[0];
+        out.push({ level: "error", nodeId: first.id, message: `Duplicate label "${first.label}" under "${n.label}" (${siblings.length} occurrences)` });
       }
     });
 
