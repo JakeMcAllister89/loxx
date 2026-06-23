@@ -331,8 +331,9 @@ export default function AdminOrders() {
                 <TableHead>Ref</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Company</TableHead>
+                <TableHead>Payment</TableHead>
                 <TableHead>System</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead>Ordered</TableHead>
                 <TableHead>Items</TableHead>
                 <TableHead>Revenue</TableHead>
                 <TableHead>Cost</TableHead>
