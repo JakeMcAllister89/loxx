@@ -73,6 +73,18 @@ export default function Systems() {
 
   const doDelete = async () => {
     if (!deleteOf) return;
+    const { data: linkedOrders } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("system_id", deleteOf.id)
+      .limit(1);
+
+    if (linkedOrders && linkedOrders.length > 0) {
+      toast.error("This system has been ordered and cannot be deleted.");
+      setDeleteOf(null);
+      return;
+    }
+
     await supabase.from("key_systems").delete().eq("id", deleteOf.id);
     setDeleteOf(null);
     toast.success("System deleted");
