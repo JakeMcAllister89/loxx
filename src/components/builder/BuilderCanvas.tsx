@@ -4,6 +4,7 @@ import {
   useReactFlow, Node, Edge, useNodesState, useEdgesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { Maximize2 } from "lucide-react";
 import { TNode, TreeData, NodeType, countDoors, validChildTypes } from "@/lib/keytree";
 import { CanvasNode, NODE_WIDTH, NODE_HEIGHT } from "./CanvasNode";
 
