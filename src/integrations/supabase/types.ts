@@ -359,6 +359,8 @@ export type Database = {
           delivery_address: Json | null
           id: string
           notes: string | null
+          paid_at: string | null
+          payment_status: string
           po_number: string | null
           po_sent_at: string | null
           po_sent_to: string | null
@@ -382,6 +384,8 @@ export type Database = {
           delivery_address?: Json | null
           id?: string
           notes?: string | null
+          paid_at?: string | null
+          payment_status?: string
           po_number?: string | null
           po_sent_at?: string | null
           po_sent_to?: string | null
@@ -405,6 +409,8 @@ export type Database = {
           delivery_address?: Json | null
           id?: string
           notes?: string | null
+          paid_at?: string | null
+          payment_status?: string
           po_number?: string | null
           po_sent_at?: string | null
           po_sent_to?: string | null
