@@ -263,8 +263,6 @@ export default function AdminOrders() {
 
   const doDeleteOrder = async () => {
     if (!deleteId) return;
-    const ref = orders.find((o) => o.id === deleteId);
-    const refLbl = ref ? refLabel(ref) : deleteId.slice(0, 8).toUpperCase();
     const { error } = await supabase.from("orders").delete().eq("id", deleteId);
     if (error) {
       toast.error(error.message);
@@ -274,7 +272,6 @@ export default function AdminOrders() {
     setOpenId(null);
     toast.success("Order deleted");
     reload();
-    void refLbl;
   };
 
   return (
