@@ -79,18 +79,23 @@ Deno.serve(async (req) => {
       ? session.payment_intent
       : session.payment_intent?.id ?? null;
 
+    const updatePayload: Record<string, unknown> = {
+      status,
+      subtotal: subtotalPence / 100,
+      vat: taxPence / 100,
+      total: totalPence / 100,
+      customer_email: session.customer_details?.email ?? order.customer_email,
+      customer_name: shippingDetails?.name ?? order.customer_name,
+      delivery_address: address,
+      stripe_payment_intent: piId,
+    };
+    if (paid) {
+      updatePayload.payment_status = "paid";
+      updatePayload.paid_at = new Date().toISOString();
+    }
     await supabase
       .from("orders")
-      .update({
-        status,
-        subtotal: subtotalPence / 100,
-        vat: taxPence / 100,
-        total: totalPence / 100,
-        customer_email: session.customer_details?.email ?? order.customer_email,
-        customer_name: shippingDetails?.name ?? order.customer_name,
-        delivery_address: address,
-        stripe_payment_intent: piId,
-      })
+      .update(updatePayload)
       .eq("id", order.id);
 
     return new Response(

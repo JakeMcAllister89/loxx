@@ -35,6 +35,8 @@ interface OrderRow {
   system_id: string | null;
   delivery_address: any;
   notes: string | null;
+  payment_status: string;
+  paid_at: string | null;
 }
 interface ItemRow {
   id: string;
@@ -66,7 +68,14 @@ const statusLabel: Record<string, string> = {
   delivered: "delivered",
   cancelled: "cancelled",
 };
-const STATUS_OPTIONS = ["pending", "paid", "processing", "shipped", "delivered", "cancelled"];
+const STATUS_OPTIONS = ["processing", "shipped", "delivered", "cancelled"];
+
+const fmtPaidAt = (iso: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 const gbp = (n: number) => `£${n.toFixed(2)}`;
 
 interface SendProgress {
@@ -322,8 +331,9 @@ export default function AdminOrders() {
                 <TableHead>Ref</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Company</TableHead>
+                <TableHead>Payment</TableHead>
                 <TableHead>System</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead>Ordered</TableHead>
                 <TableHead>Items</TableHead>
                 <TableHead>Revenue</TableHead>
                 <TableHead>Cost</TableHead>
@@ -356,6 +366,16 @@ export default function AdminOrders() {
                     <TableCell className="font-mono text-amber-700">{refLabel(o)}</TableCell>
                     <TableCell>{o.customer_name ?? profileMap[o.user_id]?.name ?? "—"}</TableCell>
                     <TableCell>{o.company ?? profileMap[o.user_id]?.company ?? "—"}</TableCell>
+                    <TableCell className="text-xs">
+                      {o.payment_status === "paid" ? (
+                        <div className="flex flex-col gap-0.5">
+                          <Badge className="bg-green-100 text-green-800 border-green-300 w-fit">Paid ✓</Badge>
+                          <span className="text-[10px] text-muted-foreground font-mono">{fmtPaidAt(o.paid_at)}</span>
+                        </div>
+                      ) : (
+                        <Badge className="bg-amber-100 text-amber-800 border-amber-300">Unpaid</Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="text-xs">
                       {o.system_id ? (
                         <div>
