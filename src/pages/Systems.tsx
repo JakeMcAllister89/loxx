@@ -73,6 +73,18 @@ export default function Systems() {
 
   const doDelete = async () => {
     if (!deleteOf) return;
+    const { data: linkedOrders } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("system_id", deleteOf.id)
+      .limit(1);
+
+    if (linkedOrders && linkedOrders.length > 0) {
+      toast.error("This system has been ordered and cannot be deleted.");
+      setDeleteOf(null);
+      return;
+    }
+
     await supabase.from("key_systems").delete().eq("id", deleteOf.id);
     setDeleteOf(null);
     toast.success("System deleted");
@@ -157,12 +169,12 @@ export default function Systems() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this system?</AlertDialogTitle>
             <AlertDialogDescription>
-              "{deleteOf?.name}" will be permanently removed. This cannot be undone.
+              This will permanently delete "{deleteOf?.name}" including all nodes, cylinder assignments, and key specifications. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={doDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+            <AlertDialogAction onClick={doDelete} className="bg-destructive hover:bg-destructive/90 text-white">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

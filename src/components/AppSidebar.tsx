@@ -31,13 +31,29 @@ export function AppSidebar() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("key_systems")
-      .select("id,name,door_count")
-      .order("updated_at", { ascending: false })
-      .limit(6)
-      .then(({ data }) => setSystems(data ?? []));
-  }, [user, pathname]);
+
+    const fetchSystems = () => {
+      supabase
+        .from("key_systems")
+        .select("id,name,door_count")
+        .order("updated_at", { ascending: false })
+        .limit(6)
+        .then(({ data }) => setSystems(data ?? []));
+    };
+
+    fetchSystems();
+
+    const channel = supabase
+      .channel("sidebar-systems")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "key_systems", filter: `user_id=eq.${user.id}` },
+        () => fetchSystems()
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   const newSystem = async () => {
     if (!user || creating) return;

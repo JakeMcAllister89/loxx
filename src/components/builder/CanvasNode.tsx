@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useEffect } from "react";
+import { memo, useState, useRef } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { AlertCircle, Plus, Key, History, KeyRound } from "lucide-react";
 import { NodeType, TNode } from "@/lib/keytree";
@@ -64,14 +64,6 @@ function CanvasNodeImpl(props: NodeProps) {
   const [hovered, setHovered] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!popoverOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (popRef.current && !popRef.current.contains(e.target as Node)) setPopoverOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [popoverOpen]);
 
   const ringClass = highlight
     ? "ring-2 ring-[hsl(var(--node-cyl))]"
@@ -123,9 +115,10 @@ function CanvasNodeImpl(props: NodeProps) {
   const handlePlusClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const total = (addOptions?.length ?? 0) + (extraAddActions?.length ?? 0);
-    if (total === 0) return;
-    if (total === 1 && (addOptions?.length ?? 0) === 1) onAddChildType?.(addOptions![0]);
-    else setPopoverOpen((v) => !v);
+    if (total === 1 && (addOptions?.length ?? 0) === 1) {
+      onAddChildType?.(addOptions![0]);
+      setPopoverOpen(false);
+    }
   };
 
   const cardWidth = isCyl ? 160 : 180;
@@ -149,7 +142,10 @@ function CanvasNodeImpl(props: NodeProps) {
         width: cardWidth,
         borderLeft: `3px solid ${isDecommissioned ? "hsl(var(--muted-foreground))" : meta.border}`,
         boxShadow: hovered || selected ? "0 4px 14px rgba(0,0,0,0.10)" : "0 1px 2px rgba(0,0,0,0.04)",
-        background: isDecommissioned ? undefined : hovered ? `hsl(${meta.tintHsl} / 0.03)` : undefined,
+        background: isDecommissioned ? undefined
+          : selected ? `hsl(${meta.tintHsl} / 0.18)`
+          : hovered ? `hsl(${meta.tintHsl} / 0.10)`
+          : undefined,
       }}
     >
       {node.type !== "GMK" && <Handle type="target" position={Position.Top} className="!bg-border !w-2 !h-2" />}
@@ -263,7 +259,12 @@ function CanvasNodeImpl(props: NodeProps) {
       </div>
 
       {canAdd && (
-        <div ref={popRef} className="absolute -bottom-3 left-1/2 -translate-x-1/2 nodrag group/add">
+        <div
+          ref={popRef}
+          onMouseEnter={() => setPopoverOpen(true)}
+          onMouseLeave={() => setPopoverOpen(false)}
+          className="absolute -bottom-3 left-1/2 -translate-x-1/2 nodrag group/add"
+        >
           <button
             onClick={handlePlusClick}
             className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90"
