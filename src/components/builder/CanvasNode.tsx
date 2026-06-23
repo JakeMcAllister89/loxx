@@ -263,15 +263,19 @@ function CanvasNodeImpl(props: NodeProps) {
       </div>
 
       {canAdd && (
-        <div ref={popRef} className="absolute -bottom-3 left-1/2 -translate-x-1/2 nodrag">
+        <div ref={popRef} className="absolute -bottom-3 left-1/2 -translate-x-1/2 nodrag group/add">
           <button
             onClick={handlePlusClick}
-            className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-opacity"
-            title="Add child"
-            style={{ opacity: selected || popoverOpen || hovered ? 1 : 0 }}
+            className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90"
+            aria-label="Add child"
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
+          {!popoverOpen && (
+            <div className="pointer-events-none absolute top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 opacity-0 group-hover/add:opacity-100 transition-opacity shadow-md">
+              Add child
+            </div>
+          )}
           {popoverOpen && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-10">
               {addOptions?.map((t) => (
