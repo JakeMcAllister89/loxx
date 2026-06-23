@@ -68,7 +68,14 @@ const statusLabel: Record<string, string> = {
   delivered: "delivered",
   cancelled: "cancelled",
 };
-const STATUS_OPTIONS = ["pending", "paid", "processing", "shipped", "delivered", "cancelled"];
+const STATUS_OPTIONS = ["processing", "shipped", "delivered", "cancelled"];
+
+const fmtPaidAt = (iso: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 const gbp = (n: number) => `£${n.toFixed(2)}`;
 
 interface SendProgress {
