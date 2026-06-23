@@ -11,10 +11,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { presetRange, RangePreset } from "@/lib/dateRanges";
 import { toast } from "sonner";
-import { Send, Download, X, ExternalLink, Loader2, Check } from "lucide-react";
+import { Send, Download, X, ExternalLink, Loader2, Check, Trash2 } from "lucide-react";
 
 interface OrderRow {
   id: string;
@@ -50,11 +51,22 @@ interface ItemRow {
 }
 
 const statusColor: Record<string, string> = {
-  paid: "bg-amber-100 text-amber-800",
-  processing: "bg-blue-100 text-blue-800",
-  shipped: "bg-green-100 text-green-800",
-  delivered: "bg-green-200 text-green-900",
+  pending: "bg-amber-100 text-amber-800 border-amber-300",
+  paid: "bg-blue-100 text-blue-800 border-blue-300",
+  processing: "bg-indigo-100 text-indigo-800 border-indigo-300",
+  shipped: "bg-teal-100 text-teal-800 border-teal-300",
+  delivered: "bg-green-100 text-green-800 border-green-300",
+  cancelled: "bg-red-100 text-red-800 border-red-300",
 };
+const statusLabel: Record<string, string> = {
+  pending: "pending",
+  paid: "Paid ✓",
+  processing: "processing",
+  shipped: "shipped",
+  delivered: "delivered",
+  cancelled: "cancelled",
+};
+const STATUS_OPTIONS = ["pending", "paid", "processing", "shipped", "delivered", "cancelled"];
 const gbp = (n: number) => `£${n.toFixed(2)}`;
 
 interface SendProgress {
@@ -87,6 +99,7 @@ export default function AdminOrders() {
   const [progressOpen, setProgressOpen] = useState(false);
   const [progress, setProgress] = useState<SendProgress[]>([]);
   const [singleSending, setSingleSending] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const reload = async () => {
     let q = supabase
@@ -248,6 +261,19 @@ export default function AdminOrders() {
     reload();
   };
 
+  const doDeleteOrder = async () => {
+    if (!deleteId) return;
+    const { error } = await supabase.from("orders").delete().eq("id", deleteId);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setDeleteId(null);
+    setOpenId(null);
+    toast.success("Order deleted");
+    reload();
+  };
+
   return (
     <DashboardLayout>
       <div className="p-8 max-w-[1400px]">
@@ -263,10 +289,12 @@ export default function AdminOrders() {
             <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
               <SelectItem value="processing">Processing</SelectItem>
               <SelectItem value="shipped">Shipped</SelectItem>
               <SelectItem value="delivered">Delivered</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
           <Input placeholder="Search order ref, customer, company…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
@@ -342,18 +370,39 @@ export default function AdminOrders() {
                     <TableCell className="text-muted-foreground">{gbp(cost)}</TableCell>
                     <TableCell className="text-green-600 font-bold">{gbp(profit)}</TableCell>
                     <TableCell className={`font-semibold ${marginCls}`}>{margin.toFixed(1)}%</TableCell>
-                    <TableCell><Badge className={statusColor[o.status] ?? ""}>{o.status}</Badge></TableCell>
+                    <TableCell>
+                      <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
+                        <SelectTrigger className={`h-7 text-xs px-2 py-0 w-auto min-w-[100px] border ${statusColor[o.status] ?? ""}`}>
+                          <SelectValue>{statusLabel[o.status] ?? o.status}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STATUS_OPTIONS.map((s) => (
+                            <SelectItem key={s} value={s}>{statusLabel[s] ?? s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell className="font-mono text-xs text-amber-700">{o.po_number ?? "—"}</TableCell>
                     <TableCell className="flex gap-1">
                       <Button size="sm" variant="outline" onClick={() => setOpenId(o.id)}>View</Button>
                       {o.po_number ? (
-                        <Badge variant="outline" className="bg-muted text-muted-foreground text-[10px]">
-                          Sent {o.po_sent_at ? new Date(o.po_sent_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : ""}
-                        </Badge>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="outline" className="bg-muted text-muted-foreground text-[10px]">
+                              Sent {o.po_sent_at ? new Date(o.po_sent_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : ""}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">PO already sent — click View to see details</TooltipContent>
+                        </Tooltip>
                       ) : (
-                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700" disabled={sending} onClick={() => sendSingle(o.id)}>
-                          {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="sm" className="bg-amber-600 hover:bg-amber-700" disabled={sending} onClick={() => sendSingle(o.id)}>
+                              {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left">Send purchase order to supplier</TooltipContent>
+                        </Tooltip>
                       )}
                     </TableCell>
                   </TableRow>
@@ -567,16 +616,34 @@ export default function AdminOrders() {
                   </div>
                 </Block>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {open.status === "paid" && <Button size="sm" variant="outline" onClick={() => updateStatus(open.id, "processing")}>Mark processing</Button>}
                   {open.status !== "shipped" && open.status !== "delivered" && <Button size="sm" variant="outline" onClick={() => updateStatus(open.id, "shipped")}>Mark shipped</Button>}
                   {open.status !== "delivered" && <Button size="sm" variant="outline" onClick={() => updateStatus(open.id, "delivered")}>Mark delivered</Button>}
+                  <Button size="sm" variant="outline" className="ml-auto text-destructive border-destructive/40 hover:bg-destructive/10" onClick={() => setDeleteId(open.id)}>
+                    <Trash2 className="h-3.5 w-3.5" /> Delete order
+                  </Button>
                 </div>
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete order {deleteId ? (orders.find((o) => o.id === deleteId) ? refLabel(orders.find((o) => o.id === deleteId)!) : "") : ""}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the order and all its line items. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doDeleteOrder} className="bg-destructive hover:bg-destructive/90 text-white">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

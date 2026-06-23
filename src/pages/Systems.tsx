@@ -73,15 +73,22 @@ export default function Systems() {
 
   const doDelete = async () => {
     if (!deleteOf) return;
-    const { data: linkedOrders } = await supabase
+
+    // Block deletion if this system has any linked orders
+    const { data: linkedOrders, error: checkError } = await supabase
       .from("orders")
       .select("id")
       .eq("system_id", deleteOf.id)
       .limit(1);
 
+    if (checkError) {
+      toast.error("Could not verify order history. Please try again.");
+      return;
+    }
+
     if (linkedOrders && linkedOrders.length > 0) {
-      toast.error("This system has been ordered and cannot be deleted.");
       setDeleteOf(null);
+      toast.error("This system has been ordered and cannot be deleted. Order records must be retained.");
       return;
     }
 

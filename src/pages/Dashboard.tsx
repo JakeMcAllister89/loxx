@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useIsAdmin } from "@/lib/auth";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, Copy, ExternalLink, Upload, Shield, ArrowRight, Loader2 } from "lucide-react";
+import { Plus, ExternalLink, Upload, Shield, ArrowRight, Loader2 } from "lucide-react";
 import { logAction } from "@/lib/audit";
 import { createSystem } from "@/lib/createSystem";
 
@@ -66,19 +66,8 @@ export default function Dashboard() {
   };
 
 
-  const dup = async (s: Sys) => {
-    if (!user) return;
-    const { data: src } = await supabase.from("key_systems").select("*").eq("id", s.id).single();
-    if (!src) return;
-    const ref = `SYS-${Math.floor(1000 + Math.random() * 9000)}`;
-    const { data } = await supabase.from("key_systems").insert({
-      user_id: user.id, name: `Copy of ${src.name}`, reference: ref, tree_data: src.tree_data, door_count: src.door_count,
-    }).select("id,name").single();
-    if (data) {
-      logAction({ system_id: data.id, action: "system_created", node_label: data.name, metadata: { source: "duplicate", from: s.id } });
-      navigate(`/builder/${data.id}`);
-    }
-  };
+
+
 
   const stats = [
     { label: "Total doors", value: totalCyl },
@@ -148,7 +137,6 @@ export default function Dashboard() {
                     <div className="text-xs text-muted-foreground mt-1">Updated {new Date(s.updated_at).toLocaleDateString("en-GB")}</div>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => dup(s)}><Copy className="h-3.5 w-3.5" /></Button>
                     <Button size="sm" asChild className="bg-primary hover:bg-primary/90"><Link to={`/builder/${s.id}`}>Open <ExternalLink className="h-3.5 w-3.5" /></Link></Button>
                   </div>
                 </div>

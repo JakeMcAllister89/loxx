@@ -32,10 +32,12 @@ interface ItemRow {
 }
 
 const statusColor: Record<string, string> = {
-  paid: "bg-accent-light text-primary",
-  processing: "bg-blue-100 text-info",
-  shipped: "bg-green-100 text-success",
-  delivered: "bg-green-200 text-success",
+  pending: "bg-amber-100 text-amber-800 border-amber-300",
+  paid: "bg-blue-100 text-blue-800 border-blue-300",
+  processing: "bg-indigo-100 text-indigo-800 border-indigo-300",
+  shipped: "bg-teal-100 text-teal-800 border-teal-300",
+  delivered: "bg-green-100 text-green-800 border-green-300",
+  cancelled: "bg-red-100 text-red-800 border-red-300",
 };
 
 const gbp = (n: number) => `£${n.toFixed(2)}`;
@@ -130,17 +132,23 @@ export default function AdminDashboard() {
     })();
   }, [from, to]);
 
+  const activeOrders = useMemo(
+    () => orders.filter((o) => ["paid", "processing", "shipped", "delivered"].includes(o.status)),
+    [orders],
+  );
+
   const stats = useMemo(() => {
-    const revenue = orders.reduce((s, o) => s + Number(o.total), 0);
-    const cost = items.reduce((s, i) => s + Number(i.quantity) * (costMap[i.product_code ?? ""] ?? 0), 0);
+    const activeItems = items.filter((i) => activeOrders.some((o) => o.id === i.order_id));
+    const revenue = activeOrders.reduce((s, o) => s + Number(o.total), 0);
+    const cost = activeItems.reduce((s, i) => s + Number(i.quantity) * (costMap[i.product_code ?? ""] ?? 0), 0);
     const profit = revenue - cost;
-    const aov = orders.length ? revenue / orders.length : 0;
-    const cylQty = items.filter((i) => i.item_type === "cylinder").reduce((s, i) => s + Number(i.quantity), 0);
-    const keyQty = items.filter((i) => i.item_type === "key").reduce((s, i) => s + Number(i.quantity), 0);
-    const prevRev = prevOrders.reduce((s, o) => s + Number(o.total), 0);
+    const aov = activeOrders.length ? revenue / activeOrders.length : 0;
+    const cylQty = activeItems.filter((i) => i.item_type === "cylinder").reduce((s, i) => s + Number(i.quantity), 0);
+    const keyQty = activeItems.filter((i) => i.item_type === "key").reduce((s, i) => s + Number(i.quantity), 0);
+    const prevRev = prevOrders.filter((o) => ["paid", "processing", "shipped", "delivered"].includes(o.status)).reduce((s, o) => s + Number(o.total), 0);
     const revChange = prevRev > 0 ? ((revenue - prevRev) / prevRev) * 100 : null;
     return { revenue, cost, profit, aov, cylQty, keyQty, revChange };
-  }, [orders, items, costMap, prevOrders]);
+  }, [activeOrders, items, costMap, prevOrders]);
 
   const actionOrders = orders.filter((o) => o.status === "paid" && !o.po_number);
 
@@ -159,7 +167,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard label="Orders" value={orders.length} sub={`${gbp(stats.revenue)} total`} />
+          <StatCard label="Orders" value={activeOrders.length} sub={`${gbp(stats.revenue)} total`} />
           <StatCard
             label="Revenue"
             value={gbp(stats.revenue)}
