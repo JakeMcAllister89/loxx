@@ -744,6 +744,27 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const confirmedCount = allCyls.filter((c) => !!c.cylinder_type).length;
   const unassignedIds = useMemo(() => new Set(allCyls.filter((c) => !c.cylinder_type).map((c) => c.id)), [allCyls]);
 
+  // Build filtered view-tree for the canvas: hide decommissioned by default
+  const decommParents = useMemo(() => parentsWithDecommissionedChildren(tree.root), [tree]);
+  const hasAnyDecomm = decommParents.size > 0;
+  const viewTree: TreeData = useMemo(() => ({
+    ...tree,
+    root: filterDecommissioned(tree.root, { showAll: showAllDecomm, revealParentIds: revealedDecomm }),
+  }), [tree, showAllDecomm, revealedDecomm]);
+
+  const toggleRevealParent = useCallback((id: string) => {
+    setRevealedDecomm((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }, []);
+
+  const getExtraAddActions = useCallback((n: TNode) => {
+    if (!isFulfilled) return [];
+    return [{
+      id: "order-additional-keys",
+      label: "Order additional keys",
+      onClick: () => openAddKeysFlow(n.id),
+    }];
+  }, [isFulfilled, openAddKeysFlow]);
+
   if (loading) {
     return <div className="h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   }
