@@ -1593,7 +1593,7 @@ function Legend({ type }: { type: NodeType }) {
 
 function DetailPanel({
   node, parent, trail, products, onPatch, addOptions, onAddChildType, onDelete, isRoot, onClose,
-  isFulfilled, onReplace, readOnly = false,
+  isFulfilled, onReplace, onCopySpec, readOnly = false,
 }: {
   node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
@@ -1604,6 +1604,7 @@ function DetailPanel({
   onClose: () => void;
   isFulfilled: boolean;
   onReplace: () => void;
+  onCopySpec?: () => void;
   readOnly?: boolean;
 }) {
   const meta = TYPE_META[node.type];
