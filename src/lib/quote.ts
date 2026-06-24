@@ -75,14 +75,14 @@ export function treeToQuoteItems(
 }
 
 export function stashQuoteDraft(d: QuoteDraftContext) {
-  try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(d)); } catch { /* */ }
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(d)); } catch { /* */ }
 }
 
 export function popQuoteDraft(): QuoteDraftContext | null {
   try {
-    const s = sessionStorage.getItem(DRAFT_KEY);
+    const s = localStorage.getItem(DRAFT_KEY);
     if (!s) return null;
-    sessionStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(DRAFT_KEY);
     return JSON.parse(s);
   } catch { return null; }
 }
@@ -90,7 +90,7 @@ export function popQuoteDraft(): QuoteDraftContext | null {
 /** Read the draft without consuming it. */
 export function peekQuoteDraft(): QuoteDraftContext | null {
   try {
-    const s = sessionStorage.getItem(DRAFT_KEY);
+    const s = localStorage.getItem(DRAFT_KEY);
     if (!s) return null;
     return JSON.parse(s);
   } catch { return null; }
@@ -98,7 +98,7 @@ export function peekQuoteDraft(): QuoteDraftContext | null {
 
 /** Explicitly remove the draft once it has been loaded into state. */
 export function clearQuoteDraft() {
-  try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* */ }
+  try { localStorage.removeItem(DRAFT_KEY); } catch { /* */ }
 }
 
 export function totals(items: CartLine[]) {
