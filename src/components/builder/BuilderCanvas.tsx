@@ -31,6 +31,8 @@ interface Props {
   onToggleReveal?: (parentId: string) => void;
   /** Returns extra non-type actions to append to a node's +-popover. */
   getExtraAddActions?: (node: TNode) => { id: string; label: string; onClick: () => void }[];
+  /** When true: disable add popovers / extra actions (view-only mode). */
+  readOnly?: boolean;
 }
 
 const nodeTypes = { keynode: CanvasNode };
