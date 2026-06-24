@@ -190,6 +190,39 @@ Deno.serve(async (req) => {
       return header + dataRows;
     }).join("");
 
+    const keyItems = (items ?? []).filter((i: any) => i.item_type === "key");
+    const masterKeyItems = keyItems.filter((i: any) => !i.differ_ref);
+    const extraKeyItems  = keyItems.filter((i: any) => !!i.differ_ref);
+
+    const masterKeyRows = masterKeyItems.map((i: any) => {
+      const total = Number(i.unit_price ?? 0) * Number(i.quantity);
+      return `<tr>
+        <td style="color:#64748b">—</td>
+        <td colspan="4" style="font-weight:500">${esc(i.key_reference ?? i.room_label ?? "—")}</td>
+        <td colspan="4" style="color:#64748b;font-size:11px">Master / sub-master key</td>
+        <td style="text-align:right">${i.quantity}</td>
+        <td style="text-align:right;color:#64748b">—</td>
+        <td style="text-align:right;color:#64748b">—</td>
+        <td style="text-align:right">${fmt(Number(i.unit_price ?? 0))}</td>
+        <td style="text-align:right">${fmt(total)}</td>
+      </tr>`;
+    }).join("");
+
+    const extraKeyRows = extraKeyItems.map((i: any) => {
+      const total = Number(i.unit_price ?? 0) * Number(i.quantity);
+      return `<tr>
+        <td style="color:#b45309;font-weight:500">${esc(i.differ_ref ?? "—")}</td>
+        <td colspan="4">${esc(i.key_reference ?? i.room_label ?? "—")}</td>
+        <td colspan="4" style="color:#64748b;font-size:11px">Additional differ key</td>
+        <td style="text-align:right">${i.quantity}</td>
+        <td style="text-align:right;color:#64748b">—</td>
+        <td style="text-align:right;color:#64748b">—</td>
+        <td style="text-align:right">${fmt(Number(i.unit_price ?? 0))}</td>
+        <td style="text-align:right">${fmt(total)}</td>
+      </tr>`;
+    }).join("");
+
+
 
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(displayPo)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
