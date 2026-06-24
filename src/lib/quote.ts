@@ -20,7 +20,7 @@ export function treeToQuoteItems(
 ): CartLine[] {
   const productByCode = new Map(products.map((p) => [p.code, p]));
   const out: CartLine[] = [];
-  const walk = (n: TNode) => {
+  const walk = (n: TNode, trail: TNode[]) => {
     if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
       normaliseKeys(n).forEach((k) => {
         if (k.qty > 0) {
@@ -30,6 +30,7 @@ export function treeToQuoteItems(
             room_label: n.location || n.label,
             quantity: k.qty,
             unit_price: 12,
+            location: n.type,
             ...sys,
           });
         }
@@ -40,6 +41,15 @@ export function treeToQuoteItems(
       const unit = Number(p?.price_gbp ?? 0);
       const qty = n.quantity ?? 1;
       const differRef = `D${String(n.differ ?? 0).padStart(3, "0")}`;
+      const mkNode  = trail.find(t => t.type === "MK");
+      const smkNode = trail.find(t => t.type === "SMK");
+      const hierarchyRefs: string[] = [
+        ...(mkNode  ? [mkNode.label]  : []),
+        ...(smkNode ? [smkNode.label] : []),
+      ];
+      const zoneNode = smkNode ?? mkNode;
+      const zoneLabel = zoneNode ? (zoneNode.location?.trim() || zoneNode.label) : undefined;
+      const zoneRef   = zoneNode?.label;
       out.push({
         kind: "cylinder",
         product_code: n.cylinder_type,
@@ -53,6 +63,8 @@ export function treeToQuoteItems(
         differ_ref: differRef,
         quantity: qty,
         unit_price: unit,
+        hierarchy_refs: hierarchyRefs,
+        location: zoneLabel,
         ...sys,
       });
       const extra = n.extra_keys ?? 0;
@@ -64,13 +76,15 @@ export function treeToQuoteItems(
           differ_ref: differRef,
           quantity: extra,
           unit_price: 12,
+          location: "extra",
+          hierarchy_refs: zoneRef ? [zoneRef] : [],
           ...sys,
         });
       }
     }
-    n.children.forEach(walk);
+    n.children.forEach(c => walk(c, [...trail, n]));
   };
-  if (tree.root) walk(tree.root);
+  if (tree.root) walk(tree.root, []);
   return out;
 }
 

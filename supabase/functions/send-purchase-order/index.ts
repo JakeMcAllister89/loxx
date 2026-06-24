@@ -98,10 +98,15 @@ Deno.serve(async (req) => {
 
     // System reference
     let systemRef = "—", systemName = "";
+    let systemTreeRoot: any = null;
     if (order.system_id) {
       const { data: sys } = await supabase
-        .from("key_systems").select("name,reference").eq("id", order.system_id).maybeSingle();
-      if (sys) { systemRef = sys.reference ?? "—"; systemName = sys.name ?? ""; }
+        .from("key_systems").select("name,reference,tree_data").eq("id", order.system_id).maybeSingle();
+      if (sys) {
+        systemRef = sys.reference ?? "—";
+        systemName = sys.name ?? "";
+        systemTreeRoot = (sys as any).tree_data?.root ?? null;
+      }
     }
 
     // Assign PO number if missing
@@ -114,7 +119,7 @@ Deno.serve(async (req) => {
     const displayPo = poNumber ?? "(preview)";
 
     // Build hierarchy map from tree snapshot and extra keys map from line items
-    const hierarchyMap = buildDifferHierarchyMap((order as any).tree_snapshot?.root ?? null);
+    const hierarchyMap = buildDifferHierarchyMap(systemTreeRoot);
     const extraKeysMap = buildDifferExtraKeysMap(items ?? []);
 
     const combinedSubtotal = (items ?? [])
@@ -281,6 +286,16 @@ ${S.po_notes ? `<div class="block" style="margin-top:12px"><div class="label">No
   LOXX — Master key systems made simple · myloxx.co.uk
 </div>
 
+<script>
+  window.onload = function() {
+    setTimeout(function() { window.print(); }, 800);
+  };
+</script>
+<div class="noprint" style="position:fixed;bottom:24px;right:24px;z-index:999">
+  <button onclick="window.print()" style="padding:10px 20px;background:#b45309;color:#fff;border:0;border-radius:6px;cursor:pointer;font-size:13px;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.15)">
+    🖨 Print / Save as PDF
+  </button>
+</div>
 </body></html>`;
 
     if (downloadOnly) {

@@ -1115,7 +1115,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                   <tbody>
                     {keyRows.map((r, i) => (
                       <tr key={i} className="border-b">
-                        <td className="py-1 px-2 font-mono">{r.ref}</td>
+                        <td className="py-1 px-2 font-medium text-amber-700">{r.ref}</td>
                         <td className="py-1 px-2">{r.label}</td>
                         <td className="py-1 px-2">{r.type}</td>
                         <td className="py-1 px-2 text-right">{r.qty}</td>
@@ -1181,9 +1181,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
                           const extraKeys = c.extra_keys ?? 0;
                           return (
                             <tr key={c.id} className="border-b">
-                              <td className="py-1 px-2 font-mono">D{String(c.differ ?? 0).padStart(3, "0")}</td>
+                              <td className="py-1 px-2 font-medium text-amber-700">D{String(c.differ ?? 0).padStart(3, "0")}</td>
                               <td className="py-1 px-2">{c.label}</td>
-                              <td className="py-1 px-2 font-mono">{c.cylinder_type ?? "—"}</td>
+                              <td className="py-1 px-2 text-muted-foreground">{c.cylinder_type ?? "—"}</td>
                               <td className="py-1 px-2">{(prod as any)?.cylinder_profile ?? "—"}</td>
                               <td className="py-1 px-2">{c.finish ?? "—"}</td>
                               <td className="py-1 px-2">{c.size ?? "—"}</td>
