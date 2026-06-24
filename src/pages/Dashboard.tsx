@@ -93,7 +93,7 @@ export default function Dashboard() {
           {stats.map((s) => (
             <div key={s.label} className="rounded-[10px] border bg-card p-5 shadow-card">
               <div className="text-xs text-muted-foreground uppercase tracking-wide">{s.label}</div>
-              <div className="text-2xl font-semibold mt-2 font-mono">{s.value}</div>
+              <div className="text-2xl font-semibold mt-2">{s.value}</div>
             </div>
           ))}
         </div>
