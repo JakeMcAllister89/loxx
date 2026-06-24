@@ -1479,7 +1479,7 @@ function Legend({ type }: { type: NodeType }) {
 
 function DetailPanel({
   node, parent, trail, products, onPatch, addOptions, onAddChildType, onDelete, isRoot, onClose,
-  isFulfilled, onReplace,
+  isFulfilled, onReplace, readOnly = false,
 }: {
   node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
@@ -1490,6 +1490,7 @@ function DetailPanel({
   onClose: () => void;
   isFulfilled: boolean;
   onReplace: () => void;
+  readOnly?: boolean;
 }) {
   const meta = TYPE_META[node.type];
   const isCyl = node.type === "CYL";
