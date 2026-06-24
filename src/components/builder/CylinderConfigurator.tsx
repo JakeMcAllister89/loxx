@@ -215,7 +215,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
               <div className="text-sm font-semibold leading-tight">{selected.product_description ?? selected.name}</div>
               <div className="text-[11px] font-mono text-muted-foreground mt-0.5">{selected.code}</div>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                {selected.cylinder_profile && <Badge variant="secondary" className="text-[10px]">{selected.cylinder_profile} profile</Badge>}
+                {selected.cylinder_profile && <Badge variant="secondary" className="text-[10px]">{selected.cylinder_profile}</Badge>}
                 {selected.size && <Badge variant="secondary" className="text-[10px] font-mono">{selected.size}</Badge>}
               </div>
               <div className="text-lg font-bold text-[hsl(var(--node-cyl))] mt-1.5">£{Number(selected.price_gbp).toFixed(2)}</div>
