@@ -122,12 +122,16 @@ Deno.serve(async (req) => {
     const hierarchyMap = buildDifferHierarchyMap(systemTreeRoot);
     const extraKeysMap = buildDifferExtraKeysMap(items ?? []);
 
-    const combinedSubtotal = (items ?? [])
+    const cylSubtotal = (items ?? [])
       .filter((i: any) => i.item_type === "cylinder")
       .reduce((sum: number, i: any) => {
         const unitCost = Number(productMap[i.product_code]?.cost_price ?? 0);
         return sum + unitCost * Number(i.quantity);
       }, 0);
+    const keySubtotal = (items ?? [])
+      .filter((i: any) => i.item_type === "key")
+      .reduce((sum: number, i: any) => sum + Number(i.unit_price ?? 0) * Number(i.quantity), 0);
+    const combinedSubtotal = cylSubtotal + keySubtotal;
     const exVat = combinedSubtotal;
     const vatRate = Number(S.vat_rate ?? 20);
     const vat = +(exVat * vatRate / 100).toFixed(2);
