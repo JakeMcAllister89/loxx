@@ -1978,6 +1978,37 @@ function GuidePanel({ onClose }: { onClose: () => void }) {
         ))}
       </div>
 
+      <div className="my-5 border-t" />
+
+      <div className="space-y-3">
+        <div className="text-xs font-semibold flex items-center gap-1">
+          <span>🔑</span> How access works
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Every door has its own differ key — 
+          it only opens that one door. But every key above it in your tree can 
+          also open it.
+        </p>
+        <div className="space-y-2">
+          {[
+            { color: "hsl(var(--node-cyl))", label: "Differ key", desc: "Opens this door only" },
+            { color: "hsl(var(--node-smk))", label: "Sub-Master key", desc: "Opens all doors in its zone" },
+            { color: "hsl(var(--node-mk))",  label: "Master key",     desc: "Opens all doors in its section" },
+            { color: "hsl(var(--node-gmk))", label: "Grand Master key", desc: "Opens every door in the system" },
+          ].map(({ color, label, desc }) => (
+            <div key={label} className="flex items-center gap-2 text-[10px]">
+              <span className="h-2 w-2 rounded-full shrink-0" style={{ background: color }} />
+              <span className="font-medium text-foreground">{label}</span>
+              <span className="text-muted-foreground">— {desc}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-[11px] italic text-muted-foreground leading-relaxed">
+          Example: the cleaner holds a Sub-Master key for Ground Floor — 
+          they can open every ground floor door, but not the floors above.
+        </p>
+      </div>
+
       <div className="mt-5 rounded-md border border-amber-300 bg-amber-50 p-3">
         <p className="text-[11px] text-amber-900 leading-relaxed">
           Not sure where to start? Click the orange + button below any node on the canvas to add the next level down.
