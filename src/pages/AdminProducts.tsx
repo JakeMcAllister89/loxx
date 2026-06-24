@@ -123,7 +123,7 @@ export default function AdminProducts() {
                 <th className="px-3 py-2 w-14"></th>
                 {([
                   ["name","Name"],["code","Code"],["cylinder_type","Type"],["finish","Finish"],["size","Size"],
-                  ["cylinder_profile","Profile"],
+                  ["cylinder_profile","Lock function"],
                   ["cost_price","Cost"],["price_gbp","Sell"],
                 ] as [keyof AdminProduct, string][]).map(([k,l]) => (
                   <th key={k} className="px-3 py-2 text-left">
