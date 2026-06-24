@@ -80,13 +80,14 @@ export default function QuoteNew() {
         return;
       }
 
-      const draft = popQuoteDraft();
+      const draft = peekQuoteDraft();
       if (draft) {
         setItems(draft.items);
         setSystemId(draft.system_id);
         setSystemName(draft.system_name);
         setSystemRef(draft.system_reference);
         setTreeSnapshot(draft.tree_snapshot);
+        clearQuoteDraft();
       }
     })();
   }, [user, editingId]);
