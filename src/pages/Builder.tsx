@@ -839,6 +839,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <div className="flex-1" />
         <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import</Link></Button>
         <Button variant="outline" onClick={() => fitViewRef.current?.()}><Maximize2 className="h-4 w-4" /> Fit view</Button>
+        <Button variant="outline" size="sm" onClick={handleUndo} disabled={!canUndo} title="Undo last action (Ctrl+Z)">
+          <Undo2 className="h-4 w-4" />
+        </Button>
         <Button variant="outline" onClick={runValidate}><ShieldCheck className="h-4 w-4" /> Validate</Button>
         <Button variant="outline" onClick={() => setGuideOpen(v => !v)} className="gap-1.5">
           <BookOpen className="h-4 w-4" />
