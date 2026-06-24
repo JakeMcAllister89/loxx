@@ -180,7 +180,7 @@ export default function CartReview() {
               {meta.customerPoRef && (
                 <div className="pt-3 border-t">
                   <div className="text-xs text-muted-foreground">Your PO ref</div>
-                  <div className="text-sm font-mono">{meta.customerPoRef}</div>
+                  <div className="text-sm">{meta.customerPoRef}</div>
                 </div>
               )}
 
