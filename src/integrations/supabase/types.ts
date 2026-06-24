@@ -172,39 +172,53 @@ export type Database = {
       }
       key_systems: {
         Row: {
+          commission_pct: number | null
           created_at: string
           door_count: number
           id: string
           name: string
           next_differ: number
+          partner_id: string | null
           reference: string | null
           tree_data: Json
           updated_at: string
           user_id: string
         }
         Insert: {
+          commission_pct?: number | null
           created_at?: string
           door_count?: number
           id?: string
           name: string
           next_differ?: number
+          partner_id?: string | null
           reference?: string | null
           tree_data?: Json
           updated_at?: string
           user_id: string
         }
         Update: {
+          commission_pct?: number | null
           created_at?: string
           door_count?: number
           id?: string
           name?: string
           next_differ?: number
+          partner_id?: string | null
           reference?: string | null
           tree_data?: Json
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "key_systems_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       keys: {
         Row: {
@@ -301,6 +315,8 @@ export type Database = {
       }
       order_items: {
         Row: {
+          commission_amount: number | null
+          commission_pct: number | null
           cylinder_type: string | null
           differ_ref: string | null
           finish: string | null
@@ -314,6 +330,8 @@ export type Database = {
           unit_price: number
         }
         Insert: {
+          commission_amount?: number | null
+          commission_pct?: number | null
           cylinder_type?: string | null
           differ_ref?: string | null
           finish?: string | null
@@ -327,6 +345,8 @@ export type Database = {
           unit_price?: number
         }
         Update: {
+          commission_amount?: number | null
+          commission_pct?: number | null
           cylinder_type?: string | null
           differ_ref?: string | null
           finish?: string | null
@@ -434,6 +454,127 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      partner_logins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          last_login_at: string | null
+          partner_id: string
+          password_hash: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          last_login_at?: string | null
+          partner_id: string
+          password_hash: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          last_login_at?: string | null
+          partner_id?: string
+          password_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_logins_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_payments: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          partner_id: string
+          period_end: string
+          period_start: string
+          status: string
+          total_commission: number
+          total_revenue: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          partner_id: string
+          period_end: string
+          period_start: string
+          status?: string
+          total_commission?: number
+          total_revenue?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          partner_id?: string
+          period_end?: string
+          period_start?: string
+          status?: string
+          total_commission?: number
+          total_revenue?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_payments_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          company: string
+          created_at: string
+          default_commission_pct: number
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          partner_type: string
+          phone: string | null
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          default_commission_pct?: number
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          partner_type?: string
+          phone?: string | null
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          default_commission_pct?: number
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          partner_type?: string
+          phone?: string | null
+        }
+        Relationships: []
       }
       products: {
         Row: {
