@@ -1,4 +1,4 @@
-import { memo, useState, useRef } from "react";
+import { memo, useState, useRef, useEffect } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { AlertCircle, Plus, Key, History, KeyRound } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
