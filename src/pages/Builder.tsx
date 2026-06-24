@@ -373,6 +373,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   const handleAddChild = useCallback((parentId: string, childType?: NodeType) => {
     setTree((prev) => {
+      pushUndo(prev);
       const parent = findNode(prev.root, parentId);
       if (!parent) return prev;
       const valid = validChildTypes(parent.type);
