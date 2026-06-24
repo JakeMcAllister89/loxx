@@ -167,7 +167,7 @@ export default function CartReview() {
                   {meta.delivery.line1 && meta.delivery.contact_name && meta.delivery.contact_phone ? (
                     <>
                       <div className="text-foreground font-medium">{meta.delivery.contact_name}</div>
-                      <div className="font-mono text-xs">{meta.delivery.contact_phone}</div>
+                      <div className="text-xs">{meta.delivery.contact_phone}</div>
                       <div className="pt-1">{meta.delivery.line1}</div>
                       {meta.delivery.line2 && <div>{meta.delivery.line2}</div>}
                       <div>{[meta.delivery.city, meta.delivery.county].filter(Boolean).join(", ")}</div>
