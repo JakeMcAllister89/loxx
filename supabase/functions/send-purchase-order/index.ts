@@ -277,6 +277,10 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 
 ${S.po_notes ? `<div class="block" style="margin-top:12px"><div class="label">Notes</div><div>${esc(S.po_notes)}</div></div>` : ""}
 
+<div style="margin-top:32px;padding-top:12px;border-top:1px solid #e5e7eb;text-align:center;font-size:11px;color:#64748b">
+  LOXX — Master key systems made simple · myloxx.co.uk
+</div>
+
 </body></html>`;
 
     if (downloadOnly) {
