@@ -122,6 +122,7 @@ export function AppSidebar() {
             {[
               { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
               { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
+              { to: "/admin/partners", label: "Partners", icon: Users },
               { to: "/admin/products", label: "Product catalogue", icon: Package },
               { to: "/admin/settings", label: "Settings", icon: Settings },
             ].map((a) => (
