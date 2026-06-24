@@ -1769,7 +1769,7 @@ function DetailPanel({
           )}
           {!readOnly && !isRoot && (
             <Button variant="outline" onClick={onDelete} className="text-destructive hover:text-destructive">
-              <X className="h-4 w-4" /> Delete node
+              <X className="h-4 w-4" /> Remove from system
             </Button>
           )}
         </div>
