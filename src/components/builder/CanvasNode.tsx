@@ -67,19 +67,26 @@ function CanvasNodeImpl(props: NodeProps) {
 
   useEffect(() => {
     if (!popoverOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (popRef.current && !popRef.current.contains(e.target as Node)) {
-        setPopoverOpen(false);
-      }
-    };
+    let active = true;
+    let mouseHandler: ((e: MouseEvent) => void) | null = null;
     const keyHandler = (e: KeyboardEvent) => {
       if (e.key === "Escape") setPopoverOpen(false);
     };
-    document.addEventListener("mousedown", handler);
+    const t = setTimeout(() => {
+      if (!active) return;
+      mouseHandler = (e: MouseEvent) => {
+        if (popRef.current && !popRef.current.contains(e.target as Node)) {
+          setPopoverOpen(false);
+        }
+      };
+      document.addEventListener("mousedown", mouseHandler);
+    }, 0);
     document.addEventListener("keydown", keyHandler);
     return () => {
-      document.removeEventListener("mousedown", handler);
+      active = false;
+      clearTimeout(t);
       document.removeEventListener("keydown", keyHandler);
+      if (mouseHandler) document.removeEventListener("mousedown", mouseHandler);
     };
   }, [popoverOpen]);
 
@@ -309,7 +316,9 @@ function CanvasNodeImpl(props: NodeProps) {
           </button>
           {!popoverOpen && (
             <div className="pointer-events-none absolute top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 opacity-0 group-hover/add:opacity-100 transition-opacity shadow-md">
-              Add child
+              {(addOptions?.length ?? 0) + (extraAddActions?.length ?? 0) === 1 && addOptions?.length === 1
+                ? ADD_LABEL[addOptions[0]]
+                : "Add…"}
             </div>
           )}
           {popoverOpen && (
