@@ -314,6 +314,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
       const fulfilledStatuses = new Set(["delivered", "fulfilled", "shipped", "complete", "completed"]);
       setIsFulfilled((data ?? []).some((o: any) => fulfilledStatuses.has(String(o.status).toLowerCase())));
     });
+    supabase.from("partners").select("id, name, company, partner_type, default_commission_pct").eq("is_active", true).order("name")
+      .then(({ data }) => setPartners((data as any) ?? []));
   }, [systemId, navigate]);
 
   // Flush pending debounced audits when selectedId changes
