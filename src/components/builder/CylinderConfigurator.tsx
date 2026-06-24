@@ -4,6 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { colorForFinish, FINISH_BORDER } from "@/lib/finishes";
 
@@ -218,7 +225,22 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
 
       {/* Quantity */}
       <div>
-        <Label className="text-xs">Quantity at this door</Label>
+        <TooltipProvider>
+          <div className="flex items-center gap-1.5">
+            <Label className="text-xs">Quantity at this door</Label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="p-0.5 hover:bg-muted rounded-full">
+                  <Info className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[220px] text-xs">
+                Most doors need 1 cylinder. Set to 2 if the door has a lock on both sides 
+                (e.g. a double-cylinder or bathroom lockset).
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </TooltipProvider>
         <div className="flex items-center gap-2 mt-1.5">
           <Button size="sm" variant="outline" className="h-9 w-9 p-0" onClick={() => onPatch({ quantity: Math.max(1, (node.quantity ?? 1) - 1) })}>−</Button>
           <Input
@@ -234,7 +256,10 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
       {/* Additional keys */}
       <div className="pt-3 border-t">
         <Label className="text-xs">Additional keys</Label>
-        <p className="text-[11px] text-muted-foreground mt-0.5">2x differ keys are included as standard with each cylinder</p>
+        <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+          2 differ keys are included with each cylinder. Add extras here if more key-holders 
+          need access to just this door.
+        </p>
         <div className="mt-2">
           <Label htmlFor="extra-keys" className="text-[11px] text-muted-foreground">Extra keys required</Label>
           <Input
