@@ -1547,10 +1547,31 @@ function DetailPanel({
   const suggestions = isMk ? MK_SUGGESTIONS : isSmk ? SMK_SUGGESTIONS : [];
 
   const addButtonLabel = (t: NodeType) =>
-    t === "MK" ? "Add master key"
-      : t === "SMK" ? "Add sub-master"
-      : t === "CYL" ? "Add cylinder"
-      : "Add child";
+    t === "MK"  ? "+ Add a section (Master Key)"
+  : t === "SMK" ? "+ Add a zone (Sub-Master)"
+  : t === "CYL" ? "+ Add a door (Cylinder)"
+  : "+ Add child";
+
+  const NEXT_STEP: Record<NodeType, string> = {
+    GMK: "Add a Master Key for each building or major section of your site.",
+    MK:  "Add Sub-Masters for each floor or zone — or add Cylinders directly for simpler sites.",
+    SMK: "Add a Cylinder for each door this zone covers.",
+    CYL: "Give this door a name and choose a cylinder type from the options below.",
+  };
+  const showNextStepHint = isCyl ? !node.cylinder_type : node.children.length === 0;
+
+  // Build the access trail for CYL nodes (chain of keys that can open this door).
+  // trail includes the selected node itself, so slice it to ancestors only.
+  const ancestors = trail.slice(0, Math.max(0, trail.length - 1));
+  const accessTrail = isCyl
+    ? [
+        ...ancestors.map((t) => ({
+          node: t,
+          label: (t.type === "MK" || t.type === "SMK") && t.location?.trim() ? t.location.trim() : t.label,
+        })),
+        { node, label: node.label || "This door" },
+      ]
+    : [];
 
   return (
     <div className="p-5">
