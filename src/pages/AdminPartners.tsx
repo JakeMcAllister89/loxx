@@ -457,7 +457,7 @@ export default function AdminPartners() {
               <div>
                 <Label>Partner</Label>
                 <Select
-                  value={attrDrawer.partnerId || "__none__"}
+                  value={attrDrawer.partnerId || undefined}
                   onValueChange={(v) => {
                     if (v === "__remove__") {
                       setAttrDrawer((s) => ({ ...s, partnerId: "__remove__", pct: "" }));
