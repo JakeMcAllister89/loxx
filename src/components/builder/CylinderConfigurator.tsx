@@ -209,10 +209,10 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold leading-tight">{selected.product_description ?? selected.name}</div>
-              <div className="text-[11px] font-mono text-muted-foreground mt-0.5">{selected.code}</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5">{selected.code}</div>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 {selected.cylinder_profile && <Badge variant="secondary" className="text-[10px]">{selected.cylinder_profile}</Badge>}
-                {selected.size && <Badge variant="secondary" className="text-[10px] font-mono">{selected.size}</Badge>}
+                {selected.size && <Badge variant="secondary" className="text-[10px]">{selected.size}</Badge>}
               </div>
               <div className="text-lg font-bold text-[hsl(var(--node-cyl))] mt-1.5">£{Number(selected.price_gbp).toFixed(2)}</div>
             </div>
@@ -255,7 +255,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
                 <button
                   key={s}
                   onClick={() => setSize(s)}
-                  className={`px-3 py-1 rounded-full text-xs font-mono border transition-colors ${
+                  className={`px-3 py-1 rounded-full text-xs border transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-card text-foreground border-border hover:border-primary/50"
@@ -291,7 +291,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
             type="number" min={1} max={20}
             value={node.quantity ?? 1}
             onChange={(e) => onPatch({ quantity: Math.max(1, Math.min(20, Number(e.target.value) || 1)) })}
-            className="h-9 w-16 text-center font-mono"
+            className="h-9 w-16 text-center"
           />
           <Button size="sm" variant="outline" className="h-9 w-9 p-0" onClick={() => onPatch({ quantity: Math.min(20, (node.quantity ?? 1) + 1) })}>+</Button>
         </div>
@@ -311,11 +311,11 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
             type="number" min={0} max={50}
             value={node.extra_keys ?? 0}
             onChange={(e) => onPatch({ extra_keys: Math.max(0, Math.min(50, Number(e.target.value) || 0)) })}
-            className="h-9 w-24 font-mono mt-1"
+            className="h-9 w-24 mt-1"
           />
         </div>
         <p className="text-[11px] text-muted-foreground mt-2">
-          Total keys for this cylinder: <span className="font-mono font-semibold text-foreground">{2 + (node.extra_keys ?? 0)}</span>
+          Total keys for this cylinder: <span className="font-semibold text-foreground">{2 + (node.extra_keys ?? 0)}</span>
         </p>
       </div>
     </div>

@@ -8,7 +8,7 @@ import { createSystem } from "@/lib/createSystem";
 import { LoxxLogo } from "./LoxxLogo";
 import { Button } from "@/components/ui/button";
 
-interface NavItem { to: string; label: string; icon: any; builder?: boolean; basket?: boolean; hideForViewOnly?: boolean }
+interface NavItem { to: string; label: string; icon: any; builder?: boolean; basket?: boolean; hideForViewOnly?: boolean; quoteCount?: boolean }
 
 const nav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -16,7 +16,7 @@ const nav: NavItem[] = [
   { to: "/systems", label: "My Systems", icon: LayoutGrid },
   { to: "/builder", label: "System Builder", icon: Network, builder: true },
   { to: "/catalogue", label: "Product Catalogue", icon: Package, hideForViewOnly: true },
-  { to: "/quotes", label: "My Quotes", icon: FileText, hideForViewOnly: true },
+  { to: "/quotes", label: "My Quotes", icon: FileText, hideForViewOnly: true, quoteCount: true },
   { to: "/cart", label: "Basket", icon: ShoppingCart, basket: true, hideForViewOnly: true },
   { to: "/orders", label: "My Orders", icon: ClipboardList, hideForViewOnly: true },
   { to: "/account", label: "Account", icon: Settings },
@@ -30,6 +30,7 @@ export function AppSidebar() {
   const { items } = useCart();
   const basketCount = items.reduce((s, i) => s + (i.quantity ?? 0), 0);
   const [systems, setSystems] = useState<{ id: string; name: string; door_count: number }[]>([]);
+  const [quoteCount, setQuoteCount] = useState<number>(0);
   const [creating, setCreating] = useState(false);
 
   const isViewOnly = orgRole === "view_only";
@@ -49,6 +50,22 @@ export function AppSidebar() {
     const channel = supabase
       .channel("sidebar-systems")
       .on("postgres_changes", { event: "*", schema: "public", table: "key_systems" }, () => fetchSystems())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchQuotes = () => {
+      (supabase.from("quotes" as any) as any)
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .then(({ count }: { count: number | null }) => setQuoteCount(count ?? 0));
+    };
+    fetchQuotes();
+    const channel = supabase
+      .channel("sidebar-quotes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "quotes" }, fetchQuotes)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
@@ -84,6 +101,11 @@ export function AppSidebar() {
               {item.basket && basketCount > 0 && (
                 <span className="inline-flex items-center justify-center rounded-full text-white text-[11px] font-medium leading-none" style={{ background: "#d4820a", width: 18, height: 18 }}>
                   {basketCount > 99 ? "99+" : basketCount}
+                </span>
+              )}
+              {item.quoteCount && quoteCount > 0 && (
+                <span className="text-[11px] text-sidebar-foreground/50 font-medium">
+                  {quoteCount}
                 </span>
               )}
             </NavLink>

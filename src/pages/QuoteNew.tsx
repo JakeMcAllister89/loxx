@@ -267,9 +267,54 @@ export default function QuoteNew() {
               </div>
             </div>
 
-            <Button onClick={save} disabled={saving} className="w-full bg-primary hover:bg-primary/90 text-base h-12">
-              {saving ? "Saving…" : editingId ? "Update quote →" : "Generate quote →"}
-            </Button>
+            <div className="space-y-2">
+              <Button onClick={save} disabled={saving} className="w-full bg-primary hover:bg-primary/90 text-base h-12">
+                {saving ? "Saving…" : editingId ? "Update quote →" : "Generate quote →"}
+              </Button>
+              {!editingId && (
+                <Button
+                  variant="outline"
+                  disabled={saving}
+                  className="w-full"
+                  onClick={async () => {
+                    if (!user) return;
+                    if (items.length === 0) { toast.error("Add at least one item"); return; }
+                    setSaving(true);
+                    try {
+                      const { data: num } = await (supabase as any).rpc("assign_quote_number");
+                      const payload: any = {
+                        user_id: user.id,
+                        system_id: systemId,
+                        status: "draft",
+                        valid_until: validUntil || null,
+                        customer_name: customerName || null,
+                        customer_email: customerEmail || null,
+                        company: company || null,
+                        delivery_address: delivery,
+                        customer_po_ref: poRef || null,
+                        notes: notes || null,
+                        items,
+                        subtotal: t.subtotal,
+                        vat: t.vat,
+                        total: t.total,
+                        tree_snapshot: treeSnapshot,
+                        quote_number: num ?? null,
+                      };
+                      const { error } = await (supabase.from("quotes" as any) as any).insert(payload);
+                      if (error) throw error;
+                      toast.success("Quote saved as draft");
+                      navigate("/quotes");
+                    } catch (e: any) {
+                      toast.error(e?.message ?? "Failed to save draft");
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                >
+                  Save as draft
+                </Button>
+              )}
+            </div>
           </aside>
         </div>
         )}
