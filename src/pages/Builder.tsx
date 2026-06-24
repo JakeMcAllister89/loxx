@@ -1904,3 +1904,82 @@ function KeyManager({ node, onPatch }: { node: TNode; onPatch: (p: Partial<TNode
     </div>
   );
 }
+
+/* ------------------------- Beginner Guide Panel ------------------------- */
+
+function GuidePanel({ onClose }: { onClose: () => void }) {
+  const steps = [
+    {
+      step: "1",
+      color: "hsl(var(--node-gmk))",
+      title: "Grand Master Key",
+      desc: "The top-level key. One key that can open every single door in the system. Usually held by the building manager or security team.",
+      tip: "You only ever have one Grand Master Key per system.",
+    },
+    {
+      step: "2",
+      color: "hsl(var(--node-mk))",
+      title: "Master Keys",
+      desc: "Add one Master Key per building, wing, or major section. A Master Key opens all the doors within its section.",
+      tip: "Example: 'Main Building', 'Annexe', 'Warehouse'",
+    },
+    {
+      step: "3",
+      color: "hsl(var(--node-smk))",
+      title: "Sub-Master Keys",
+      desc: "Add one Sub-Master per floor or department within a section. Useful for large buildings with many areas.",
+      tip: "Example: 'Ground Floor', 'IT Department', 'Reception'",
+    },
+    {
+      step: "4",
+      color: "hsl(var(--node-cyl))",
+      title: "Cylinders (Doors)",
+      desc: "Each cylinder represents one physical door lock. Add a cylinder for every door that needs to be part of the system.",
+      tip: "Example: 'Server Room', 'Director's Office', 'Room 14'",
+    },
+  ];
+
+  return (
+    <aside className="w-72 shrink-0 border-r bg-card p-5 overflow-auto no-print">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold">How to build your system</h3>
+        <button
+          onClick={onClose}
+          className="text-muted-foreground hover:text-foreground"
+          aria-label="Close guide"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+        A master key system is like a family tree of keys. The key at the top opens everything.
+        Keys further down open fewer doors. Cylinders are the actual locks on the doors.
+      </p>
+
+      <div className="space-y-4">
+        {steps.map(({ step, color, title, desc, tip }) => (
+          <div key={step} className="flex items-start gap-3">
+            <div
+              className="h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-semibold text-white shrink-0"
+              style={{ background: color }}
+            >
+              {step}
+            </div>
+            <div className="flex-1">
+              <div className="text-xs font-semibold">{title}</div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{desc}</p>
+              <p className="text-[11px] italic text-muted-foreground mt-1">{tip}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5 rounded-md border border-amber-300 bg-amber-50 p-3">
+        <p className="text-[11px] text-amber-900 leading-relaxed">
+          Not sure where to start? Click the orange + button below any node on the canvas to add the next level down.
+        </p>
+      </div>
+    </aside>
+  );
+}
