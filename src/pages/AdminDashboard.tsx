@@ -210,7 +210,7 @@ export default function AdminDashboard() {
                   const qty = it.reduce((s, x) => s + Number(x.quantity), 0);
                   return (
                     <TableRow key={o.id}>
-                      <TableCell className="font-mono text-amber-700">{o.id.slice(0, 8).toUpperCase()}</TableCell>
+                      <TableCell className="text-sm text-amber-700">{o.id.slice(0, 8).toUpperCase()}</TableCell>
                       <TableCell>{o.customer_name ?? profileMap[o.user_id]?.name ?? "—"}</TableCell>
                       <TableCell>{o.company ?? profileMap[o.user_id]?.company ?? "—"}</TableCell>
                       <TableCell className="text-xs">{new Date(o.created_at).toLocaleDateString("en-GB")}</TableCell>
@@ -245,9 +245,9 @@ export default function AdminDashboard() {
             <TableBody>
               {recent.map((o) => (
                 <TableRow key={o.id}>
-                  <TableCell className="font-mono text-amber-700">{o.id.slice(0, 8).toUpperCase()}</TableCell>
+                  <TableCell className="text-sm text-amber-700">{o.id.slice(0, 8).toUpperCase()}</TableCell>
                   <TableCell>{o.customer_name ?? "—"}</TableCell>
-                  <TableCell className="text-xs font-mono">{o.system_id ? systemMap[o.system_id]?.reference ?? "—" : "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{o.system_id ? systemMap[o.system_id]?.reference ?? "—" : "—"}</TableCell>
                   <TableCell className="text-xs">{new Date(o.created_at).toLocaleDateString("en-GB")}</TableCell>
                   <TableCell className="font-semibold">{gbp(Number(o.total))}</TableCell>
                   <TableCell>
@@ -285,7 +285,7 @@ export default function AdminDashboard() {
                 {lowMargin.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell>{p.desc}</TableCell>
-                    <TableCell className="font-mono text-red-600 font-semibold">{p.margin.toFixed(1)}%</TableCell>
+                    <TableCell className="text-red-600 font-semibold">{p.margin.toFixed(1)}%</TableCell>
                     <TableCell><Link to="/admin/products" className="text-primary text-xs hover:underline">Edit pricing</Link></TableCell>
                   </TableRow>
                 ))}
@@ -302,7 +302,7 @@ function StatCard({ label, value, sub, extra }: { label: string; value: React.Re
   return (
     <div className="rounded-[10px] border bg-card p-5 shadow-card">
       <div className="text-xs text-muted-foreground uppercase tracking-wide">{label}</div>
-      <div className="text-2xl font-semibold mt-2 font-mono">{value}</div>
+      <div className="text-2xl font-semibold mt-2">{value}</div>
       {sub && <div className="text-xs text-muted-foreground mt-1">{sub}</div>}
       {extra && <div className="mt-1">{extra}</div>}
     </div>

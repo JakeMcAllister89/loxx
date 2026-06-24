@@ -202,8 +202,9 @@ function CanvasInner({
         className="!shadow-card !rounded-[10px] !border"
       />
       <MiniMap
-        pannable zoomable
-        className="!rounded-[10px] !border !shadow-card"
+        pannable
+        zoomable
+        className="!rounded-[10px] !border !shadow-card [&_.react-flow__minimap-zoom]:bg-background [&_.react-flow__minimap-zoom]:border [&_.react-flow__minimap-zoom]:rounded [&_.react-flow__minimap-zoom]:shadow-sm [&_.react-flow__minimap-zoom]:w-6 [&_.react-flow__minimap-zoom]:h-6 [&_.react-flow__minimap-zoom]:flex [&_.react-flow__minimap-zoom]:items-center [&_.react-flow__minimap-zoom]:justify-center [&_.react-flow__minimap-zoom]:text-foreground [&_.react-flow__minimap-zoom]:cursor-pointer [&_.react-flow__minimap-zoom:hover]:bg-muted"
         nodeColor={(n) => {
           const t = (n.data as any)?.node?.type as NodeType | undefined;
           if (!t) return "hsl(var(--border))";

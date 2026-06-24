@@ -656,8 +656,6 @@ function BuilderInner({ systemId }: { systemId: string }) {
     savedNameRef.current = name;
     logAction({ system_id: systemId, action: opts.auto ? "system_autosaved" : "system_saved", metadata: { door_count: doors } });
     dirtyRef.current = false;
-    undoStack.current = [];
-    setCanUndo(false);
     setSaveStatus("saved");
     setLastSavedAt(Date.now());
     if (!opts.auto) toast.success("System saved");
