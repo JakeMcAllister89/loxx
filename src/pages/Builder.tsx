@@ -1070,13 +1070,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
               trail={trail}
               products={products}
               onPatch={patchSelected}
-              addOptions={validChildTypes(selected.type)}
+              addOptions={readOnly ? [] : validChildTypes(selected.type)}
               onAddChildType={(t) => handleAddChild(selected.id, t)}
               onDelete={() => handleDelete(selected.id)}
               isRoot={tree.root?.id === selected.id}
               onClose={() => setSelectedId(null)}
               isFulfilled={isFulfilled}
               onReplace={() => openReplaceFlow(selected.id)}
+              readOnly={readOnly}
             />
           )}
         </aside>
