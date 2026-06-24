@@ -1843,7 +1843,7 @@ function DetailPanel({
                   <li key={c.id} className="flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full" style={{ background: TYPE_META[c.type].color }} />
                     <span className="truncate">{main}</span>
-                    {showRef && <span className="text-[11px] text-[hsl(var(--node-cyl))] font-mono">· {c.label}</span>}
+                    {showRef && <span className="text-[11px] text-[hsl(var(--node-cyl))]">· {c.label}</span>}
                   </li>
                 );
               })}
