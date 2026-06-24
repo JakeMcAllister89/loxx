@@ -1,0 +1,221 @@
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { LoxxLogo } from "@/components/LoxxLogo";
+import { LogOut, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+
+const STORAGE_KEY = "loxx_partner_session";
+const FN_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/partner-auth`;
+
+interface PartnerInfo { id: string; name: string; company: string; partner_type: string; }
+interface PortalData {
+  partner: PartnerInfo;
+  summary: { lifetimeRevenue: number; lifetimeCommission: number; systemsCount: number; pendingCommission: number };
+  quarterly: { key: string; period_start: string; period_end: string; revenue: number; commission: number; commission_pct: number; status: string }[];
+  systems: { id: string; name: string; reference: string | null; firstOrderDate: string | null; customerCompany: string | null; revenue: number; commission: number }[];
+}
+
+const gbp = (n: number) => `£${Number(n ?? 0).toFixed(2)}`;
+const fmtDate = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString("en-GB") : "—";
+const quarterLabel = (key: string) => {
+  const [y, q] = key.split("-");
+  return `${q} ${y}`;
+};
+
+export default function PartnerPortal() {
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
+  const [data, setData] = useState<PortalData | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const fetchData = async (tok: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(FN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "data", token: tok }),
+      });
+      const j = await res.json();
+      if (!res.ok) {
+        localStorage.removeItem(STORAGE_KEY);
+        setToken(null);
+        toast.error(j.error ?? "Session expired");
+        return;
+      }
+      setData(j);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { if (token) fetchData(token); }, [token]);
+
+  const login = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch(FN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "login", email, password }),
+      });
+      const j = await res.json();
+      if (!res.ok) { toast.error(j.error ?? "Login failed"); return; }
+      localStorage.setItem(STORAGE_KEY, j.token);
+      setToken(j.token);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setToken(null);
+    setData(null);
+  };
+
+  if (!token) {
+    return (
+      <div className="min-h-screen bg-[#f5f4f1] flex flex-col">
+        <header className="bg-[#17171a] text-white px-6 py-4">
+          <LoxxLogo />
+        </header>
+        <div className="flex-1 flex items-center justify-center p-6">
+          <form onSubmit={login} className="w-full max-w-sm bg-white rounded-[10px] border shadow-card p-6 space-y-4">
+            <div>
+              <h1 className="text-xl font-semibold">Partner portal</h1>
+              <p className="text-sm text-muted-foreground">Sign in to view your commission statements.</p>
+            </div>
+            <div><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
+            <div><Label>Password</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+            <Button type="submit" disabled={loading} className="w-full bg-[#d4820a] hover:bg-[#b86d08] text-white">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
+            </Button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || !data) {
+    return (
+      <div className="min-h-screen bg-[#f5f4f1] flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#f5f4f1]">
+      <header className="bg-[#17171a] text-white px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <LoxxLogo />
+          <div className="text-sm">
+            <div className="font-semibold">{data.partner.name}</div>
+            <div className="text-white/60 text-xs">{data.partner.company}</div>
+          </div>
+        </div>
+        <Button variant="ghost" onClick={logout} className="text-white hover:bg-white/10">
+          <LogOut className="h-4 w-4 mr-1" /> Logout
+        </Button>
+      </header>
+
+      <main className="p-6 max-w-6xl mx-auto space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <Card label="Lifetime revenue" value={gbp(data.summary.lifetimeRevenue)} />
+          <Card label="Lifetime commission" value={gbp(data.summary.lifetimeCommission)} accent />
+          <Card label="Systems referred" value={String(data.summary.systemsCount)} />
+          <Card label="Pending commission" value={gbp(data.summary.pendingCommission)} />
+        </div>
+
+        <section>
+          <h2 className="text-lg font-semibold mb-2">Quarterly breakdown</h2>
+          <div className="rounded-[10px] border bg-white shadow-card overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Period</TableHead>
+                  <TableHead className="text-right">Revenue</TableHead>
+                  <TableHead className="text-right">%</TableHead>
+                  <TableHead className="text-right">Commission</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.quarterly.map((q) => (
+                  <TableRow key={q.key}>
+                    <TableCell className="font-mono">{quarterLabel(q.key)}</TableCell>
+                    <TableCell className="text-right font-mono">{gbp(q.revenue)}</TableCell>
+                    <TableCell className="text-right font-mono">{q.commission_pct.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-mono">{gbp(q.commission)}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={q.status === "paid" ? "bg-green-100 text-green-800 border-green-300" : "bg-amber-100 text-amber-800 border-amber-300"}>
+                        {q.status === "paid" ? "Paid" : "Pending"}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {data.quarterly.length === 0 && (
+                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No earnings yet.</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold mb-2">Referred systems</h2>
+          <div className="rounded-[10px] border bg-white shadow-card overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>System</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>First order</TableHead>
+                  <TableHead className="text-right">Revenue</TableHead>
+                  <TableHead className="text-right">Commission</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.systems.map((s) => (
+                  <TableRow key={s.id}>
+                    <TableCell>
+                      <div>{s.name}</div>
+                      {s.reference && <div className="text-xs font-mono text-muted-foreground">{s.reference}</div>}
+                    </TableCell>
+                    <TableCell>{s.customerCompany ?? "—"}</TableCell>
+                    <TableCell>{fmtDate(s.firstOrderDate)}</TableCell>
+                    <TableCell className="text-right font-mono">{gbp(s.revenue)}</TableCell>
+                    <TableCell className="text-right font-mono">{gbp(s.commission)}</TableCell>
+                  </TableRow>
+                ))}
+                {data.systems.length === 0 && (
+                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No referred systems yet.</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </section>
+
+        <footer className="text-xs text-muted-foreground text-center py-6">
+          LOXX Partner Portal · Read-only commission view
+        </footer>
+      </main>
+    </div>
+  );
+}
+
+function Card({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className={`rounded-[10px] border bg-white p-4 shadow-card ${accent ? "border-[#d4820a]" : ""}`}>
+      <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className={`text-2xl font-semibold mt-1 font-mono ${accent ? "text-[#d4820a]" : ""}`}>{value}</div>
+    </div>
+  );
+}
