@@ -41,7 +41,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { logAction } from "@/lib/audit";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { stashQuoteDraft, treeToQuoteItems } from "@/lib/quote";
-import { useAuth } from "@/lib/auth";
+import { useAuth, useIsAdmin } from "@/lib/auth";
 import { createSystem } from "@/lib/createSystem";
 
 const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }> = {
@@ -134,6 +134,7 @@ function BuilderEmptyState() {
 
 function BuilderInner({ systemId }: { systemId: string }) {
   const { orgRole } = useAuth();
+  const isAdmin = useIsAdmin();
   const readOnly = orgRole === "view_only";
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1017,6 +1018,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               <div className="mt-6 space-y-2 text-xs">
                 <Legend type="GMK" /><Legend type="MK" /><Legend type="SMK" /><Legend type="CYL" />
               </div>
+              {isAdmin && (
               <div className="mt-8 pt-5 border-t">
                 <h4 className="text-sm font-semibold text-foreground mb-2">Partner attribution</h4>
                 <div className="space-y-2">
@@ -1059,6 +1061,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                   )}
                 </div>
               </div>
+              )}
               {!readOnly && (
                 <div className="mt-8 pt-5 border-t">
                   <h4 className="text-sm font-semibold text-foreground mb-1">Activity</h4>

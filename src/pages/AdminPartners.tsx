@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Pencil, Key, FileText, BarChart3 } from "lucide-react";
+import { Plus, Pencil, Key, FileText, BarChart3, Search } from "lucide-react";
 
 interface Partner {
   id: string;
@@ -60,6 +60,20 @@ export default function AdminPartners() {
     open: false, partnerId: "", email: "", password: "",
   });
 
+  // System attribution tab
+  interface SysRow {
+    id: string; name: string; reference: string | null; org_id: string | null;
+    partner_id: string | null; commission_pct: number | null;
+    organisations: { name: string | null } | null;
+    partners: { name: string; company: string } | null;
+  }
+  const [systems, setSystems] = useState<SysRow[]>([]);
+  const [sysSearch, setSysSearch] = useState("");
+  const [sysFilter, setSysFilter] = useState<"all" | "attributed" | "unattributed">("all");
+  const [attrDrawer, setAttrDrawer] = useState<{ open: boolean; sys: SysRow | null; partnerId: string; pct: string }>({
+    open: false, sys: null, partnerId: "", pct: "",
+  });
+
   const load = async () => {
     const { data } = await supabase.from("partners").select("*").order("name");
     setPartners((data as any) ?? []);
@@ -69,8 +83,48 @@ export default function AdminPartners() {
     setCounts(c);
     const { data: pays } = await supabase.from("partner_payments").select("*").order("period_start", { ascending: false });
     setPayments((pays as any) ?? []);
+    const { data: allSys } = await supabase
+      .from("key_systems")
+      .select("id, name, reference, org_id, partner_id, commission_pct, organisations(name), partners(name, company)")
+      .order("created_at", { ascending: false });
+    setSystems((allSys as any) ?? []);
   };
   useEffect(() => { load(); }, []);
+
+  const filteredSystems = useMemo(() => {
+    const q = sysSearch.trim().toLowerCase();
+    return systems.filter((s) => {
+      if (sysFilter === "attributed" && !s.partner_id) return false;
+      if (sysFilter === "unattributed" && s.partner_id) return false;
+      if (!q) return true;
+      return (
+        (s.name ?? "").toLowerCase().includes(q) ||
+        (s.reference ?? "").toLowerCase().includes(q) ||
+        (s.organisations?.name ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [systems, sysSearch, sysFilter]);
+
+  const openAttrDrawer = (s: SysRow) => {
+    setAttrDrawer({
+      open: true, sys: s,
+      partnerId: s.partner_id ?? "",
+      pct: s.commission_pct == null ? "" : String(s.commission_pct),
+    });
+  };
+  const saveAttribution = async () => {
+    if (!attrDrawer.sys) return;
+    const remove = attrDrawer.partnerId === "__remove__" || attrDrawer.partnerId === "";
+    const payload = remove
+      ? { partner_id: null, commission_pct: null }
+      : { partner_id: attrDrawer.partnerId, commission_pct: attrDrawer.pct === "" ? null : Number(attrDrawer.pct) };
+    const { error } = await supabase.from("key_systems").update(payload).eq("id", attrDrawer.sys.id);
+    if (error) return toast.error(error.message);
+    toast.success("Attribution saved");
+    setAttrDrawer({ open: false, sys: null, partnerId: "", pct: "" });
+    load();
+  };
+
 
   const openNew = () => {
     setEditing(null);
@@ -224,6 +278,7 @@ export default function AdminPartners() {
           <TabsList>
             <TabsTrigger value="partners">Partners</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="attribution">System Attribution</TabsTrigger>
           </TabsList>
 
           <TabsContent value="partners" className="mt-4">
@@ -324,7 +379,123 @@ export default function AdminPartners() {
               </Table>
             </div>
           </TabsContent>
+
+          <TabsContent value="attribution" className="mt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="relative flex-1 max-w-md">
+                <Search className="h-4 w-4 absolute left-2.5 top-2.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search by system, reference, or organisation…"
+                  value={sysSearch}
+                  onChange={(e) => setSysSearch(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <Select value={sysFilter} onValueChange={(v: any) => setSysFilter(v)}>
+                <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All systems</SelectItem>
+                  <SelectItem value="attributed">Attributed</SelectItem>
+                  <SelectItem value="unattributed">Unattributed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="rounded-[10px] border bg-card shadow-card overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>System</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Partner</TableHead>
+                    <TableHead>Commission %</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSystems.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell>
+                        <div className="font-medium">{s.name}</div>
+                        {s.reference && <div className="text-xs font-mono text-muted-foreground">{s.reference}</div>}
+                      </TableCell>
+                      <TableCell>{s.organisations?.name ?? "—"}</TableCell>
+                      <TableCell>
+                        {s.partners ? (
+                          <div>
+                            <div className="font-medium">{s.partners.name}</div>
+                            <div className="text-xs text-muted-foreground">{s.partners.company}</div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">— Unattributed —</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-mono">{s.commission_pct == null ? "—" : `${s.commission_pct}%`}</TableCell>
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="outline" onClick={() => openAttrDrawer(s)}>Assign / Edit</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredSystems.length === 0 && (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No systems match.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
         </Tabs>
+
+        {/* Attribution drawer */}
+        <Sheet open={attrDrawer.open} onOpenChange={(o) => setAttrDrawer((s) => ({ ...s, open: o }))}>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Edit attribution</SheetTitle>
+              <SheetDescription>
+                {attrDrawer.sys?.name}{attrDrawer.sys?.reference ? ` · ${attrDrawer.sys.reference}` : ""}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="space-y-3 mt-4">
+              <div>
+                <Label>Partner</Label>
+                <Select
+                  value={attrDrawer.partnerId || undefined}
+                  onValueChange={(v) => {
+                    if (v === "__remove__") {
+                      setAttrDrawer((s) => ({ ...s, partnerId: "__remove__", pct: "" }));
+                      return;
+                    }
+                    const p = partners.find((x) => x.id === v);
+                    setAttrDrawer((s) => ({
+                      ...s,
+                      partnerId: v,
+                      pct: p ? String(p.default_commission_pct) : s.pct,
+                    }));
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select partner" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__remove__">— Remove attribution —</SelectItem>
+                    {partners.filter((p) => p.is_active).map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name} · {p.company}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {attrDrawer.partnerId && attrDrawer.partnerId !== "__remove__" && (
+                <div>
+                  <Label>Commission %</Label>
+                  <Input
+                    type="number" step="0.01" min="0" max="100"
+                    value={attrDrawer.pct}
+                    onChange={(e) => setAttrDrawer((s) => ({ ...s, pct: e.target.value }))}
+                    className="font-mono"
+                  />
+                </div>
+              )}
+              <Button onClick={saveAttribution} className="w-full bg-[#d4820a] hover:bg-[#b86d08] text-white">Save</Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+
 
         {/* Partner drawer */}
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
