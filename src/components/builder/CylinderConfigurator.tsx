@@ -75,6 +75,17 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
     [variants],
   );
 
+  const setProfile = (profile: string) => {
+    if (!activeFamily) return;
+    const desiredFinish = node.finish ?? selected?.finish ?? finishesForFamily[0];
+    const desiredSize = node.size ?? selected?.size ?? sizesForFamily[0];
+    const match =
+      variants.find((v) => (v as any).cylinder_profile === profile && v.finish === desiredFinish && v.size === desiredSize) ??
+      variants.find((v) => (v as any).cylinder_profile === profile && v.finish === desiredFinish) ??
+      variants.find((v) => (v as any).cylinder_profile === profile);
+    if (match) onPatch({ cylinder_type: match.code, finish: match.finish ?? node.finish, size: match.size ?? node.size });
+  };
+
   /** Resolve a variant within the current family by finish/size and update the node. */
   const setFinish = (finish: string) => {
     if (!activeFamily) return;
