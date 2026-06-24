@@ -20,7 +20,7 @@ import { TreeData, TNode, NodeType } from "@/lib/keytree";
 import { logAction } from "@/lib/audit";
 import {
   Upload, FileText, FileSpreadsheet, ArrowLeft, ArrowRight, Loader2,
-  CheckCircle2, AlertCircle, ChevronDown, ChevronRight,
+  CheckCircle2, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Trash2,
 } from "lucide-react";
 
 // TODO: concierge import flow — accept emailed PDFs from customers and have a team member
@@ -94,7 +94,7 @@ export default function ImportPage() {
           <p className="text-muted-foreground text-sm mt-1">Upload a lockchart PDF or CSV and we'll build the hierarchy for you.</p>
         </div>
 
-        <Stepper step={step} />
+        <Stepper step={step} warningCount={step === "review" ? warnings.length : 0} />
 
         {step === "upload" && (
           <UploadStep onCsvParsed={(rows) => goReview(rows, "csv")} onPdfParsed={(rows, name) => goReview(rows, "pdf", name)} />
@@ -125,7 +125,7 @@ export default function ImportPage() {
 
 /* ----------------------------- Stepper ----------------------------- */
 
-function Stepper({ step }: { step: Step }) {
+function Stepper({ step, warningCount = 0 }: { step: Step; warningCount?: number }) {
   const items: { key: Step; label: string }[] = [
     { key: "upload", label: "Upload" },
     { key: "review", label: "Review" },
@@ -140,6 +140,9 @@ function Stepper({ step }: { step: Step }) {
             i <= idx ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
           }`}>{i + 1}</div>
           <span className={`text-sm ${i === idx ? "font-semibold" : "text-muted-foreground"}`}>{it.label}</span>
+          {it.key === "review" && step === "review" && warningCount > 0 && (
+            <Badge className="bg-amber-100 text-amber-900 border-amber-300 text-[10px]">{warningCount} issue{warningCount !== 1 ? "s" : ""} to review</Badge>
+          )}
           {i < items.length - 1 && <div className="w-10 h-px bg-border mx-2" />}
         </div>
       ))}
@@ -251,7 +254,12 @@ function PdfCard({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: str
       form.append("file", file);
       const { data, error } = await supabase.functions.invoke("parse-lockchart", { body: form });
       if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
+      if (data?.error === "pinning_schedule") {
+        setBusy(false);
+        setErr(data.message || "This looks like a pinning schedule, not a lockchart. Pinning schedules describe how to cut keys (pin stack heights) — we need a lockchart showing which keys open which doors and the master key hierarchy.");
+        return;
+      }
+      if (data?.error) throw new Error(data.message || data.error);
       const nodes: ParsedNode[] = (data?.nodes ?? []).map((n: any) => ({
         level: (n.level ?? "").toUpperCase() as NodeType,
         label: n.label ?? "",
@@ -264,6 +272,12 @@ function PdfCard({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: str
         key_qty: n.key_qty ?? null,
       }));
       if (!nodes.length) throw new Error("No nodes extracted");
+
+      const allFlat = nodes.every((n) => !n.parent_label);
+      if (allFlat && nodes.length > 0) {
+        toast.warning(`We found ${nodes.length} doors but couldn't determine the hierarchy. You may need to manually assign master key groups in the next step.`);
+      }
+
       onParsed(nodes, data?.system_name || file.name.replace(/\.pdf$/i, ""));
     } catch (e: any) {
       setBusy(false);
