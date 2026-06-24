@@ -1114,9 +1114,16 @@ function BuilderInner({ systemId }: { systemId: string }) {
       <Sheet open={validateOpen} onOpenChange={setValidateOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>Validation report</SheetTitle>
+            <SheetTitle>
+              {issues.length === 0 ? "✅ System looks good!" : issues.some(i => i.level === "error") ? "⚠️ A few things need attention" : "📋 A few suggestions"}
+            </SheetTitle>
             <SheetDescription>
-              {issues.filter((i) => i.level === "error").length} error(s), {issues.filter((i) => i.level === "warning").length} warning(s)
+              {issues.length === 0
+                ? "No issues found — your system is ready to order."
+                : issues.some(i => i.level === "error")
+                  ? `${issues.filter(i => i.level === "error").length} thing${issues.filter(i => i.level === "error").length !== 1 ? "s" : ""} to fix before ordering, plus ${issues.filter(i => i.level === "warning").length} suggestion${issues.filter(i => i.level === "warning").length !== 1 ? "s" : ""} to review.`
+                  : `${issues.filter(i => i.level === "warning").length} suggestion${issues.filter(i => i.level === "warning").length !== 1 ? "s" : ""} to review — nothing blocking your order.`
+              }
             </SheetDescription>
           </SheetHeader>
           <div className="mt-4 space-y-2">
