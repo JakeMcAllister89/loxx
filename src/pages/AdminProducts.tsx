@@ -482,7 +482,7 @@ function CylinderTypesSection({ types, reload, products }: { types: CylinderType
     <section className="mt-10">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">Cylinder types</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Lock types</h2>
           <p className="text-sm text-muted-foreground">Manage the cylinder type options that appear in the product form and the builder.</p>
         </div>
       </div>
