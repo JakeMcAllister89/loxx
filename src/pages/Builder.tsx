@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
-  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert, History,
+  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert, History, BookOpen,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -44,11 +44,11 @@ import { stashQuoteDraft, treeToQuoteItems } from "@/lib/quote";
 import { useAuth, useIsAdmin } from "@/lib/auth";
 import { createSystem } from "@/lib/createSystem";
 
-const TYPE_META: Record<NodeType, { label: string; color: string; pill: string }> = {
-  GMK: { label: "Grand Master Key", color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30" },
-  MK:  { label: "Master Key",       color: "hsl(var(--node-mk))",  pill: "bg-[hsl(178_70%_94%)] text-[hsl(var(--node-mk))] border-[hsl(var(--node-mk))]/30" },
-  SMK: { label: "Sub Master Key",   color: "hsl(var(--node-smk))", pill: "bg-[hsl(154_60%_95%)] text-[hsl(var(--node-smk))] border-[hsl(var(--node-smk))]/30" },
-  CYL: { label: "Cylinder",         color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30" },
+const TYPE_META: Record<NodeType, { label: string; color: string; pill: string; description: string }> = {
+  GMK: { label: "Grand Master Key", color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30", description: "The master key that opens every door in the building — held by senior management." },
+  MK:  { label: "Master Key",       color: "hsl(var(--node-mk))",  pill: "bg-[hsl(178_70%_94%)] text-[hsl(var(--node-mk))] border-[hsl(var(--node-mk))]/30",   description: "Opens all doors in one building or section — one per area or wing." },
+  SMK: { label: "Sub Master Key",   color: "hsl(var(--node-smk))", pill: "bg-[hsl(154_60%_95%)] text-[hsl(var(--node-smk))] border-[hsl(var(--node-smk))]/30", description: "Opens all doors in one floor or zone — e.g. Ground Floor, IT Department." },
+  CYL: { label: "Cylinder",         color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30",  description: "The physical lock cylinder fitted to a single door." },
 };
 
 const KEY_TYPE_LABEL: Record<string, string> = {
@@ -177,6 +177,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [showAllDecomm, setShowAllDecomm] = useState(false);
   // Per-SMK reveal of decommissioned children
   const [revealedDecomm, setRevealedDecomm] = useState<Set<string>>(new Set());
+  // Beginner guide drawer
+  const [guideOpen, setGuideOpen] = useState(false);
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
@@ -797,6 +799,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import</Link></Button>
         <Button variant="outline" onClick={() => fitViewRef.current?.()}><Maximize2 className="h-4 w-4" /> Fit view</Button>
         <Button variant="outline" onClick={runValidate}><ShieldCheck className="h-4 w-4" /> Validate</Button>
+        <Button variant="outline" onClick={() => setGuideOpen(v => !v)} className="gap-1.5">
+          <BookOpen className="h-4 w-4" />
+          Guide
+        </Button>
         {hasAnyDecomm && (
           <Button
             variant={showAllDecomm ? "default" : "outline"}
@@ -937,6 +943,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
       </div>
 
       <div className="flex-1 flex flex-col md:flex-row min-h-0">
+        {/* Guide drawer (left) */}
+        {guideOpen && <GuidePanel onClose={() => setGuideOpen(false)} />}
         {/* Canvas */}
         <div className="flex-1 min-h-[400px] relative bg-muted/30 no-print">
           {!tree.root ? (
@@ -946,12 +954,23 @@ function BuilderInner({ systemId }: { systemId: string }) {
                   <KeyRound className="h-7 w-7 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold">Start your hierarchy</h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Think of this like drawing a family tree for your keys.
+                </p>
                 <p className="text-sm text-muted-foreground mt-1 mb-4">
-                  Every master-key system begins with a Grand Master Key. Add one to start branching into master keys, sub-masters and cylinders.
+                  Start with your Grand Master Key — the one key that opens everything — then add sections, floors, and individual doors beneath it.
                 </p>
                 <Button onClick={addRoot} className="bg-primary hover:bg-primary/90">
-                  <Plus className="h-4 w-4" /> Add Grand Master
+                  <Plus className="h-4 w-4" /> Start building →
                 </Button>
+                <div>
+                  <button
+                    onClick={() => setGuideOpen(true)}
+                    className="mt-2 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                  >
+                    Not sure? Read the guide first
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
@@ -973,6 +992,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
             />
           )}
         </div>
+
 
         {/* Print-only hierarchy + schedule */}
         <div className="print-only px-6">
@@ -1527,10 +1547,31 @@ function DetailPanel({
   const suggestions = isMk ? MK_SUGGESTIONS : isSmk ? SMK_SUGGESTIONS : [];
 
   const addButtonLabel = (t: NodeType) =>
-    t === "MK" ? "Add master key"
-      : t === "SMK" ? "Add sub-master"
-      : t === "CYL" ? "Add cylinder"
-      : "Add child";
+    t === "MK"  ? "+ Add a section (Master Key)"
+  : t === "SMK" ? "+ Add a zone (Sub-Master)"
+  : t === "CYL" ? "+ Add a door (Cylinder)"
+  : "+ Add child";
+
+  const NEXT_STEP: Record<NodeType, string> = {
+    GMK: "Add a Master Key for each building or major section of your site.",
+    MK:  "Add Sub-Masters for each floor or zone — or add Cylinders directly for simpler sites.",
+    SMK: "Add a Cylinder for each door this zone covers.",
+    CYL: "Give this door a name and choose a cylinder type from the options below.",
+  };
+  const showNextStepHint = isCyl ? !node.cylinder_type : node.children.length === 0;
+
+  // Build the access trail for CYL nodes (chain of keys that can open this door).
+  // trail includes the selected node itself, so slice it to ancestors only.
+  const ancestors = trail.slice(0, Math.max(0, trail.length - 1));
+  const accessTrail = isCyl
+    ? [
+        ...ancestors.map((t) => ({
+          node: t,
+          label: (t.type === "MK" || t.type === "SMK") && t.location?.trim() ? t.location.trim() : t.label,
+        })),
+        { node, label: node.label || "This door" },
+      ]
+    : [];
 
   return (
     <div className="p-5">
@@ -1569,6 +1610,9 @@ function DetailPanel({
         </button>
       </div>
       <h3 className="text-lg font-semibold mt-1 truncate" title={displayName}>{displayName || "Unnamed"}</h3>
+      <p className="text-[11px] text-muted-foreground mt-1">{meta.description}</p>
+
+
 
 
       <div className="mt-5 space-y-4">
@@ -1636,6 +1680,58 @@ function DetailPanel({
         )}
 
 
+        {isCyl && accessTrail.length > 0 && (
+          <div className="rounded-md border bg-muted/30 p-3">
+            <div className="text-xs font-semibold mb-2">🔑 Who can open this door?</div>
+            <div className="space-y-1">
+              {accessTrail.map((entry, i) => {
+                const isThisDoor = i === accessTrail.length - 1;
+                const dot = ({
+                  GMK: "hsl(var(--node-gmk))",
+                  MK:  "hsl(var(--node-mk))",
+                  SMK: "hsl(var(--node-smk))",
+                  CYL: "hsl(var(--node-cyl))",
+                } as Record<NodeType, string>)[entry.node.type];
+                const suffix = ({
+                  GMK: "— every door in the system",
+                  MK:  "— all doors in this section",
+                  SMK: "— all doors in this zone",
+                  CYL: "— this door only",
+                } as Record<NodeType, string>)[entry.node.type];
+                const keyLabel = entry.node.type === "GMK" ? "Grand Master key"
+                  : entry.node.type === "MK" ? "Master key"
+                  : entry.node.type === "SMK" ? "Sub-Master key"
+                  : isThisDoor ? `Differ key (D${String(node.differ ?? 0).padStart(3, "0")})` : "Differ key";
+                return (
+                  <div key={entry.node.id} className="flex items-start gap-2 text-[11px]">
+                    <div className="flex flex-col items-center pt-1">
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ background: dot }} />
+                      {i < accessTrail.length - 1 && <span className="w-px flex-1 bg-border mt-1" style={{ minHeight: 12 }} />}
+                    </div>
+                    <div className="flex-1 leading-relaxed">
+                      <span className="font-medium text-foreground">{entry.label}</span>
+                      <span className="text-muted-foreground"> ({keyLabel})</span>
+                      <span className="text-muted-foreground"> {suffix}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+              The differ key only opens this one door. Every key above it in the tree can also open this lock — plus all other doors in their group.
+            </p>
+          </div>
+        )}
+
+        {showNextStepHint && !readOnly && (
+          <div className="rounded-md border border-amber-300 bg-amber-50 p-2.5 flex items-start gap-2">
+            <span className="text-base leading-none">💡</span>
+            <p className="text-[11px] text-amber-900 leading-relaxed">
+              <span className="font-semibold">Next step:</span> {NEXT_STEP[node.type]}
+            </p>
+          </div>
+        )}
+
         <div className="pt-3 border-t flex flex-col gap-2">
           {!readOnly && addOptions.map((t, idx) => (
             <Button
@@ -1673,7 +1769,7 @@ function DetailPanel({
           )}
           {!readOnly && !isRoot && (
             <Button variant="outline" onClick={onDelete} className="text-destructive hover:text-destructive">
-              <X className="h-4 w-4" /> Delete node
+              <X className="h-4 w-4" /> Remove from system
             </Button>
           )}
         </div>
@@ -1806,5 +1902,84 @@ function KeyManager({ node, onPatch }: { node: TNode; onPatch: (p: Partial<TNode
         ))}
       </div>
     </div>
+  );
+}
+
+/* ------------------------- Beginner Guide Panel ------------------------- */
+
+function GuidePanel({ onClose }: { onClose: () => void }) {
+  const steps = [
+    {
+      step: "1",
+      color: "hsl(var(--node-gmk))",
+      title: "Grand Master Key",
+      desc: "The top-level key. One key that can open every single door in the system. Usually held by the building manager or security team.",
+      tip: "You only ever have one Grand Master Key per system.",
+    },
+    {
+      step: "2",
+      color: "hsl(var(--node-mk))",
+      title: "Master Keys",
+      desc: "Add one Master Key per building, wing, or major section. A Master Key opens all the doors within its section.",
+      tip: "Example: 'Main Building', 'Annexe', 'Warehouse'",
+    },
+    {
+      step: "3",
+      color: "hsl(var(--node-smk))",
+      title: "Sub-Master Keys",
+      desc: "Add one Sub-Master per floor or department within a section. Useful for large buildings with many areas.",
+      tip: "Example: 'Ground Floor', 'IT Department', 'Reception'",
+    },
+    {
+      step: "4",
+      color: "hsl(var(--node-cyl))",
+      title: "Cylinders (Doors)",
+      desc: "Each cylinder represents one physical door lock. Add a cylinder for every door that needs to be part of the system.",
+      tip: "Example: 'Server Room', 'Director's Office', 'Room 14'",
+    },
+  ];
+
+  return (
+    <aside className="w-72 shrink-0 border-r bg-card p-5 overflow-auto no-print">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold">How to build your system</h3>
+        <button
+          onClick={onClose}
+          className="text-muted-foreground hover:text-foreground"
+          aria-label="Close guide"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+        A master key system is like a family tree of keys. The key at the top opens everything.
+        Keys further down open fewer doors. Cylinders are the actual locks on the doors.
+      </p>
+
+      <div className="space-y-4">
+        {steps.map(({ step, color, title, desc, tip }) => (
+          <div key={step} className="flex items-start gap-3">
+            <div
+              className="h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-semibold text-white shrink-0"
+              style={{ background: color }}
+            >
+              {step}
+            </div>
+            <div className="flex-1">
+              <div className="text-xs font-semibold">{title}</div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{desc}</p>
+              <p className="text-[11px] italic text-muted-foreground mt-1">{tip}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5 rounded-md border border-amber-300 bg-amber-50 p-3">
+        <p className="text-[11px] text-amber-900 leading-relaxed">
+          Not sure where to start? Click the orange + button below any node on the canvas to add the next level down.
+        </p>
+      </div>
+    </aside>
   );
 }

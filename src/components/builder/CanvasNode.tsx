@@ -1,6 +1,7 @@
 import { memo, useState, useRef } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { AlertCircle, Plus, Key, History, KeyRound } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { NodeType, TNode } from "@/lib/keytree";
 import { colorForFinish } from "@/lib/finishes";
 
@@ -32,11 +33,11 @@ export interface CanvasNodeData {
   onToggleRevealDecommissioned?: () => void;
 }
 
-const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string; tintHsl: string }> = {
-  GMK: { label: "Grand Master Key", tone: "text-[hsl(var(--node-gmk))]", dot: "hsl(var(--node-gmk))", border: "hsl(var(--node-gmk))", tintHsl: "var(--node-gmk)" },
-  MK:  { label: "Master Key",       tone: "text-[hsl(var(--node-mk))]",  dot: "hsl(var(--node-mk))",  border: "hsl(var(--node-mk))",  tintHsl: "var(--node-mk)"  },
-  SMK: { label: "Sub Master Key",   tone: "text-[hsl(var(--node-smk))]", dot: "hsl(var(--node-smk))", border: "hsl(var(--node-smk))", tintHsl: "var(--node-smk)" },
-  CYL: { label: "Cylinder",         tone: "text-[hsl(var(--node-cyl))]", dot: "hsl(var(--node-cyl))", border: "hsl(var(--node-cyl))", tintHsl: "var(--node-cyl)" },
+const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string; tintHsl: string; description: string }> = {
+  GMK: { label: "Grand Master Key", tone: "text-[hsl(var(--node-gmk))]", dot: "hsl(var(--node-gmk))", border: "hsl(var(--node-gmk))", tintHsl: "var(--node-gmk)", description: "The master key that opens every door in the building — held by senior management." },
+  MK:  { label: "Master Key",       tone: "text-[hsl(var(--node-mk))]",  dot: "hsl(var(--node-mk))",  border: "hsl(var(--node-mk))",  tintHsl: "var(--node-mk)",  description: "Opens all doors in one building or section — one per area or wing." },
+  SMK: { label: "Sub Master Key",   tone: "text-[hsl(var(--node-smk))]", dot: "hsl(var(--node-smk))", border: "hsl(var(--node-smk))", tintHsl: "var(--node-smk)", description: "Opens all doors in one floor or zone — e.g. Ground Floor, IT Department." },
+  CYL: { label: "Cylinder",         tone: "text-[hsl(var(--node-cyl))]", dot: "hsl(var(--node-cyl))", border: "hsl(var(--node-cyl))", tintHsl: "var(--node-cyl)", description: "The physical lock cylinder fitted to a single door." },
 };
 
 const ADD_LABEL: Record<NodeType, string> = {
@@ -153,12 +154,21 @@ function CanvasNodeImpl(props: NodeProps) {
 
       <div className={`${padding} text-center`}>
         {/* Row 1 — type label */}
-        <div
-          className={`font-mono uppercase ${meta.tone}`}
-          style={{ fontSize: 9, letterSpacing: "0.08em", marginBottom: 3 }}
-        >
-          {meta.label}
-        </div>
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className={`font-mono uppercase ${meta.tone} cursor-help inline-block`}
+                style={{ fontSize: 9, letterSpacing: "0.08em", marginBottom: 3 }}
+              >
+                {meta.label}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs max-w-[200px]">
+              {meta.description}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         {/* Row 2 — main label */}
         <div
@@ -263,7 +273,7 @@ function CanvasNodeImpl(props: NodeProps) {
           ref={popRef}
           onMouseEnter={() => setPopoverOpen(true)}
           onMouseLeave={() => setPopoverOpen(false)}
-          className="absolute -bottom-3 left-1/2 -translate-x-1/2 nodrag group/add"
+          className="absolute -bottom-5 left-1/2 -translate-x-1/2 nodrag group/add"
         >
           <button
             onClick={handlePlusClick}
