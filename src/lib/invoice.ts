@@ -23,8 +23,10 @@ interface ItemRow {
   product_code: string | null;
   cylinder_type: string | null;
   finish: string | null;
+  size?: string | null;
   room_label: string | null;
   differ_ref: string | null;
+  key_reference?: string | null;
   quantity: number;
   unit_price: number | string;
   line_total: number | string;
@@ -55,20 +57,53 @@ export async function downloadInvoice(orderId: string) {
   if (!order) throw new Error("Order not found");
   const s = Object.fromEntries((settings ?? []).map((r: any) => [r.key, r.value]));
 
+  const codes = Array.from(new Set((items ?? []).map((i: any) => i.product_code).filter(Boolean)));
+  const productMap: Record<string, any> = {};
+  if (codes.length) {
+    const { data: prods } = await supabase
+      .from("products")
+      .select("code,cylinder_profile,product_description,name,size")
+      .in("code", codes as string[]);
+    (prods ?? []).forEach((p: any) => (productMap[p.code] = p));
+  }
+
+  const hierarchyMap: Record<string, { mk: string; smk: string }> = {};
+  const treeRoot = (order as any).tree_snapshot?.root ?? (order as any).tree_snapshot;
+  if (treeRoot) {
+    const walk = (node: any, trail: any[]) => {
+      if (node.type === "CYL" && node.differ != null) {
+        const ref = `D${String(node.differ).padStart(3, "0")}`;
+        hierarchyMap[ref] = {
+          mk:  trail.find((n: any) => n.type === "MK")?.label  ?? "",
+          smk: trail.find((n: any) => n.type === "SMK")?.label ?? "",
+        };
+      }
+      for (const child of node.children ?? []) walk(child, [...trail, node]);
+    };
+    walk(treeRoot, []);
+  }
+
   let systemRef: string | null = null;
-  if (order.system_id) {
-    const { data: sys } = await supabase.from("key_systems").select("reference").eq("id", order.system_id).single();
+  if ((order as any).system_id) {
+    const { data: sys } = await supabase.from("key_systems").select("reference").eq("id", (order as any).system_id).single();
     systemRef = sys?.reference ?? null;
   }
 
-  const html = renderInvoiceHtml(order as OrderRow, (items ?? []) as ItemRow[], s, systemRef);
+  const html = renderInvoiceHtml(order as OrderRow, (items ?? []) as ItemRow[], s, systemRef, productMap, hierarchyMap);
   const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
   window.open(url, "_blank");
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
-function renderInvoiceHtml(order: OrderRow, items: ItemRow[], s: Record<string, string>, systemRef: string | null): string {
+function renderInvoiceHtml(
+  order: OrderRow,
+  items: ItemRow[],
+  s: Record<string, string>,
+  systemRef: string | null,
+  productMap: Record<string, any> = {},
+  hierarchyMap: Record<string, { mk: string; smk: string }> = {},
+): string {
   const inv = invoiceRef(order.id);
   const ord = orderRef(order.id);
   const date = new Date(order.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
@@ -78,43 +113,79 @@ function renderInvoiceHtml(order: OrderRow, items: ItemRow[], s: Record<string, 
   const companyEmail = s.company_email || "";
   const companyPhone = s.company_phone || "";
 
-  const itemRows = items.map((it) => {
-    const isKey = it.item_type === "key";
-    const desc = isKey
-      ? `${it.room_label || "Key"}${it.differ_ref ? ` — ${it.differ_ref}` : ""}`
-      : [
-          it.product_code || it.cylinder_type || "Cylinder",
-          [it.cylinder_type, it.finish].filter(Boolean).join(" · "),
-          it.room_label && it.differ_ref ? `${it.room_label} (${it.differ_ref})` : (it.room_label || it.differ_ref || ""),
-        ].filter(Boolean).join(" — ");
-    return `<tr>
-      <td>${esc(desc)}</td>
-      <td class="num">${it.quantity}</td>
-      <td class="num">${fmt(it.unit_price)}</td>
-      <td class="num">${fmt(it.line_total)}</td>
-    </tr>`;
+  const cylItems = items.filter(i => i.item_type === "cylinder");
+  const keyItems = items.filter(i => i.item_type === "key");
+
+  const zoneMap = new Map<string, { zone: string; rows: ItemRow[] }>();
+  cylItems.forEach(it => {
+    const h = hierarchyMap[it.differ_ref ?? ""] ?? { mk: "", smk: "" };
+    const zoneKey = h.smk || h.mk || "General";
+    const existing = zoneMap.get(zoneKey);
+    if (existing) existing.rows.push(it);
+    else zoneMap.set(zoneKey, { zone: zoneKey, rows: [it] });
+  });
+  const zones = Array.from(zoneMap.values());
+  const isGrouped = zones.length > 1;
+
+  const groupHeader = (label: string) =>
+    `<tr><td colspan="9" style="padding:10px 0 6px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;font-weight:600;background:#f8fafc">${esc(label)}</td></tr>`;
+
+  const cylRows = zones.map(({ zone, rows }) => {
+    const header = isGrouped ? groupHeader(zone) : "";
+    const dataRows = rows.map(it => {
+      const p = productMap[it.product_code ?? ""] ?? {};
+      const profile = p.cylinder_profile ?? "—";
+      const size = it.size ?? p.size ?? "—";
+      return `<tr>
+        <td style="color:#b45309;font-weight:500">${esc(it.differ_ref ?? "—")}</td>
+        <td>${esc(it.room_label ?? "—")}</td>
+        <td class="mono muted">${esc(it.product_code ?? "—")}</td>
+        <td>${esc(profile)}</td>
+        <td>${esc(it.finish ?? "—")}</td>
+        <td>${esc(size)}</td>
+        <td class="num">${it.quantity}</td>
+        <td class="num">${fmt(it.unit_price)}</td>
+        <td class="num">${fmt(it.line_total)}</td>
+      </tr>`;
+    }).join("");
+    return header + dataRows;
   }).join("");
+
+  const keyHeader = keyItems.length > 0 ? groupHeader("Keys") : "";
+  const keyRows = keyItems.map(it => `<tr>
+    <td style="color:#b45309;font-weight:500">${esc(it.differ_ref ?? "—")}</td>
+    <td colspan="5">${esc(it.key_reference ?? it.room_label ?? "—")}</td>
+    <td class="num">${it.quantity}</td>
+    <td class="num">${fmt(it.unit_price)}</td>
+    <td class="num">${fmt(it.line_total)}</td>
+  </tr>`).join("");
+
+  const subtotal = Number(order.subtotal || 0);
+  const vat = Number(order.vat || 0);
+  const total = Number(order.total || 0);
 
   return `<!doctype html><html><head><meta charset="utf-8"/>
 <title>${esc(inv)}</title>
 <style>
-  *{box-sizing:border-box} body{font-family:-apple-system,Segoe UI,Inter,sans-serif;color:#0f172a;margin:40px;max-width:820px}
-  h1{font-size:32px;margin:0;letter-spacing:.02em}
-  .ref{font-family:ui-monospace,Menlo,monospace;color:#b45309;font-weight:600}
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,Segoe UI,Inter,sans-serif;color:#0f172a;margin:40px;max-width:900px;font-size:13px}
+  h1{font-size:28px;margin:0;letter-spacing:.02em}
+  .ref{color:#b45309;font-weight:600}
+  .mono{font-family:ui-monospace,Menlo,monospace}
+  .muted{color:#64748b}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:32px}
-  .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:6px}
-  table{width:100%;border-collapse:collapse;margin-top:24px;font-size:14px}
-  th,td{padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top}
-  th{background:#f8fafc;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#475569}
+  .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:6px}
+  table{width:100%;border-collapse:collapse;margin-top:16px;font-size:12px}
+  th{padding:8px 10px;background:#f8fafc;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#475569;text-align:left;border-bottom:2px solid #e2e8f0}
+  td{padding:8px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top}
   .num{text-align:right;font-variant-numeric:tabular-nums}
-  .totals{margin-top:24px;margin-left:auto;width:320px;font-size:14px}
-  .totals .row{display:flex;justify-content:space-between;padding:6px 0}
-  .totals .grand{font-size:18px;font-weight:700;border-top:2px solid #0f172a;margin-top:6px;padding-top:10px;color:#b45309}
-  .foot{margin-top:48px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b}
+  .totals{margin-top:20px;margin-left:auto;width:320px;font-size:13px}
+  .totals .row{display:flex;justify-content:space-between;padding:5px 0}
+  .totals .grand{font-size:16px;font-weight:700;border-top:2px solid #0f172a;margin-top:6px;padding-top:8px;color:#b45309}
+  .foot{margin-top:40px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;text-align:center}
   .head{display:flex;justify-content:space-between;align-items:flex-start}
   .right{text-align:right}
-  .muted{color:#64748b;font-size:12px}
-  @media print { body{margin:20px} .noprint{display:none} }
+  @media print{body{margin:20px}.noprint{display:none}@page{margin:16mm}}
 </style></head><body>
 <div class="head">
   <div>
@@ -132,42 +203,53 @@ function renderInvoiceHtml(order: OrderRow, items: ItemRow[], s: Record<string, 
 
 <div class="grid">
   <div>
-    <div class="label">Billed to</div>
+    <div class="lbl">Billed to</div>
     <div style="font-weight:600">${esc(order.customer_name || "")}</div>
     ${order.company ? `<div>${esc(order.company)}</div>` : ""}
     ${order.customer_email ? `<div class="muted">${esc(order.customer_email)}</div>` : ""}
-    ${d.contact_name || d.contact_phone ? `<div class="muted" style="margin-top:6px">Delivery contact: ${esc(d.contact_name || "")}${d.contact_phone ? ` · ${esc(d.contact_phone)}` : ""}</div>` : ""}
-    <div class="muted" style="margin-top:4px">
-      ${[d.line1, d.line2, d.city, d.county, d.postcode].filter(Boolean).map(esc).join("<br/>")}
-    </div>
+    ${d.contact_name || d.contact_phone ? `<div class="muted" style="margin-top:6px">${esc(d.contact_name || "")}${d.contact_phone ? ` · ${esc(d.contact_phone)}` : ""}</div>` : ""}
+    <div class="muted" style="margin-top:4px">${[d.line1, d.line2, d.city, d.county, d.postcode].filter(Boolean).map(esc).join(", ")}</div>
   </div>
   <div>
-    <div class="label">Order details</div>
+    <div class="lbl">Order details</div>
     <div><span class="muted">Order ref:</span> <span class="ref">${esc(ord)}</span></div>
     ${systemRef ? `<div><span class="muted">System ref:</span> <span class="ref">${esc(systemRef)}</span></div>` : ""}
-    ${order.customer_po_ref || order.purchase_order_ref ? `<div><span class="muted">Your PO ref:</span> ${esc(order.customer_po_ref || order.purchase_order_ref)}</div>` : ""}
-    <div><span class="muted">Payment method:</span> Stripe</div>
+    ${order.customer_po_ref || order.purchase_order_ref ? `<div><span class="muted">PO ref:</span> ${esc(order.customer_po_ref || order.purchase_order_ref)}</div>` : ""}
     <div><span class="muted">Payment date:</span> ${esc(date)}</div>
   </div>
 </div>
 
 <table>
-  <thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Total</th></tr></thead>
-  <tbody>${itemRows || `<tr><td colspan="4" class="muted">No items</td></tr>`}</tbody>
+  <thead><tr>
+    <th>Differ</th>
+    <th>Room / Door</th>
+    <th>Product code</th>
+    <th>Lock function</th>
+    <th>Finish</th>
+    <th>Size</th>
+    <th class="num">Qty</th>
+    <th class="num">Unit price</th>
+    <th class="num">Total</th>
+  </tr></thead>
+  <tbody>
+    ${cylRows}
+    ${keyHeader}${keyRows}
+    ${!cylRows && !keyRows ? `<tr><td colspan="9" class="muted">No items</td></tr>` : ""}
+  </tbody>
 </table>
 
 <div class="totals">
-  <div class="row"><span>Subtotal (ex VAT)</span><span>${fmt(order.subtotal)}</span></div>
-  <div class="row"><span>VAT (${esc(s.vat_rate || "20")}%)</span><span>${fmt(order.vat)}</span></div>
-  <div class="row grand"><span>Total inc VAT</span><span>${fmt(order.total)}</span></div>
+  <div class="row"><span>Subtotal (ex VAT)</span><span>${fmt(subtotal)}</span></div>
+  <div class="row"><span>VAT (${esc(s.vat_rate || "20")}%)</span><span>${fmt(vat)}</span></div>
+  <div class="row grand"><span>Total inc VAT</span><span>${fmt(total)}</span></div>
 </div>
 
 <div class="foot">
-  Thank you for your order.<br/>
-  ${esc(companyName)}${companyEmail ? ` · ${esc(companyEmail)}` : ""}${companyPhone ? ` · ${esc(companyPhone)}` : ""}
+  Thank you for your order. ${esc(companyName)}${companyEmail ? ` · ${esc(companyEmail)}` : ""}${companyPhone ? ` · ${esc(companyPhone)}` : ""}
   ${s.vat_number ? `<div style="margin-top:4px">VAT no. ${esc(s.vat_number)}</div>` : ""}
+  <div style="margin-top:6px">LOXX — Master key systems made simple · myloxx.co.uk</div>
 </div>
 
-<div class="noprint" style="margin-top:24px"><button onclick="window.print()" style="padding:8px 16px;background:#b45309;color:#fff;border:0;border-radius:6px;cursor:pointer">Print / Save as PDF</button></div>
+<div class="noprint" style="margin-top:24px;text-align:center"><button onclick="window.print()" style="padding:8px 16px;background:#b45309;color:#fff;border:0;border-radius:6px;cursor:pointer">Print / Save as PDF</button></div>
 </body></html>`;
 }
