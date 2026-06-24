@@ -1070,7 +1070,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               tree={viewTree}
               selectedId={selectedId}
               errorIds={errorIds}
-              highlightIds={showOnlyUnassigned ? unassignedIds : undefined}
+              highlightIds={showOnlyUnassigned ? unassignedIds : (search.trim() ? searchMatch : undefined)}
               productsByCode={productsByCode}
               onSelect={setSelectedId}
               onAddChild={handleAddChild}
