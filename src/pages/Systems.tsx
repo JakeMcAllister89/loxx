@@ -136,7 +136,7 @@ export default function Systems() {
                   <div className="min-w-0">
                     <div className="font-semibold truncate">{s.name}</div>
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {s.reference && <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200">{s.reference}</span>}
+                      {s.reference && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">{s.reference}</span>}
                       <span className="text-xs text-muted-foreground">{s.door_count} doors</span>
                       <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-800">Active</span>
                     </div>
