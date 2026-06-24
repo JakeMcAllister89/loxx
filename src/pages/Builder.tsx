@@ -1563,7 +1563,7 @@ function DetailPanel({
     GMK: "Add a Master Key for each building or major section of your site.",
     MK:  "Add Sub-Masters for each floor or zone — or add Cylinders directly for simpler sites.",
     SMK: "Add a Cylinder for each door this zone covers.",
-    CYL: "Give this door a name and choose a cylinder type from the options below.",
+    CYL: "Give this door a name and choose a cylinder type from the options above.",
   };
   const showNextStepHint = isCyl ? !node.cylinder_type : node.children.length === 0;
 
