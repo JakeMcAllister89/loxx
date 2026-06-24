@@ -713,6 +713,45 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_invites: {
+        Row: {
+          accepted_at: string | null
+          company: string
+          created_at: string
+          email: string
+          expires_at: string
+          first_name: string
+          id: string
+          invited_by: string
+          last_name: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          company: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          first_name: string
+          id?: string
+          invited_by: string
+          last_name: string
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          company?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          first_name?: string
+          id?: string
+          invited_by?: string
+          last_name?: string
+          token?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           bs_en_1303: boolean
