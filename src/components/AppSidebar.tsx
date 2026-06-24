@@ -104,8 +104,8 @@ export function AppSidebar() {
                 </span>
               )}
               {item.quoteCount && quoteCount > 0 && (
-                <span className="text-[11px] text-sidebar-foreground/50 font-medium">
-                  {quoteCount}
+                <span className="inline-flex items-center justify-center rounded-full text-white text-[11px] font-medium leading-none" style={{ background: "#d4820a", width: 18, height: 18 }}>
+                  {quoteCount > 99 ? "99+" : quoteCount}
                 </span>
               )}
             </NavLink>
