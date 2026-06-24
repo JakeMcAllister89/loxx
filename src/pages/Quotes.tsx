@@ -138,7 +138,22 @@ export default function Quotes() {
                         <Badge variant="outline" className={`text-[10px] ${STATUS_BADGE[r.status] ?? ""}`}>{STATUS_LABEL[r.status] ?? r.status}</Badge>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Button asChild size="sm" variant="outline"><Link to={`/quotes/${r.id}`}>View</Link></Button>
+                        <div className="flex items-center justify-end gap-2">
+                          {r.status === "draft" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={deleting === r.id}
+                              onClick={() => handleDelete(r.id)}
+                              className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          <Button asChild size="sm" variant="outline">
+                            <Link to={`/quotes/${r.id}`}>View</Link>
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );
