@@ -1614,6 +1614,7 @@ function DetailPanel({
               onChange={(e) => onPatch({ label: e.target.value })}
               placeholder={namePlaceholder}
               className={isCyl ? "text-base font-medium" : ""}
+              disabled={readOnly}
             />
           </div>
         )}
