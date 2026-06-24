@@ -133,6 +133,8 @@ function BuilderEmptyState() {
 
 
 function BuilderInner({ systemId }: { systemId: string }) {
+  const { orgRole } = useAuth();
+  const readOnly = orgRole === "view_only";
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const imported = searchParams.get("imported") === "1";
