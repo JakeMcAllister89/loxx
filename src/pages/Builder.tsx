@@ -1680,6 +1680,58 @@ function DetailPanel({
         )}
 
 
+        {isCyl && accessTrail.length > 0 && (
+          <div className="rounded-md border bg-muted/30 p-3">
+            <div className="text-xs font-semibold mb-2">🔑 Who can open this door?</div>
+            <div className="space-y-1">
+              {accessTrail.map((entry, i) => {
+                const isThisDoor = i === accessTrail.length - 1;
+                const dot = ({
+                  GMK: "hsl(var(--node-gmk))",
+                  MK:  "hsl(var(--node-mk))",
+                  SMK: "hsl(var(--node-smk))",
+                  CYL: "hsl(var(--node-cyl))",
+                } as Record<NodeType, string>)[entry.node.type];
+                const suffix = ({
+                  GMK: "— every door in the system",
+                  MK:  "— all doors in this section",
+                  SMK: "— all doors in this zone",
+                  CYL: "— this door only",
+                } as Record<NodeType, string>)[entry.node.type];
+                const keyLabel = entry.node.type === "GMK" ? "Grand Master key"
+                  : entry.node.type === "MK" ? "Master key"
+                  : entry.node.type === "SMK" ? "Sub-Master key"
+                  : isThisDoor ? `Differ key (D${String(node.differ ?? 0).padStart(3, "0")})` : "Differ key";
+                return (
+                  <div key={entry.node.id} className="flex items-start gap-2 text-[11px]">
+                    <div className="flex flex-col items-center pt-1">
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ background: dot }} />
+                      {i < accessTrail.length - 1 && <span className="w-px flex-1 bg-border mt-1" style={{ minHeight: 12 }} />}
+                    </div>
+                    <div className="flex-1 leading-relaxed">
+                      <span className="font-medium text-foreground">{entry.label}</span>
+                      <span className="text-muted-foreground"> ({keyLabel})</span>
+                      <span className="text-muted-foreground"> {suffix}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+              The differ key only opens this one door. Every key above it in the tree can also open this lock — plus all other doors in their group.
+            </p>
+          </div>
+        )}
+
+        {showNextStepHint && !readOnly && (
+          <div className="rounded-md border border-amber-300 bg-amber-50 p-2.5 flex items-start gap-2">
+            <span className="text-base leading-none">💡</span>
+            <p className="text-[11px] text-amber-900 leading-relaxed">
+              <span className="font-semibold">Next step:</span> {NEXT_STEP[node.type]}
+            </p>
+          </div>
+        )}
+
         <div className="pt-3 border-t flex flex-col gap-2">
           {!readOnly && addOptions.map((t, idx) => (
             <Button
