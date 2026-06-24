@@ -177,6 +177,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [showAllDecomm, setShowAllDecomm] = useState(false);
   // Per-SMK reveal of decommissioned children
   const [revealedDecomm, setRevealedDecomm] = useState<Set<string>>(new Set());
+  // Beginner guide drawer
+  const [guideOpen, setGuideOpen] = useState(false);
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
