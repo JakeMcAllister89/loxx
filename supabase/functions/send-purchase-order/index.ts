@@ -251,7 +251,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
     <th>SMK</th>
     <th>Product Code</th>
     <th>Description</th>
-    <th>Profile</th>
+    <th>Lock function</th>
     <th>Finish</th>
     <th>Size</th>
     <th style="text-align:right">Qty</th>
