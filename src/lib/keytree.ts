@@ -311,36 +311,36 @@ export function validate(tree: TreeData): ValidationIssue[] {
         out.push({
           level: "error",
           nodeId: c.id,
-          message: `Duplicate label "${effectiveName(c)}" under "${n.label}"`,
+          message: `"${effectiveName(c)}" appears more than once under "${n.label}" — each door or zone needs a unique name`,
         });
       }
     });
 
     if (n.type === "GMK" && n.children.length === 0) {
-      out.push({ level: "warning", nodeId: n.id, message: `Grand master has no keys or cylinders` });
+      out.push({ level: "warning", nodeId: n.id, message: "Grand Master Key has no sections or doors added yet" });
     }
     if (n.type === "MK" && n.children.length === 0) {
-      out.push({ level: "warning", nodeId: n.id, message: `Master key "${n.label}" has no zones or cylinders assigned` });
+      out.push({ level: "warning", nodeId: n.id, message: `"${n.location?.trim() || n.label}" has no zones or doors assigned — add at least one` });
     }
     if (n.type === "SMK" && !n.children.some((c) => c.type === "CYL")) {
-      out.push({ level: "warning", nodeId: n.id, message: `Sub-master "${n.label}" has no cylinders assigned` });
+      out.push({ level: "warning", nodeId: n.id, message: `"${n.location?.trim() || n.label}" has no door cylinders assigned — add at least one cylinder` });
     }
     if (n.type === "CYL") {
       hasCyl = true;
       if (!n.cylinder_type) {
-        out.push({ level: "error", nodeId: n.id, message: `Cylinder "${n.label}" has no product selected` });
+        out.push({ level: "error", nodeId: n.id, message: `"${n.label || "Unnamed door"}" needs a cylinder type selected before it can be ordered` });
       }
       if (!n.label.trim()) {
-        out.push({ level: "error", nodeId: n.id, message: `Unnamed cylinder` });
+        out.push({ level: "error", nodeId: n.id, message: "One of your doors has no name — give it a room or door name" });
       }
     }
     n.children.forEach(walk);
   };
   walk(tree.root);
 
-  if (!hasCyl) out.push({ level: "warning", message: "No cylinders defined yet" });
+  if (!hasCyl) out.push({ level: "warning", message: "No door cylinders added yet — add at least one cylinder to complete your system" });
   if (countDoors(tree.root) > 500)
-    out.push({ level: "warning", message: "System is very large (>500 doors) — please double-check" });
+    out.push({ level: "warning", message: "Your system has over 500 doors — that's a large system, please double-check everything looks right" });
 
   return out;
 }
