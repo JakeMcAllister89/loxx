@@ -194,7 +194,7 @@ export default function CartReview() {
 
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Pricing</h2>
-              <div className="space-y-1 text-sm font-mono">
+              <div className="space-y-1 text-sm">
                 <div className="flex justify-between text-muted-foreground"><span>Cylinders ×{cylinderCount}</span><span>£{cylindersSubtotal.toFixed(2)}</span></div>
                 {keysSubtotal > 0 && <div className="flex justify-between text-muted-foreground"><span>Keys ×{extraKeys}</span><span>£{keysSubtotal.toFixed(2)}</span></div>}
                 <div className="flex justify-between border-t pt-2 mt-2"><span>Subtotal (ex VAT)</span><span>£{subtotal.toFixed(2)}</span></div>
