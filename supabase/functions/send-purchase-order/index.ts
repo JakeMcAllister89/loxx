@@ -283,7 +283,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
   </div>
 </div>
 
-<h3 style="margin-top:24px;margin-bottom:8px">Differ Schedule</h3>
+<h3 style="margin-top:24px;margin-bottom:8px">Cylinder Schedule</h3>
 <table>
   <thead><tr>
     <th>Differ</th>
