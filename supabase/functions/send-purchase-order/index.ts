@@ -332,7 +332,7 @@ ${(masterKeyRows || extraKeyRows) ? `
 </table>
 
 <div class="block" style="margin-top:24px;background:#f8fafc">
-  <div class="label">Differ schedule</div>
+  <div class="label">Cylinder schedule note</div>
   <div>All cylinders must be keyed to the master key system and differ references shown. Please confirm keying schedule matches this order before dispatch.</div>
 </div>
 
