@@ -180,6 +180,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [showAllDecomm, setShowAllDecomm] = useState(false);
   // Per-SMK reveal of decommissioned children
   const [revealedDecomm, setRevealedDecomm] = useState<Set<string>>(new Set());
+  const [copySpecState, setCopySpecState] = useState<{
+    open: boolean;
+    sourceId: string;
+    newLabel: string;
+  }>({ open: false, sourceId: "", newLabel: "" });
   // Beginner guide drawer
   const [guideOpen, setGuideOpen] = useState(false);
   const dirtyRef = useRef(false);
