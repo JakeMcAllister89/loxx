@@ -60,6 +60,20 @@ export default function AdminPartners() {
     open: false, partnerId: "", email: "", password: "",
   });
 
+  // System attribution tab
+  interface SysRow {
+    id: string; name: string; reference: string | null; org_id: string | null;
+    partner_id: string | null; commission_pct: number | null;
+    organisations: { name: string | null } | null;
+    partners: { name: string; company: string } | null;
+  }
+  const [systems, setSystems] = useState<SysRow[]>([]);
+  const [sysSearch, setSysSearch] = useState("");
+  const [sysFilter, setSysFilter] = useState<"all" | "attributed" | "unattributed">("all");
+  const [attrDrawer, setAttrDrawer] = useState<{ open: boolean; sys: SysRow | null; partnerId: string; pct: string }>({
+    open: false, sys: null, partnerId: "", pct: "",
+  });
+
   const load = async () => {
     const { data } = await supabase.from("partners").select("*").order("name");
     setPartners((data as any) ?? []);
@@ -69,8 +83,48 @@ export default function AdminPartners() {
     setCounts(c);
     const { data: pays } = await supabase.from("partner_payments").select("*").order("period_start", { ascending: false });
     setPayments((pays as any) ?? []);
+    const { data: allSys } = await supabase
+      .from("key_systems")
+      .select("id, name, reference, org_id, partner_id, commission_pct, organisations(name), partners(name, company)")
+      .order("created_at", { ascending: false });
+    setSystems((allSys as any) ?? []);
   };
   useEffect(() => { load(); }, []);
+
+  const filteredSystems = useMemo(() => {
+    const q = sysSearch.trim().toLowerCase();
+    return systems.filter((s) => {
+      if (sysFilter === "attributed" && !s.partner_id) return false;
+      if (sysFilter === "unattributed" && s.partner_id) return false;
+      if (!q) return true;
+      return (
+        (s.name ?? "").toLowerCase().includes(q) ||
+        (s.reference ?? "").toLowerCase().includes(q) ||
+        (s.organisations?.name ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [systems, sysSearch, sysFilter]);
+
+  const openAttrDrawer = (s: SysRow) => {
+    setAttrDrawer({
+      open: true, sys: s,
+      partnerId: s.partner_id ?? "",
+      pct: s.commission_pct == null ? "" : String(s.commission_pct),
+    });
+  };
+  const saveAttribution = async () => {
+    if (!attrDrawer.sys) return;
+    const remove = attrDrawer.partnerId === "__remove__" || attrDrawer.partnerId === "";
+    const payload = remove
+      ? { partner_id: null, commission_pct: null }
+      : { partner_id: attrDrawer.partnerId, commission_pct: attrDrawer.pct === "" ? null : Number(attrDrawer.pct) };
+    const { error } = await supabase.from("key_systems").update(payload).eq("id", attrDrawer.sys.id);
+    if (error) return toast.error(error.message);
+    toast.success("Attribution saved");
+    setAttrDrawer({ open: false, sys: null, partnerId: "", pct: "" });
+    load();
+  };
+
 
   const openNew = () => {
     setEditing(null);
