@@ -120,7 +120,7 @@ function CanvasInner({
           rootDoorCount: l.node.type === "GMK" ? totalDoors : undefined,
           addOptions,
           onAddChildType: (t: NodeType) => onAddChild(l.id, t),
-          extraAddActions: getExtraAddActions?.(l.node) ?? [],
+          extraAddActions: readOnly ? [] : (getExtraAddActions?.(l.node) ?? []),
           hasDecommissionedChildren: parentsWithDecomm?.has(l.id) ?? false,
           revealDecommissioned: revealedDecomm?.has(l.id) ?? false,
           onToggleRevealDecommissioned: () => onToggleReveal?.(l.id),
