@@ -397,6 +397,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   const handleDelete = useCallback((nodeId: string) => {
     setTree((prev) => {
+      pushUndo(prev);
       const target = findNode(prev.root, nodeId);
       if (target) logAction({ system_id: systemId, action: "node_deleted", node_type: target.type, node_label: auditLabel(target) });
       dirtyRef.current = true;
