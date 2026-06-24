@@ -171,7 +171,7 @@ export default function CartReview() {
                       <div className="pt-1">{meta.delivery.line1}</div>
                       {meta.delivery.line2 && <div>{meta.delivery.line2}</div>}
                       <div>{[meta.delivery.city, meta.delivery.county].filter(Boolean).join(", ")}</div>
-                      <div className="font-mono">{meta.delivery.postcode}</div>
+                      <div>{meta.delivery.postcode}</div>
                     </>
                   ) : <div className="text-destructive text-xs">Delivery contact and address required</div>}
                 </div>
