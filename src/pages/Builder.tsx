@@ -183,6 +183,37 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
 
+  // Undo history
+  const undoStack = useRef<TreeData[]>([]);
+  const MAX_UNDO = 20;
+  const [canUndo, setCanUndo] = useState(false);
+  const pushUndo = useCallback((snapshot: TreeData) => {
+    undoStack.current = [snapshot, ...undoStack.current].slice(0, MAX_UNDO);
+    setCanUndo(true);
+  }, []);
+  const handleUndo = useCallback(() => {
+    const prev = undoStack.current[0];
+    if (!prev) return;
+    undoStack.current = undoStack.current.slice(1);
+    setCanUndo(undoStack.current.length > 0);
+    setTree(prev);
+    setSelectedId(null);
+    dirtyRef.current = true;
+    toast.info("Undone");
+  }, []);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+        e.preventDefault();
+        handleUndo();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [handleUndo]);
+
   // Debounced audit refs
   const labelAuditRef = useRef<{
     nodeId: string;
