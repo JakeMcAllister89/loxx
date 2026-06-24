@@ -1867,10 +1867,29 @@ function KeyManager({ node, onPatch }: { node: TNode; onPatch: (p: Partial<TNode
 
   return (
     <div>
-      <div className="flex items-center gap-1.5 mb-2">
-        <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-xs font-medium">Keys</span>
-      </div>
+      <TooltipProvider>
+        <div className="flex items-center gap-1.5 mb-2">
+          <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-xs font-medium">Keys</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button type="button" className="p-0.5 hover:bg-muted rounded-full">
+                <Info className="h-3 w-3 text-muted-foreground" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[220px] text-xs">
+              These keys open every door in this group and all the groups below it. 
+              Order as many copies as the key-holders who need this level of access.
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
+
+      <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">
+        This is the key that opens all doors in this group. Set how many copies you need — 
+        2 is standard for most sites.
+      </p>
+
       <div className="flex flex-col gap-2">
         {entries.map((entry, i) => (
           <div key={i}>
@@ -1880,7 +1899,7 @@ function KeyManager({ node, onPatch }: { node: TNode; onPatch: (p: Partial<TNode
                 className="flex-1 min-w-0 text-xs font-mono bg-transparent border-none outline-none text-amber-700 font-medium"
                 value={entry.ref}
                 onChange={(e) => updateRef(i, e.target.value)}
-                placeholder="Key reference"
+                placeholder="e.g. Main Building Master"
               />
               <button
                 type="button"
