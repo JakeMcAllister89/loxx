@@ -193,6 +193,7 @@ function CanvasInner({
       minZoom={0.3}
       maxZoom={1.5}
       proOptions={{ hideAttribution: true }}
+      defaultEdgeOptions={{ type: "smoothstep" }}
     >
       <Background gap={20} size={1} color="hsl(var(--border))" />
       <Controls
