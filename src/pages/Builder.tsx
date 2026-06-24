@@ -877,6 +877,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <div className="ml-4 relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search nodes…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 w-56 h-9" />
+          {search.trim() && (
+            <div className="absolute top-full left-0 mt-1 text-[11px] text-muted-foreground whitespace-nowrap">
+              {searchMatch.size === 0 ? "No matches" : `${searchMatch.size} match${searchMatch.size !== 1 ? "es" : ""} highlighted`}
+            </div>
+          )}
         </div>
 
         <div className="flex-1" />
