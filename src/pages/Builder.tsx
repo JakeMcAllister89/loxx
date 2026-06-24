@@ -1610,6 +1610,9 @@ function DetailPanel({
         </button>
       </div>
       <h3 className="text-lg font-semibold mt-1 truncate" title={displayName}>{displayName || "Unnamed"}</h3>
+      <p className="text-[11px] text-muted-foreground mt-1">{meta.description}</p>
+
+
 
 
       <div className="mt-5 space-y-4">
