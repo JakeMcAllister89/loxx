@@ -250,9 +250,9 @@ export default function QuoteNew() {
                 <Input value={poRef} onChange={(e) => setPoRef(e.target.value)} placeholder="e.g. PO-2024-001" />
               </div>
               <div>
-                <Label className="text-xs">Notes for quote recipient</Label>
+                <Label className="text-xs">Notes (optional)</Label>
                 <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4}
-                  placeholder="e.g. This quote is valid for 30 days. Please contact us to discuss installation requirements." />
+                  placeholder="e.g. Please review and approve this quote for our master key system. Valid for 30 days. Contact me with any questions." />
               </div>
             </div>
 
