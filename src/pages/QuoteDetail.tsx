@@ -247,7 +247,7 @@ export default function QuoteDetail() {
           {systemRef && (
             <section className="mt-8 p-4 bg-muted/30 rounded">
               <div className="text-sm">
-                This quote covers master key system reference: <span className="font-mono font-semibold text-amber-700">{systemRef}</span>
+                This quote covers master key system reference: <span className="font-semibold text-amber-700">{systemRef}</span>
               </div>
               <div className="text-xs text-muted-foreground mt-1">All cylinders will be keyed to this system. Differ schedule available on request.</div>
             </section>
