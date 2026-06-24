@@ -163,13 +163,13 @@ export default function Orders() {
                           <div className="font-medium truncate">
                             {it.room_label || it.product_code || it.item_type}
                           </div>
-                          <div className="text-xs text-muted-foreground font-mono truncate">
+                          <div className="text-xs text-muted-foreground truncate">
                             {[it.differ_ref, it.product_code, it.finish].filter(Boolean).join(" · ")}
                           </div>
                         </div>
-                        <div className="text-right font-mono shrink-0">
+                        <div className="text-right shrink-0">
                           <div className="text-xs text-muted-foreground">{it.quantity} × £{Number(it.unit_price).toFixed(2)}</div>
-                          <div>£{Number(it.line_total).toFixed(2)}</div>
+                          <div className="font-medium">£{Number(it.line_total).toFixed(2)}</div>
                         </div>
                       </div>
                     ))}
@@ -177,7 +177,7 @@ export default function Orders() {
                   </div>
                 </section>
 
-                <section className="space-y-1 font-mono text-sm pt-2 border-t">
+                <section className="space-y-1 text-sm pt-2 border-t">
                   <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>£{Number(selected.subtotal).toFixed(2)}</span></div>
                   <div className="flex justify-between text-muted-foreground"><span>VAT</span><span>£{Number(selected.vat).toFixed(2)}</span></div>
                   <div className="flex justify-between text-base font-semibold pt-1"><span>Total</span><span>£{Number(selected.total).toFixed(2)}</span></div>
