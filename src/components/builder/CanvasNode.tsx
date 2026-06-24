@@ -54,7 +54,7 @@ export const NODE_HEIGHT = 72;
 
 function CanvasNodeImpl(props: NodeProps) {
   const d = props.data as unknown as CanvasNodeData;
-  const selected = props.selected ?? d.selected;
+  const selected = d.selected;
   const {
     node, hasError, product, highlight, addOptions, onAddChildType,
     extraAddActions, hasDecommissionedChildren, revealDecommissioned, onToggleRevealDecommissioned,
