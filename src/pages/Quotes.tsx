@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Trash2 } from "lucide-react";
 import { STATUS_BADGE, STATUS_LABEL } from "@/lib/quote";
 
 interface QuoteRow {
@@ -26,6 +26,7 @@ export default function Quotes() {
   const [systems, setSystems] = useState<Record<string, { name: string; reference: string | null }>>({});
   const [filter, setFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
