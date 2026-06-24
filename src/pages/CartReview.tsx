@@ -106,7 +106,7 @@ export default function CartReview() {
                     <div className="flex-1">
                       <div className="font-semibold">{sys.name}</div>
                     </div>
-                    {sys.reference && <span className="font-mono text-xs px-2 py-1 rounded bg-amber-100 text-amber-900 border border-amber-200">{sys.reference}</span>}
+                    {sys.reference && <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-200">{sys.reference}</span>}
                   </button>
                   {!isCollapsed && sys.tree_data?.root && (
                     <div className="p-4">
