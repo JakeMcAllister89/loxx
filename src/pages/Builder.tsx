@@ -1481,7 +1481,7 @@ function TreeRow({
 
         {/* differ for CYL */}
         {node.type === "CYL" && node.differ != null && (
-          <span className="text-[11px] font-mono text-muted-foreground">· D{String(node.differ).padStart(3, "0")}</span>
+          <span className="text-[11px] text-muted-foreground">· D{String(node.differ).padStart(3, "0")}</span>
         )}
         {node.type === "CYL" && !node.cylinder_type && (
           <span className="text-[11px] text-destructive">· no product</span>
