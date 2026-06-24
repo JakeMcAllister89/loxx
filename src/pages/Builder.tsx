@@ -816,7 +816,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         }}>
           <FileText className="h-4 w-4" /> Get quote
         </Button>
-        {(() => {
+        {!readOnly && (() => {
           const amber = "bg-[hsl(36_94%_52%)] hover:bg-[hsl(36_94%_46%)] text-white";
           if (exportedAt == null) {
             return (
@@ -844,6 +844,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
           );
         })()}
       </div>
+
+      {readOnly && (
+        <div className="border-b border-amber-300 bg-amber-50 px-6 py-2.5 flex items-center gap-2 no-print">
+          <Lock className="h-4 w-4 text-amber-700" />
+          <span className="text-sm text-amber-900">You have view-only access to this system.</span>
+        </div>
+      )}
+
 
       {/* Import banner */}
       {imported && allCyls.length > 0 && (
