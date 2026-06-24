@@ -188,7 +188,7 @@ export default function QuoteDetail() {
                   {[q.delivery_address.line1, q.delivery_address.line2, q.delivery_address.city, q.delivery_address.county, q.delivery_address.postcode].filter(Boolean).join("\n")}
                 </div>
               )}
-              {q.customer_po_ref && <div className="text-xs text-muted-foreground mt-2">Customer ref: <span className="font-mono">{q.customer_po_ref}</span></div>}
+              {q.customer_po_ref && <div className="text-xs text-muted-foreground mt-2">Customer ref: <span className="font-medium">{q.customer_po_ref}</span></div>}
             </div>
             <div>
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground">From</div>
