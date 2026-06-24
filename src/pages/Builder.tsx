@@ -807,15 +807,17 @@ function BuilderInner({ systemId }: { systemId: string }) {
         )}
         <SaveStatusIndicator status={saveStatus} onRetry={save} />
         <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" /> Export PDF</Button>
-        <Button variant="outline" onClick={() => {
-          if (!tree.root) { toast.error("Nothing to quote"); return; }
-          const items = treeToQuoteItems(tree, products as any, { system_id: systemId, system_name: name, system_reference: reference });
-          if (items.length === 0) { toast.error("Add at least one configured cylinder before requesting a quote."); return; }
-          stashQuoteDraft({ system_id: systemId, system_name: name, system_reference: reference, tree_snapshot: tree, items });
-          navigate("/quotes/new");
-        }}>
-          <FileText className="h-4 w-4" /> Get quote
-        </Button>
+        {!readOnly && (
+          <Button variant="outline" onClick={() => {
+            if (!tree.root) { toast.error("Nothing to quote"); return; }
+            const items = treeToQuoteItems(tree, products as any, { system_id: systemId, system_name: name, system_reference: reference });
+            if (items.length === 0) { toast.error("Add at least one configured cylinder before requesting a quote."); return; }
+            stashQuoteDraft({ system_id: systemId, system_name: name, system_reference: reference, tree_snapshot: tree, items });
+            navigate("/quotes/new");
+          }}>
+            <FileText className="h-4 w-4" /> Get quote
+          </Button>
+        )}
         {!readOnly && (() => {
           const amber = "bg-[hsl(36_94%_52%)] hover:bg-[hsl(36_94%_46%)] text-white";
           if (exportedAt == null) {
@@ -1057,11 +1059,13 @@ function BuilderInner({ systemId }: { systemId: string }) {
                   )}
                 </div>
               </div>
-              <div className="mt-8 pt-5 border-t">
-                <h4 className="text-sm font-semibold text-foreground mb-1">Activity</h4>
-                <p className="text-[11px] text-muted-foreground mb-3">Last 20 actions on this system.</p>
-                <ActivityTimeline systemId={systemId} showClear />
-              </div>
+              {!readOnly && (
+                <div className="mt-8 pt-5 border-t">
+                  <h4 className="text-sm font-semibold text-foreground mb-1">Activity</h4>
+                  <p className="text-[11px] text-muted-foreground mb-3">Last 20 actions on this system.</p>
+                  <ActivityTimeline systemId={systemId} showClear />
+                </div>
+              )}
             </div>
           ) : (
             <DetailPanel

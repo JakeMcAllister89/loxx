@@ -128,7 +128,7 @@ export default function PartnerPortal() {
 
       <main className="p-6 max-w-6xl mx-auto space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <Card label="Lifetime revenue" value={gbp(data.summary.lifetimeRevenue)} />
+          <Card label="Lifetime revenue (ex VAT)" value={gbp(data.summary.lifetimeRevenue)} />
           <Card label="Lifetime commission" value={gbp(data.summary.lifetimeCommission)} accent />
           <Card label="Systems referred" value={String(data.summary.systemsCount)} />
           <Card label="Pending commission" value={gbp(data.summary.pendingCommission)} />
@@ -141,7 +141,7 @@ export default function PartnerPortal() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Period</TableHead>
-                  <TableHead className="text-right">Revenue</TableHead>
+                  <TableHead className="text-right">Revenue (ex VAT)</TableHead>
                   <TableHead className="text-right">%</TableHead>
                   <TableHead className="text-right">Commission</TableHead>
                   <TableHead>Status</TableHead>
@@ -178,7 +178,7 @@ export default function PartnerPortal() {
                   <TableHead>System</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>First order</TableHead>
-                  <TableHead className="text-right">Revenue</TableHead>
+                  <TableHead className="text-right">Revenue (ex VAT)</TableHead>
                   <TableHead className="text-right">Commission</TableHead>
                 </TableRow>
               </TableHeader>

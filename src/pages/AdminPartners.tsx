@@ -292,7 +292,7 @@ export default function AdminPartners() {
                   <TableRow>
                     <TableHead>Partner</TableHead>
                     <TableHead>Period</TableHead>
-                    <TableHead>Revenue</TableHead>
+                    <TableHead>Revenue (ex VAT)</TableHead>
                     <TableHead>Commission</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>

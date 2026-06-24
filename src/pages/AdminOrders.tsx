@@ -335,7 +335,7 @@ export default function AdminOrders() {
                 <TableHead>System</TableHead>
                 <TableHead>Ordered</TableHead>
                 <TableHead>Items</TableHead>
-                <TableHead>Revenue</TableHead>
+                <TableHead>Revenue (ex VAT)</TableHead>
                 <TableHead>Cost</TableHead>
                 <TableHead>Profit</TableHead>
                 <TableHead>Margin</TableHead>
@@ -614,7 +614,7 @@ export default function AdminOrders() {
                   <div className="flex justify-between"><span>VAT</span><span className="font-mono">{gbp(Number(open.vat))}</span></div>
                   <div className="flex justify-between font-semibold"><span>Total inc VAT</span><span className="font-mono">{gbp(Number(open.total))}</span></div>
                   <div className="border-t mt-2 pt-2 grid grid-cols-3 gap-2 text-center">
-                    <div><div className="text-xs text-muted-foreground">Revenue</div><div className="font-mono font-semibold text-green-600">{gbp(Number(open.total))}</div></div>
+                    <div><div className="text-xs text-muted-foreground">Revenue (ex VAT)</div><div className="font-mono font-semibold text-green-600">{gbp(Number(open.total))}</div></div>
                     <div><div className="text-xs text-muted-foreground">Cost</div><div className="font-mono text-muted-foreground">{gbp(openCost)}</div></div>
                     <div><div className="text-xs text-muted-foreground">Profit</div><div className="font-mono font-semibold text-green-600">{gbp(openProfit)}</div></div>
                   </div>
