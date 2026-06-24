@@ -188,7 +188,7 @@ function CanvasInner({
       nodeTypes={nodeTypes}
       nodesDraggable={false}
       nodesConnectable={false}
-      elementsSelectable
+      elementsSelectable={false}
       panOnScroll
       minZoom={0.3}
       maxZoom={1.5}
