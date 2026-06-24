@@ -153,7 +153,7 @@ function CanvasInner({
 
   // Register a "fit view" trigger for the topbar button
   useEffect(() => {
-    if (registerFitView) registerFitView(() => fitView({ padding: 0.2, duration: 400 }));
+    if (registerFitView) registerFitView(() => fitView({ padding: 0.25, duration: 400 }));
   }, [registerFitView, fitView]);
 
   // Auto-pan to newly added nodes
@@ -167,14 +167,13 @@ function CanvasInner({
     lastNodeCount.current = nodes.length;
   }, [nodes, setCenter]);
 
-  // Fit on first mount with content
+  // Fit when node count changes (mount, new system, add/remove)
   useEffect(() => {
-    if (nodes.length > 0) {
-      const t = setTimeout(() => fitView({ padding: 0.2, duration: 0 }), 50);
-      return () => clearTimeout(t);
-    }
+    if (nodes.length === 0) return;
+    const t = setTimeout(() => fitView({ padding: 0.25, duration: 300 }), 150);
+    return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [nodes.length]);
 
   const handleNodeClick = useCallback((_: unknown, n: Node) => onSelect(n.id), [onSelect]);
 
@@ -194,14 +193,12 @@ function CanvasInner({
       minZoom={0.3}
       maxZoom={1.5}
       proOptions={{ hideAttribution: true }}
-      fitView
-      fitViewOptions={{ padding: 0.2 }}
     >
       <Background gap={20} size={1} color="hsl(var(--border))" />
       <Controls showInteractive={false} className="!shadow-card !rounded-[10px] !border" />
       <button
         type="button"
-        onClick={() => fitView({ padding: 0.2, duration: 400 })}
+        onClick={() => fitView({ padding: 0.25, duration: 400 })}
         className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 text-xs font-semibold px-4 py-2 rounded-full bg-card border border-border shadow-md text-foreground hover:bg-muted"
         title="Zoom to fit entire system in view"
       >

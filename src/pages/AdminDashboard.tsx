@@ -171,7 +171,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <StatCard label="Orders" value={activeOrders.length} sub={`${gbp(stats.revenue)} total`} />
           <StatCard
-            label="Revenue"
+            label="Revenue (ex VAT)"
             value={gbp(stats.revenue)}
             extra={stats.revChange != null ? (
               <span className={`text-xs inline-flex items-center gap-1 ${stats.revChange >= 0 ? "text-green-600" : "text-red-600"}`}>

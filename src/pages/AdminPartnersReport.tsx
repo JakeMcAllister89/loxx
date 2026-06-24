@@ -166,13 +166,13 @@ export default function AdminPartnersReport() {
       const sysCount = new Set(pRows.map((r) => r.system_id)).size;
 
       doc.setFontSize(10);
-      doc.text(`Total revenue:  ${gbp(totalRev)}`, 14, 62);
+      doc.text(`Total revenue (ex VAT):  ${gbp(totalRev)}`, 14, 62);
       doc.text(`Total commission:  ${gbp(totalCom)}`, 14, 68);
       doc.text(`Systems:  ${sysCount}`, 14, 74);
 
       autoTable(doc, {
         startY: 82,
-        head: [["System", "Ref", "PO", "Date", "Revenue", "%", "Commission"]],
+        head: [["System", "Ref", "PO", "Date", "Revenue (ex VAT)", "%", "Commission"]],
         body: pRows.map((r) => [
           r.system_name, r.system_reference ?? "", r.order_po ?? "",
           fmtDate(r.order_date), gbp(r.revenue), r.commission_pct.toFixed(2), gbp(r.commission),
@@ -225,7 +225,7 @@ export default function AdminPartnersReport() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-6">
-          <Card label="Revenue attributed" value={gbp(summary.revenue)} />
+          <Card label="Revenue attributed (ex VAT)" value={gbp(summary.revenue)} />
           <Card label="Commission owed" value={gbp(summary.commission)} />
           <Card label="Systems" value={String(summary.systems)} />
           <Card label="Orders" value={String(summary.orders)} />
@@ -240,7 +240,7 @@ export default function AdminPartnersReport() {
                 <TableHead>Ref</TableHead>
                 <TableHead>PO</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead className="text-right">Revenue</TableHead>
+                <TableHead className="text-right">Revenue (ex VAT)</TableHead>
                 <TableHead className="text-right">%</TableHead>
                 <TableHead className="text-right">Commission</TableHead>
               </TableRow>
