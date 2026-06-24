@@ -1086,39 +1086,126 @@ function BuilderInner({ systemId }: { systemId: string }) {
         </div>
 
 
-        {/* Print-only hierarchy + schedule */}
-        <div className="print-only px-6">
-          <div className="text-sm text-muted-foreground">See cylinder schedule below.</div>
+        {/* Print-only export — key schedule + cylinder schedule grouped by zone */}
+        <div className="print-only px-6 mt-6">
+          {/* KEY SCHEDULE */}
+          {(() => {
+            const keyRows: { ref: string; label: string; type: string; qty: number }[] = [];
+            const walkKeys = (n: TNode) => {
+              if (n.type !== "CYL") {
+                const typeLabel = n.type === "GMK" ? "Grand Master Key" : n.type === "MK" ? "Master Key" : "Sub-Master Key";
+                normaliseKeys(n).forEach((k) => keyRows.push({ ref: k.ref, label: n.label, type: typeLabel, qty: k.qty }));
+              }
+              n.children.forEach(walkKeys);
+            };
+            if (tree.root) walkKeys(tree.root);
+            if (keyRows.length === 0) return null;
+            return (
+              <div className="mb-8">
+                <h2 className="text-lg font-semibold mb-2">Key schedule</h2>
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-1 px-2">Key ref</th>
+                      <th className="text-left py-1 px-2">Description</th>
+                      <th className="text-left py-1 px-2">Level</th>
+                      <th className="text-right py-1 px-2">Qty</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {keyRows.map((r, i) => (
+                      <tr key={i} className="border-b">
+                        <td className="py-1 px-2 font-mono">{r.ref}</td>
+                        <td className="py-1 px-2">{r.label}</td>
+                        <td className="py-1 px-2">{r.type}</td>
+                        <td className="py-1 px-2 text-right">{r.qty}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
+
+          {/* CYLINDER SCHEDULE — grouped by zone */}
+          {(() => {
+            if (allCyls.length === 0) return null;
+            const groups: { zoneLabel: string; zoneRef: string; zoneType: string; cyls: TNode[] }[] = [];
+            const walkZones = (n: TNode, currentZone?: { zoneLabel: string; zoneRef: string; zoneType: string }) => {
+              if (n.type === "CYL") {
+                if (currentZone) {
+                  const g = groups.find(g => g.zoneRef === currentZone.zoneRef);
+                  if (g) g.cyls.push(n);
+                  else groups.push({ ...currentZone, cyls: [n] });
+                } else {
+                  const fallback = groups.find(g => g.zoneRef === "ungrouped");
+                  if (fallback) fallback.cyls.push(n);
+                  else groups.push({ zoneLabel: "Other", zoneRef: "ungrouped", zoneType: "", cyls: [n] });
+                }
+              } else {
+                const zone = (n.type === "SMK" || n.type === "MK" || n.type === "GMK")
+                  ? { zoneLabel: n.location?.trim() || n.label, zoneRef: n.label, zoneType: n.type }
+                  : currentZone;
+                n.children.forEach(c => walkZones(c, zone));
+              }
+            };
+            if (tree.root) walkZones(tree.root);
+
+            return (
+              <div>
+                <h2 className="text-lg font-semibold mb-2">Cylinder schedule</h2>
+                {groups.map((group) => (
+                  <div key={group.zoneRef} className="mb-5">
+                    <div className="text-sm font-semibold mb-1 pb-1 border-b">
+                      {group.zoneLabel}
+                      {group.zoneRef !== group.zoneLabel && group.zoneRef !== "ungrouped" && (
+                        <span className="text-xs text-muted-foreground font-normal ml-2">({group.zoneRef})</span>
+                      )}
+                    </div>
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-1 px-2">Differ</th>
+                          <th className="text-left py-1 px-2">Room / Door</th>
+                          <th className="text-left py-1 px-2">Product code</th>
+                          <th className="text-left py-1 px-2">Lock function</th>
+                          <th className="text-left py-1 px-2">Finish</th>
+                          <th className="text-left py-1 px-2">Size</th>
+                          <th className="text-right py-1 px-2">Qty</th>
+                          <th className="text-right py-1 px-2">Keys inc.</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {group.cyls.map((c) => {
+                          const prod = c.cylinder_type ? products.find(p => p.code === c.cylinder_type) : null;
+                          const extraKeys = c.extra_keys ?? 0;
+                          return (
+                            <tr key={c.id} className="border-b">
+                              <td className="py-1 px-2 font-mono">D{String(c.differ ?? 0).padStart(3, "0")}</td>
+                              <td className="py-1 px-2">{c.label}</td>
+                              <td className="py-1 px-2 font-mono">{c.cylinder_type ?? "—"}</td>
+                              <td className="py-1 px-2">{(prod as any)?.cylinder_profile ?? "—"}</td>
+                              <td className="py-1 px-2">{c.finish ?? "—"}</td>
+                              <td className="py-1 px-2">{c.size ?? "—"}</td>
+                              <td className="py-1 px-2 text-right">{c.quantity ?? 1}</td>
+                              <td className="py-1 px-2 text-right">{2 + extraKeys}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
+          {/* Footer */}
+          <div className="mt-10 pt-4 border-t text-center text-[10px] text-muted-foreground">
+            LOXX — Master key systems made simple · myloxx.co.uk
+          </div>
         </div>
 
-        {/* Print cylinder schedule */}
-        {allCyls.length > 0 && (
-          <div className="print-only mt-8 px-6">
-            <h2 className="text-lg font-semibold mb-2">Cylinder schedule</h2>
-            <table className="w-full text-xs border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-1 px-2">Differ</th>
-                  <th className="text-left py-1 px-2">Room / Door</th>
-                  <th className="text-left py-1 px-2">Type</th>
-                  <th className="text-left py-1 px-2">Finish</th>
-                  <th className="text-left py-1 px-2">Qty</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allCyls.map((c) => (
-                  <tr key={c.id} className="border-b">
-                    <td className="py-1 px-2 font-mono">D{String(c.differ ?? 0).padStart(3, "0")}</td>
-                    <td className="py-1 px-2">{c.label}</td>
-                    <td className="py-1 px-2 font-mono">{c.cylinder_type ?? "—"}</td>
-                    <td className="py-1 px-2">{c.finish ?? "—"}</td>
-                    <td className="py-1 px-2 font-mono">{c.quantity ?? 1}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
 
 
         {/* Right detail panel */}
