@@ -25,7 +25,8 @@ function timeAgo(iso: string) {
 }
 
 export default function Systems() {
-  const { user } = useAuth();
+  const { user, orgRole } = useAuth();
+  const canDelete = orgRole === "master_admin";
   const navigate = useNavigate();
   const [systems, setSystems] = useState<Sys[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,7 +153,7 @@ export default function Systems() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => { setRenameOf(s); setRenameValue(s.name); }}>Rename</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => toast.info("Archive coming soon")}>Archive</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteOf(s)}>Delete</DropdownMenuItem>
+                      {canDelete && <DropdownMenuItem className="text-destructive" onClick={() => setDeleteOf(s)}>Delete</DropdownMenuItem>}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
