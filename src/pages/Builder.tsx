@@ -654,12 +654,20 @@ function BuilderInner({ systemId }: { systemId: string }) {
     if (!search.trim() || !tree.root) return s;
     const q = search.trim().toLowerCase();
     const walk = (n: TNode) => {
-      if (n.label.toLowerCase().includes(q) || n.cylinder_type?.toLowerCase().includes(q)) s.add(n.id);
+      const differRef = n.differ != null ? `d${String(n.differ).padStart(3, "0")}` : "";
+      const productName = n.cylinder_type ? (productsByCode[n.cylinder_type]?.name ?? "").toLowerCase() : "";
+      if (
+        n.label.toLowerCase().includes(q) ||
+        (n.location ?? "").toLowerCase().includes(q) ||
+        n.cylinder_type?.toLowerCase().includes(q) ||
+        differRef.includes(q) ||
+        productName.includes(q)
+      ) s.add(n.id);
       n.children.forEach(walk);
     };
     walk(tree.root);
     return s;
-  }, [search, tree]);
+  }, [search, tree, productsByCode]);
 
   const errorIds = useMemo(() => new Set(issues.filter((i) => i.level === "error" && i.nodeId).map((i) => i.nodeId!)), [issues]);
 
