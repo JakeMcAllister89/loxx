@@ -1452,6 +1452,68 @@ function BuilderInner({ systemId }: { systemId: string }) {
           })()}
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Copy spec modal */}
+      <Dialog
+        open={copySpecState.open}
+        onOpenChange={(o) => !o && setCopySpecState({ open: false, sourceId: "", newLabel: "" })}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Copy door spec</DialogTitle>
+            <DialogDescription asChild>
+              <div>
+                {(() => {
+                  const src = findNode(tree.root, copySpecState.sourceId);
+                  if (!src) return null;
+                  const parts = [src.cylinder_type, src.finish, src.size].filter(Boolean);
+                  return (
+                    <>
+                      <div>Creates a new door with the same spec as <span className="font-medium text-foreground">{src.label}</span>.</div>
+                      {parts.length > 0 && (
+                        <div className="mt-1 text-xs">
+                          {parts.join(" · ")}
+                          {(src.quantity ?? 1) > 1 && ` · Qty ${src.quantity}`}
+                          {(src.extra_keys ?? 0) > 0 && ` · +${src.extra_keys} extra keys`}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label htmlFor="copy-spec-label">New room / door name</Label>
+            <Input
+              id="copy-spec-label"
+              autoFocus
+              placeholder="e.g. Director's Office"
+              value={copySpecState.newLabel}
+              onChange={(e) => setCopySpecState((s) => ({ ...s, newLabel: e.target.value }))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && copySpecState.newLabel.trim()) {
+                  handleCopySpec(copySpecState.sourceId, copySpecState.newLabel);
+                }
+              }}
+              className="mt-1.5"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCopySpecState({ open: false, sourceId: "", newLabel: "" })}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => handleCopySpec(copySpecState.sourceId, copySpecState.newLabel)}
+            >
+              Add door
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
