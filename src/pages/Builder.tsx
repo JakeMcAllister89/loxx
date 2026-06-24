@@ -1858,6 +1858,11 @@ function DetailPanel({
               </Tooltip>
             </TooltipProvider>
           )}
+          {!readOnly && isCyl && node.cylinder_type && onCopySpec && (
+            <Button variant="outline" onClick={onCopySpec} className="w-full">
+              <Copy className="h-4 w-4" /> Copy spec to new door
+            </Button>
+          )}
           {!readOnly && !isRoot && (
             <Button variant="outline" onClick={onDelete} className="text-destructive hover:text-destructive">
               <X className="h-4 w-4" /> Remove from system
