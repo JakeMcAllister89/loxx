@@ -58,6 +58,29 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
   const activeFamily = selected?.cylinder_type ?? "";
   const variants = activeFamily ? families.get(activeFamily) ?? [] : [];
 
+  const profilesForFamily = useMemo(() => {
+    if (!activeFamily) return [];
+    const variants = families.get(activeFamily) ?? [];
+    return Array.from(new Set(variants.map((p) => (p as any).cylinder_profile).filter(Boolean))) as string[];
+  }, [families, activeFamily]);
+
+  const activeProfile = useMemo(() => {
+    if (!selected) return null;
+    return (selected as any).cylinder_profile ?? null;
+  }, [selected]);
+
+  const setProfile = (profile: string) => {
+    const family = activeFamily;
+    const variants = families.get(family) ?? [];
+    const match = variants.find(
+      (p) =>
+        (p as any).cylinder_profile === profile &&
+        (node.size ? p.size === node.size : true) &&
+        (node.finish ? p.finish === node.finish : true)
+    ) ?? variants.find((p) => (p as any).cylinder_profile === profile);
+    if (match) onPatch({ cylinder_type: match.code, finish: match.finish ?? node.finish, size: match.size ?? node.size });
+  };
+
   const finishesForFamily = useMemo(
     () => Array.from(new Set(variants.map((v) => v.finish).filter(Boolean))) as string[],
     [variants],
@@ -108,7 +131,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
     <div className="space-y-4">
       {/* Family / type selector — card-style */}
       <div>
-        <Label className="text-xs">Cylinder type</Label>
+        <Label className="text-xs">Lock type</Label>
         <div className="grid grid-cols-2 gap-2 mt-1.5">
           {Array.from(families.keys()).map((fam) => {
             const isActive = !isCommonEntrance && fam === activeFamily;
@@ -156,6 +179,31 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
         )}
       </div>
 
+      {/* Lock function selector */}
+      {!isCommonEntrance && profilesForFamily.length > 1 && (
+        <div>
+          <Label className="text-xs">Lock function</Label>
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
+            {profilesForFamily.map((profile) => {
+              const isActive = activeProfile === profile;
+              return (
+                <button
+                  key={profile}
+                  onClick={() => setProfile(profile)}
+                  className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-foreground border-border hover:border-primary/50"
+                  }`}
+                >
+                  {profile}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Selected product card */}
       {selected && (
         <div className="rounded-[10px] border bg-card p-3 shadow-card">
@@ -167,7 +215,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
               <div className="text-sm font-semibold leading-tight">{selected.product_description ?? selected.name}</div>
               <div className="text-[11px] font-mono text-muted-foreground mt-0.5">{selected.code}</div>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                {selected.cylinder_profile && <Badge variant="secondary" className="text-[10px]">{selected.cylinder_profile} profile</Badge>}
+                {selected.cylinder_profile && <Badge variant="secondary" className="text-[10px]">{selected.cylinder_profile}</Badge>}
                 {selected.size && <Badge variant="secondary" className="text-[10px] font-mono">{selected.size}</Badge>}
               </div>
               <div className="text-lg font-bold text-[hsl(var(--node-cyl))] mt-1.5">£{Number(selected.price_gbp).toFixed(2)}</div>

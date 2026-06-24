@@ -123,7 +123,7 @@ export default function AdminProducts() {
                 <th className="px-3 py-2 w-14"></th>
                 {([
                   ["name","Name"],["code","Code"],["cylinder_type","Type"],["finish","Finish"],["size","Size"],
-                  ["cylinder_profile","Profile"],
+                  ["cylinder_profile","Lock function"],
                   ["cost_price","Cost"],["price_gbp","Sell"],
                 ] as [keyof AdminProduct, string][]).map(([k,l]) => (
                   <th key={k} className="px-3 py-2 text-left">
@@ -282,7 +282,7 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Classification</div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Cylinder type</Label>
+                <Label>Lock type</Label>
                 <Select value={p.cylinder_type} onValueChange={v => upd("cylinder_type", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{types.map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}</SelectContent>
@@ -290,7 +290,7 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
               </div>
               <div><Label>Size</Label><Input placeholder="e.g. 35/35" value={p.size} onChange={e => upd("size", e.target.value)} /></div>
               <div>
-                <Label>Cylinder profile</Label>
+                <Label>Lock function</Label>
                 <Input placeholder="e.g. Euro, Oval, Rim, Mortice" value={p.cylinder_profile ?? ""} onChange={e => upd("cylinder_profile", e.target.value || null)} />
               </div>
               <div><Label>Finish</Label><Input value={p.finish} onChange={e => upd("finish", e.target.value)} /></div>
@@ -482,7 +482,7 @@ function CylinderTypesSection({ types, reload, products }: { types: CylinderType
     <section className="mt-10">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">Cylinder types</h2>
+          <h2 className="text-xl font-semibold tracking-tight">Lock types</h2>
           <p className="text-sm text-muted-foreground">Manage the cylinder type options that appear in the product form and the builder.</p>
         </div>
       </div>
