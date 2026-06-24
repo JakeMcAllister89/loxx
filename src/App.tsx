@@ -30,9 +30,11 @@ import QuoteNew from "./pages/QuoteNew";
 import QuoteDetail from "./pages/QuoteDetail";
 import AdminPartners from "./pages/AdminPartners";
 import AdminPartnersReport from "./pages/AdminPartnersReport";
+import AdminUsers from "./pages/AdminUsers";
 import PartnerPortal from "./pages/PartnerPortal";
 import Team from "./pages/Team";
 import AcceptInvite from "./pages/AcceptInvite";
+import AcceptPlatformInvite from "./pages/AcceptPlatformInvite";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +51,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/accept-invite" element={<AcceptInvite />} />
+              <Route path="/accept-platform-invite" element={<AcceptPlatformInvite />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
               <Route path="/systems" element={<ProtectedRoute><Systems /></ProtectedRoute>} />
@@ -65,6 +68,7 @@ const App = () => (
               <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+              <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="/admin/partners" element={<AdminRoute><AdminPartners /></AdminRoute>} />
               <Route path="/admin/partners/report" element={<AdminRoute><AdminPartnersReport /></AdminRoute>} />
               <Route path="/partner-portal" element={<PartnerPortal />} />
