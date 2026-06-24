@@ -273,7 +273,7 @@ function CanvasNodeImpl(props: NodeProps) {
           ref={popRef}
           onMouseEnter={() => setPopoverOpen(true)}
           onMouseLeave={() => setPopoverOpen(false)}
-          className="absolute -bottom-3 left-1/2 -translate-x-1/2 nodrag group/add"
+          className="absolute -bottom-5 left-1/2 -translate-x-1/2 nodrag group/add"
         >
           <button
             onClick={handlePlusClick}
