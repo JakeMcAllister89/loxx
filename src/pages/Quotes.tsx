@@ -80,7 +80,11 @@ export default function Quotes() {
         </div>
 
         <div className="mt-5 flex gap-2 flex-wrap">
-          {["all", "draft", "sent", "accepted", "converted", "expired", "declined"].map((s) => (
+          {[
+            "all", "draft", "sent", "accepted", "converted",
+            ...(rows.some(r => r.status === "expired") ? ["expired"] : []),
+            ...(rows.some(r => r.status === "declined") ? ["declined"] : []),
+          ].map((s) => (
             <button key={s} onClick={() => setFilter(s)}
               className={`px-3 py-1 text-xs rounded-full border ${filter === s ? "bg-foreground text-background border-foreground" : "bg-card hover:border-foreground/40"}`}>
               {s === "all" ? "All" : STATUS_LABEL[s] ?? s}
