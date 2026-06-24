@@ -53,6 +53,14 @@ export default function Quotes() {
     })();
   }, [user]);
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this draft quote? This cannot be undone.")) return;
+    setDeleting(id);
+    await (supabase.from("quotes" as any) as any).delete().eq("id", id);
+    setRows((prev) => prev.filter((r) => r.id !== id));
+    setDeleting(null);
+  };
+
   const filtered = useMemo(
     () => (filter === "all" ? rows : rows.filter((r) => r.status === filter)),
     [rows, filter],
