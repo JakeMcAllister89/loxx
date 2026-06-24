@@ -135,10 +135,26 @@ Deno.serve(async (req) => {
 
     const today = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
 
-    const differRows = (items ?? [])
+    const cylItemsSorted = (items ?? [])
       .filter((i: any) => i.item_type === "cylinder")
-      .sort((a: any, b: any) => (a.differ_ref ?? "").localeCompare(b.differ_ref ?? ""))
-      .map((i: any) => {
+      .sort((a: any, b: any) => (a.differ_ref ?? "").localeCompare(b.differ_ref ?? ""));
+
+    const zoneGroups = new Map<string, { zoneLabel: string; rows: any[] }>();
+    cylItemsSorted.forEach((i: any) => {
+      const h = hierarchyMap[i.differ_ref ?? ""] ?? { gmk: "—", mk: "—", smk: "—" };
+      const zoneKey = h.smk !== "—" ? h.smk : (h.mk !== "—" ? h.mk : "General");
+      const existing = zoneGroups.get(zoneKey);
+      if (existing) existing.rows.push(i);
+      else zoneGroups.set(zoneKey, { zoneLabel: zoneKey, rows: [i] });
+    });
+
+    const isGrouped = zoneGroups.size > 1;
+
+    const differRows = Array.from(zoneGroups.values()).map(({ zoneLabel, rows }) => {
+      const header = isGrouped
+        ? `<tr><td colspan="15" style="background:#f1f5f9;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#475569;font-weight:600">${esc(zoneLabel)}</td></tr>`
+        : "";
+      const dataRows = rows.map((i: any) => {
         const p = productMap[i.product_code] ?? {};
         const hierarchy = hierarchyMap[i.differ_ref ?? ""] ?? { gmk: "—", mk: "—", smk: "—" };
         const extraKeys = extraKeysMap[i.differ_ref ?? ""] ?? 0;
@@ -147,9 +163,9 @@ Deno.serve(async (req) => {
         return `<tr>
           <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-weight:600">${esc(i.differ_ref ?? "—")}</td>
           <td>${esc(i.room_label ?? "—")}</td>
-          <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px">${esc(hierarchy.gmk)}</td>
-          <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px">${esc(hierarchy.mk)}</td>
-          <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px">${esc(hierarchy.smk)}</td>
+          <td>${esc(hierarchy.gmk)}</td>
+          <td>${esc(hierarchy.mk)}</td>
+          <td>${esc(hierarchy.smk)}</td>
           <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#92400e">${esc(i.product_code ?? "—")}</td>
           <td>${esc(p.product_description ?? p.name ?? (i as any).cylinder_type ?? "—")}</td>
           <td>${esc(p.cylinder_profile ?? "—")}</td>
@@ -162,6 +178,9 @@ Deno.serve(async (req) => {
           <td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(totalCost)}</td>
         </tr>`;
       }).join("");
+      return header + dataRows;
+    }).join("");
+
 
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(displayPo)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -181,6 +200,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 .totals{margin-top:12px;width:300px;margin-left:auto}
 .totals td{border:none;padding:4px 8px}
 .totals .grand{border-top:2px solid #0f172a;font-weight:700;font-size:14px}
+@media print { @page { margin: 16mm; } .noprint { display: none } }
 </style></head><body>
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
   <div><h1>${esc(S.company_name || "LOXX")}</h1><div class="muted">${esc(S.company_address || "")}</div></div>
@@ -231,7 +251,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
     <th>SMK</th>
     <th>Product Code</th>
     <th>Description</th>
-    <th>Profile</th>
+    <th>Lock function</th>
     <th>Finish</th>
     <th>Size</th>
     <th style="text-align:right">Qty</th>
@@ -256,6 +276,10 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 </div>
 
 ${S.po_notes ? `<div class="block" style="margin-top:12px"><div class="label">Notes</div><div>${esc(S.po_notes)}</div></div>` : ""}
+
+<div style="margin-top:32px;padding-top:12px;border-top:1px solid #e5e7eb;text-align:center;font-size:11px;color:#64748b">
+  LOXX — Master key systems made simple · myloxx.co.uk
+</div>
 
 </body></html>`;
 
