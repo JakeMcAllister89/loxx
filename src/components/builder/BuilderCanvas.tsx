@@ -31,6 +31,8 @@ interface Props {
   onToggleReveal?: (parentId: string) => void;
   /** Returns extra non-type actions to append to a node's +-popover. */
   getExtraAddActions?: (node: TNode) => { id: string; label: string; onClick: () => void }[];
+  /** When true: disable add popovers / extra actions (view-only mode). */
+  readOnly?: boolean;
 }
 
 const nodeTypes = { keynode: CanvasNode };
@@ -83,7 +85,7 @@ function layout(root: TNode): { laid: Laid[]; width: number; height: number } {
 
 function CanvasInner({
   tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, onPaneClick, registerFitView,
-  parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions,
+  parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly,
 }: Props) {
   const { fitView, setCenter } = useReactFlow();
   const lastNodeCount = useRef(0);
@@ -99,7 +101,7 @@ function CanvasInner({
         ? productsByCode.get(l.node.cylinder_type) ?? null
         : null;
       const kids = l.node.children;
-      const addOptions = validChildTypes(l.node.type);
+      const addOptions = readOnly ? [] : validChildTypes(l.node.type);
       return {
         id: l.id,
         type: "keynode",
@@ -118,7 +120,7 @@ function CanvasInner({
           rootDoorCount: l.node.type === "GMK" ? totalDoors : undefined,
           addOptions,
           onAddChildType: (t: NodeType) => onAddChild(l.id, t),
-          extraAddActions: getExtraAddActions?.(l.node) ?? [],
+          extraAddActions: readOnly ? [] : (getExtraAddActions?.(l.node) ?? []),
           hasDecommissionedChildren: parentsWithDecomm?.has(l.id) ?? false,
           revealDecommissioned: revealedDecomm?.has(l.id) ?? false,
           onToggleRevealDecommissioned: () => onToggleReveal?.(l.id),
@@ -141,7 +143,7 @@ function CanvasInner({
     };
     if (tree.root) collectEdges(tree.root);
     return { nodes, edges };
-  }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions]);
+  }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly]);
 
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState(nodes);
   const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState(edges);

@@ -61,6 +61,18 @@ Deno.serve(async (req) => {
         org_id: invite.org_id,
       } as any);
 
+      // Delete the orphan org created by the trigger (the one that has no other members)
+      const { data: orphanMember } = await admin
+        .from("org_members")
+        .select("org_id")
+        .eq("user_id", uid)
+        .neq("org_id", invite.org_id)
+        .maybeSingle();
+
+      if (orphanMember?.org_id) {
+        await admin.from("organisations").delete().eq("id", orphanMember.org_id);
+      }
+
       // Clean up any org auto-created by the trigger and create proper member row
       await admin.from("org_members").delete().eq("user_id", uid);
       await admin.from("org_members").insert({

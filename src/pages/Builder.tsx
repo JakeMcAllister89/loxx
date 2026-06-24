@@ -133,6 +133,8 @@ function BuilderEmptyState() {
 
 
 function BuilderInner({ systemId }: { systemId: string }) {
+  const { orgRole } = useAuth();
+  const readOnly = orgRole === "view_only";
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const imported = searchParams.get("imported") === "1";
@@ -764,13 +766,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
   }, []);
 
   const getExtraAddActions = useCallback((n: TNode) => {
+    if (readOnly) return [];
     if (!isFulfilled) return [];
     return [{
       id: "order-additional-keys",
       label: "Order additional keys",
       onClick: () => openAddKeysFlow(n.id),
     }];
-  }, [isFulfilled, openAddKeysFlow]);
+  }, [isFulfilled, openAddKeysFlow, readOnly]);
 
   if (loading) {
     return <div className="h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
@@ -813,7 +816,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         }}>
           <FileText className="h-4 w-4" /> Get quote
         </Button>
-        {(() => {
+        {!readOnly && (() => {
           const amber = "bg-[hsl(36_94%_52%)] hover:bg-[hsl(36_94%_46%)] text-white";
           if (exportedAt == null) {
             return (
@@ -841,6 +844,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
           );
         })()}
       </div>
+
+      {readOnly && (
+        <div className="border-b border-amber-300 bg-amber-50 px-6 py-2.5 flex items-center gap-2 no-print">
+          <Lock className="h-4 w-4 text-amber-700" />
+          <span className="text-sm text-amber-900">You have view-only access to this system.</span>
+        </div>
+      )}
+
 
       {/* Import banner */}
       {imported && allCyls.length > 0 && (
@@ -955,6 +966,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               revealedDecomm={revealedDecomm}
               onToggleReveal={toggleRevealParent}
               getExtraAddActions={getExtraAddActions}
+              readOnly={readOnly}
             />
           )}
         </div>
@@ -1058,13 +1070,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
               trail={trail}
               products={products}
               onPatch={patchSelected}
-              addOptions={validChildTypes(selected.type)}
+              addOptions={readOnly ? [] : validChildTypes(selected.type)}
               onAddChildType={(t) => handleAddChild(selected.id, t)}
               onDelete={() => handleDelete(selected.id)}
               isRoot={tree.root?.id === selected.id}
               onClose={() => setSelectedId(null)}
               isFulfilled={isFulfilled}
               onReplace={() => openReplaceFlow(selected.id)}
+              readOnly={readOnly}
             />
           )}
         </aside>
@@ -1466,7 +1479,7 @@ function Legend({ type }: { type: NodeType }) {
 
 function DetailPanel({
   node, parent, trail, products, onPatch, addOptions, onAddChildType, onDelete, isRoot, onClose,
-  isFulfilled, onReplace,
+  isFulfilled, onReplace, readOnly = false,
 }: {
   node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
@@ -1477,6 +1490,7 @@ function DetailPanel({
   onClose: () => void;
   isFulfilled: boolean;
   onReplace: () => void;
+  readOnly?: boolean;
 }) {
   const meta = TYPE_META[node.type];
   const isCyl = node.type === "CYL";
@@ -1571,6 +1585,7 @@ function DetailPanel({
                 value={node.location ?? ""}
                 onChange={(e) => onPatch({ location: e.target.value })}
                 placeholder={namePlaceholder}
+                disabled={readOnly}
               />
               <p className="text-[11px] text-muted-foreground mt-1">
                 Optional — helps identify this zone in large systems
@@ -1599,6 +1614,7 @@ function DetailPanel({
               onChange={(e) => onPatch({ label: e.target.value })}
               placeholder={namePlaceholder}
               className={isCyl ? "text-base font-medium" : ""}
+              disabled={readOnly}
             />
           </div>
         )}
@@ -1614,7 +1630,7 @@ function DetailPanel({
 
 
         <div className="pt-3 border-t flex flex-col gap-2">
-          {addOptions.map((t, idx) => (
+          {!readOnly && addOptions.map((t, idx) => (
             <Button
               key={t}
               variant={idx === 0 ? "default" : "outline"}
@@ -1627,7 +1643,7 @@ function DetailPanel({
           <Button onClick={onClose} variant="outline" className="w-full">
             <Check className="h-4 w-4" /> Done
           </Button>
-          {isCyl && !node.decommissioned_at && (
+          {!readOnly && isCyl && !node.decommissioned_at && (
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -1648,12 +1664,14 @@ function DetailPanel({
               </Tooltip>
             </TooltipProvider>
           )}
-          {!isRoot && (
+          {!readOnly && !isRoot && (
             <Button variant="outline" onClick={onDelete} className="text-destructive hover:text-destructive">
               <X className="h-4 w-4" /> Delete node
             </Button>
           )}
         </div>
+
+
 
 
         {(node.type === "GMK" || node.type === "MK" || node.type === "SMK") && node.children.length > 0 && (
