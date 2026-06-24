@@ -94,7 +94,7 @@ function CanvasNodeImpl(props: NodeProps) {
 
 
   const ringClass = highlight
-    ? "ring-2 ring-[hsl(var(--node-cyl))]"
+    ? "ring-2 ring-primary/60"
     : selected
       ? "ring-2 ring-primary"
       : hasError
@@ -169,10 +169,10 @@ function CanvasNodeImpl(props: NodeProps) {
       style={{
         width: cardWidth,
         borderLeft: `3px solid ${isDecommissioned ? "hsl(var(--muted-foreground))" : meta.border}`,
-        boxShadow: hovered || selected ? "0 4px 14px rgba(0,0,0,0.10)" : "0 1px 2px rgba(0,0,0,0.04)",
+        boxShadow: hovered || selected || highlight ? "0 4px 14px rgba(0,0,0,0.10)" : "0 1px 2px rgba(0,0,0,0.04)",
         background: isDecommissioned ? undefined
           : selected ? `hsl(${meta.tintHsl} / 0.18)`
-          : hovered ? `hsl(${meta.tintHsl} / 0.10)`
+          : hovered || highlight ? `hsl(${meta.tintHsl} / 0.10)`
           : undefined,
       }}
     >

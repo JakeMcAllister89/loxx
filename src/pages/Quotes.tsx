@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Trash2 } from "lucide-react";
 import { STATUS_BADGE, STATUS_LABEL } from "@/lib/quote";
 
 interface QuoteRow {
@@ -26,6 +26,7 @@ export default function Quotes() {
   const [systems, setSystems] = useState<Record<string, { name: string; reference: string | null }>>({});
   const [filter, setFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -52,6 +53,14 @@ export default function Quotes() {
     })();
   }, [user]);
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this draft quote? This cannot be undone.")) return;
+    setDeleting(id);
+    await (supabase.from("quotes" as any) as any).delete().eq("id", id);
+    setRows((prev) => prev.filter((r) => r.id !== id));
+    setDeleting(null);
+  };
+
   const filtered = useMemo(
     () => (filter === "all" ? rows : rows.filter((r) => r.status === filter)),
     [rows, filter],
@@ -71,7 +80,11 @@ export default function Quotes() {
         </div>
 
         <div className="mt-5 flex gap-2 flex-wrap">
-          {["all", "draft", "sent", "accepted", "converted", "expired", "declined"].map((s) => (
+          {[
+            "all", "draft", "sent", "accepted", "converted",
+            ...(rows.some(r => r.status === "expired") ? ["expired"] : []),
+            ...(rows.some(r => r.status === "declined") ? ["declined"] : []),
+          ].map((s) => (
             <button key={s} onClick={() => setFilter(s)}
               className={`px-3 py-1 text-xs rounded-full border ${filter === s ? "bg-foreground text-background border-foreground" : "bg-card hover:border-foreground/40"}`}>
               {s === "all" ? "All" : STATUS_LABEL[s] ?? s}
@@ -125,7 +138,22 @@ export default function Quotes() {
                         <Badge variant="outline" className={`text-[10px] ${STATUS_BADGE[r.status] ?? ""}`}>{STATUS_LABEL[r.status] ?? r.status}</Badge>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Button asChild size="sm" variant="outline"><Link to={`/quotes/${r.id}`}>View</Link></Button>
+                        <div className="flex items-center justify-end gap-2">
+                          {r.status === "draft" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={deleting === r.id}
+                              onClick={() => handleDelete(r.id)}
+                              className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          <Button asChild size="sm" variant="outline">
+                            <Link to={`/quotes/${r.id}`}>View</Link>
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );
