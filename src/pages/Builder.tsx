@@ -1383,7 +1383,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                         onClick={() => setAddKeysState((s) => s.open ? { ...s, quantity: Math.max(1, s.quantity - 1) } : s)}
                         className="h-8 w-8 rounded border hover:bg-muted"
                       >−</button>
-                      <span className="font-mono w-8 text-center">{addKeysState.quantity}</span>
+                      <span className="w-8 text-center font-medium">{addKeysState.quantity}</span>
                       <button
                         type="button"
                         onClick={() => setAddKeysState((s) => s.open ? { ...s, quantity: s.quantity + 1 } : s)}
