@@ -122,12 +122,16 @@ Deno.serve(async (req) => {
     const hierarchyMap = buildDifferHierarchyMap(systemTreeRoot);
     const extraKeysMap = buildDifferExtraKeysMap(items ?? []);
 
-    const combinedSubtotal = (items ?? [])
+    const cylSubtotal = (items ?? [])
       .filter((i: any) => i.item_type === "cylinder")
       .reduce((sum: number, i: any) => {
         const unitCost = Number(productMap[i.product_code]?.cost_price ?? 0);
         return sum + unitCost * Number(i.quantity);
       }, 0);
+    const keySubtotal = (items ?? [])
+      .filter((i: any) => i.item_type === "key")
+      .reduce((sum: number, i: any) => sum + Number(i.unit_price ?? 0) * Number(i.quantity), 0);
+    const combinedSubtotal = cylSubtotal + keySubtotal;
     const exVat = combinedSubtotal;
     const vatRate = Number(S.vat_rate ?? 20);
     const vat = +(exVat * vatRate / 100).toFixed(2);
@@ -171,9 +175,9 @@ Deno.serve(async (req) => {
           <td>${esc(hierarchy.gmk)}</td>
           <td>${esc(hierarchy.mk)}</td>
           <td>${esc(hierarchy.smk)}</td>
-          <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:#92400e">${esc(i.product_code ?? "—")}</td>
-          <td>${esc(p.product_description ?? p.name ?? (i as any).cylinder_type ?? "—")}</td>
-          <td>${esc(p.cylinder_profile ?? "—")}</td>
+          <td style="font-size:11px;color:#64748b">${esc(i.product_code ?? "—")}</td>
+          <td style="color:#0f172a">${esc(p.product_description ?? p.name ?? (i as any).cylinder_type ?? "—")}</td>
+          <td style="color:#0f172a">${esc(p.cylinder_profile ?? "—")}</td>
           <td>${esc(i.finish ?? p.finish ?? "—")}</td>
           <td>${esc(p.size ?? "—")}</td>
           <td style="text-align:right">${i.quantity}</td>
@@ -185,6 +189,39 @@ Deno.serve(async (req) => {
       }).join("");
       return header + dataRows;
     }).join("");
+
+    const keyItems = (items ?? []).filter((i: any) => i.item_type === "key");
+    const masterKeyItems = keyItems.filter((i: any) => !i.differ_ref);
+    const extraKeyItems  = keyItems.filter((i: any) => !!i.differ_ref);
+
+    const masterKeyRows = masterKeyItems.map((i: any) => {
+      const total = Number(i.unit_price ?? 0) * Number(i.quantity);
+      return `<tr>
+        <td style="color:#64748b">—</td>
+        <td colspan="4" style="font-weight:500">${esc(i.key_reference ?? i.room_label ?? "—")}</td>
+        <td colspan="4" style="color:#64748b;font-size:11px">Master / sub-master key</td>
+        <td style="text-align:right">${i.quantity}</td>
+        <td style="text-align:right;color:#64748b">—</td>
+        <td style="text-align:right;color:#64748b">—</td>
+        <td style="text-align:right">${fmt(Number(i.unit_price ?? 0))}</td>
+        <td style="text-align:right">${fmt(total)}</td>
+      </tr>`;
+    }).join("");
+
+    const extraKeyRows = extraKeyItems.map((i: any) => {
+      const total = Number(i.unit_price ?? 0) * Number(i.quantity);
+      return `<tr>
+        <td style="color:#b45309;font-weight:500">${esc(i.differ_ref ?? "—")}</td>
+        <td colspan="4">${esc(i.key_reference ?? i.room_label ?? "—")}</td>
+        <td colspan="4" style="color:#64748b;font-size:11px">Additional differ key</td>
+        <td style="text-align:right">${i.quantity}</td>
+        <td style="text-align:right;color:#64748b">—</td>
+        <td style="text-align:right;color:#64748b">—</td>
+        <td style="text-align:right">${fmt(Number(i.unit_price ?? 0))}</td>
+        <td style="text-align:right">${fmt(total)}</td>
+      </tr>`;
+    }).join("");
+
 
 
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(displayPo)}</title>
@@ -246,7 +283,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
   </div>
 </div>
 
-<h3 style="margin-top:24px;margin-bottom:8px">Differ Schedule</h3>
+<h3 style="margin-top:24px;margin-bottom:8px">Cylinder Schedule</h3>
 <table>
   <thead><tr>
     <th>Differ</th>
@@ -268,6 +305,25 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
   <tbody>${differRows}</tbody>
 </table>
 
+${(masterKeyRows || extraKeyRows) ? `
+<h3 style="margin-top:24px;margin-bottom:8px">Key Schedule</h3>
+<table>
+  <thead><tr>
+    <th>Differ</th>
+    <th colspan="4">Key reference / description</th>
+    <th colspan="4">Type</th>
+    <th style="text-align:right">Qty</th>
+    <th style="text-align:right">Keys (inc.)</th>
+    <th style="text-align:right">Extra keys</th>
+    <th style="text-align:right">Unit cost</th>
+    <th style="text-align:right">Total cost</th>
+  </tr></thead>
+  <tbody>
+    ${masterKeyRows ? `<tr><td colspan="15" style="background:#f1f5f9;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#475569;font-weight:600">Master &amp; Sub-Master Keys</td></tr>${masterKeyRows}` : ""}
+    ${extraKeyRows ? `<tr><td colspan="15" style="background:#f1f5f9;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#475569;font-weight:600">Additional Differ Keys</td></tr>${extraKeyRows}` : ""}
+  </tbody>
+</table>` : ""}
+
 <table class="totals">
   <tr><td>Subtotal (cost)</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(combinedSubtotal)}</td></tr>
   <tr><td>Subtotal ex VAT</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(exVat)}</td></tr>
@@ -276,7 +332,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 </table>
 
 <div class="block" style="margin-top:24px;background:#f8fafc">
-  <div class="label">Differ schedule</div>
+  <div class="label">Cylinder schedule note</div>
   <div>All cylinders must be keyed to the master key system and differ references shown. Please confirm keying schedule matches this order before dispatch.</div>
 </div>
 
