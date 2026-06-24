@@ -101,7 +101,7 @@ function CanvasInner({
         ? productsByCode.get(l.node.cylinder_type) ?? null
         : null;
       const kids = l.node.children;
-      const addOptions = validChildTypes(l.node.type);
+      const addOptions = readOnly ? [] : validChildTypes(l.node.type);
       return {
         id: l.id,
         type: "keynode",
