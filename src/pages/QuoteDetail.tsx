@@ -203,17 +203,21 @@ export default function QuoteDetail() {
 
           <section className="mt-8">
             {(() => {
-              const zoneMap = new Map<string, { zoneLabel: string; items: CartLine[] }>();
+              // --- CYLINDERS grouped by zone ---
+              const zoneMap = new Map<string, { zoneLabel: string; zoneRef: string; items: CartLine[] }>();
               cylinders.forEach((c) => {
                 const refs = c.hierarchy_refs ?? [];
-                const zoneRef = refs[refs.length - 1] ?? "General";
+                const zoneRef = refs[refs.length - 1] ?? "general";
                 const zoneLabel = (c as any).location ?? zoneRef;
                 const existing = zoneMap.get(zoneRef);
                 if (existing) existing.items.push(c);
-                else zoneMap.set(zoneRef, { zoneLabel, items: [c] });
+                else zoneMap.set(zoneRef, { zoneLabel, zoneRef, items: [c] });
               });
               const zones = Array.from(zoneMap.values());
               const isGrouped = zones.length > 1;
+
+              const masterKeys = keys.filter(k => !k.differ_ref || (k as any).location === "GMK" || (k as any).location === "MK" || (k as any).location === "SMK");
+              const extraKeys  = keys.filter(k => k.differ_ref && (k as any).location === "extra");
 
               return (
                 <table className="w-full text-sm">
@@ -234,9 +238,12 @@ export default function QuoteDetail() {
                     {zones.map((zone, zi) => (
                       <React.Fragment key={`z${zi}`}>
                         {isGrouped && (
-                          <tr className="bg-muted/30">
-                            <td colSpan={9} className="py-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          <tr className="bg-muted/20">
+                            <td colSpan={9} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                               {zone.zoneLabel}
+                              {zone.zoneRef !== zone.zoneLabel && (
+                                <span className="ml-1.5 text-amber-700 normal-case font-normal">({zone.zoneRef})</span>
+                              )}
                             </td>
                           </tr>
                         )}
@@ -245,9 +252,9 @@ export default function QuoteDetail() {
                             <td className="py-2 text-amber-700 font-medium">{c.differ_ref}</td>
                             <td className="py-2">{c.room_label}</td>
                             <td className="py-2 text-[11px] text-muted-foreground">{c.product_code ?? "—"}</td>
-                            <td className="py-2 text-xs">{c.cylinder_profile ?? "—"}</td>
-                            <td className="py-2 text-xs">{c.finish ?? "—"}</td>
-                            <td className="py-2 text-xs">{c.size ?? "—"}</td>
+                            <td className="py-2 text-xs text-foreground">{c.cylinder_profile ?? "—"}</td>
+                            <td className="py-2 text-xs text-foreground">{c.finish ?? "—"}</td>
+                            <td className="py-2 text-xs text-foreground">{c.size ?? "—"}</td>
                             <td className="py-2 text-right">{c.quantity}</td>
                             <td className="py-2 text-right">£{c.unit_price.toFixed(2)}</td>
                             <td className="py-2 text-right font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
@@ -255,17 +262,33 @@ export default function QuoteDetail() {
                         ))}
                       </React.Fragment>
                     ))}
-                    {keys.length > 0 && (
-                      <tr className="bg-muted/30">
-                        <td colSpan={9} className="py-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Keys
+                    {masterKeys.length > 0 && (
+                      <tr className="bg-muted/20">
+                        <td colSpan={9} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Master keys
                         </td>
                       </tr>
                     )}
-                    {keys.map((k, i) => (
-                      <tr key={`k${i}`}>
-                        <td className="py-2 text-amber-700 font-medium">{k.differ_ref ?? "—"}</td>
-                        <td className="py-2" colSpan={5}>{k.key_reference}</td>
+                    {masterKeys.map((k, i) => (
+                      <tr key={`mk${i}`}>
+                        <td className="py-2 text-muted-foreground">—</td>
+                        <td className="py-2 text-sm" colSpan={5}>{k.key_reference}</td>
+                        <td className="py-2 text-right">{k.quantity}</td>
+                        <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
+                        <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    {extraKeys.length > 0 && (
+                      <tr className="bg-muted/20">
+                        <td colSpan={9} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Additional keys
+                        </td>
+                      </tr>
+                    )}
+                    {extraKeys.map((k, i) => (
+                      <tr key={`ek${i}`}>
+                        <td className="py-2 text-amber-700 font-medium">{k.differ_ref}</td>
+                        <td className="py-2 text-sm" colSpan={5}>{k.key_reference}</td>
                         <td className="py-2 text-right">{k.quantity}</td>
                         <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
                         <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
