@@ -133,7 +133,7 @@ export default function Dashboard() {
                 <div key={s.id} className="rounded-[10px] border bg-card p-5 shadow-card flex items-start justify-between">
                   <div>
                     <div className="font-semibold">{s.name}</div>
-                    <div className="text-xs text-muted-foreground mt-1 font-mono">{s.reference} · {s.door_count} doors</div>
+                    <div className="text-xs text-muted-foreground mt-1">{s.reference} · {s.door_count} doors</div>
                     <div className="text-xs text-muted-foreground mt-1">Updated {new Date(s.updated_at).toLocaleDateString("en-GB")}</div>
                   </div>
                   <div className="flex gap-2">
