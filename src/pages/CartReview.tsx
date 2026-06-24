@@ -127,7 +127,7 @@ export default function CartReview() {
                 <div className="text-sm text-muted-foreground">Ad-hoc catalogue items (no system attached).</div>
                 <ul className="mt-3 space-y-1 text-sm">
                   {items.map((i, idx) => (
-                    <li key={idx} className="flex justify-between font-mono">
+                    <li key={idx} className="flex justify-between">
                       <span>{i.product_name ?? i.product_code} × {i.quantity}</span>
                       <span>£{(i.unit_price * i.quantity).toFixed(2)}</span>
                     </li>
