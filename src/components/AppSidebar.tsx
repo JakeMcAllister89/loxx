@@ -16,7 +16,7 @@ const nav: NavItem[] = [
   { to: "/systems", label: "My Systems", icon: LayoutGrid },
   { to: "/builder", label: "System Builder", icon: Network, builder: true },
   { to: "/catalogue", label: "Product Catalogue", icon: Package, hideForViewOnly: true },
-  { to: "/quotes", label: "My Quotes", icon: FileText, hideForViewOnly: true },
+  { to: "/quotes", label: "My Quotes", icon: FileText, hideForViewOnly: true, quoteCount: true },
   { to: "/cart", label: "Basket", icon: ShoppingCart, basket: true, hideForViewOnly: true },
   { to: "/orders", label: "My Orders", icon: ClipboardList, hideForViewOnly: true },
   { to: "/account", label: "Account", icon: Settings },

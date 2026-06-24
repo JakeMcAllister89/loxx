@@ -58,32 +58,36 @@ export default function QuoteDetail() {
   useEffect(() => {
     if (!id) return;
     (async () => {
-      const [{ data }, { data: s }] = await Promise.all([
-        (supabase.from("quotes" as any) as any).select("*").eq("id", id).maybeSingle(),
-        (supabase.from("admin_settings" as any) as any).select("key,value").in("key", ["quote_terms", "quote_footer", "company_name", "company_address"]),
-      ]);
-      if (data) {
-        // auto-expire
-        const today = new Date().toISOString().slice(0, 10);
-        if (data.status === "sent" && data.valid_until && data.valid_until < today) {
-          await (supabase.from("quotes" as any) as any).update({ status: "expired" }).eq("id", data.id);
-          data.status = "expired";
+      try {
+        const [{ data }, { data: s }] = await Promise.all([
+          (supabase.from("quotes" as any) as any).select("*").eq("id", id).maybeSingle(),
+          (supabase.from("admin_settings" as any) as any).select("key,value").in("key", ["quote_terms", "quote_footer", "company_name", "company_address"]),
+        ]);
+        if (data) {
+          const today = new Date().toISOString().slice(0, 10);
+          if (data.status === "sent" && data.valid_until && data.valid_until < today) {
+            await (supabase.from("quotes" as any) as any).update({ status: "expired" }).eq("id", data.id);
+            data.status = "expired";
+          }
+          setQ(data);
+          if (data.system_id) {
+            const { data: sys } = await supabase.from("key_systems").select("reference").eq("id", data.system_id).maybeSingle();
+            setSystemRef(sys?.reference ?? null);
+          }
         }
-        setQ(data);
-        if (data.system_id) {
-          const { data: sys } = await supabase.from("key_systems").select("reference").eq("id", data.system_id).maybeSingle();
-          setSystemRef(sys?.reference ?? null);
-        }
+        const sm: Record<string, string> = {};
+        (s ?? []).forEach((r: any) => { try { sm[r.key] = JSON.parse(r.value); } catch { sm[r.key] = r.value; } });
+        setSettings({
+          terms: sm["quote_terms"],
+          footer: sm["quote_footer"] ?? "LOXX — Master key systems made simple",
+          company: sm["company_name"] ?? "LOXX",
+          address: sm["company_address"] ?? "",
+        });
+      } catch (e) {
+        console.error("QuoteDetail load error:", e);
+      } finally {
+        setLoading(false);
       }
-      const sm: Record<string, string> = {};
-      (s ?? []).forEach((r: any) => { try { sm[r.key] = JSON.parse(r.value); } catch { sm[r.key] = r.value; } });
-      setSettings({
-        terms: sm["quote_terms"],
-        footer: sm["quote_footer"] ?? "LOXX — Master key systems made simple",
-        company: sm["company_name"] ?? "LOXX",
-        address: sm["company_address"] ?? "",
-      });
-      setLoading(false);
     })();
   }, [id]);
 
