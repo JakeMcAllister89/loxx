@@ -121,9 +121,9 @@ export default function Orders() {
                   const s = statusVariant[o.status] ?? { className: "bg-muted", label: o.status };
                   return (
                     <tr key={o.id} className="border-t hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs">#{o.id.slice(0, 8).toUpperCase()}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">#{o.id.slice(0, 8).toUpperCase()}</td>
                       <td className="px-4 py-3">{new Date(o.created_at).toLocaleDateString("en-GB")}</td>
-                      <td className="px-4 py-3 font-mono">£{Number(o.total).toFixed(2)}</td>
+                      <td className="px-4 py-3 font-medium">£{Number(o.total).toFixed(2)}</td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full text-xs ${s.className}`}>{s.label}</span>
                       </td>
