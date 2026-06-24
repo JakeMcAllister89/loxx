@@ -1585,6 +1585,7 @@ function DetailPanel({
                 value={node.location ?? ""}
                 onChange={(e) => onPatch({ location: e.target.value })}
                 placeholder={namePlaceholder}
+                disabled={readOnly}
               />
               <p className="text-[11px] text-muted-foreground mt-1">
                 Optional — helps identify this zone in large systems
