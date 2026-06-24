@@ -379,7 +379,123 @@ export default function AdminPartners() {
               </Table>
             </div>
           </TabsContent>
+
+          <TabsContent value="attribution" className="mt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="relative flex-1 max-w-md">
+                <Search className="h-4 w-4 absolute left-2.5 top-2.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search by system, reference, or organisation…"
+                  value={sysSearch}
+                  onChange={(e) => setSysSearch(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <Select value={sysFilter} onValueChange={(v: any) => setSysFilter(v)}>
+                <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All systems</SelectItem>
+                  <SelectItem value="attributed">Attributed</SelectItem>
+                  <SelectItem value="unattributed">Unattributed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="rounded-[10px] border bg-card shadow-card overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>System</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Partner</TableHead>
+                    <TableHead>Commission %</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSystems.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell>
+                        <div className="font-medium">{s.name}</div>
+                        {s.reference && <div className="text-xs font-mono text-muted-foreground">{s.reference}</div>}
+                      </TableCell>
+                      <TableCell>{s.organisations?.name ?? "—"}</TableCell>
+                      <TableCell>
+                        {s.partners ? (
+                          <div>
+                            <div className="font-medium">{s.partners.name}</div>
+                            <div className="text-xs text-muted-foreground">{s.partners.company}</div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">— Unattributed —</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-mono">{s.commission_pct == null ? "—" : `${s.commission_pct}%`}</TableCell>
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="outline" onClick={() => openAttrDrawer(s)}>Assign / Edit</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredSystems.length === 0 && (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No systems match.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
         </Tabs>
+
+        {/* Attribution drawer */}
+        <Sheet open={attrDrawer.open} onOpenChange={(o) => setAttrDrawer((s) => ({ ...s, open: o }))}>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Edit attribution</SheetTitle>
+              <SheetDescription>
+                {attrDrawer.sys?.name}{attrDrawer.sys?.reference ? ` · ${attrDrawer.sys.reference}` : ""}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="space-y-3 mt-4">
+              <div>
+                <Label>Partner</Label>
+                <Select
+                  value={attrDrawer.partnerId || "__none__"}
+                  onValueChange={(v) => {
+                    if (v === "__remove__") {
+                      setAttrDrawer((s) => ({ ...s, partnerId: "__remove__", pct: "" }));
+                      return;
+                    }
+                    const p = partners.find((x) => x.id === v);
+                    setAttrDrawer((s) => ({
+                      ...s,
+                      partnerId: v,
+                      pct: p ? String(p.default_commission_pct) : s.pct,
+                    }));
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select partner" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__remove__">— Remove attribution —</SelectItem>
+                    {partners.filter((p) => p.is_active).map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name} · {p.company}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {attrDrawer.partnerId && attrDrawer.partnerId !== "__remove__" && (
+                <div>
+                  <Label>Commission %</Label>
+                  <Input
+                    type="number" step="0.01" min="0" max="100"
+                    value={attrDrawer.pct}
+                    onChange={(e) => setAttrDrawer((s) => ({ ...s, pct: e.target.value }))}
+                    className="font-mono"
+                  />
+                </div>
+              )}
+              <Button onClick={saveAttribution} className="w-full bg-[#d4820a] hover:bg-[#b86d08] text-white">Save</Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+
 
         {/* Partner drawer */}
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
