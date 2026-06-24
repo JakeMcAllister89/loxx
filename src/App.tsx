@@ -27,6 +27,9 @@ import AdminSettings from "./pages/AdminSettings";
 import Quotes from "./pages/Quotes";
 import QuoteNew from "./pages/QuoteNew";
 import QuoteDetail from "./pages/QuoteDetail";
+import AdminPartners from "./pages/AdminPartners";
+import AdminPartnersReport from "./pages/AdminPartnersReport";
+import PartnerPortal from "./pages/PartnerPortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
