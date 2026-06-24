@@ -176,7 +176,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
       </div>
 
       {/* Lock function selector */}
-      {!isCommonEntrance && profilesForFamily.length > 1 && (
+      {!isCommonEntrance && activeFamily && profilesForFamily.length > 0 && (
         <div>
           <Label className="text-xs">Lock function</Label>
           <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -186,7 +186,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
                 <button
                   key={profile}
                   onClick={() => setProfile(profile)}
-                  className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                  className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-card text-foreground border-border hover:border-primary/50"
