@@ -200,6 +200,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 .totals{margin-top:12px;width:300px;margin-left:auto}
 .totals td{border:none;padding:4px 8px}
 .totals .grand{border-top:2px solid #0f172a;font-weight:700;font-size:14px}
+@media print { @page { margin: 16mm; } .noprint { display: none } }
 </style></head><body>
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
   <div><h1>${esc(S.company_name || "LOXX")}</h1><div class="muted">${esc(S.company_address || "")}</div></div>
