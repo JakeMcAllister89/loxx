@@ -202,51 +202,86 @@ export default function QuoteDetail() {
           </section>
 
           <section className="mt-8">
-            <table className="w-full text-sm">
-              <thead className="border-b">
-                <tr className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  <th className="text-left py-2">Differ</th>
-                  <th className="text-left py-2">Room / Door</th>
-                  <th className="text-left py-2">Product</th>
-                  <th className="text-left py-2">Profile</th>
-                  <th className="text-left py-2">Finish</th>
-                  <th className="text-left py-2">Size</th>
-                  <th className="text-right py-2">Qty</th>
-                  <th className="text-right py-2">Unit</th>
-                  <th className="text-right py-2">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {cylinders.map((c, i) => (
-                  <tr key={`c${i}`}>
-                    <td className="py-2 text-amber-700 font-medium">{c.differ_ref}</td>
-                    <td className="py-2">{c.room_label}</td>
-                    <td className="py-2 text-[11px] text-muted-foreground">{c.product_code}</td>
-                    <td className="py-2 text-xs">{c.cylinder_profile ?? "—"}</td>
-                    <td className="py-2 text-xs">{c.finish ?? "—"}</td>
-                    <td className="py-2 text-xs">{c.size ?? "—"}</td>
-                    <td className="py-2 text-right">{c.quantity}</td>
-                    <td className="py-2 text-right">£{c.unit_price.toFixed(2)}</td>
-                    <td className="py-2 text-right font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
-                  </tr>
-                ))}
-                {keys.map((k, i) => (
-                  <tr key={`k${i}`}>
-                    <td className="py-2 text-amber-700 font-medium">{k.differ_ref ?? "—"}</td>
-                    <td className="py-2" colSpan={5}>{k.key_reference}</td>
-                    <td className="py-2 text-right">{k.quantity}</td>
-                    <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
-                    <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr><td colSpan={8} className="text-right text-muted-foreground pt-3">Subtotal (ex VAT)</td><td className="text-right font-medium pt-3">£{t.subtotal.toFixed(2)}</td></tr>
-                <tr><td colSpan={8} className="text-right text-muted-foreground">VAT (20%)</td><td className="text-right font-medium">£{t.vat.toFixed(2)}</td></tr>
-                <tr className="text-lg font-bold text-amber-700"><td colSpan={8} className="text-right pt-2 border-t">Total inc VAT</td><td className="text-right font-semibold pt-2 border-t">£{t.total.toFixed(2)}</td></tr>
-              </tfoot>
-            </table>
+            {(() => {
+              const zoneMap = new Map<string, { zoneLabel: string; items: CartLine[] }>();
+              cylinders.forEach((c) => {
+                const refs = c.hierarchy_refs ?? [];
+                const zoneRef = refs[refs.length - 1] ?? "General";
+                const zoneLabel = (c as any).location ?? zoneRef;
+                const existing = zoneMap.get(zoneRef);
+                if (existing) existing.items.push(c);
+                else zoneMap.set(zoneRef, { zoneLabel, items: [c] });
+              });
+              const zones = Array.from(zoneMap.values());
+              const isGrouped = zones.length > 1;
+
+              return (
+                <table className="w-full text-sm">
+                  <thead className="border-b">
+                    <tr className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      <th className="text-left py-2">Differ</th>
+                      <th className="text-left py-2">Room / Door</th>
+                      <th className="text-left py-2">Product code</th>
+                      <th className="text-left py-2">Lock function</th>
+                      <th className="text-left py-2">Finish</th>
+                      <th className="text-left py-2">Size</th>
+                      <th className="text-right py-2">Qty</th>
+                      <th className="text-right py-2">Unit</th>
+                      <th className="text-right py-2">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {zones.map((zone, zi) => (
+                      <>
+                        {isGrouped && (
+                          <tr key={`z${zi}`} className="bg-muted/30">
+                            <td colSpan={9} className="py-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                              {zone.zoneLabel}
+                            </td>
+                          </tr>
+                        )}
+                        {zone.items.map((c, i) => (
+                          <tr key={`c${zi}-${i}`}>
+                            <td className="py-2 text-amber-700 font-medium">{c.differ_ref}</td>
+                            <td className="py-2">{c.room_label}</td>
+                            <td className="py-2 text-[11px] text-muted-foreground">{c.product_code ?? "—"}</td>
+                            <td className="py-2 text-xs">{c.cylinder_profile ?? "—"}</td>
+                            <td className="py-2 text-xs">{c.finish ?? "—"}</td>
+                            <td className="py-2 text-xs">{c.size ?? "—"}</td>
+                            <td className="py-2 text-right">{c.quantity}</td>
+                            <td className="py-2 text-right">£{c.unit_price.toFixed(2)}</td>
+                            <td className="py-2 text-right font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </>
+                    ))}
+                    {keys.length > 0 && (
+                      <tr className="bg-muted/30">
+                        <td colSpan={9} className="py-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Keys
+                        </td>
+                      </tr>
+                    )}
+                    {keys.map((k, i) => (
+                      <tr key={`k${i}`}>
+                        <td className="py-2 text-amber-700 font-medium">{k.differ_ref ?? "—"}</td>
+                        <td className="py-2" colSpan={5}>{k.key_reference}</td>
+                        <td className="py-2 text-right">{k.quantity}</td>
+                        <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
+                        <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr><td colSpan={8} className="text-right text-muted-foreground pt-3">Subtotal (ex VAT)</td><td className="text-right font-medium pt-3">£{t.subtotal.toFixed(2)}</td></tr>
+                    <tr><td colSpan={8} className="text-right text-muted-foreground">VAT (20%)</td><td className="text-right font-medium">£{t.vat.toFixed(2)}</td></tr>
+                    <tr className="text-lg font-bold text-amber-700"><td colSpan={8} className="text-right pt-2 border-t">Total inc VAT</td><td className="text-right font-semibold pt-2 border-t">£{t.total.toFixed(2)}</td></tr>
+                  </tfoot>
+                </table>
+              );
+            })()}
           </section>
+
 
           {systemRef && (
             <section className="mt-8 p-4 bg-muted/30 rounded">
