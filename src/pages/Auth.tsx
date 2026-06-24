@@ -14,7 +14,8 @@ export default function Auth() {
   const [mode, setMode] = useState<"login" | "signup">(params.get("mode") === "signup" ? "signup" : "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [company, setCompany] = useState("");
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
@@ -34,7 +35,13 @@ export default function Auth() {
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { name, company, role: "facility_manager" },
+            data: {
+              first_name: firstName,
+              last_name: lastName,
+              name: `${firstName} ${lastName}`.trim(),
+              company,
+              role: "facility_manager",
+            },
           },
         });
         if (error) throw error;
@@ -83,9 +90,15 @@ export default function Auth() {
           <form onSubmit={submit} className="space-y-3">
             {mode === "signup" && (
               <>
-                <div>
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="firstName">First name</Label>
+                    <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last name</Label>
+                    <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="company">Company</Label>
