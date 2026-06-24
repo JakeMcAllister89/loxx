@@ -48,7 +48,7 @@ const TYPE_META: Record<NodeType, { label: string; color: string; pill: string; 
   GMK: { label: "Grand Master Key", color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30", description: "The master key that opens every door in the building — held by senior management." },
   MK:  { label: "Master Key",       color: "hsl(var(--node-mk))",  pill: "bg-[hsl(178_70%_94%)] text-[hsl(var(--node-mk))] border-[hsl(var(--node-mk))]/30",   description: "Opens all doors in one building or section — one per area or wing." },
   SMK: { label: "Sub Master Key",   color: "hsl(var(--node-smk))", pill: "bg-[hsl(154_60%_95%)] text-[hsl(var(--node-smk))] border-[hsl(var(--node-smk))]/30", description: "Opens all doors in one floor or zone — e.g. Ground Floor, IT Department." },
-  CYL: { label: "Cylinder",         color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30",  description: "The physical lock cylinder fitted to a single door." },
+  CYL: { label: "Cylinder",         color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30",  description: "The physical lock cylinder on a single door. Its differ key opens only this door — but Sub-Master, Master, and Grand Master keys above it can also open this lock." },
 };
 
 const KEY_TYPE_LABEL: Record<string, string> = {
