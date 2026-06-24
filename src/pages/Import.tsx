@@ -355,11 +355,36 @@ function ReviewStep({
     setTree({ ...tree, root: tree.root ? walk(tree.root) : null });
   };
 
+  const deleteNode = (id: string) => {
+    const walk = (n: TNode): TNode => ({
+      ...n,
+      children: n.children.filter((c) => c.id !== id).map(walk),
+    });
+    setTree({ ...tree, root: tree.root ? walk(tree.root) : null });
+  };
+
   return (
     <div className="grid md:grid-cols-[1fr_320px] gap-4">
       {/* Tree preview */}
-      <div className="rounded-[10px] border bg-card p-4 shadow-card max-h-[60vh] overflow-auto">
-        {tree.root && <ReviewRow node={tree.root} depth={0} onRename={(id, label) => patchNode(id, { label })} />}
+      <div className="space-y-3">
+        {warnings.length > 0 && (
+          <div className="rounded-[10px] border border-amber-300 bg-amber-50 p-4 shadow-card">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-700 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-amber-900">
+                  {warnings.length} issue{warnings.length !== 1 ? "s" : ""} to review before building
+                </div>
+                <ul className="text-xs text-amber-900/90 space-y-1 list-disc pl-4 mt-2">
+                  {warnings.map((w, i) => <li key={i}>{w}</li>)}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="rounded-[10px] border bg-card p-4 shadow-card max-h-[60vh] overflow-auto">
+          {tree.root && <ReviewRow node={tree.root} depth={0} onRename={(id, label) => patchNode(id, { label })} onDelete={deleteNode} />}
+        </div>
       </div>
 
       {/* Summary panel */}
@@ -376,14 +401,6 @@ function ReviewStep({
           <div>{counts.CYL} cylinder{counts.CYL !== 1 ? "s" : ""}</div>
         </div>
 
-        {warnings.length > 0 && (
-          <div>
-            <div className="text-xs font-semibold mb-1">Issues found</div>
-            <ul className="text-[11px] text-muted-foreground space-y-1 list-disc pl-4">
-              {warnings.map((w, i) => <li key={i}>{w}</li>)}
-            </ul>
-          </div>
-        )}
 
         {unmatched.length > 0 && (
           <div>
@@ -413,7 +430,7 @@ function ReviewStep({
   );
 }
 
-function ReviewRow({ node, depth, onRename }: { node: TNode; depth: number; onRename: (id: string, label: string) => void }) {
+function ReviewRow({ node, depth, onRename, onDelete }: { node: TNode; depth: number; onRename: (id: string, label: string) => void; onDelete: (id: string) => void }) {
   const colors: Record<string, string> = {
     GMK: "hsl(var(--node-gmk))", MK: "hsl(var(--node-mk))", SMK: "hsl(var(--node-smk))", CYL: "hsl(var(--node-cyl))", CK: "hsl(var(--node-ck))",
   };
@@ -421,7 +438,7 @@ function ReviewRow({ node, depth, onRename }: { node: TNode; depth: number; onRe
   const [val, setVal] = useState(node.label);
   return (
     <div>
-      <div className="flex items-center gap-2 py-1 text-sm" style={{ paddingLeft: depth * 16 }}>
+      <div className="group flex items-center gap-2 py-1 text-sm" style={{ paddingLeft: depth * 16 }}>
         <span className="h-2 w-2 rounded-full shrink-0" style={{ background: colors[node.type] }} />
         {editing ? (
           <Input
@@ -441,8 +458,18 @@ function ReviewRow({ node, depth, onRename }: { node: TNode; depth: number; onRe
         {node.type === "CYL" && node.cylinder_type && (
           <span className="text-[10px] font-mono text-muted-foreground">· {node.cylinder_type}</span>
         )}
+        {node.type === "CYL" && (
+          <button
+            onClick={() => onDelete(node.id)}
+            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-1 rounded"
+            title="Remove this door from the import"
+            aria-label="Remove this door"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
-      {node.children.map((c) => <ReviewRow key={c.id} node={c} depth={depth + 1} onRename={onRename} />)}
+      {node.children.map((c) => <ReviewRow key={c.id} node={c} depth={depth + 1} onRename={onRename} onDelete={onDelete} />)}
     </div>
   );
 }
