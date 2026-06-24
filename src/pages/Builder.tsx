@@ -654,12 +654,20 @@ function BuilderInner({ systemId }: { systemId: string }) {
     if (!search.trim() || !tree.root) return s;
     const q = search.trim().toLowerCase();
     const walk = (n: TNode) => {
-      if (n.label.toLowerCase().includes(q) || n.cylinder_type?.toLowerCase().includes(q)) s.add(n.id);
+      const differRef = n.differ != null ? `d${String(n.differ).padStart(3, "0")}` : "";
+      const productName = n.cylinder_type ? (productsByCode[n.cylinder_type]?.name ?? "").toLowerCase() : "";
+      if (
+        n.label.toLowerCase().includes(q) ||
+        (n.location ?? "").toLowerCase().includes(q) ||
+        n.cylinder_type?.toLowerCase().includes(q) ||
+        differRef.includes(q) ||
+        productName.includes(q)
+      ) s.add(n.id);
       n.children.forEach(walk);
     };
     walk(tree.root);
     return s;
-  }, [search, tree]);
+  }, [search, tree, productsByCode]);
 
   const errorIds = useMemo(() => new Set(issues.filter((i) => i.level === "error" && i.nodeId).map((i) => i.nodeId!)), [issues]);
 
@@ -869,6 +877,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <div className="ml-4 relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search nodes…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 w-56 h-9" />
+          {search.trim() && (
+            <div className="absolute top-full left-0 mt-1 text-[11px] text-muted-foreground whitespace-nowrap">
+              {searchMatch.size === 0 ? "No matches" : `${searchMatch.size} match${searchMatch.size !== 1 ? "es" : ""} highlighted`}
+            </div>
+          )}
         </div>
 
         <div className="flex-1" />
@@ -1057,7 +1070,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               tree={viewTree}
               selectedId={selectedId}
               errorIds={errorIds}
-              highlightIds={showOnlyUnassigned ? unassignedIds : undefined}
+              highlightIds={showOnlyUnassigned ? unassignedIds : (search.trim() ? searchMatch : undefined)}
               productsByCode={productsByCode}
               onSelect={setSelectedId}
               onAddChild={handleAddChild}
