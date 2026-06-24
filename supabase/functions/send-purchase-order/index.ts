@@ -305,6 +305,25 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
   <tbody>${differRows}</tbody>
 </table>
 
+${(masterKeyRows || extraKeyRows) ? `
+<h3 style="margin-top:24px;margin-bottom:8px">Key Schedule</h3>
+<table>
+  <thead><tr>
+    <th>Differ</th>
+    <th colspan="4">Key reference / description</th>
+    <th colspan="4">Type</th>
+    <th style="text-align:right">Qty</th>
+    <th style="text-align:right">Keys (inc.)</th>
+    <th style="text-align:right">Extra keys</th>
+    <th style="text-align:right">Unit cost</th>
+    <th style="text-align:right">Total cost</th>
+  </tr></thead>
+  <tbody>
+    ${masterKeyRows ? `<tr><td colspan="15" style="background:#f1f5f9;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#475569;font-weight:600">Master &amp; Sub-Master Keys</td></tr>${masterKeyRows}` : ""}
+    ${extraKeyRows ? `<tr><td colspan="15" style="background:#f1f5f9;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#475569;font-weight:600">Additional Differ Keys</td></tr>${extraKeyRows}` : ""}
+  </tbody>
+</table>` : ""}
+
 <table class="totals">
   <tr><td>Subtotal (cost)</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(combinedSubtotal)}</td></tr>
   <tr><td>Subtotal ex VAT</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(exVat)}</td></tr>
