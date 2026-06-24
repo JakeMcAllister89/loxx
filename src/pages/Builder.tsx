@@ -766,13 +766,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
   }, []);
 
   const getExtraAddActions = useCallback((n: TNode) => {
+    if (readOnly) return [];
     if (!isFulfilled) return [];
     return [{
       id: "order-additional-keys",
       label: "Order additional keys",
       onClick: () => openAddKeysFlow(n.id),
     }];
-  }, [isFulfilled, openAddKeysFlow]);
+  }, [isFulfilled, openAddKeysFlow, readOnly]);
 
   if (loading) {
     return <div className="h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
