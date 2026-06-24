@@ -1675,7 +1675,7 @@ function DetailPanel({
                 <Lock className="h-3 w-3 text-muted-foreground" />
               </Label>
               <div
-                className="mt-1 px-2.5 py-1.5 rounded-md bg-muted/40 font-mono text-sm text-[hsl(var(--node-cyl))] select-all"
+                className="mt-1 px-2.5 py-1.5 rounded-md bg-muted/40 text-sm font-medium text-[hsl(var(--node-cyl))] select-all"
                 title="Auto-assigned reference code — cannot be edited"
               >
                 {node.label}
