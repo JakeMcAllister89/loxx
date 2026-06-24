@@ -148,6 +148,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [exportedAt, setExportedAt] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [reference, setReference] = useState<string | null>(null);
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [commissionPct, setCommissionPct] = useState<number | "">("");
+  const [partners, setPartners] = useState<{ id: string; name: string; company: string; partner_type: string; default_commission_pct: number }[]>([]);
   const [tree, setTree] = useState<TreeData>(emptyTree());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
