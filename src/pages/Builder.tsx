@@ -966,6 +966,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               revealedDecomm={revealedDecomm}
               onToggleReveal={toggleRevealParent}
               getExtraAddActions={getExtraAddActions}
+              readOnly={readOnly}
             />
           )}
         </div>
