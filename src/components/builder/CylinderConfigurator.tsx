@@ -131,7 +131,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
     <div className="space-y-4">
       {/* Family / type selector — card-style */}
       <div>
-        <Label className="text-xs">Cylinder type</Label>
+        <Label className="text-xs">Lock type</Label>
         <div className="grid grid-cols-2 gap-2 mt-1.5">
           {Array.from(families.keys()).map((fam) => {
             const isActive = !isCommonEntrance && fam === activeFamily;
@@ -178,6 +178,31 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
           </p>
         )}
       </div>
+
+      {/* Lock function selector */}
+      {!isCommonEntrance && profilesForFamily.length > 1 && (
+        <div>
+          <Label className="text-xs">Lock function</Label>
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
+            {profilesForFamily.map((profile) => {
+              const isActive = activeProfile === profile;
+              return (
+                <button
+                  key={profile}
+                  onClick={() => setProfile(profile)}
+                  className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-foreground border-border hover:border-primary/50"
+                  }`}
+                >
+                  {profile}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Selected product card */}
       {selected && (
