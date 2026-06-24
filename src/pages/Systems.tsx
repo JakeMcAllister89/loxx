@@ -56,10 +56,12 @@ export default function Systems() {
     if (!user) return;
     const { data: src } = await supabase.from("key_systems").select("*").eq("id", s.id).single();
     if (!src) return;
+    const { data: prof } = await supabase.from("profiles").select("org_id").eq("id", user.id).maybeSingle();
+    const orgId = (prof as any)?.org_id ?? null;
     const ref = `SYS-${Math.floor(1000 + Math.random() * 9000)}`;
     const { data } = await supabase.from("key_systems").insert({
-      user_id: user.id, name: `Copy of ${src.name}`, reference: ref, tree_data: src.tree_data, door_count: src.door_count,
-    }).select("id").single();
+      user_id: user.id, org_id: orgId, name: `Copy of ${src.name}`, reference: ref, tree_data: src.tree_data, door_count: src.door_count,
+    } as any).select("id").single();
     if (data) navigate(`/builder/${data.id}`);
   };
 

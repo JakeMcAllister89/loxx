@@ -69,12 +69,15 @@ export default function Orders() {
       }
       const today = new Date().toLocaleDateString("en-GB");
       const ref = `SYS-${Math.floor(1000 + Math.random() * 9000)}`;
+      const { data: prof } = await supabase.from("profiles").select("org_id").eq("id", user.id).maybeSingle();
+      const orgId = (prof as any)?.org_id ?? null;
       const { data: created, error } = await supabase.from("key_systems").insert({
         user_id: user.id,
+        org_id: orgId,
         name: `Re-order — ${origName} (${today})`,
         reference: ref,
         tree_data: src.tree_snapshot,
-      }).select("id").single();
+      } as any).select("id").single();
       if (error || !created) { toast.error("Could not create system"); setBusy(false); return; }
       try { logAction({ system_id: created.id, action: "system_created", node_label: `Re-order from ${o.id.slice(0, 8)}` }); } catch {}
       toast.success("System loaded — review and export to basket when ready");
