@@ -1489,7 +1489,7 @@ function TreeRow({
         {(node.type === "MK" || node.type === "SMK") && node.keys != null && (() => {
           const total = countKeys(node);
           return (
-            <span className="text-[11px] font-mono text-muted-foreground">· {total} key{total !== 1 ? "s" : ""}</span>
+            <span className="text-[11px] text-muted-foreground">· {total} key{total !== 1 ? "s" : ""}</span>
           );
         })()}
 
