@@ -58,28 +58,13 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
   const activeFamily = selected?.cylinder_type ?? "";
   const variants = activeFamily ? families.get(activeFamily) ?? [] : [];
 
-  const profilesForFamily = useMemo(() => {
-    if (!activeFamily) return [];
-    const variants = families.get(activeFamily) ?? [];
-    return Array.from(new Set(variants.map((p) => (p as any).cylinder_profile).filter(Boolean))) as string[];
-  }, [families, activeFamily]);
+  const profilesForFamily = useMemo(
+    () => Array.from(new Set(variants.map((v) => (v as any).cylinder_profile).filter(Boolean))) as string[],
+    [variants],
+  );
 
-  const activeProfile = useMemo(() => {
-    if (!selected) return null;
-    return (selected as any).cylinder_profile ?? null;
-  }, [selected]);
+  const activeProfile = (selected as any)?.cylinder_profile ?? null;
 
-  const setProfile = (profile: string) => {
-    const family = activeFamily;
-    const variants = families.get(family) ?? [];
-    const match = variants.find(
-      (p) =>
-        (p as any).cylinder_profile === profile &&
-        (node.size ? p.size === node.size : true) &&
-        (node.finish ? p.finish === node.finish : true)
-    ) ?? variants.find((p) => (p as any).cylinder_profile === profile);
-    if (match) onPatch({ cylinder_type: match.code, finish: match.finish ?? node.finish, size: match.size ?? node.size });
-  };
 
   const finishesForFamily = useMemo(
     () => Array.from(new Set(variants.map((v) => v.finish).filter(Boolean))) as string[],
@@ -89,6 +74,17 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
     () => Array.from(new Set(variants.map((v) => v.size).filter(Boolean))) as string[],
     [variants],
   );
+
+  const setProfile = (profile: string) => {
+    if (!activeFamily) return;
+    const desiredFinish = node.finish ?? selected?.finish ?? finishesForFamily[0];
+    const desiredSize = node.size ?? selected?.size ?? sizesForFamily[0];
+    const match =
+      variants.find((v) => (v as any).cylinder_profile === profile && v.finish === desiredFinish && v.size === desiredSize) ??
+      variants.find((v) => (v as any).cylinder_profile === profile && v.finish === desiredFinish) ??
+      variants.find((v) => (v as any).cylinder_profile === profile);
+    if (match) onPatch({ cylinder_type: match.code, finish: match.finish ?? node.finish, size: match.size ?? node.size });
+  };
 
   /** Resolve a variant within the current family by finish/size and update the node. */
   const setFinish = (finish: string) => {
@@ -180,7 +176,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
       </div>
 
       {/* Lock function selector */}
-      {!isCommonEntrance && profilesForFamily.length > 1 && (
+      {!isCommonEntrance && activeFamily && profilesForFamily.length > 0 && (
         <div>
           <Label className="text-xs">Lock function</Label>
           <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -190,7 +186,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
                 <button
                   key={profile}
                   onClick={() => setProfile(profile)}
-                  className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                  className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-card text-foreground border-border hover:border-primary/50"

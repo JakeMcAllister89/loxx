@@ -17,12 +17,15 @@ import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
-  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert, History, BookOpen, Undo2,
+  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert, History, BookOpen, Undo2, Copy,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
@@ -177,6 +180,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [showAllDecomm, setShowAllDecomm] = useState(false);
   // Per-SMK reveal of decommissioned children
   const [revealedDecomm, setRevealedDecomm] = useState<Set<string>>(new Set());
+  const [copySpecState, setCopySpecState] = useState<{
+    open: boolean;
+    sourceId: string;
+    newLabel: string;
+  }>({ open: false, sourceId: "", newLabel: "" });
   // Beginner guide drawer
   const [guideOpen, setGuideOpen] = useState(false);
   const dirtyRef = useRef(false);
@@ -408,6 +416,35 @@ function BuilderInner({ systemId }: { systemId: string }) {
     if (cylConfigRef.current?.nodeId === nodeId) cylConfigRef.current = null;
     setSelectedId((s) => (s === nodeId ? null : s));
   }, [systemId]);
+
+  const handleCopySpec = useCallback((sourceId: string, newLabel: string) => {
+    setTree((prev) => {
+      pushUndo(prev);
+      const source = findNode(prev.root, sourceId);
+      if (!source || source.type !== "CYL") return prev;
+      const parent = findParent(prev.root, sourceId);
+      if (!parent) return prev;
+      const siblingCount = parent.children.length;
+      const newNode: TNode = {
+        id: newId(),
+        type: "CYL",
+        label: newLabel.trim() || `Door ${siblingCount + 1}`,
+        differ: prev.next_differ,
+        cylinder_type: source.cylinder_type,
+        finish: source.finish,
+        size: source.size,
+        quantity: source.quantity ?? 1,
+        extra_keys: source.extra_keys ?? 0,
+        is_common_entrance: source.is_common_entrance ?? false,
+        children: [],
+      };
+      const newRoot = addChild(prev.root, parent.id, newNode);
+      dirtyRef.current = true;
+      return { ...prev, root: newRoot, next_differ: (prev.next_differ ?? 1) + 1 };
+    });
+    setCopySpecState({ open: false, sourceId: "", newLabel: "" });
+    setSelectedId(null);
+  }, [pushUndo]);
 
   /** Open the "Replace cylinder" flow for a CYL node. */
   const openReplaceFlow = useCallback((nodeId: string) => {
@@ -1146,6 +1183,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               onClose={() => setSelectedId(null)}
               isFulfilled={isFulfilled}
               onReplace={() => openReplaceFlow(selected.id)}
+              onCopySpec={() => setCopySpecState({ open: true, sourceId: selected.id, newLabel: "" })}
               readOnly={readOnly}
             />
           )}
@@ -1414,6 +1452,68 @@ function BuilderInner({ systemId }: { systemId: string }) {
           })()}
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Copy spec modal */}
+      <Dialog
+        open={copySpecState.open}
+        onOpenChange={(o) => !o && setCopySpecState({ open: false, sourceId: "", newLabel: "" })}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Copy door spec</DialogTitle>
+            <DialogDescription asChild>
+              <div>
+                {(() => {
+                  const src = findNode(tree.root, copySpecState.sourceId);
+                  if (!src) return null;
+                  const parts = [src.cylinder_type, src.finish, src.size].filter(Boolean);
+                  return (
+                    <>
+                      <div>Creates a new door with the same spec as <span className="font-medium text-foreground">{src.label}</span>.</div>
+                      {parts.length > 0 && (
+                        <div className="mt-1 text-xs">
+                          {parts.join(" · ")}
+                          {(src.quantity ?? 1) > 1 && ` · Qty ${src.quantity}`}
+                          {(src.extra_keys ?? 0) > 0 && ` · +${src.extra_keys} extra keys`}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <Label htmlFor="copy-spec-label">New room / door name</Label>
+            <Input
+              id="copy-spec-label"
+              autoFocus
+              placeholder="e.g. Director's Office"
+              value={copySpecState.newLabel}
+              onChange={(e) => setCopySpecState((s) => ({ ...s, newLabel: e.target.value }))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && copySpecState.newLabel.trim()) {
+                  handleCopySpec(copySpecState.sourceId, copySpecState.newLabel);
+                }
+              }}
+              className="mt-1.5"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCopySpecState({ open: false, sourceId: "", newLabel: "" })}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => handleCopySpec(copySpecState.sourceId, copySpecState.newLabel)}
+            >
+              Add door
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1555,7 +1655,7 @@ function Legend({ type }: { type: NodeType }) {
 
 function DetailPanel({
   node, parent, trail, products, onPatch, addOptions, onAddChildType, onDelete, isRoot, onClose,
-  isFulfilled, onReplace, readOnly = false,
+  isFulfilled, onReplace, onCopySpec, readOnly = false,
 }: {
   node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
@@ -1566,6 +1666,7 @@ function DetailPanel({
   onClose: () => void;
   isFulfilled: boolean;
   onReplace: () => void;
+  onCopySpec?: () => void;
   readOnly?: boolean;
 }) {
   const meta = TYPE_META[node.type];
@@ -1818,6 +1919,11 @@ function DetailPanel({
                 )}
               </Tooltip>
             </TooltipProvider>
+          )}
+          {!readOnly && isCyl && node.cylinder_type && onCopySpec && (
+            <Button variant="outline" onClick={onCopySpec} className="w-full">
+              <Copy className="h-4 w-4" /> Copy spec to new door
+            </Button>
           )}
           {!readOnly && !isRoot && (
             <Button variant="outline" onClick={onDelete} className="text-destructive hover:text-destructive">
