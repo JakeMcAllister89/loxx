@@ -278,6 +278,7 @@ export default function AdminPartners() {
           <TabsList>
             <TabsTrigger value="partners">Partners</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="attribution">System Attribution</TabsTrigger>
           </TabsList>
 
           <TabsContent value="partners" className="mt-4">
