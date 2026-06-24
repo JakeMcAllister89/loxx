@@ -823,11 +823,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
       <div className="border-b bg-card px-6 py-3 flex items-center gap-3 no-print">
         <Input value={name} onChange={(e) => { setName(e.target.value); dirtyRef.current = true; }} className="max-w-xs font-semibold" />
         {reference && (
-          <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+          <span className="text-xs font-medium text-foreground bg-muted px-2.5 py-1 rounded-full whitespace-nowrap">
             {reference}
           </span>
         )}
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-foreground/60 whitespace-nowrap">
           {countDoors(tree.root)} {countDoors(tree.root) !== 1 ? "doors" : "door"}
         </span>
 
