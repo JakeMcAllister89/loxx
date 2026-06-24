@@ -93,7 +93,7 @@ export default function Dashboard() {
           {stats.map((s) => (
             <div key={s.label} className="rounded-[10px] border bg-card p-5 shadow-card">
               <div className="text-xs text-muted-foreground uppercase tracking-wide">{s.label}</div>
-              <div className="text-2xl font-semibold mt-2 font-mono">{s.value}</div>
+              <div className="text-2xl font-semibold mt-2">{s.value}</div>
             </div>
           ))}
         </div>
@@ -133,7 +133,7 @@ export default function Dashboard() {
                 <div key={s.id} className="rounded-[10px] border bg-card p-5 shadow-card flex items-start justify-between">
                   <div>
                     <div className="font-semibold">{s.name}</div>
-                    <div className="text-xs text-muted-foreground mt-1 font-mono">{s.reference} · {s.door_count} doors</div>
+                    <div className="text-xs text-muted-foreground mt-1">{s.reference} · {s.door_count} doors</div>
                     <div className="text-xs text-muted-foreground mt-1">Updated {new Date(s.updated_at).toLocaleDateString("en-GB")}</div>
                   </div>
                   <div className="flex gap-2">
@@ -159,9 +159,9 @@ export default function Dashboard() {
                 <tbody>
                   {orders.map((o) => (
                     <tr key={o.id} className="border-t">
-                      <td className="px-4 py-3 font-mono text-xs">#{o.id.slice(0, 8).toUpperCase()}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">#{o.id.slice(0, 8).toUpperCase()}</td>
                       <td className="px-4 py-3">{new Date(o.created_at).toLocaleDateString("en-GB")}</td>
-                      <td className="px-4 py-3 font-mono">£{Number(o.total).toFixed(2)}</td>
+                      <td className="px-4 py-3 font-medium">£{Number(o.total).toFixed(2)}</td>
                       <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs ${statusColor[o.status] ?? "bg-muted"}`}>{o.status}</span></td>
                     </tr>
                   ))}

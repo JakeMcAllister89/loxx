@@ -121,9 +121,9 @@ export default function Orders() {
                   const s = statusVariant[o.status] ?? { className: "bg-muted", label: o.status };
                   return (
                     <tr key={o.id} className="border-t hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 font-mono text-xs">#{o.id.slice(0, 8).toUpperCase()}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">#{o.id.slice(0, 8).toUpperCase()}</td>
                       <td className="px-4 py-3">{new Date(o.created_at).toLocaleDateString("en-GB")}</td>
-                      <td className="px-4 py-3 font-mono">£{Number(o.total).toFixed(2)}</td>
+                      <td className="px-4 py-3 font-medium">£{Number(o.total).toFixed(2)}</td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-0.5 rounded-full text-xs ${s.className}`}>{s.label}</span>
                       </td>
@@ -163,13 +163,13 @@ export default function Orders() {
                           <div className="font-medium truncate">
                             {it.room_label || it.product_code || it.item_type}
                           </div>
-                          <div className="text-xs text-muted-foreground font-mono truncate">
+                          <div className="text-xs text-muted-foreground truncate">
                             {[it.differ_ref, it.product_code, it.finish].filter(Boolean).join(" · ")}
                           </div>
                         </div>
-                        <div className="text-right font-mono shrink-0">
+                        <div className="text-right shrink-0">
                           <div className="text-xs text-muted-foreground">{it.quantity} × £{Number(it.unit_price).toFixed(2)}</div>
-                          <div>£{Number(it.line_total).toFixed(2)}</div>
+                          <div className="font-medium">£{Number(it.line_total).toFixed(2)}</div>
                         </div>
                       </div>
                     ))}
@@ -177,7 +177,7 @@ export default function Orders() {
                   </div>
                 </section>
 
-                <section className="space-y-1 font-mono text-sm pt-2 border-t">
+                <section className="space-y-1 text-sm pt-2 border-t">
                   <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>£{Number(selected.subtotal).toFixed(2)}</span></div>
                   <div className="flex justify-between text-muted-foreground"><span>VAT</span><span>£{Number(selected.vat).toFixed(2)}</span></div>
                   <div className="flex justify-between text-base font-semibold pt-1"><span>Total</span><span>£{Number(selected.total).toFixed(2)}</span></div>

@@ -97,7 +97,7 @@ export function AppSidebar() {
             {systems.map((s) => (
               <NavLink key={s.id} to={`/builder/${s.id}`} className="block px-3 py-1.5 rounded-md text-xs hover:bg-sidebar-accent/60 truncate">
                 <span className="truncate">{s.name}</span>
-                <span className="text-sidebar-foreground/40 ml-2 font-mono">{s.door_count}</span>
+                <span className="text-sidebar-foreground/40 ml-2">{s.door_count}</span>
               </NavLink>
             ))}
           </div>

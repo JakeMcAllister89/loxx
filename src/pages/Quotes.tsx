@@ -107,12 +107,12 @@ export default function Quotes() {
                   const expired = r.status === "expired";
                   return (
                     <tr key={r.id} className={expired ? "opacity-60" : ""}>
-                      <td className="px-4 py-3 font-mono text-amber-700">{r.quote_number ?? "—"}</td>
+                      <td className="px-4 py-3 font-medium text-amber-700">{r.quote_number ?? "—"}</td>
                       <td className="px-4 py-3">
                         {sys ? (
                           <div>
                             <div className="text-sm">{sys.name}</div>
-                            {sys.reference && <div className="text-[11px] font-mono text-muted-foreground">{sys.reference}</div>}
+                            {sys.reference && <div className="text-[11px] text-muted-foreground">{sys.reference}</div>}
                           </div>
                         ) : (
                           <span className="text-muted-foreground">—</span>
@@ -120,7 +120,7 @@ export default function Quotes() {
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString("en-GB")}</td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{r.valid_until ? new Date(r.valid_until).toLocaleDateString("en-GB") : "—"}</td>
-                      <td className="px-4 py-3 text-right font-mono">£{Number(r.total ?? 0).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right font-medium">£{Number(r.total ?? 0).toFixed(2)}</td>
                       <td className="px-4 py-3">
                         <Badge variant="outline" className={`text-[10px] ${STATUS_BADGE[r.status] ?? ""}`}>{STATUS_LABEL[r.status] ?? r.status}</Badge>
                       </td>

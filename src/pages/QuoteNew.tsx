@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Trash2, Lock, KeyRound, Minus, Plus, FileText } from "lucide-react";
-import { popQuoteDraft, totals } from "@/lib/quote";
+import { peekQuoteDraft, clearQuoteDraft, totals } from "@/lib/quote";
 import type { CartLine } from "@/contexts/CartContext";
 import type { TreeData } from "@/lib/keytree";
 import { toast } from "sonner";
@@ -80,13 +80,14 @@ export default function QuoteNew() {
         return;
       }
 
-      const draft = popQuoteDraft();
+      const draft = peekQuoteDraft();
       if (draft) {
         setItems(draft.items);
         setSystemId(draft.system_id);
         setSystemName(draft.system_name);
         setSystemRef(draft.system_reference);
         setTreeSnapshot(draft.tree_snapshot);
+        clearQuoteDraft();
       }
     })();
   }, [user, editingId]);
@@ -249,9 +250,9 @@ export default function QuoteNew() {
                 <Input value={poRef} onChange={(e) => setPoRef(e.target.value)} placeholder="e.g. PO-2024-001" />
               </div>
               <div>
-                <Label className="text-xs">Notes for quote recipient</Label>
+                <Label className="text-xs">Notes (optional)</Label>
                 <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4}
-                  placeholder="e.g. This quote is valid for 30 days. Please contact us to discuss installation requirements." />
+                  placeholder="e.g. Please review and approve this quote for our master key system. Valid for 30 days. Contact me with any questions." />
               </div>
             </div>
 

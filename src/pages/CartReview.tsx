@@ -106,7 +106,7 @@ export default function CartReview() {
                     <div className="flex-1">
                       <div className="font-semibold">{sys.name}</div>
                     </div>
-                    {sys.reference && <span className="font-mono text-xs px-2 py-1 rounded bg-amber-100 text-amber-900 border border-amber-200">{sys.reference}</span>}
+                    {sys.reference && <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-200">{sys.reference}</span>}
                   </button>
                   {!isCollapsed && sys.tree_data?.root && (
                     <div className="p-4">
@@ -127,7 +127,7 @@ export default function CartReview() {
                 <div className="text-sm text-muted-foreground">Ad-hoc catalogue items (no system attached).</div>
                 <ul className="mt-3 space-y-1 text-sm">
                   {items.map((i, idx) => (
-                    <li key={idx} className="flex justify-between font-mono">
+                    <li key={idx} className="flex justify-between">
                       <span>{i.product_name ?? i.product_code} × {i.quantity}</span>
                       <span>£{(i.unit_price * i.quantity).toFixed(2)}</span>
                     </li>
@@ -167,11 +167,11 @@ export default function CartReview() {
                   {meta.delivery.line1 && meta.delivery.contact_name && meta.delivery.contact_phone ? (
                     <>
                       <div className="text-foreground font-medium">{meta.delivery.contact_name}</div>
-                      <div className="font-mono text-xs">{meta.delivery.contact_phone}</div>
+                      <div className="text-xs">{meta.delivery.contact_phone}</div>
                       <div className="pt-1">{meta.delivery.line1}</div>
                       {meta.delivery.line2 && <div>{meta.delivery.line2}</div>}
                       <div>{[meta.delivery.city, meta.delivery.county].filter(Boolean).join(", ")}</div>
-                      <div className="font-mono">{meta.delivery.postcode}</div>
+                      <div>{meta.delivery.postcode}</div>
                     </>
                   ) : <div className="text-destructive text-xs">Delivery contact and address required</div>}
                 </div>
@@ -180,7 +180,7 @@ export default function CartReview() {
               {meta.customerPoRef && (
                 <div className="pt-3 border-t">
                   <div className="text-xs text-muted-foreground">Your PO ref</div>
-                  <div className="text-sm font-mono">{meta.customerPoRef}</div>
+                  <div className="text-sm">{meta.customerPoRef}</div>
                 </div>
               )}
 
@@ -194,7 +194,7 @@ export default function CartReview() {
 
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Pricing</h2>
-              <div className="space-y-1 text-sm font-mono">
+              <div className="space-y-1 text-sm">
                 <div className="flex justify-between text-muted-foreground"><span>Cylinders ×{cylinderCount}</span><span>£{cylindersSubtotal.toFixed(2)}</span></div>
                 {keysSubtotal > 0 && <div className="flex justify-between text-muted-foreground"><span>Keys ×{extraKeys}</span><span>£{keysSubtotal.toFixed(2)}</span></div>}
                 <div className="flex justify-between border-t pt-2 mt-2"><span>Subtotal (ex VAT)</span><span>£{subtotal.toFixed(2)}</span></div>
@@ -273,8 +273,8 @@ function HierarchyView({ root }: { root: TNode }) {
         )}
         {n.type === "CYL" && (
           <span className="text-xs text-muted-foreground ml-1">
-            {n.differ != null && <span className="font-mono mr-2">D{String(n.differ).padStart(3, "0")}</span>}
-            {n.cylinder_type && <span className="font-mono">{n.cylinder_type}</span>}
+            {n.differ != null && <span className="mr-2 text-amber-700 font-medium">D{String(n.differ).padStart(3, "0")}</span>}
+            {n.cylinder_type && <span className="text-muted-foreground">{n.cylinder_type}</span>}
             {n.finish && <span> · {n.finish}</span>}
           </span>
         )}

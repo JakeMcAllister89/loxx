@@ -87,6 +87,20 @@ export function popQuoteDraft(): QuoteDraftContext | null {
   } catch { return null; }
 }
 
+/** Read the draft without consuming it. */
+export function peekQuoteDraft(): QuoteDraftContext | null {
+  try {
+    const s = sessionStorage.getItem(DRAFT_KEY);
+    if (!s) return null;
+    return JSON.parse(s);
+  } catch { return null; }
+}
+
+/** Explicitly remove the draft once it has been loaded into state. */
+export function clearQuoteDraft() {
+  try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* */ }
+}
+
 export function totals(items: CartLine[]) {
   const cylSub = items.filter((i) => i.kind === "cylinder").reduce((s, i) => s + i.unit_price * i.quantity, 0);
   const keySub = items.filter((i) => i.kind === "key").reduce((s, i) => s + i.unit_price * i.quantity, 0);

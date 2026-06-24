@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
-  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert, History, BookOpen,
+  Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert, History, BookOpen, Undo2,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -183,6 +183,37 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
 
+  // Undo history
+  const undoStack = useRef<TreeData[]>([]);
+  const MAX_UNDO = 20;
+  const [canUndo, setCanUndo] = useState(false);
+  const pushUndo = useCallback((snapshot: TreeData) => {
+    undoStack.current = [snapshot, ...undoStack.current].slice(0, MAX_UNDO);
+    setCanUndo(true);
+  }, []);
+  const handleUndo = useCallback(() => {
+    const prev = undoStack.current[0];
+    if (!prev) return;
+    undoStack.current = undoStack.current.slice(1);
+    setCanUndo(undoStack.current.length > 0);
+    setTree(prev);
+    setSelectedId(null);
+    dirtyRef.current = true;
+    toast.info("Undone");
+  }, []);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+        e.preventDefault();
+        handleUndo();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [handleUndo]);
+
   // Debounced audit refs
   const labelAuditRef = useRef<{
     nodeId: string;
@@ -338,10 +369,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const mutate = (updater: (t: TreeData) => TreeData) => {
     setTree((prev) => { const next = updater(prev); dirtyRef.current = true; return next; });
   };
-  const addRoot = () => mutate((t) => ({ ...t, root: createGMK(), next_differ: 1 }));
+  const addRoot = () => { pushUndo(tree); mutate((t) => ({ ...t, root: createGMK(), next_differ: 1 })); };
 
   const handleAddChild = useCallback((parentId: string, childType?: NodeType) => {
     setTree((prev) => {
+      pushUndo(prev);
       const parent = findNode(prev.root, parentId);
       if (!parent) return prev;
       const valid = validChildTypes(parent.type);
@@ -365,6 +397,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   const handleDelete = useCallback((nodeId: string) => {
     setTree((prev) => {
+      pushUndo(prev);
       const target = findNode(prev.root, nodeId);
       if (target) logAction({ system_id: systemId, action: "node_deleted", node_type: target.type, node_label: auditLabel(target) });
       dirtyRef.current = true;
@@ -623,6 +656,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
     savedNameRef.current = name;
     logAction({ system_id: systemId, action: opts.auto ? "system_autosaved" : "system_saved", metadata: { door_count: doors } });
     dirtyRef.current = false;
+    undoStack.current = [];
+    setCanUndo(false);
     setSaveStatus("saved");
     setLastSavedAt(Date.now());
     if (!opts.auto) toast.success("System saved");
@@ -788,11 +823,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
       <div className="border-b bg-card px-6 py-3 flex items-center gap-3 no-print">
         <Input value={name} onChange={(e) => { setName(e.target.value); dirtyRef.current = true; }} className="max-w-xs font-semibold" />
         {reference && (
-          <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+          <span className="text-xs font-medium text-foreground bg-muted px-2.5 py-1 rounded-full whitespace-nowrap">
             {reference}
           </span>
         )}
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-foreground/60 whitespace-nowrap">
           {countDoors(tree.root)} {countDoors(tree.root) !== 1 ? "doors" : "door"}
         </span>
 
@@ -804,6 +839,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <div className="flex-1" />
         <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import</Link></Button>
         <Button variant="outline" onClick={() => fitViewRef.current?.()}><Maximize2 className="h-4 w-4" /> Fit view</Button>
+        <Button variant="outline" size="sm" onClick={handleUndo} disabled={!canUndo} title="Undo last action (Ctrl+Z)">
+          <Undo2 className="h-4 w-4" />
+        </Button>
         <Button variant="outline" onClick={runValidate}><ShieldCheck className="h-4 w-4" /> Validate</Button>
         <Button variant="outline" onClick={() => setGuideOpen(v => !v)} className="gap-1.5">
           <BookOpen className="h-4 w-4" />
@@ -943,7 +981,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       <div className="print-only px-2 py-4">
         <div className="text-2xl font-semibold">{name}</div>
         <div className="text-sm text-muted-foreground mt-1">
-          {reference && <span className="font-mono">{reference} · </span>}
+          {reference && <span>{reference} · </span>}
           {countDoors(tree.root)} doors · Printed {new Date().toLocaleDateString("en-GB")}
         </div>
       </div>
@@ -1345,7 +1383,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                         onClick={() => setAddKeysState((s) => s.open ? { ...s, quantity: Math.max(1, s.quantity - 1) } : s)}
                         className="h-8 w-8 rounded border hover:bg-muted"
                       >−</button>
-                      <span className="font-mono w-8 text-center">{addKeysState.quantity}</span>
+                      <span className="w-8 text-center font-medium">{addKeysState.quantity}</span>
                       <button
                         type="button"
                         onClick={() => setAddKeysState((s) => s.open ? { ...s, quantity: s.quantity + 1 } : s)}
@@ -1443,7 +1481,7 @@ function TreeRow({
 
         {/* differ for CYL */}
         {node.type === "CYL" && node.differ != null && (
-          <span className="text-[11px] font-mono text-muted-foreground">· D{String(node.differ).padStart(3, "0")}</span>
+          <span className="text-[11px] text-muted-foreground">· D{String(node.differ).padStart(3, "0")}</span>
         )}
         {node.type === "CYL" && !node.cylinder_type && (
           <span className="text-[11px] text-destructive">· no product</span>
@@ -1451,7 +1489,7 @@ function TreeRow({
         {(node.type === "MK" || node.type === "SMK") && node.keys != null && (() => {
           const total = countKeys(node);
           return (
-            <span className="text-[11px] font-mono text-muted-foreground">· {total} key{total !== 1 ? "s" : ""}</span>
+            <span className="text-[11px] text-muted-foreground">· {total} key{total !== 1 ? "s" : ""}</span>
           );
         })()}
 
@@ -1602,7 +1640,7 @@ function DetailPanel({
 
       <div className="flex items-center gap-2">
         <span className="h-2.5 w-2.5 rounded-full" style={{ background: meta.color }} />
-        <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">{meta.label}</span>
+        <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{meta.label}</span>
         {isMkOrSmk && node.location?.trim() && (
           <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border border-[hsl(var(--node-cyl))]/30">
             {node.label}
@@ -1637,7 +1675,7 @@ function DetailPanel({
                 <Lock className="h-3 w-3 text-muted-foreground" />
               </Label>
               <div
-                className="mt-1 px-2.5 py-1.5 rounded-md bg-muted/40 font-mono text-sm text-[hsl(var(--node-cyl))] select-all"
+                className="mt-1 px-2.5 py-1.5 rounded-md bg-muted/40 text-sm font-medium text-[hsl(var(--node-cyl))] select-all"
                 title="Auto-assigned reference code — cannot be edited"
               >
                 {node.label}
@@ -1805,7 +1843,7 @@ function DetailPanel({
                   <li key={c.id} className="flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full" style={{ background: TYPE_META[c.type].color }} />
                     <span className="truncate">{main}</span>
-                    {showRef && <span className="text-[11px] text-[hsl(var(--node-cyl))] font-mono">· {c.label}</span>}
+                    {showRef && <span className="text-[11px] text-[hsl(var(--node-cyl))]">· {c.label}</span>}
                   </li>
                 );
               })}
