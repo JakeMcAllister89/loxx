@@ -169,7 +169,7 @@ export default function QuoteDetail() {
             </div>
             <div className="text-right">
               <h1 className="text-3xl font-bold tracking-tight uppercase">Quotation</h1>
-              <div className="font-mono text-amber-700 mt-1">{q.quote_number}</div>
+              <div className="font-semibold text-amber-700 mt-1">{q.quote_number}</div>
               <div className="text-xs text-muted-foreground mt-2">
                 Issued: {new Date(q.created_at).toLocaleDateString("en-GB")}
                 <br />
