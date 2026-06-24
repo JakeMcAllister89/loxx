@@ -943,6 +943,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
       </div>
 
       <div className="flex-1 flex flex-col md:flex-row min-h-0">
+        {/* Guide drawer (left) */}
+        {guideOpen && <GuidePanel onClose={() => setGuideOpen(false)} />}
         {/* Canvas */}
         <div className="flex-1 min-h-[400px] relative bg-muted/30 no-print">
           {!tree.root ? (
@@ -952,12 +954,23 @@ function BuilderInner({ systemId }: { systemId: string }) {
                   <KeyRound className="h-7 w-7 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold">Start your hierarchy</h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Think of this like drawing a family tree for your keys.
+                </p>
                 <p className="text-sm text-muted-foreground mt-1 mb-4">
-                  Every master-key system begins with a Grand Master Key. Add one to start branching into master keys, sub-masters and cylinders.
+                  Start with your Grand Master Key — the one key that opens everything — then add sections, floors, and individual doors beneath it.
                 </p>
                 <Button onClick={addRoot} className="bg-primary hover:bg-primary/90">
-                  <Plus className="h-4 w-4" /> Add Grand Master
+                  <Plus className="h-4 w-4" /> Start building →
                 </Button>
+                <div>
+                  <button
+                    onClick={() => setGuideOpen(true)}
+                    className="mt-2 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                  >
+                    Not sure? Read the guide first
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
@@ -979,6 +992,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
             />
           )}
         </div>
+
 
         {/* Print-only hierarchy + schedule */}
         <div className="print-only px-6">
