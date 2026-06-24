@@ -282,7 +282,7 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Classification</div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Cylinder type</Label>
+                <Label>Lock type</Label>
                 <Select value={p.cylinder_type} onValueChange={v => upd("cylinder_type", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{types.map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}</SelectContent>
@@ -290,7 +290,7 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
               </div>
               <div><Label>Size</Label><Input placeholder="e.g. 35/35" value={p.size} onChange={e => upd("size", e.target.value)} /></div>
               <div>
-                <Label>Cylinder profile</Label>
+                <Label>Lock function</Label>
                 <Input placeholder="e.g. Euro, Oval, Rim, Mortice" value={p.cylinder_profile ?? ""} onChange={e => upd("cylinder_profile", e.target.value || null)} />
               </div>
               <div><Label>Finish</Label><Input value={p.finish} onChange={e => upd("finish", e.target.value)} /></div>
