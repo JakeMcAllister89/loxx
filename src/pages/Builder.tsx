@@ -369,7 +369,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const mutate = (updater: (t: TreeData) => TreeData) => {
     setTree((prev) => { const next = updater(prev); dirtyRef.current = true; return next; });
   };
-  const addRoot = () => mutate((t) => ({ ...t, root: createGMK(), next_differ: 1 }));
+  const addRoot = () => { pushUndo(tree); mutate((t) => ({ ...t, root: createGMK(), next_differ: 1 })); };
 
   const handleAddChild = useCallback((parentId: string, childType?: NodeType) => {
     setTree((prev) => {
