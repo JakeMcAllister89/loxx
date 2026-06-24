@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/auth";
 import { CartProvider } from "@/contexts/CartContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
+import { RoleRoute } from "@/components/RoleRoute";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -30,6 +31,8 @@ import QuoteDetail from "./pages/QuoteDetail";
 import AdminPartners from "./pages/AdminPartners";
 import AdminPartnersReport from "./pages/AdminPartnersReport";
 import PartnerPortal from "./pages/PartnerPortal";
+import Team from "./pages/Team";
+import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,17 +48,19 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/accept-invite" element={<AcceptInvite />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
               <Route path="/systems" element={<ProtectedRoute><Systems /></ProtectedRoute>} />
-              <Route path="/catalogue" element={<ProtectedRoute><Catalogue /></ProtectedRoute>} />
+              <Route path="/catalogue" element={<RoleRoute allow={["master_admin","admin","standard"]}><Catalogue /></RoleRoute>} />
               <Route path="/builder" element={<ProtectedRoute><Builder /></ProtectedRoute>} />
               <Route path="/builder/:id" element={<ProtectedRoute><Builder /></ProtectedRoute>} />
-              <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-              <Route path="/cart/review" element={<ProtectedRoute><CartReview /></ProtectedRoute>} />
-              <Route path="/basket" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-              <Route path="/basket/review" element={<ProtectedRoute><CartReview /></ProtectedRoute>} />
+              <Route path="/cart" element={<RoleRoute allow={["master_admin","admin"]}><Cart /></RoleRoute>} />
+              <Route path="/cart/review" element={<RoleRoute allow={["master_admin","admin"]}><CartReview /></RoleRoute>} />
+              <Route path="/basket" element={<RoleRoute allow={["master_admin","admin"]}><Cart /></RoleRoute>} />
+              <Route path="/basket/review" element={<RoleRoute allow={["master_admin","admin"]}><CartReview /></RoleRoute>} />
               <Route path="/checkout/return" element={<ProtectedRoute><CheckoutReturn /></ProtectedRoute>} />
-              <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+              <Route path="/orders" element={<RoleRoute allow={["master_admin","admin","standard"]}><Orders /></RoleRoute>} />
               <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
               <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
@@ -65,9 +70,9 @@ const App = () => (
               <Route path="/partner-portal" element={<PartnerPortal />} />
               <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
               <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
-              <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
-              <Route path="/quotes/new" element={<ProtectedRoute><QuoteNew /></ProtectedRoute>} />
-              <Route path="/quotes/:id" element={<ProtectedRoute><QuoteDetail /></ProtectedRoute>} />
+              <Route path="/quotes" element={<RoleRoute allow={["master_admin","admin","standard"]}><Quotes /></RoleRoute>} />
+              <Route path="/quotes/new" element={<RoleRoute allow={["master_admin","admin","standard"]}><QuoteNew /></RoleRoute>} />
+              <Route path="/quotes/:id" element={<RoleRoute allow={["master_admin","admin","standard"]}><QuoteDetail /></RoleRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
