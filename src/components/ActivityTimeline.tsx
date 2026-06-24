@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { AuditRow, describeAction, actionIcon, actionColor, timeAgo, formatPreciseTimestamp } from "@/lib/audit";
+import { AuditRow, describeAction, actionIcon, actionColor, timeAgo, formatPreciseTimestamp, actorDisplayName } from "@/lib/audit";
 import { toast } from "sonner";
 
 export function ActivityTimeline({
@@ -77,7 +77,7 @@ export function ActivityTimeline({
                       className="text-[11px] text-muted-foreground mt-0.5"
                       title={timeAgo(r.created_at)}
                     >
-                      {r.user_name ?? "Unknown user"} · {formatPreciseTimestamp(r.created_at)}
+                      {actorDisplayName(r)} · {formatPreciseTimestamp(r.created_at)}
                     </div>
                   </div>
                 </div>

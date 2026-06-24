@@ -18,13 +18,16 @@ export function logAction(entry: AuditEntry): void {
       if (!user) return;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("name")
+        .select("name,first_name,last_name")
         .eq("id", user.id)
         .maybeSingle();
-      const userName = (profile as any)?.name || user.email || "Unknown user";
+      const p = (profile as any) ?? {};
+      const composed = [p.first_name, p.last_name].filter(Boolean).join(" ").trim();
+      const actorName = composed || p.name || user.email || "Unknown user";
       await (supabase.from("audit_log" as any) as any).insert({
         user_id: user.id,
-        user_name: userName,
+        user_name: actorName,
+        actor_name: actorName,
         system_id: entry.system_id ?? null,
         action: entry.action,
         node_type: entry.node_type ?? null,
@@ -43,6 +46,7 @@ export interface AuditRow {
   id: string;
   user_id: string;
   user_name: string | null;
+  actor_name: string | null;
   system_id: string | null;
   action: string;
   node_type: string | null;
@@ -63,7 +67,6 @@ export function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB");
 }
 
-/** "14 Jun 2025 at 09:47:23" */
 export function formatPreciseTimestamp(iso: string): string {
   const d = new Date(iso);
   const date = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
@@ -71,12 +74,16 @@ export function formatPreciseTimestamp(iso: string): string {
   return `${date} at ${time}`;
 }
 
-/** "14 Jun 2025 09:47:23" (table column) */
 export function formatTableTimestamp(iso: string): string {
   const d = new Date(iso);
   const date = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
   return `${date} ${time}`;
+}
+
+/** Best display name for an audit row — prefers snapshot actor_name. */
+export function actorDisplayName(r: AuditRow): string {
+  return r.actor_name || r.user_name || "Unknown user";
 }
 
 export function describeAction(r: AuditRow): string {
@@ -104,6 +111,9 @@ export function describeAction(r: AuditRow): string {
     case "validation_run":            return `Validation run — ${meta.errors ?? 0} error(s), ${meta.warnings ?? 0} warning(s)`;
     case "exported_to_cart":          return `Exported to basket — ${meta.line_count ?? 0} lines${meta.cylinder_count != null ? `, ${meta.cylinder_count} cylinders` : ""}`;
     case "order_placed":              return `Order placed — £${Number(meta.total ?? 0).toFixed(2)}`;
+    case "member_removed":            return `${actorDisplayName(r)} removed ${meta.target_name ?? "a member"} from the organisation`;
+    case "member_role_changed":       return `${actorDisplayName(r)} changed ${meta.target_name ?? "a member"}'s role: ${r.old_value} → ${r.new_value}`;
+    case "member_invited":            return `${actorDisplayName(r)} invited ${meta.target_name ?? r.new_value} (${meta.target_role ?? "member"})`;
     case "cylinder_replaced": {
       const oldRef = meta.old_differ != null ? `D${String(meta.old_differ).padStart(3, "0")}` : "—";
       const newRef = meta.new_differ != null ? `D${String(meta.new_differ).padStart(3, "0")}` : oldRef;
@@ -115,14 +125,14 @@ export function describeAction(r: AuditRow): string {
     }
     case "replacement_key_ordered": {
       const ref = meta.differ != null ? `D${String(meta.differ).padStart(3, "0")}` : (r.node_label ?? "");
-      const who = r.user_name ? ` · Risk acknowledged by ${r.user_name}` : "";
-      return `Replacement key ordered: ${ref}${who}`;
+      const who = actorDisplayName(r);
+      return `Replacement key ordered: ${ref} · Risk acknowledged by ${who}`;
     }
     case "additional_keys_ordered": {
       const qty = meta.quantity ?? 1;
       const ref = meta.key_reference ?? r.node_label ?? "";
-      const who = r.user_name ? ` · Authorised by ${r.user_name}` : "";
-      return `Additional keys ordered: ${qty} × ${ref}${who}`;
+      const who = actorDisplayName(r);
+      return `Additional keys ordered: ${qty} × ${ref} · Authorised by ${who}`;
     }
     default:                          return r.action;
   }
@@ -133,6 +143,7 @@ export function actionIcon(action: string): string {
   if (action === "system_saved" || action === "system_created" || action === "system_renamed" || action === "system_imported") return "💾";
   if (action === "validation_run") return "✅";
   if (action === "exported_to_cart" || action === "order_placed") return "🛒";
+  if (action.startsWith("member_")) return "👤";
   return "•";
 }
 
@@ -141,5 +152,6 @@ export function actionColor(action: string): string {
   if (action.startsWith("node_")) return "hsl(var(--node-ck))";
   if (action === "system_saved" || action === "exported_to_cart" || action === "order_placed") return "hsl(var(--success))";
   if (action === "validation_run") return "hsl(var(--muted-foreground))";
+  if (action.startsWith("member_")) return "#d4820a";
   return "hsl(var(--node-gmk))";
 }

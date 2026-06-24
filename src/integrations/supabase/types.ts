@@ -38,6 +38,7 @@ export type Database = {
       audit_log: {
         Row: {
           action: string
+          actor_name: string | null
           created_at: string
           id: string
           metadata: Json | null
@@ -51,6 +52,7 @@ export type Database = {
         }
         Insert: {
           action: string
+          actor_name?: string | null
           created_at?: string
           id?: string
           metadata?: Json | null
@@ -64,6 +66,7 @@ export type Database = {
         }
         Update: {
           action?: string
+          actor_name?: string | null
           created_at?: string
           id?: string
           metadata?: Json | null
@@ -178,6 +181,7 @@ export type Database = {
           id: string
           name: string
           next_differ: number
+          org_id: string | null
           partner_id: string | null
           reference: string | null
           tree_data: Json
@@ -191,6 +195,7 @@ export type Database = {
           id?: string
           name: string
           next_differ?: number
+          org_id?: string | null
           partner_id?: string | null
           reference?: string | null
           tree_data?: Json
@@ -204,6 +209,7 @@ export type Database = {
           id?: string
           name?: string
           next_differ?: number
+          org_id?: string | null
           partner_id?: string | null
           reference?: string | null
           tree_data?: Json
@@ -211,6 +217,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "key_systems_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "key_systems_partner_id_fkey"
             columns: ["partner_id"]
@@ -455,6 +468,130 @@ export type Database = {
           },
         ]
       }
+      org_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          first_name: string
+          id: string
+          invited_by: string
+          last_name: string
+          org_id: string
+          org_role: string
+          system_ids: string[] | null
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          first_name: string
+          id?: string
+          invited_by: string
+          last_name: string
+          org_id: string
+          org_role: string
+          system_ids?: string[] | null
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          first_name?: string
+          id?: string
+          invited_by?: string
+          last_name?: string
+          org_id?: string
+          org_role?: string
+          system_ids?: string[] | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_invites_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_members: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          invited_by: string | null
+          last_name: string
+          org_id: string
+          org_role: string
+          removed_at: string | null
+          removed_by: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          invited_by?: string | null
+          last_name: string
+          org_id: string
+          org_role?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          invited_by?: string | null
+          last_name?: string
+          org_id?: string
+          org_role?: string
+          removed_at?: string | null
+          removed_by?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organisations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       partner_logins: {
         Row: {
           created_at: string
@@ -641,9 +778,12 @@ export type Database = {
           company: string | null
           created_at: string
           email: string | null
+          first_name: string | null
           id: string
           is_admin: boolean
+          last_name: string | null
           name: string | null
+          org_id: string | null
           phone: string | null
           role: string
           updated_at: string
@@ -652,9 +792,12 @@ export type Database = {
           company?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           id: string
           is_admin?: boolean
+          last_name?: string | null
           name?: string | null
+          org_id?: string | null
           phone?: string | null
           role?: string
           updated_at?: string
@@ -663,14 +806,25 @@ export type Database = {
           company?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           id?: string
           is_admin?: boolean
+          last_name?: string | null
           name?: string | null
+          org_id?: string | null
           phone?: string | null
           role?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quotes: {
         Row: {
@@ -762,6 +916,38 @@ export type Database = {
           },
         ]
       }
+      system_access: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          system_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          system_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          system_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_access_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "key_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -769,7 +955,17 @@ export type Database = {
     Functions: {
       assign_po_number: { Args: never; Returns: string }
       assign_quote_number: { Args: never; Returns: string }
+      current_user_org_id: { Args: never; Returns: string }
+      current_user_org_role: { Args: never; Returns: string }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_org_master_admin: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_in_org: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
