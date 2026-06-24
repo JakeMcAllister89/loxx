@@ -1682,7 +1682,10 @@ function DetailPanel({
 
         {isCyl && accessTrail.length > 0 && (
           <div className="rounded-md border bg-muted/30 p-3">
-            <div className="text-xs font-semibold mb-2">🔑 Who can open this door?</div>
+            <div className="text-xs font-semibold mb-1">🔑 Who can open this door?</div>
+            <p className="text-[10px] text-muted-foreground mb-3 leading-relaxed">
+              Keys higher up the tree automatically have access to all doors below them.
+            </p>
             <div className="space-y-1">
               {accessTrail.map((entry, i) => {
                 const isThisDoor = i === accessTrail.length - 1;
