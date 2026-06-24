@@ -1630,7 +1630,7 @@ function DetailPanel({
 
 
         <div className="pt-3 border-t flex flex-col gap-2">
-          {addOptions.map((t, idx) => (
+          {!readOnly && addOptions.map((t, idx) => (
             <Button
               key={t}
               variant={idx === 0 ? "default" : "outline"}
@@ -1643,7 +1643,7 @@ function DetailPanel({
           <Button onClick={onClose} variant="outline" className="w-full">
             <Check className="h-4 w-4" /> Done
           </Button>
-          {isCyl && !node.decommissioned_at && (
+          {!readOnly && isCyl && !node.decommissioned_at && (
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -1664,12 +1664,14 @@ function DetailPanel({
               </Tooltip>
             </TooltipProvider>
           )}
-          {!isRoot && (
+          {!readOnly && !isRoot && (
             <Button variant="outline" onClick={onDelete} className="text-destructive hover:text-destructive">
               <X className="h-4 w-4" /> Delete node
             </Button>
           )}
         </div>
+
+
 
 
         {(node.type === "GMK" || node.type === "MK" || node.type === "SMK") && node.children.length > 0 && (
