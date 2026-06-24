@@ -94,7 +94,7 @@ function CanvasNodeImpl(props: NodeProps) {
 
 
   const ringClass = highlight
-    ? "ring-2 ring-[hsl(var(--node-cyl))]"
+    ? "ring-2 ring-primary/60"
     : selected
       ? "ring-2 ring-primary"
       : hasError
