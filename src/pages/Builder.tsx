@@ -134,6 +134,7 @@ function BuilderEmptyState() {
 
 function BuilderInner({ systemId }: { systemId: string }) {
   const { orgRole } = useAuth();
+  const isAdmin = useIsAdmin();
   const readOnly = orgRole === "view_only";
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
