@@ -300,6 +300,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setName(data.name);
       savedNameRef.current = data.name;
       setReference(data.reference);
+      setPartnerId((data as any).partner_id ?? null);
+      setCommissionPct((data as any).commission_pct ?? "");
       const raw = (data.tree_data as unknown as TreeData) ?? emptyTree();
       const loaded = raw?.root !== undefined ? raw : emptyTree();
       setLegacyCKDetected(hasLegacyCK(loaded.root));
