@@ -232,9 +232,9 @@ export default function QuoteDetail() {
                   </thead>
                   <tbody className="divide-y">
                     {zones.map((zone, zi) => (
-                      <>
+                      <React.Fragment key={`z${zi}`}>
                         {isGrouped && (
-                          <tr key={`z${zi}`} className="bg-muted/30">
+                          <tr className="bg-muted/30">
                             <td colSpan={9} className="py-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                               {zone.zoneLabel}
                             </td>
@@ -253,7 +253,7 @@ export default function QuoteDetail() {
                             <td className="py-2 text-right font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
                           </tr>
                         ))}
-                      </>
+                      </React.Fragment>
                     ))}
                     {keys.length > 0 && (
                       <tr className="bg-muted/30">
