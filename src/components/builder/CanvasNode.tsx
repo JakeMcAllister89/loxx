@@ -34,10 +34,10 @@ export interface CanvasNodeData {
 }
 
 const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string; tintHsl: string; description: string }> = {
-  GMK: { label: "Grand Master Key", tone: "text-[hsl(var(--node-gmk))]", dot: "hsl(var(--node-gmk))", border: "hsl(var(--node-gmk))", tintHsl: "var(--node-gmk)", description: "The master key that opens every door in the building — held by senior management." },
-  MK:  { label: "Master Key",       tone: "text-[hsl(var(--node-mk))]",  dot: "hsl(var(--node-mk))",  border: "hsl(var(--node-mk))",  tintHsl: "var(--node-mk)",  description: "Opens all doors in one building or section — one per area or wing." },
-  SMK: { label: "Sub Master Key",   tone: "text-[hsl(var(--node-smk))]", dot: "hsl(var(--node-smk))", border: "hsl(var(--node-smk))", tintHsl: "var(--node-smk)", description: "Opens all doors in one floor or zone — e.g. Ground Floor, IT Department." },
-  CYL: { label: "Cylinder",         tone: "text-[hsl(var(--node-cyl))]", dot: "hsl(var(--node-cyl))", border: "hsl(var(--node-cyl))", tintHsl: "var(--node-cyl)", description: "The physical lock cylinder fitted to a single door." },
+  GMK: { label: "Grand Master Key", tone: "text-[hsl(var(--node-gmk))]", dot: "hsl(var(--node-gmk))", border: "hsl(var(--node-gmk))", tintHsl: "var(--node-gmk)", description: "The master key that opens every door — held by senior management." },
+  MK:  { label: "Master Key",       tone: "text-[hsl(var(--node-mk))]",  dot: "hsl(var(--node-mk))",  border: "hsl(var(--node-mk))",  tintHsl: "var(--node-mk)",  description: "Opens all doors in one building or section." },
+  SMK: { label: "Sub Master Key",   tone: "text-[hsl(var(--node-smk))]", dot: "hsl(var(--node-smk))", border: "hsl(var(--node-smk))", tintHsl: "var(--node-smk)", description: "Opens all doors in one floor or zone." },
+  CYL: { label: "Cylinder",         tone: "text-[hsl(var(--node-cyl))]", dot: "hsl(var(--node-cyl))", border: "hsl(var(--node-cyl))", tintHsl: "var(--node-cyl)", description: "The physical lock cylinder on a single door. Has its own differ key, but Sub-Master, Master and Grand Master keys above it can also open this lock." },
 };
 
 const ADD_LABEL: Record<NodeType, string> = {

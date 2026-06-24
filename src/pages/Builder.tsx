@@ -48,7 +48,7 @@ const TYPE_META: Record<NodeType, { label: string; color: string; pill: string; 
   GMK: { label: "Grand Master Key", color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30", description: "The master key that opens every door in the building — held by senior management." },
   MK:  { label: "Master Key",       color: "hsl(var(--node-mk))",  pill: "bg-[hsl(178_70%_94%)] text-[hsl(var(--node-mk))] border-[hsl(var(--node-mk))]/30",   description: "Opens all doors in one building or section — one per area or wing." },
   SMK: { label: "Sub Master Key",   color: "hsl(var(--node-smk))", pill: "bg-[hsl(154_60%_95%)] text-[hsl(var(--node-smk))] border-[hsl(var(--node-smk))]/30", description: "Opens all doors in one floor or zone — e.g. Ground Floor, IT Department." },
-  CYL: { label: "Cylinder",         color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30",  description: "The physical lock cylinder fitted to a single door." },
+  CYL: { label: "Cylinder",         color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30",  description: "The physical lock cylinder on a single door. Its differ key opens only this door — but Sub-Master, Master, and Grand Master keys above it can also open this lock." },
 };
 
 const KEY_TYPE_LABEL: Record<string, string> = {
@@ -1682,7 +1682,10 @@ function DetailPanel({
 
         {isCyl && accessTrail.length > 0 && (
           <div className="rounded-md border bg-muted/30 p-3">
-            <div className="text-xs font-semibold mb-2">🔑 Who can open this door?</div>
+            <div className="text-xs font-semibold mb-1">🔑 Who can open this door?</div>
+            <p className="text-[10px] text-muted-foreground mb-3 leading-relaxed">
+              Keys higher up the tree automatically have access to all doors below them.
+            </p>
             <div className="space-y-1">
               {accessTrail.map((entry, i) => {
                 const isThisDoor = i === accessTrail.length - 1;
@@ -1973,6 +1976,37 @@ function GuidePanel({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="my-5 border-t" />
+
+      <div className="space-y-3">
+        <div className="text-xs font-semibold flex items-center gap-1">
+          <span>🔑</span> How access works
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Every door has its own differ key — 
+          it only opens that one door. But every key above it in your tree can 
+          also open it.
+        </p>
+        <div className="space-y-2">
+          {[
+            { color: "hsl(var(--node-cyl))", label: "Differ key", desc: "Opens this door only" },
+            { color: "hsl(var(--node-smk))", label: "Sub-Master key", desc: "Opens all doors in its zone" },
+            { color: "hsl(var(--node-mk))",  label: "Master key",     desc: "Opens all doors in its section" },
+            { color: "hsl(var(--node-gmk))", label: "Grand Master key", desc: "Opens every door in the system" },
+          ].map(({ color, label, desc }) => (
+            <div key={label} className="flex items-center gap-2 text-[10px]">
+              <span className="h-2 w-2 rounded-full shrink-0" style={{ background: color }} />
+              <span className="font-medium text-foreground">{label}</span>
+              <span className="text-muted-foreground">— {desc}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-[11px] italic text-muted-foreground leading-relaxed">
+          Example: the cleaner holds a Sub-Master key for Ground Floor — 
+          they can open every ground floor door, but not the floors above.
+        </p>
       </div>
 
       <div className="mt-5 rounded-md border border-amber-300 bg-amber-50 p-3">
