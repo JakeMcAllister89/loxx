@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Trash2, Lock, KeyRound, Minus, Plus, FileText } from "lucide-react";
-import { popQuoteDraft, totals } from "@/lib/quote";
+import { peekQuoteDraft, clearQuoteDraft, totals } from "@/lib/quote";
 import type { CartLine } from "@/contexts/CartContext";
 import type { TreeData } from "@/lib/keytree";
 import { toast } from "sonner";
