@@ -85,7 +85,7 @@ function layout(root: TNode): { laid: Laid[]; width: number; height: number } {
 
 function CanvasInner({
   tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, onPaneClick, registerFitView,
-  parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions,
+  parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly,
 }: Props) {
   const { fitView, setCenter } = useReactFlow();
   const lastNodeCount = useRef(0);
