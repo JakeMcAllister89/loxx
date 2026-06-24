@@ -291,12 +291,17 @@ function CanvasNodeImpl(props: NodeProps) {
       {canAdd && (
         <div
           ref={popRef}
-          onMouseEnter={() => setPopoverOpen(true)}
-          onMouseLeave={() => setPopoverOpen(false)}
           className="absolute -bottom-5 left-1/2 -translate-x-1/2 nodrag group/add"
         >
           <button
-            onClick={handlePlusClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              if ((addOptions?.length ?? 0) + (extraAddActions?.length ?? 0) > 1) {
+                setPopoverOpen((v) => !v);
+              } else {
+                handlePlusClick(e);
+              }
+            }}
             className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90"
             aria-label="Add child"
           >
@@ -308,7 +313,10 @@ function CanvasNodeImpl(props: NodeProps) {
             </div>
           )}
           {popoverOpen && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-10">
+            <div
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-50"
+              onKeyDown={(e) => { if (e.key === "Escape") setPopoverOpen(false); }}
+            >
               {addOptions?.map((t) => (
                 <button
                   key={t}
