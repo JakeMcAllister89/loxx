@@ -288,7 +288,10 @@ export default function QuoteDetail() {
               <div className="text-sm">
                 This quote covers master key system reference: <span className="font-semibold text-amber-700">{systemRef}</span>
               </div>
-              <div className="text-xs text-muted-foreground mt-1">All cylinders will be keyed to this system. Differ schedule available on request.</div>
+              <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                All cylinders will be supplied keyed to the master key system above. Each cylinder's differ
+                reference is shown against the relevant door. Keys are priced per copy at the unit price shown.
+              </div>
             </section>
           )}
 
