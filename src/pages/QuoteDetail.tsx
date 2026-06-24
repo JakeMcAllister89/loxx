@@ -215,31 +215,31 @@ export default function QuoteDetail() {
               <tbody className="divide-y">
                 {cylinders.map((c, i) => (
                   <tr key={`c${i}`}>
-                    <td className="py-2 font-mono text-amber-700">{c.differ_ref}</td>
+                    <td className="py-2 text-amber-700 font-medium">{c.differ_ref}</td>
                     <td className="py-2">{c.room_label}</td>
-                    <td className="py-2 font-mono text-[11px]">{c.product_code}</td>
+                    <td className="py-2 text-[11px] text-muted-foreground">{c.product_code}</td>
                     <td className="py-2 text-xs">{c.cylinder_profile ?? "—"}</td>
                     <td className="py-2 text-xs">{c.finish ?? "—"}</td>
-                    <td className="py-2 font-mono text-xs">{c.size ?? "—"}</td>
-                    <td className="py-2 text-right font-mono">{c.quantity}</td>
-                    <td className="py-2 text-right font-mono">£{c.unit_price.toFixed(2)}</td>
-                    <td className="py-2 text-right font-mono font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
+                    <td className="py-2 text-xs">{c.size ?? "—"}</td>
+                    <td className="py-2 text-right">{c.quantity}</td>
+                    <td className="py-2 text-right">£{c.unit_price.toFixed(2)}</td>
+                    <td className="py-2 text-right font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
                   </tr>
                 ))}
                 {keys.map((k, i) => (
                   <tr key={`k${i}`}>
-                    <td className="py-2 font-mono text-amber-700">{k.differ_ref ?? "—"}</td>
+                    <td className="py-2 text-amber-700 font-medium">{k.differ_ref ?? "—"}</td>
                     <td className="py-2" colSpan={5}>{k.key_reference}</td>
-                    <td className="py-2 text-right font-mono">{k.quantity}</td>
-                    <td className="py-2 text-right font-mono">£{k.unit_price.toFixed(2)}</td>
-                    <td className="py-2 text-right font-mono font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
+                    <td className="py-2 text-right">{k.quantity}</td>
+                    <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
+                    <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr><td colSpan={8} className="text-right text-muted-foreground pt-3">Subtotal (ex VAT)</td><td className="text-right font-mono pt-3">£{t.subtotal.toFixed(2)}</td></tr>
-                <tr><td colSpan={8} className="text-right text-muted-foreground">VAT (20%)</td><td className="text-right font-mono">£{t.vat.toFixed(2)}</td></tr>
-                <tr className="text-lg font-bold text-amber-700"><td colSpan={8} className="text-right pt-2 border-t">Total inc VAT</td><td className="text-right font-mono pt-2 border-t">£{t.total.toFixed(2)}</td></tr>
+                <tr><td colSpan={8} className="text-right text-muted-foreground pt-3">Subtotal (ex VAT)</td><td className="text-right font-medium pt-3">£{t.subtotal.toFixed(2)}</td></tr>
+                <tr><td colSpan={8} className="text-right text-muted-foreground">VAT (20%)</td><td className="text-right font-medium">£{t.vat.toFixed(2)}</td></tr>
+                <tr className="text-lg font-bold text-amber-700"><td colSpan={8} className="text-right pt-2 border-t">Total inc VAT</td><td className="text-right font-semibold pt-2 border-t">£{t.total.toFixed(2)}</td></tr>
               </tfoot>
             </table>
           </section>
