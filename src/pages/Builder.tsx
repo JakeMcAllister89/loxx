@@ -417,6 +417,35 @@ function BuilderInner({ systemId }: { systemId: string }) {
     setSelectedId((s) => (s === nodeId ? null : s));
   }, [systemId]);
 
+  const handleCopySpec = useCallback((sourceId: string, newLabel: string) => {
+    setTree((prev) => {
+      pushUndo(prev);
+      const source = findNode(prev.root, sourceId);
+      if (!source || source.type !== "CYL") return prev;
+      const parent = findParent(prev.root, sourceId);
+      if (!parent) return prev;
+      const siblingCount = parent.children.length;
+      const newNode: TNode = {
+        id: newId(),
+        type: "CYL",
+        label: newLabel.trim() || `Door ${siblingCount + 1}`,
+        differ: prev.next_differ,
+        cylinder_type: source.cylinder_type,
+        finish: source.finish,
+        size: source.size,
+        quantity: source.quantity ?? 1,
+        extra_keys: source.extra_keys ?? 0,
+        is_common_entrance: source.is_common_entrance ?? false,
+        children: [],
+      };
+      const newRoot = addChild(prev.root, parent.id, newNode);
+      dirtyRef.current = true;
+      return { ...prev, root: newRoot, next_differ: (prev.next_differ ?? 1) + 1 };
+    });
+    setCopySpecState({ open: false, sourceId: "", newLabel: "" });
+    setSelectedId(null);
+  }, [pushUndo]);
+
   /** Open the "Replace cylinder" flow for a CYL node. */
   const openReplaceFlow = useCallback((nodeId: string) => {
     setReplaceState({ open: true, nodeId, step: "reason", note: "" });
