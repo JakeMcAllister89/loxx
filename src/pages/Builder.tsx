@@ -148,6 +148,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [exportedAt, setExportedAt] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [reference, setReference] = useState<string | null>(null);
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [commissionPct, setCommissionPct] = useState<number | "">("");
+  const [partners, setPartners] = useState<{ id: string; name: string; company: string; partner_type: string; default_commission_pct: number }[]>([]);
   const [tree, setTree] = useState<TreeData>(emptyTree());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -297,6 +300,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setName(data.name);
       savedNameRef.current = data.name;
       setReference(data.reference);
+      setPartnerId((data as any).partner_id ?? null);
+      setCommissionPct((data as any).commission_pct ?? "");
       const raw = (data.tree_data as unknown as TreeData) ?? emptyTree();
       const loaded = raw?.root !== undefined ? raw : emptyTree();
       setLegacyCKDetected(hasLegacyCK(loaded.root));
@@ -309,6 +314,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
       const fulfilledStatuses = new Set(["delivered", "fulfilled", "shipped", "complete", "completed"]);
       setIsFulfilled((data ?? []).some((o: any) => fulfilledStatuses.has(String(o.status).toLowerCase())));
     });
+    supabase.from("partners").select("id, name, company, partner_type, default_commission_pct").eq("is_active", true).order("name")
+      .then(({ data }) => setPartners((data as any) ?? []));
   }, [systemId, navigate]);
 
   // Flush pending debounced audits when selectedId changes
@@ -995,6 +1002,48 @@ function BuilderInner({ systemId }: { systemId: string }) {
               <p>Click any row to edit its properties, or hover and tap <kbd className="px-1 rounded bg-muted text-xs">+</kbd> to add a child.</p>
               <div className="mt-6 space-y-2 text-xs">
                 <Legend type="GMK" /><Legend type="MK" /><Legend type="SMK" /><Legend type="CYL" />
+              </div>
+              <div className="mt-8 pt-5 border-t">
+                <h4 className="text-sm font-semibold text-foreground mb-2">Partner attribution</h4>
+                <div className="space-y-2">
+                  <select
+                    value={partnerId ?? ""}
+                    onChange={async (e) => {
+                      const newId = e.target.value || null;
+                      setPartnerId(newId);
+                      const p = partners.find((x) => x.id === newId);
+                      const newPct = p ? Number(p.default_commission_pct) : null;
+                      setCommissionPct(newPct ?? "");
+                      await supabase.from("key_systems").update({ partner_id: newId, commission_pct: newPct }).eq("id", systemId);
+                    }}
+                    className="w-full text-xs border rounded-md px-2 py-2 bg-background"
+                  >
+                    <option value="">— No partner —</option>
+                    {partners.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} · {p.company} ({p.partner_type})
+                      </option>
+                    ))}
+                  </select>
+                  {partnerId && (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <label className="text-[11px] text-muted-foreground flex-1">Commission %</label>
+                        <input
+                          type="number" step="0.01" min="0" max="100"
+                          value={commissionPct}
+                          onChange={(e) => setCommissionPct(e.target.value === "" ? "" : Number(e.target.value))}
+                          onBlur={async () => {
+                            const val = commissionPct === "" ? null : Number(commissionPct);
+                            await supabase.from("key_systems").update({ commission_pct: val }).eq("id", systemId);
+                          }}
+                          className="w-20 text-xs font-mono border rounded-md px-2 py-1 bg-background"
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground italic">This rate is locked per order at checkout.</p>
+                    </>
+                  )}
+                </div>
               </div>
               <div className="mt-8 pt-5 border-t">
                 <h4 className="text-sm font-semibold text-foreground mb-1">Activity</h4>

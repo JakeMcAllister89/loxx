@@ -27,6 +27,9 @@ import AdminSettings from "./pages/AdminSettings";
 import Quotes from "./pages/Quotes";
 import QuoteNew from "./pages/QuoteNew";
 import QuoteDetail from "./pages/QuoteDetail";
+import AdminPartners from "./pages/AdminPartners";
+import AdminPartnersReport from "./pages/AdminPartnersReport";
+import PartnerPortal from "./pages/PartnerPortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +60,9 @@ const App = () => (
               <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+              <Route path="/admin/partners" element={<AdminRoute><AdminPartners /></AdminRoute>} />
+              <Route path="/admin/partners/report" element={<AdminRoute><AdminPartnersReport /></AdminRoute>} />
+              <Route path="/partner-portal" element={<PartnerPortal />} />
               <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
               <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
               <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />

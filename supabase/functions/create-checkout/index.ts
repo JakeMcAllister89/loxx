@@ -118,20 +118,47 @@ Deno.serve(async (req) => {
       .single();
     if (orderErr || !order) return jsonError(`Failed to create order: ${orderErr?.message}`, 500);
 
-    const itemRows = items.map((it) => ({
-      order_id: order.id,
-      item_type: it.kind,
-      product_code: it.product_code ?? null,
-      cylinder_type: it.cylinder_type ?? null,
-      finish: it.finish ?? null,
-      room_label: it.room_label ?? it.key_reference ?? null,
-      differ_ref: it.differ_ref ?? null,
-      quantity: it.quantity,
-      unit_price: it.unit_price,
-      line_total: it.quantity * it.unit_price,
-    }));
+    // Snapshot commission rate for this order based on attributed partner (locked at order time)
+    let commissionPct: number | null = null;
+    if (body.systemId) {
+      const { data: sys } = await supabase
+        .from("key_systems")
+        .select("commission_pct, partner_id, partners:partner_id (default_commission_pct, is_active)")
+        .eq("id", body.systemId)
+        .maybeSingle();
+      if (sys?.partner_id) {
+        const partner = (sys as any).partners;
+        const sysPct = (sys as any).commission_pct;
+        const defPct = partner?.default_commission_pct;
+        commissionPct = typeof sysPct === "number" ? sysPct
+          : typeof defPct === "number" ? Number(defPct)
+          : 0;
+      }
+    }
+
+    const itemRows = items.map((it) => {
+      const line_total = it.quantity * it.unit_price;
+      const commission_amount = commissionPct != null
+        ? Math.round(line_total * commissionPct) / 100
+        : null;
+      return {
+        order_id: order.id,
+        item_type: it.kind,
+        product_code: it.product_code ?? null,
+        cylinder_type: it.cylinder_type ?? null,
+        finish: it.finish ?? null,
+        room_label: it.room_label ?? it.key_reference ?? null,
+        differ_ref: it.differ_ref ?? null,
+        quantity: it.quantity,
+        unit_price: it.unit_price,
+        line_total,
+        commission_pct: commissionPct,
+        commission_amount,
+      };
+    });
     const { error: itemsErr } = await supabase.from("order_items").insert(itemRows);
     if (itemsErr) return jsonError(`Failed to write order items: ${itemsErr.message}`, 500);
+
 
     const stripe = createStripeClient(body.environment);
 
