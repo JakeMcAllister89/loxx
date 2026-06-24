@@ -20,7 +20,7 @@ import { TreeData, TNode, NodeType } from "@/lib/keytree";
 import { logAction } from "@/lib/audit";
 import {
   Upload, FileText, FileSpreadsheet, ArrowLeft, ArrowRight, Loader2,
-  CheckCircle2, AlertCircle, ChevronDown, ChevronRight,
+  CheckCircle2, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Trash2,
 } from "lucide-react";
 
 // TODO: concierge import flow — accept emailed PDFs from customers and have a team member
@@ -94,7 +94,7 @@ export default function ImportPage() {
           <p className="text-muted-foreground text-sm mt-1">Upload a lockchart PDF or CSV and we'll build the hierarchy for you.</p>
         </div>
 
-        <Stepper step={step} />
+        <Stepper step={step} warningCount={step === "review" ? warnings.length : 0} />
 
         {step === "upload" && (
           <UploadStep onCsvParsed={(rows) => goReview(rows, "csv")} onPdfParsed={(rows, name) => goReview(rows, "pdf", name)} />
@@ -125,7 +125,7 @@ export default function ImportPage() {
 
 /* ----------------------------- Stepper ----------------------------- */
 
-function Stepper({ step }: { step: Step }) {
+function Stepper({ step, warningCount = 0 }: { step: Step; warningCount?: number }) {
   const items: { key: Step; label: string }[] = [
     { key: "upload", label: "Upload" },
     { key: "review", label: "Review" },
@@ -140,6 +140,9 @@ function Stepper({ step }: { step: Step }) {
             i <= idx ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
           }`}>{i + 1}</div>
           <span className={`text-sm ${i === idx ? "font-semibold" : "text-muted-foreground"}`}>{it.label}</span>
+          {it.key === "review" && step === "review" && warningCount > 0 && (
+            <Badge className="bg-amber-100 text-amber-900 border-amber-300 text-[10px]">{warningCount} issue{warningCount !== 1 ? "s" : ""} to review</Badge>
+          )}
           {i < items.length - 1 && <div className="w-10 h-px bg-border mx-2" />}
         </div>
       ))}
@@ -251,7 +254,12 @@ function PdfCard({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: str
       form.append("file", file);
       const { data, error } = await supabase.functions.invoke("parse-lockchart", { body: form });
       if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
+      if (data?.error === "pinning_schedule") {
+        setBusy(false);
+        setErr(data.message || "This looks like a pinning schedule, not a lockchart. Pinning schedules describe how to cut keys (pin stack heights) — we need a lockchart showing which keys open which doors and the master key hierarchy.");
+        return;
+      }
+      if (data?.error) throw new Error(data.message || data.error);
       const nodes: ParsedNode[] = (data?.nodes ?? []).map((n: any) => ({
         level: (n.level ?? "").toUpperCase() as NodeType,
         label: n.label ?? "",
@@ -264,6 +272,12 @@ function PdfCard({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: str
         key_qty: n.key_qty ?? null,
       }));
       if (!nodes.length) throw new Error("No nodes extracted");
+
+      const allFlat = nodes.every((n) => !n.parent_label);
+      if (allFlat && nodes.length > 0) {
+        toast.warning(`We found ${nodes.length} doors but couldn't determine the hierarchy. You may need to manually assign master key groups in the next step.`);
+      }
+
       onParsed(nodes, data?.system_name || file.name.replace(/\.pdf$/i, ""));
     } catch (e: any) {
       setBusy(false);
@@ -341,11 +355,36 @@ function ReviewStep({
     setTree({ ...tree, root: tree.root ? walk(tree.root) : null });
   };
 
+  const deleteNode = (id: string) => {
+    const walk = (n: TNode): TNode => ({
+      ...n,
+      children: n.children.filter((c) => c.id !== id).map(walk),
+    });
+    setTree({ ...tree, root: tree.root ? walk(tree.root) : null });
+  };
+
   return (
     <div className="grid md:grid-cols-[1fr_320px] gap-4">
       {/* Tree preview */}
-      <div className="rounded-[10px] border bg-card p-4 shadow-card max-h-[60vh] overflow-auto">
-        {tree.root && <ReviewRow node={tree.root} depth={0} onRename={(id, label) => patchNode(id, { label })} />}
+      <div className="space-y-3">
+        {warnings.length > 0 && (
+          <div className="rounded-[10px] border border-amber-300 bg-amber-50 p-4 shadow-card">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-700 mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-amber-900">
+                  {warnings.length} issue{warnings.length !== 1 ? "s" : ""} to review before building
+                </div>
+                <ul className="text-xs text-amber-900/90 space-y-1 list-disc pl-4 mt-2">
+                  {warnings.map((w, i) => <li key={i}>{w}</li>)}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="rounded-[10px] border bg-card p-4 shadow-card max-h-[60vh] overflow-auto">
+          {tree.root && <ReviewRow node={tree.root} depth={0} onRename={(id, label) => patchNode(id, { label })} onDelete={deleteNode} />}
+        </div>
       </div>
 
       {/* Summary panel */}
@@ -362,14 +401,6 @@ function ReviewStep({
           <div>{counts.CYL} cylinder{counts.CYL !== 1 ? "s" : ""}</div>
         </div>
 
-        {warnings.length > 0 && (
-          <div>
-            <div className="text-xs font-semibold mb-1">Issues found</div>
-            <ul className="text-[11px] text-muted-foreground space-y-1 list-disc pl-4">
-              {warnings.map((w, i) => <li key={i}>{w}</li>)}
-            </ul>
-          </div>
-        )}
 
         {unmatched.length > 0 && (
           <div>
@@ -399,7 +430,7 @@ function ReviewStep({
   );
 }
 
-function ReviewRow({ node, depth, onRename }: { node: TNode; depth: number; onRename: (id: string, label: string) => void }) {
+function ReviewRow({ node, depth, onRename, onDelete }: { node: TNode; depth: number; onRename: (id: string, label: string) => void; onDelete: (id: string) => void }) {
   const colors: Record<string, string> = {
     GMK: "hsl(var(--node-gmk))", MK: "hsl(var(--node-mk))", SMK: "hsl(var(--node-smk))", CYL: "hsl(var(--node-cyl))", CK: "hsl(var(--node-ck))",
   };
@@ -407,7 +438,7 @@ function ReviewRow({ node, depth, onRename }: { node: TNode; depth: number; onRe
   const [val, setVal] = useState(node.label);
   return (
     <div>
-      <div className="flex items-center gap-2 py-1 text-sm" style={{ paddingLeft: depth * 16 }}>
+      <div className="group flex items-center gap-2 py-1 text-sm" style={{ paddingLeft: depth * 16 }}>
         <span className="h-2 w-2 rounded-full shrink-0" style={{ background: colors[node.type] }} />
         {editing ? (
           <Input
@@ -427,8 +458,18 @@ function ReviewRow({ node, depth, onRename }: { node: TNode; depth: number; onRe
         {node.type === "CYL" && node.cylinder_type && (
           <span className="text-[10px] font-mono text-muted-foreground">· {node.cylinder_type}</span>
         )}
+        {node.type === "CYL" && (
+          <button
+            onClick={() => onDelete(node.id)}
+            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-1 rounded"
+            title="Remove this door from the import"
+            aria-label="Remove this door"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
-      {node.children.map((c) => <ReviewRow key={c.id} node={c} depth={depth + 1} onRename={onRename} />)}
+      {node.children.map((c) => <ReviewRow key={c.id} node={c} depth={depth + 1} onRename={onRename} onDelete={onDelete} />)}
     </div>
   );
 }

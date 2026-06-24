@@ -34,15 +34,23 @@ Deno.serve(async (req) => {
     }
     const base64 = btoa(binary);
 
-    const prompt = `You are a master key system specialist. Extract the complete key hierarchy from this lockchart PDF and return it as a JSON object.
+    const prompt = `You are a master key system specialist analysing a UK locksmith document. Your job is to extract the key hierarchy from this PDF.
 
-Return ONLY valid JSON in this exact structure, no other text, no markdown fences:
+STEP 1 — Classify the document:
+- LOCKCHART: shows keys + doors and which keys open which doors. May be a hierarchical list (GMK → MK → SMK → doors) OR a matrix grid (doors as rows, keys as columns, with crosses/dots marking access).
+- PINNING SCHEDULE: shows pin stack heights, bitting codes, or core combinations for cutting keys. Contains numeric pin codes per key (e.g. "1-4-2-5-6-3") but no door/key access relationships.
+
+If this document is a PINNING SCHEDULE (not a lockchart), return EXACTLY:
+{"error": "pinning_schedule", "message": "This looks like a pinning schedule, not a lockchart. Please upload a lockchart showing the key hierarchy and door list."}
+
+STEP 2 — If it is a lockchart, extract the hierarchy as JSON:
 {
   "system_name": "string",
   "nodes": [
     {
       "level": "GMK|SMK|CK|CYL",
       "label": "string",
+      "location": "string or null — area/zone/building name for MK and SMK (e.g. 'Main Building', 'Ground Floor')",
       "parent_label": "string or null for root",
       "cylinder_type": "string or null",
       "finish": "string or null",
@@ -53,15 +61,23 @@ Return ONLY valid JSON in this exact structure, no other text, no markdown fence
   ]
 }
 
-Rules:
-- Every system has exactly one GMK (Grand Master Key) at the root
-- SMK = Sub Master Key, groups of doors
-- CK = Change Key, individual door group
-- CYL = Cylinder, physical hardware on a specific door
-- Extract ALL nodes you can find, including key quantities
-- For cylinder types, map to these codes where possible: EKZ-12, AZG, C-KDZ36K36, C-DZ36/36, C-KDZ36K41, C-DZ36/41, C-KDZ31K31, C-OKZ36K36, C-AZG
-- If you cannot determine a cylinder type, leave it null
-- Preserve the exact room/door names as written in the document`;
+HIERARCHY RULES:
+- Every system has exactly one GMK (Grand Master Key) at the root.
+- MK = Master Key (groups of areas), SMK = Sub Master Key (zones within an area), CK = Change Key (single door group), CYL = Cylinder (physical hardware on a door).
+- For CYL nodes, use room_name for the door/room and set label to the same value if needed.
+- For MK/SMK nodes, populate "location" with the area/zone/building name (e.g. "Main Building", "Ground Floor", "East Wing").
+
+MATRIX/GRID LAYOUTS:
+- If the document is a matrix (doors as rows, keys as columns with × or • marks), infer the hierarchy from the column headers: GMK is the column that opens everything, MK columns open subsets, SMK columns open smaller subsets, individual differ keys open one door. Build the tree from this access pattern.
+
+COMMON UK LAYOUTS:
+- Numbered door lists grouped under MK/SMK headings: "MK1 – Main Building" then doors "1. Reception, 2. Office, 3. Server Room…" → MK label "MK1", location "Main Building", with CYL children for each door.
+- Tabbed sections per area, each with its own SMK at top and numbered doors below.
+- Always preserve exact room/door names as written.
+
+CYLINDER TYPES — map to these codes where possible: EKZ-12, AZG, C-KDZ36K36, C-DZ36/36, C-KDZ36K41, C-DZ36/41, C-KDZ31K31, C-OKZ36K36, C-AZG. If unsure, leave null.
+
+Return ONLY valid JSON, no markdown fences, no commentary.`;
 
     const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
