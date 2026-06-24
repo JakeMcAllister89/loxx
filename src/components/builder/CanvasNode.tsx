@@ -1,4 +1,4 @@
-import { memo, useState, useRef } from "react";
+import { memo, useState, useRef, useEffect } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { AlertCircle, Plus, Key, History, KeyRound } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -54,7 +54,7 @@ export const NODE_HEIGHT = 72;
 
 function CanvasNodeImpl(props: NodeProps) {
   const d = props.data as unknown as CanvasNodeData;
-  const selected = props.selected ?? d.selected;
+  const selected = d.selected;
   const {
     node, hasError, product, highlight, addOptions, onAddChildType,
     extraAddActions, hasDecommissionedChildren, revealDecommissioned, onToggleRevealDecommissioned,
@@ -64,6 +64,26 @@ function CanvasNodeImpl(props: NodeProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!popoverOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (popRef.current && !popRef.current.contains(e.target as Node)) {
+        setPopoverOpen(false);
+      }
+    };
+    const keyHandler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPopoverOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("keydown", keyHandler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("keydown", keyHandler);
+    };
+  }, [popoverOpen]);
+
+
 
 
   const ringClass = highlight
@@ -271,12 +291,17 @@ function CanvasNodeImpl(props: NodeProps) {
       {canAdd && (
         <div
           ref={popRef}
-          onMouseEnter={() => setPopoverOpen(true)}
-          onMouseLeave={() => setPopoverOpen(false)}
           className="absolute -bottom-5 left-1/2 -translate-x-1/2 nodrag group/add"
         >
           <button
-            onClick={handlePlusClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              if ((addOptions?.length ?? 0) + (extraAddActions?.length ?? 0) > 1) {
+                setPopoverOpen((v) => !v);
+              } else {
+                handlePlusClick(e);
+              }
+            }}
             className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90"
             aria-label="Add child"
           >
@@ -288,7 +313,10 @@ function CanvasNodeImpl(props: NodeProps) {
             </div>
           )}
           {popoverOpen && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-10">
+            <div
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-50"
+              onKeyDown={(e) => { if (e.key === "Escape") setPopoverOpen(false); }}
+            >
               {addOptions?.map((t) => (
                 <button
                   key={t}
