@@ -787,8 +787,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
       {/* Top bar */}
       <div className="border-b bg-card px-6 py-3 flex items-center gap-3 no-print">
         <Input value={name} onChange={(e) => { setName(e.target.value); dirtyRef.current = true; }} className="max-w-xs font-semibold" />
-        {reference && <Badge variant="secondary" className="font-mono">{reference}</Badge>}
-        <Badge variant="outline" className="font-mono">{countDoors(tree.root)} door{countDoors(tree.root) !== 1 ? "s" : ""}</Badge>
+        {reference && (
+          <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+            {reference}
+          </span>
+        )}
+        <span className="text-xs text-muted-foreground">
+          {countDoors(tree.root)} {countDoors(tree.root) !== 1 ? "doors" : "door"}
+        </span>
 
         <div className="ml-4 relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -846,7 +852,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
             <Button
               variant="outline"
               onClick={() => navigate("/cart")}
-              className="border-[hsl(36_94%_52%)] text-[hsl(36_94%_42%)] hover:bg-[hsl(36_94%_95%)]"
+              className="border-[hsl(36_94%_52%)] text-[hsl(36_94%_42%)] hover:bg-[hsl(36_94%_95%)] hover:text-[hsl(36_94%_42%)]"
             >
               View basket <ArrowRight className="h-4 w-4" />
             </Button>

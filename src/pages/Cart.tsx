@@ -78,7 +78,7 @@ export default function Cart() {
                     )}
                   </div>
                   {key.system_reference && (
-                    <span className="font-mono text-xs px-2 py-1 rounded bg-amber-100 text-amber-900 border border-amber-200">
+                    <span className="text-xs px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-200 font-medium">
                       {key.system_reference}
                     </span>
                   )}
@@ -98,7 +98,7 @@ export default function Cart() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               {line.differ_ref && (
-                                <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200">{line.differ_ref}</span>
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200">{line.differ_ref}</span>
                               )}
                               <div className="font-semibold">{line.room_label || line.product_name || line.product_code}</div>
                             </div>
@@ -108,7 +108,7 @@ export default function Cart() {
                             {line.product_name && (
                               <div className="text-[11px] text-muted-foreground mt-0.5">{line.product_name}</div>
                             )}
-                            <div className="text-[11px] font-mono text-amber-700 mt-1">
+                            <div className="text-[11px] text-amber-700/70 mt-1">
                               {[line.system_reference, ...(line.hierarchy_refs ?? []), line.differ_ref].filter(Boolean).join(" · ")}
                             </div>
                             <div className="text-[11px] italic text-muted-foreground mt-0.5">Includes 2 standard differ keys</div>
@@ -140,12 +140,12 @@ export default function Cart() {
                                 <KeyRound className="h-5 w-5 text-amber-600" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-sm font-mono">{ref}</div>
+                                <div className="font-semibold text-sm">{ref}</div>
                                 <div className="text-xs text-muted-foreground mt-0.5">{derivedLabel}</div>
                                 {line.location && (
                                   <div className="text-xs text-muted-foreground italic mt-0.5">{line.location}</div>
                                 )}
-                                <div className="text-[11px] font-mono text-amber-700 mt-1">
+                                <div className="text-[11px] text-amber-700/70 mt-1">
                                   {[line.system_reference, ...(line.hierarchy_refs ?? (ref ? [ref] : []))].filter(Boolean).join(" · ")}
                                 </div>
                               </div>
@@ -213,7 +213,7 @@ export default function Cart() {
                     {systemRefs.map((s) => (
                       <li key={s.system_id} className="flex items-center justify-between text-sm">
                         <span>{s.system_name}</span>
-                        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">{s.system_reference}</span>
+                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-900">{s.system_reference}</span>
                       </li>
                     ))}
                   </ul>
