@@ -77,6 +77,15 @@ export function AppSidebar() {
 
   const newSystem = async () => {
     if (!user || creating || !canCreate) return;
+    // If currently in the builder, confirm before navigating away
+    if (pathname.startsWith("/builder/")) {
+      setNewSystemConfirm(true);
+      return;
+    }
+    await doCreateSystem();
+  };
+
+  const doCreateSystem = async () => {
     setCreating(true);
     const id = await createSystem(user.id);
     setCreating(false);
