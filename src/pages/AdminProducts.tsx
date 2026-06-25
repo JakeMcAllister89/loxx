@@ -654,7 +654,8 @@ function CylinderTypesSection({ types, reload, products }: { types: CylinderType
     if (!n) return;
     setBusy(true);
     const nextOrder = (types[types.length - 1]?.sort_order ?? 0) + 1;
-    const { error } = await supabase.from("cylinder_types").insert({ name: n, sort_order: nextOrder });
+    let error: any = null;
+    try { await adminCatalogue("insert_cylinder_type", { name: n, sort_order: nextOrder }); } catch (e: any) { error = e; }
     setBusy(false);
     if (error) {
       toast.error(`Failed to add type: ${error.message}`);
@@ -668,22 +669,26 @@ function CylinderTypesSection({ types, reload, products }: { types: CylinderType
     const idx = types.findIndex(t => t.id === id);
     const swap = types[idx + dir];
     if (!swap) return;
-    await supabase.from("cylinder_types").update({ sort_order: swap.sort_order }).eq("id", id);
-    await supabase.from("cylinder_types").update({ sort_order: types[idx].sort_order }).eq("id", swap.id);
+    try {
+      await adminCatalogue("update_cylinder_type", { id, sort_order: swap.sort_order });
+      await adminCatalogue("update_cylinder_type", { id: swap.id, sort_order: types[idx].sort_order });
+    } catch (e: any) { toast.error(e.message); return; }
     reload();
   };
 
   const saveRename = async (id: string) => {
     const n = editName.trim();
     if (!n) { setEditingId(null); return; }
-    const { error } = await supabase.from("cylinder_types").update({ name: n }).eq("id", id);
+    let error: any = null;
+    try { await adminCatalogue("update_cylinder_type", { id, name: n }); } catch (e: any) { error = e; }
     if (error) { toast.error(error.message); return; }
     setEditingId(null); reload();
   };
 
   const remove = async (t: CylinderType) => {
     if (usageCount(t.name) > 0) return;
-    const { error } = await supabase.from("cylinder_types").update({ is_active: false }).eq("id", t.id);
+    let error: any = null;
+    try { await adminCatalogue("delete_cylinder_type", { id: t.id }); } catch (e: any) { error = e; }
     if (error) { toast.error(error.message); return; }
     reload();
   };
