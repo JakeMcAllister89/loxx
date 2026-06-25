@@ -349,8 +349,8 @@ function DetailDrawer({ fam, systems, onUseInBuilder }: {
         <SheetDescription>{fam.variants.length} variant{fam.variants.length !== 1 ? "s" : ""} available</SheetDescription>
       </SheetHeader>
       <div className="mt-6 space-y-5">
-        <div className="h-40 rounded-md bg-accent-light flex items-center justify-center overflow-hidden">
-          {fam.image ? <img src={fam.image} alt={fam.type} className="h-full w-full object-contain" /> : <Lock className="h-16 w-16 text-primary/60" />}
+        <div className="h-40 rounded-md bg-white border flex items-center justify-center overflow-hidden">
+          {fam.image ? <img src={fam.image} alt={fam.type} className="h-full w-full object-contain p-4" /> : <Lock className="h-16 w-16 text-primary/60" />}
         </div>
 
         {fam.finishes.length > 0 && (
