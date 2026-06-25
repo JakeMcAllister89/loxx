@@ -216,9 +216,9 @@ function FamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
 
   return (
     <div className="rounded-[10px] border bg-card shadow-card overflow-hidden flex flex-col">
-      <button onClick={onDetails} className="h-36 bg-accent-light flex items-center justify-center hover:bg-accent-light/70 transition-colors">
+      <button onClick={onDetails} className="h-36 bg-white flex items-center justify-center hover:bg-muted/10 transition-colors">
         {fam.image
-          ? <img src={fam.image} alt={fam.type} className="h-full w-full object-contain" />
+          ? <img src={fam.image} alt={fam.type} className="h-full w-full object-contain p-3" />
           : <Lock className="h-14 w-14 text-primary/60" />}
       </button>
       <div className="p-5 flex-1 flex flex-col gap-3">
