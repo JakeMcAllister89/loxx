@@ -121,7 +121,6 @@ export default function AdminProducts() {
       size: p.size ?? "",
       cost_price: p.cost_price != null ? Number(p.cost_price).toFixed(2) : "",
       price_gbp: Number(p.price_gbp).toFixed(2),
-      description: (p as any).description ?? "",
     }));
     const csv = Papa.unparse(rows, { columns: CSV_HEADERS });
     const blob = new Blob([csv], { type: "text/csv" });
@@ -150,8 +149,8 @@ export default function AdminProducts() {
       <div className="p-8 max-w-7xl">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight">Product catalogue</h1>
-            <Badge variant="secondary" className="font-mono">{activeCount} products</Badge>
+             <h1 className="text-3xl font-semibold tracking-tight">Product catalogue</h1>
+            <Badge variant="secondary" className="">{activeCount} products</Badge>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={exportCsv} disabled={products.length === 0}>
@@ -214,15 +213,15 @@ export default function AdminProducts() {
                         ? <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover bg-muted" />
                         : <div className="h-10 w-10 rounded bg-muted flex items-center justify-center"><ImageIcon className="h-4 w-4 text-muted-foreground" /></div>}
                     </td>
-                    <td className="px-3 py-2 font-medium">{p.product_description ?? p.name}</td>
-                    <td className="px-3 py-2 font-mono text-xs">{p.code}</td>
+                     <td className="px-3 py-2 font-medium">{p.product_description ?? p.name}</td>
+                    <td className="px-3 py-2 text-xs text-muted-foreground">{p.code}</td>
                     <td className="px-3 py-2"><Badge variant="outline">{p.cylinder_type}</Badge></td>
                     <td className="px-3 py-2">{p.finish}</td>
-                    <td className="px-3 py-2 font-mono text-xs">{p.size}</td>
+                    <td className="px-3 py-2 text-xs">{p.size}</td>
                     <td className="px-3 py-2 text-xs">{p.cylinder_profile ?? <span className="text-muted-foreground">—</span>}</td>
-                    <td className="px-3 py-2 font-mono text-green-700">£{Number(p.cost_price ?? 0).toFixed(2)}</td>
-                    <td className="px-3 py-2 font-mono font-semibold">£{Number(p.price_gbp).toFixed(2)}</td>
-                    <td className={`px-3 py-2 font-mono ${m == null ? "text-muted-foreground" : marginColor(m)}`}>{m == null ? "—" : `${m.toFixed(1)}%`}</td>
+                    <td className="px-3 py-2 text-green-700">£{Number(p.cost_price ?? 0).toFixed(2)}</td>
+                    <td className="px-3 py-2 font-semibold">£{Number(p.price_gbp).toFixed(2)}</td>
+                    <td className={`px-3 py-2 ${m == null ? "text-muted-foreground" : marginColor(m)}`}>{m == null ? "—" : `${m.toFixed(1)}%`}</td>
                     <td className="px-3 py-2 text-right">
                       <Button size="sm" variant="ghost" onClick={() => openEdit(p)} title="Edit">
                         <Pencil className="h-4 w-4" />
@@ -452,7 +451,6 @@ const CSV_HEADERS = [
   "size",
   "cost_price",
   "price_gbp",
-  "description",
 ];
 
 function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenChange: (b: boolean) => void; onDone: () => void }) {
@@ -471,7 +469,6 @@ function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpen
         "36/36",
         "18.50",
         "42.00",
-        "Standard double cylinder. Keyed both sides, Euro profile.",
       ],
       [
         "Thumbturn cylinder for bathrooms",
@@ -482,7 +479,6 @@ function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpen
         "30/10",
         "14.00",
         "52.00",
-        "Thumbturn cylinder for bathrooms and internal doors.",
       ],
     ]);
     const blob = new Blob([csv], { type: "text/csv" });
@@ -514,7 +510,6 @@ function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpen
         cost_price: r.cost_price ? Number(r.cost_price) : null,
         price_gbp: Number(r.price_gbp) || 0,
         product_description: desc || null,
-        description: r.description || null,
         is_active: true,
       };
       const { data: existing } = await supabase.from("products").select("id").eq("code", r.code).maybeSingle();
