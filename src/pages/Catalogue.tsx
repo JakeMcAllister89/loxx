@@ -306,7 +306,7 @@ function UseInBuilderButton({ systems, onPick, fullWidth = false }: {
           <DropdownMenuItem key={s.id} onClick={() => onPick(s.id)}>
             <div>
               <div className="text-sm">{s.name}</div>
-              {s.reference && <div className="text-[10px] font-mono text-muted-foreground">{s.reference}</div>}
+              {s.reference && <div className="text-[10px] text-muted-foreground">{s.reference}</div>}
             </div>
           </DropdownMenuItem>
         ))}
