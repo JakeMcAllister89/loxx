@@ -111,7 +111,7 @@ export default function Cart() {
                             <div className="text-[11px] text-amber-700/70 mt-1">
                               {[line.system_reference, ...(line.hierarchy_refs ?? []), line.differ_ref].filter(Boolean).join(" · ")}
                             </div>
-                            <div className="text-[11px] italic text-muted-foreground mt-0.5">Includes 2 standard differ keys</div>
+                            <div className="text-[11px] italic text-muted-foreground mt-0.5">Includes 2x standard differ keys with each lock</div>
                           </div>
                         </>
                       ) : line.is_extra_key || line.key_reference?.startsWith("Extra keys") ? (
