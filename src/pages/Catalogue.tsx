@@ -160,31 +160,13 @@ export default function Catalogue() {
               </Select>
             </div>
           </div>
-
-          <div className="grid md:grid-cols-12 gap-3 items-end mt-4">
-            <div className="md:col-span-7">
-              <Label className="text-xs">Max price <span className="font-mono ml-1 text-foreground">£{maxPrice}</span></Label>
-              <Slider value={[maxPrice]} min={20} max={priceCap} step={5} onValueChange={(v) => setMaxPrice(v[0])} className="mt-3" />
+          {filtersActive && (
+            <div className="mt-4 flex justify-end">
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="h-3.5 w-3.5" /> Clear filters
+              </Button>
             </div>
-            <div className="md:col-span-3">
-              <Label className="text-xs">Sort</Label>
-              <Select value={sort} onValueChange={(v: any) => setSort(v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="price-asc">Price · low to high</SelectItem>
-                  <SelectItem value="price-desc">Price · high to low</SelectItem>
-                  <SelectItem value="name">Name</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="md:col-span-2 flex justify-end">
-              {filtersActive && (
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  <X className="h-3.5 w-3.5" /> Clear
-                </Button>
-              )}
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="text-xs text-muted-foreground mt-3">
