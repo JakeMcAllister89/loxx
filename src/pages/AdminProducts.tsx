@@ -24,10 +24,12 @@ export interface AdminProduct {
   cylinder_type: string;
   cylinder_profile: string | null;
   finish: string;
+  finish_colour: string | null;
   size: string;
   price_gbp: number;
   cost_price: number | null;
   product_description: string | null;
+  product_features: string | null;
   description: string | null;
   image_url: string | null;
   is_active: boolean;
@@ -37,7 +39,8 @@ interface CylinderType { id: string; name: string; sort_order: number; is_active
 
 const blank = (defaultType = "Double"): AdminProduct => ({
   name: "", code: "", cylinder_type: defaultType, cylinder_profile: "Euro", finish: "Satin Nickel",
-  size: "35/35", price_gbp: 0, cost_price: 0, product_description: "", description: "",
+  finish_colour: null,
+  size: "35/35", price_gbp: 0, cost_price: 0, product_description: "", product_features: null, description: "",
   image_url: null, is_active: true,
 });
 
@@ -315,8 +318,10 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
       name: derivedName,
       code: p.code, cylinder_type: p.cylinder_type, cylinder_profile: p.cylinder_profile,
       pin_count: 6,
-      finish: p.finish, size: p.size, price_gbp: p.price_gbp, cost_price: p.cost_price,
+      finish: p.finish, finish_colour: p.finish_colour || null,
+      size: p.size, price_gbp: p.price_gbp, cost_price: p.cost_price,
       product_description: p.product_description,
+      product_features: p.product_features || null,
       image_url: p.image_url, is_active: p.is_active,
     };
     let error;
@@ -362,6 +367,18 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
               />
               <p className="text-[11px] text-muted-foreground mt-1">Appears on the catalogue, order confirmations and purchase orders</p>
             </div>
+            <div>
+              <Label>Product features (optional)</Label>
+              <Textarea
+                rows={4}
+                placeholder="One feature per line, e.g.\n6-pin precision cylinder\nAnti-pick mushroom pins\nDrill-resistant hardened inserts"
+                value={p.product_features ?? ""}
+                onChange={e => upd("product_features", e.target.value || null)}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Shown to customers in the product catalogue. One feature per line or separated by ·
+              </p>
+            </div>
             <div><Label>Product code *</Label><Input className="font-mono" placeholder="e.g. EKZ-12" value={p.code} onChange={e => upd("code", e.target.value)} /></div>
           </section>
 
@@ -381,6 +398,32 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
                 <Input placeholder="e.g. Euro, Oval, Rim, Mortice" value={p.cylinder_profile ?? ""} onChange={e => upd("cylinder_profile", e.target.value || null)} />
               </div>
               <div><Label>Finish</Label><Input value={p.finish} onChange={e => upd("finish", e.target.value)} /></div>
+              <div className="col-span-2">
+                <Label className="text-xs">Finish swatch colour</Label>
+                <div className="flex items-center gap-3 mt-1.5">
+                  <input
+                    type="color"
+                    value={p.finish_colour ?? "#888888"}
+                    onChange={e => upd("finish_colour", e.target.value)}
+                    className="h-9 w-16 rounded border cursor-pointer p-0.5"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {p.finish_colour ?? "Not set — will show grey"}
+                  </span>
+                  {p.finish_colour && (
+                    <button
+                      type="button"
+                      onClick={() => upd("finish_colour", null)}
+                      className="text-xs text-muted-foreground underline hover:text-destructive"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Shown as a colour swatch in the customer product catalogue.
+                </p>
+              </div>
             </div>
           </section>
 
@@ -598,7 +641,11 @@ function CylinderTypesSection({ types, reload, products }: { types: CylinderType
     const nextOrder = (types[types.length - 1]?.sort_order ?? 0) + 1;
     const { error } = await supabase.from("cylinder_types").insert({ name: n, sort_order: nextOrder });
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(`Failed to add type: ${error.message}`);
+      console.error("cylinder_types insert error:", error);
+      return;
+    }
     setNewName(""); reload();
   };
 

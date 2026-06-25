@@ -762,6 +762,7 @@ export type Database = {
           cylinder_type: string
           description: string | null
           finish: string | null
+          finish_colour: string | null
           id: string
           image_url: string | null
           is_active: boolean
@@ -769,6 +770,7 @@ export type Database = {
           pin_count: number
           price_gbp: number
           product_description: string | null
+          product_features: string | null
           security_rating: string | null
           size: string | null
         }
@@ -781,6 +783,7 @@ export type Database = {
           cylinder_type: string
           description?: string | null
           finish?: string | null
+          finish_colour?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -788,6 +791,7 @@ export type Database = {
           pin_count?: number
           price_gbp: number
           product_description?: string | null
+          product_features?: string | null
           security_rating?: string | null
           size?: string | null
         }
@@ -800,6 +804,7 @@ export type Database = {
           cylinder_type?: string
           description?: string | null
           finish?: string | null
+          finish_colour?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -807,6 +812,7 @@ export type Database = {
           pin_count?: number
           price_gbp?: number
           product_description?: string | null
+          product_features?: string | null
           security_rating?: string | null
           size?: string | null
         }

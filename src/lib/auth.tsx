@@ -72,9 +72,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const lastLoadedUid = useRef<string | null>(null);
   useEffect(() => {
+    // Still loading auth — don't reset isAdminLoading yet
+    if (loading) return;
     if (!user) {
       lastLoadedUid.current = null;
-      setIsAdmin(false); setIsAdminLoading(false);
+      setIsAdmin(false);
+      setIsAdminLoading(false);
       setOrgRole(null); setOrgId(null); setOrgRoleLoading(false);
       return;
     }
@@ -86,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
       .then(({ data }) => { setIsAdmin(!!(data as any)?.is_admin); setIsAdminLoading(false); });
     loadOrg(user.id);
-  }, [user]);
+  }, [user, loading]);
 
   const refreshOrg = async () => { if (user) await loadOrg(user.id); };
 
