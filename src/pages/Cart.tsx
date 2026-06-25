@@ -121,9 +121,9 @@ export default function Cart() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-semibold text-sm">
-                              Extra keys — {line.room_label}{line.differ_ref ? ` (${line.differ_ref})` : ""}
+                              Extra Differ Keys — {line.room_label}{line.differ_ref ? ` (${line.differ_ref})` : ""}
                             </div>
-                            <div className="text-xs text-muted-foreground mt-0.5">Additional keys beyond the 2 standard included</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">Additional keys beyond the 2x standard included with each lock</div>
                           </div>
                         </>
                       ) : (
