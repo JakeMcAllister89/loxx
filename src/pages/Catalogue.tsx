@@ -252,18 +252,16 @@ function FamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
 
         {fam.sizes.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {fam.sizes.map(s => {
-              const available = sizesForFinish.has(s);
+            {fam.sizes.filter(s => sizesForFinish.has(s)).map(s => {
               const active = selSize === s;
               return (
                 <button
                   key={s}
-                  disabled={!available}
                   onClick={() => setSelSize(s)}
-                  className={`px-2.5 py-1 rounded-full text-xs font-mono border transition-colors ${
-                    active ? "bg-primary text-primary-foreground border-primary" :
-                    available ? "bg-card text-foreground border-border hover:border-primary/50" :
-                    "bg-muted text-muted-foreground/50 border-border cursor-not-allowed"
+                  className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-foreground border-border hover:border-primary/50"
                   }`}
                 >{s}</button>
               );
@@ -275,7 +273,7 @@ function FamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
           <Badge variant="secondary" className="text-[10px] self-start">{fam.profile} profile</Badge>
         )}
 
-        <div className="text-2xl font-semibold text-amber-600 mt-auto font-mono">{priceDisplay}</div>
+        <div className="text-2xl font-semibold text-amber-600 mt-auto">{priceDisplay}</div>
 
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="flex-1" onClick={onDetails}><Info className="h-3.5 w-3.5" /> Details</Button>
