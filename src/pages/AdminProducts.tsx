@@ -155,9 +155,34 @@ export default function AdminProducts() {
             <Badge variant="secondary" className="font-mono">{activeCount} products</Badge>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCsvOpen(true)}><Upload className="h-4 w-4" /> Import CSV</Button>
-            <Button onClick={openNew} className="bg-amber-500 hover:bg-amber-600 text-white"><Plus className="h-4 w-4" /> Add product</Button>
+            <Button variant="outline" onClick={exportCsv} disabled={products.length === 0}>
+              <Download className="h-4 w-4" /> Export CSV
+            </Button>
+            <Button variant="outline" onClick={() => setCsvOpen(true)}>
+              <Upload className="h-4 w-4" /> Import CSV
+            </Button>
+            <Button onClick={openNew} className="bg-amber-500 hover:bg-amber-600 text-white">
+              <Plus className="h-4 w-4" /> Add product
+            </Button>
           </div>
+        </div>
+
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search by name, code, type, finish or size…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 w-80"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         <div className="rounded-[10px] border bg-card shadow-card overflow-hidden">
