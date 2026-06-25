@@ -32,6 +32,7 @@ export function AppSidebar() {
   const [systems, setSystems] = useState<{ id: string; name: string; door_count: number }[]>([]);
   const [quoteCount, setQuoteCount] = useState<number>(0);
   const [creating, setCreating] = useState(false);
+  const [newSystemConfirm, setNewSystemConfirm] = useState(false);
 
   const isViewOnly = orgRole === "view_only";
   const canCreate = orgRole && orgRole !== "view_only";
