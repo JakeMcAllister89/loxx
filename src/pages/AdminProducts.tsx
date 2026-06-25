@@ -411,7 +411,7 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
           <section className="space-y-3">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Product image</div>
             <p className="text-[11px] text-muted-foreground mb-2">
-              Square format recommended · 400×400px · PNG or WebP · white or transparent background
+              Square format (1:1) · Minimum 800×800px · PNG or WebP · white or transparent background
             </p>
             {p.image_url ? (
               <div className="flex items-center gap-3">
