@@ -49,7 +49,9 @@ export function AppSidebar() {
     fetchSystems();
     const channel = supabase
       .channel("sidebar-systems")
-      .on("postgres_changes", { event: "*", schema: "public", table: "key_systems" }, () => fetchSystems())
+      .on("postgres_changes", { event: "*", schema: "public", table: "key_systems" }, () => {
+        if (document.visibilityState === "visible") fetchSystems();
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
@@ -65,7 +67,9 @@ export function AppSidebar() {
     fetchQuotes();
     const channel = supabase
       .channel("sidebar-quotes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "quotes" }, fetchQuotes)
+      .on("postgres_changes", { event: "*", schema: "public", table: "quotes" }, () => {
+        if (document.visibilityState === "visible") fetchQuotes();
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);

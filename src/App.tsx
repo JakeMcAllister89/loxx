@@ -37,7 +37,14 @@ import AcceptInvite from "./pages/AcceptInvite";
 import AcceptPlatformInvite from "./pages/AcceptPlatformInvite";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 5,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

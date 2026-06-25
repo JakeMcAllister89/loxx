@@ -41,7 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [orgRoleLoading, setOrgRoleLoading] = useState(true);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
+      // Skip TOKEN_REFRESHED events — these fire on tab focus and cause
+      // unnecessary re-renders that reset in-progress component state
+      if (event === "TOKEN_REFRESHED") return;
       setSession(sess);
       setUser(sess?.user ?? null);
     });
