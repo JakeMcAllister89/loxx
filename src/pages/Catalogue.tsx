@@ -273,6 +273,17 @@ function FamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
           <Badge variant="secondary" className="text-[10px] self-start">{fam.profile} profile</Badge>
         )}
 
+        {fam.features && (
+          <ul className="space-y-0.5">
+            {fam.features.split(/\n|·/).map(f => f.trim()).filter(Boolean).slice(0, 4).map((f, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                <span className="text-primary mt-0.5 shrink-0">✓</span>
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
         <div className="text-2xl font-semibold text-amber-600 mt-auto">{priceDisplay}</div>
 
         <div className="flex gap-2">
