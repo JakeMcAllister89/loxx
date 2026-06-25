@@ -739,13 +739,27 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   const exportToCart = () => {
     if (!tree.root) { toast.error("Nothing to export"); return; }
-    // Flush pending audits so room name / cylinder config is captured before export
     if (labelAuditRef.current) flushLabelAudit();
     if (locationAuditRef.current) flushLocationAudit();
     if (cylConfigRef.current) flushCylConfig();
     const errs = validate(tree).filter((i) => i.level === "error");
     if (errs.length) { toast.error("Fix validation errors before exporting"); setIssues(validate(tree)); setValidateOpen(true); return; }
     const productByCode = new Map(products.map((p) => [p.code, p]));
+    // Look up new-system key products by code suffix "-EXTRA"
+    const extraKeyProducts = products.filter((p: any) => p.code?.toUpperCase().endsWith("-EXTRA"));
+    const keyProductForNode = (nodeType: string) => {
+      const levelHint = nodeType === "CYL" ? "DIFFER"
+        : nodeType === "GMK" ? "GMK"
+        : nodeType === "MK"  ? "MK"
+        : nodeType === "SMK" ? "SMK"
+        : "";
+      if (!levelHint) return null;
+      return extraKeyProducts.find((p: any) => {
+        const profile = p.cylinder_profile?.toUpperCase() ?? "";
+        if (levelHint === "MK") return profile.includes("MK") && !profile.includes("SMK") && !profile.includes("GMK");
+        return profile.includes(levelHint);
+      }) ?? null;
+    };
     const lines: import("@/contexts/CartContext").CartLine[] = [];
     let total = 0;
     const sys = { system_id: systemId, system_name: name, system_reference: reference };
