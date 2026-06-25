@@ -26,7 +26,7 @@ function buildDifferHierarchyMap(root: any): Record<string, { gmk: string; mk: s
     if (node.type === "CYL" && node.differ != null) {
       const ref = `D${String(node.differ).padStart(3, "0")}`;
       map[ref] = {
-        gmk: trail.find(n => n.type === "GMK")?.label ?? "—",
+        gmk: trail.find(n => n.type === "GMK") ? "GMK" : "—",
         mk:  trail.find(n => n.type === "MK")?.label  ?? "—",
         smk: trail.find(n => n.type === "SMK")?.label ?? "—",
       };
