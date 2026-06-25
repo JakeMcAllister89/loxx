@@ -537,13 +537,36 @@ function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpen
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Import products from CSV</DialogTitle>
-          <DialogDescription>Upsert by product code. Existing codes are updated.</DialogDescription>
+          <DialogDescription>
+            Matched by product code — existing products are updated, no duplicates created. Export your catalogue first, edit in Excel, then reimport.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={downloadTemplate}><FileDown className="h-4 w-4" /> Download template</Button>
             <Input type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f); }} />
           </div>
+          <details className="text-xs text-muted-foreground border rounded-md p-3">
+            <summary className="cursor-pointer font-medium text-foreground">Column guide</summary>
+            <div className="mt-2 space-y-1">
+              {[
+                ["product_description", "Required. Short product name shown in the catalogue and on documents."],
+                ["code", "Required. Unique product code (e.g. TT-30/10). Used to match existing products on import."],
+                ["cylinder_type", "Lock type family — must match an existing lock type (e.g. Double, Thumbturn, Single, Oval, Mortice)."],
+                ["cylinder_profile", "Lock function (e.g. Euro, Euro thumbturn, Oval). Free text."],
+                ["finish", "Surface finish (e.g. Nickel Plated, Polished Brass, Satin Chrome)."],
+                ["size", "Cylinder size (e.g. 35/35, 30/10, 36/41)."],
+                ["cost_price", "Your supplier cost price excluding VAT. Decimal number (e.g. 18.50)."],
+                ["price_gbp", "Customer selling price excluding VAT. Decimal number (e.g. 42.00)."],
+                ["description", "Optional longer description used on purchase orders and invoices."],
+              ].map(([col, desc]) => (
+                <div key={col} className="flex gap-2">
+                  <span className="font-medium text-foreground w-44 shrink-0">{col}</span>
+                  <span>{desc}</span>
+                </div>
+              ))}
+            </div>
+          </details>
           {rows.length > 0 && (
             <div className="max-h-72 overflow-auto border rounded">
               <table className="w-full text-xs">
