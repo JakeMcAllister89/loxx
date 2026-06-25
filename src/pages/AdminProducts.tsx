@@ -265,7 +265,7 @@ export default function AdminProducts() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {deleteTarget?.product_description ?? deleteTarget?.name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove it from the catalogue. Any systems currently using this product code will not be affected — the cylinder type will remain on existing nodes but the product will no longer be selectable for new cylinders.
+              This will permanently remove the product from the catalogue. Any existing orders or quotes referencing this product will be unaffected.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
