@@ -413,22 +413,17 @@ function DetailDrawer({ fam, systems, onUseInBuilder }: {
 
 /* -------------------- KEYS family card -------------------- */
 
-const KEY_TYPES = [
-  { code: "KEY-DIFFER", label: "Differ key", price: 12, opens: "Opens one specific door" },
-  { code: "KEY-SMK",    label: "Sub-master key", price: 14, opens: "Opens all cylinders in a zone" },
-  { code: "KEY-MK",     label: "Master key", price: 16, opens: "Opens all cylinders in a building" },
-  { code: "KEY-GMK",    label: "Grand master key", price: 18, opens: "Opens all cylinders across the entire system" },
-];
-
 function KeysFamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
   fam: Family; systems: KeySystem[]; onDetails: () => void; onUseInBuilder: (sysId: string | null) => void;
 }) {
-  const [selCode, setSelCode] = useState<string>("KEY-DIFFER");
-  const variantByCode = useMemo(() => new Map(fam.variants.map(v => [v.code, v])), [fam]);
-  const selected = variantByCode.get(selCode);
-  const selectedMeta = KEY_TYPES.find(k => k.code === selCode)!;
-  const price = selected ? Number(selected.price_gbp) : selectedMeta.price;
-  const desc = selected?.product_description ?? selected?.description ?? selectedMeta.opens;
+  // Sort by price ascending — differ, smk, mk, gmk naturally order this way
+  const keyVariants = [...fam.variants].sort((a, b) => Number(a.price_gbp) - Number(b.price_gbp));
+  const [selCode, setSelCode] = useState<string>(keyVariants[0]?.code ?? "");
+  const selected = fam.variants.find(v => v.code === selCode) ?? keyVariants[0];
+  if (!selected) return null;
+  const price = Number(selected.price_gbp);
+  const desc = selected.product_description ?? selected.description ?? "";
+  const label = selected.name ?? selected.code;
 
   return (
     <div className="rounded-[10px] border-2 border-amber-200 bg-gradient-to-br from-amber-50/60 to-card shadow-card overflow-hidden flex flex-col relative">
@@ -444,7 +439,7 @@ function KeysFamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {KEY_TYPES.filter(k => variantByCode.has(k.code)).map(k => {
+          {keyVariants.map(k => {
             const active = selCode === k.code;
             return (
               <button
@@ -453,17 +448,27 @@ function KeysFamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
                 className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${
                   active ? "bg-amber-500 text-white border-amber-500" : "bg-card text-foreground border-amber-200 hover:border-amber-400"
                 }`}
-              >{k.label} · £{(variantByCode.get(k.code) ? Number(variantByCode.get(k.code)!.price_gbp) : k.price).toFixed(0)}</button>
+              >{(k.name ?? k.code)} · £{Number(k.price_gbp).toFixed(0)}</button>
             );
           })}
         </div>
 
         <div className="mt-1">
-          <div className="font-semibold text-sm">{selectedMeta.label}</div>
-          <div className="text-xs text-muted-foreground mt-0.5">{desc}</div>
+          <div className="font-semibold text-sm">{label}</div>
+          {desc && <div className="text-xs text-muted-foreground mt-0.5">{desc}</div>}
+          {selected.product_features && (
+            <ul className="mt-2 space-y-1">
+              {selected.product_features.split(/\n|·/).map(f => f.trim()).filter(Boolean).map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-[11px]">
+                  <span className="text-amber-600 mt-0.5">✓</span>
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        <div className="text-2xl font-semibold text-amber-600 mt-auto font-mono">£{price.toFixed(2)}</div>
+        <div className="text-2xl font-semibold text-amber-600 mt-auto">£{price.toFixed(2)}</div>
         <p className="text-[11px] text-muted-foreground -mt-1">2 keys included with every new cylinder</p>
 
         <div className="flex gap-2">
@@ -478,7 +483,7 @@ function KeysFamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
 function KeysDetailDrawer({ fam, systems, onUseInBuilder }: {
   fam: Family; systems: KeySystem[]; onUseInBuilder: (sysId: string | null) => void;
 }) {
-  const variantByCode = new Map(fam.variants.map(v => [v.code, v]));
+  const keyVariants = [...fam.variants].sort((a, b) => Number(a.price_gbp) - Number(b.price_gbp));
   return (
     <>
       <SheetHeader>
@@ -498,16 +503,13 @@ function KeysDetailDrawer({ fam, systems, onUseInBuilder }: {
               <tr><th className="text-left px-3 py-2">Type</th><th className="text-left px-3 py-2">What it opens</th><th className="text-right px-3 py-2">Price</th></tr>
             </thead>
             <tbody>
-              {KEY_TYPES.map(k => {
-                const v = variantByCode.get(k.code);
-                return (
-                  <tr key={k.code} className="border-t">
-                    <td className="px-3 py-2 font-medium">{k.label}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{k.opens}</td>
-                    <td className="px-3 py-2 text-right font-mono">£{(v ? Number(v.price_gbp) : k.price).toFixed(2)}</td>
-                  </tr>
-                );
-              })}
+              {keyVariants.map(k => (
+                <tr key={k.code} className="border-t">
+                  <td className="px-3 py-2 font-medium">{k.name ?? k.code}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{k.product_description ?? k.description ?? ""}</td>
+                  <td className="px-3 py-2 text-right">£{Number(k.price_gbp).toFixed(2)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
