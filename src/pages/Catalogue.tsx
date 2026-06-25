@@ -52,6 +52,10 @@ function buildFamilies(products: Product[]): Family[] {
     const sizes = Array.from(new Set(variants.map(v => v.size).filter(Boolean))) as string[];
     const profiles = Array.from(new Set(variants.map(v => v.cylinder_profile).filter(Boolean)));
     const first = variants[0];
+    const finishColours: Record<string, string> = {};
+    variants.forEach(v => {
+      if (v.finish && v.finish_colour) finishColours[v.finish] = v.finish_colour;
+    });
     return {
       type,
       variants,
@@ -60,6 +64,8 @@ function buildFamilies(products: Product[]): Family[] {
       profile: profiles.length === 1 ? (profiles[0] as string) : null,
       image: variants.find(v => v.image_url)?.image_url ?? null,
       description: first.product_description ?? first.description ?? "",
+      features: variants.find(v => v.product_features)?.product_features ?? null,
+      finishColours,
       minPrice: Math.min(...variants.map(v => Number(v.price_gbp))),
     };
   });
