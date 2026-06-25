@@ -209,7 +209,7 @@ export default function AdminProducts() {
               {sorted.map((p) => {
                 const m = calcMargin(p.cost_price, p.price_gbp);
                 return (
-                  <tr key={p.id} className={`border-t ${!p.is_active ? "opacity-40" : ""}`}>
+                  <tr key={p.id} className="border-t">
                     <td className="px-3 py-2">
                       {p.image_url
                         ? <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover bg-muted" />
