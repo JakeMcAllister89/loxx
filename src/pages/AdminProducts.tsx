@@ -18,10 +18,8 @@ import { toast } from "sonner";
 import Papa from "papaparse";
 
 const adminCatalogue = async (action: string, payload: Record<string, unknown>) => {
-  const { data: { session } } = await supabase.auth.getSession();
   const res = await supabase.functions.invoke("admin-catalogue", {
     body: { action, payload },
-    headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
   });
   if (res.error) throw new Error(res.error.message);
   const body = res.data as any;
