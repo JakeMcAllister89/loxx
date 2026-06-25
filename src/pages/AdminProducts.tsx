@@ -337,12 +337,14 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
       product_features: p.product_features || null,
       image_url: p.image_url, is_active: p.is_active,
     };
-    let error;
-    if (p.id) {
-      ({ error } = await supabase.from("products").update(payload).eq("id", p.id));
-    } else {
-      ({ error } = await supabase.from("products").insert(payload));
-    }
+    let error: any = null;
+    try {
+      if (p.id) {
+        await adminCatalogue("update_product", { id: p.id, ...payload });
+      } else {
+        await adminCatalogue("insert_product", payload);
+      }
+    } catch (e: any) { error = e; }
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Product saved");
