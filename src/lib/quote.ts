@@ -95,6 +95,7 @@ export function treeToQuoteItems(
           kind: "key",
           key_reference: `Extra Differ Keys — ${n.label} (${differRef})`,
           product_code: differKeyProd?.code ?? undefined,
+          image_url: differKeyProd?.image_url ?? undefined,
           room_label: n.label,
           differ_ref: differRef,
           quantity: extra,
