@@ -641,7 +641,11 @@ function CylinderTypesSection({ types, reload, products }: { types: CylinderType
     const nextOrder = (types[types.length - 1]?.sort_order ?? 0) + 1;
     const { error } = await supabase.from("cylinder_types").insert({ name: n, sort_order: nextOrder });
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(`Failed to add type: ${error.message}`);
+      console.error("cylinder_types insert error:", error);
+      return;
+    }
     setNewName(""); reload();
   };
 
