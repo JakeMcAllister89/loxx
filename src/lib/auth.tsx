@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -47,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === "TOKEN_REFRESHED") return;
       setSession(sess);
       setUser(sess?.user ?? null);
+      setLoading(false);
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -69,12 +70,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setOrgRoleLoading(false);
   };
 
+  const lastLoadedUid = useRef<string | null>(null);
   useEffect(() => {
     if (!user) {
+      lastLoadedUid.current = null;
       setIsAdmin(false); setIsAdminLoading(false);
       setOrgRole(null); setOrgId(null); setOrgRoleLoading(false);
       return;
     }
+    // Skip if we already loaded for this user — prevents double-fire from
+    // getSession + onAuthStateChange both setting the same user
+    if (lastLoadedUid.current === user.id) return;
+    lastLoadedUid.current = user.id;
     setIsAdminLoading(true);
     supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
       .then(({ data }) => { setIsAdmin(!!(data as any)?.is_admin); setIsAdminLoading(false); });
