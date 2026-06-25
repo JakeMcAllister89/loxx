@@ -461,7 +461,31 @@ function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpen
   const [busy, setBusy] = useState(false);
 
   const downloadTemplate = () => {
-    const csv = Papa.unparse([CSV_HEADERS, ["Example double cylinder, keyed both sides","EX-12","Double","Satin Nickel","35/35","18.50","42.00"]]);
+    const csv = Papa.unparse([
+      CSV_HEADERS,
+      [
+        "Double cylinder — keyed both sides",
+        "C-DZ36/36",
+        "Double",
+        "Euro",
+        "Satin Nickel",
+        "36/36",
+        "18.50",
+        "42.00",
+        "Standard double cylinder. Keyed both sides, Euro profile.",
+      ],
+      [
+        "Thumbturn cylinder for bathrooms",
+        "TT-30/10",
+        "Thumbturn",
+        "Euro thumbturn",
+        "Nickel Plated",
+        "30/10",
+        "14.00",
+        "52.00",
+        "Thumbturn cylinder for bathrooms and internal doors.",
+      ],
+    ]);
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "products-template.csv"; a.click();
