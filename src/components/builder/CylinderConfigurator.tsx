@@ -300,8 +300,8 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
         </div>
       </div>
 
-      {/* Additional keys */}
-      <div className="pt-3 border-t">
+      {/* Additional keys — hidden for Key type products */}
+      {activeFamily !== "Key" && <div className="pt-3 border-t">
         <Label className="text-xs">Additional keys</Label>
         <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
           2 differ keys are included with each cylinder. Add extras here if more key-holders 
@@ -320,7 +320,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
         <p className="text-[11px] text-muted-foreground mt-2">
           Total keys for this cylinder: <span className="font-semibold text-foreground">{2 + (node.extra_keys ?? 0)}</span>
         </p>
-      </div>
+      </div>}
     </div>
   );
 }

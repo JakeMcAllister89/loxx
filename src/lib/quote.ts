@@ -19,6 +19,18 @@ export function treeToQuoteItems(
   sys: { system_id: string; system_name: string; system_reference: string | null },
 ): CartLine[] {
   const productByCode = new Map(products.map((p) => [p.code, p]));
+  // Map key products by their cylinder_profile (GMK/MK/SMK/Differ)
+  // so we can look up the correct price for each key level
+  const keyProductByProfile = new Map(
+    products
+      .filter(p => p.cylinder_type === "Key")
+      .map(p => [(p as any).cylinder_profile?.toUpperCase() ?? "", p])
+  );
+  const keyPriceForNode = (nodeType: string): { price: number; code: string | null } => {
+    const profileKey = nodeType === "CYL" ? "DIFFER" : nodeType;
+    const p = keyProductByProfile.get(profileKey);
+    return { price: p ? Number(p.price_gbp) : 12, code: p?.code ?? null };
+  };
   const out: CartLine[] = [];
   const walk = (n: TNode, trail: TNode[]) => {
     if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
