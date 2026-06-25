@@ -49,7 +49,9 @@ export function AppSidebar() {
     fetchSystems();
     const channel = supabase
       .channel("sidebar-systems")
-      .on("postgres_changes", { event: "*", schema: "public", table: "key_systems" }, () => fetchSystems())
+      .on("postgres_changes", { event: "*", schema: "public", table: "key_systems" }, () => {
+        if (document.visibilityState === "visible") fetchSystems();
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);

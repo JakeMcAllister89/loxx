@@ -107,7 +107,6 @@ export default function AdminProducts() {
       id: undefined as any,
       code: "",
       name: `${p.name} — Copy`,
-      image_url: null,
     });
     setDrawerOpen(true);
   };
