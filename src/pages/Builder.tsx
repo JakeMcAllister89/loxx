@@ -904,7 +904,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
             <History className="h-4 w-4" /> {showAllDecomm ? "Hide replaced" : "Show replaced cylinders"}
           </Button>
         )}
-        <SaveStatusIndicator status={saveStatus} onRetry={save} />
+        <SaveStatusIndicator status={saveStatus} lastSavedAt={lastSavedAt} onRetry={save} />
         <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" /> Export PDF</Button>
         {!readOnly && (
           <Button variant="outline" onClick={() => {
