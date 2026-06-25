@@ -70,12 +70,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setOrgRoleLoading(false);
   };
 
+  const lastLoadedUid = useRef<string | null>(null);
   useEffect(() => {
     if (!user) {
+      lastLoadedUid.current = null;
       setIsAdmin(false); setIsAdminLoading(false);
       setOrgRole(null); setOrgId(null); setOrgRoleLoading(false);
       return;
     }
+    // Skip if we already loaded for this user — prevents double-fire from
+    // getSession + onAuthStateChange both setting the same user
+    if (lastLoadedUid.current === user.id) return;
+    lastLoadedUid.current = user.id;
     setIsAdminLoading(true);
     supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
       .then(({ data }) => { setIsAdmin(!!(data as any)?.is_admin); setIsAdminLoading(false); });
