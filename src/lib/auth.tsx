@@ -47,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === "TOKEN_REFRESHED") return;
       setSession(sess);
       setUser(sess?.user ?? null);
+      setLoading(false);
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
