@@ -215,7 +215,7 @@ export default function AdminProducts() {
                         ? <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover bg-muted" />
                         : <div className="h-10 w-10 rounded bg-muted flex items-center justify-center"><ImageIcon className="h-4 w-4 text-muted-foreground" /></div>}
                     </td>
-                    <td className="px-3 py-2 font-medium">{p.product_description ?? p.name}{!p.is_active && <span className="ml-2 text-xs text-muted-foreground">(inactive)</span>}</td>
+                    <td className="px-3 py-2 font-medium">{p.product_description ?? p.name}</td>
                     <td className="px-3 py-2 font-mono text-xs">{p.code}</td>
                     <td className="px-3 py-2"><Badge variant="outline">{p.cylinder_type}</Badge></td>
                     <td className="px-3 py-2">{p.finish}</td>
