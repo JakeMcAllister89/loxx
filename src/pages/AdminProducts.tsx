@@ -13,7 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, ArrowUpDown, Upload, FileDown, ImageIcon, X, Copy } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowUpDown, Upload, FileDown, ImageIcon, X, Copy, Search, Download } from "lucide-react";
 import { toast } from "sonner";
 import Papa from "papaparse";
 
@@ -61,6 +61,7 @@ export default function AdminProducts() {
   const [editing, setEditing] = useState<AdminProduct | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminProduct | null>(null);
   const [csvOpen, setCsvOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const load = async () => {
     const { data } = await supabase.from("products").select("*").order("cylinder_type").order("price_gbp");
@@ -73,7 +74,17 @@ export default function AdminProducts() {
   useEffect(() => { load(); loadTypes(); }, []);
 
   const sorted = useMemo(() => {
-    const arr = [...products];
+    const q = search.trim().toLowerCase();
+    const arr = q
+      ? products.filter(p =>
+          (p.product_description ?? p.name ?? "").toLowerCase().includes(q) ||
+          (p.code ?? "").toLowerCase().includes(q) ||
+          (p.cylinder_type ?? "").toLowerCase().includes(q) ||
+          (p.cylinder_profile ?? "").toLowerCase().includes(q) ||
+          (p.finish ?? "").toLowerCase().includes(q) ||
+          (p.size ?? "").toLowerCase().includes(q)
+        )
+      : [...products];
     arr.sort((a, b) => {
       const av = (a as any)[sortKey]; const bv = (b as any)[sortKey];
       if (av == null) return 1; if (bv == null) return -1;
@@ -81,7 +92,7 @@ export default function AdminProducts() {
       return sortDir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
     });
     return arr;
-  }, [products, sortKey, sortDir]);
+  }, [products, sortKey, sortDir, search]);
 
   const toggleSort = (k: keyof AdminProduct) => {
     if (k === sortKey) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -101,16 +112,39 @@ export default function AdminProducts() {
     setDrawerOpen(true);
   };
 
+  const exportCsv = () => {
+    const rows = products.map(p => ({
+      product_description: p.product_description ?? p.name ?? "",
+      code: p.code,
+      cylinder_type: p.cylinder_type ?? "",
+      cylinder_profile: p.cylinder_profile ?? "",
+      finish: p.finish ?? "",
+      size: p.size ?? "",
+      cost_price: p.cost_price != null ? Number(p.cost_price).toFixed(2) : "",
+      price_gbp: Number(p.price_gbp).toFixed(2),
+      description: (p as any).description ?? "",
+    }));
+    const csv = Papa.unparse(rows, { columns: CSV_HEADERS });
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `loxx-products-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const confirmDelete = async () => {
     if (!deleteTarget?.id) return;
-    const { error } = await supabase.from("products").update({ is_active: false }).eq("id", deleteTarget.id);
+    const { error } = await supabase.from("products").delete().eq("id", deleteTarget.id);
     if (error) { toast.error(error.message); return; }
-    toast.success("Product removed from catalogue");
+    toast.success("Product deleted");
     setDeleteTarget(null);
     load();
   };
 
-  const activeCount = products.filter(p => p.is_active).length;
+  const activeCount = products.length;
+
 
   return (
     <DashboardLayout>
@@ -121,9 +155,34 @@ export default function AdminProducts() {
             <Badge variant="secondary" className="font-mono">{activeCount} products</Badge>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCsvOpen(true)}><Upload className="h-4 w-4" /> Import CSV</Button>
-            <Button onClick={openNew} className="bg-amber-500 hover:bg-amber-600 text-white"><Plus className="h-4 w-4" /> Add product</Button>
+            <Button variant="outline" onClick={exportCsv} disabled={products.length === 0}>
+              <Download className="h-4 w-4" /> Export CSV
+            </Button>
+            <Button variant="outline" onClick={() => setCsvOpen(true)}>
+              <Upload className="h-4 w-4" /> Import CSV
+            </Button>
+            <Button onClick={openNew} className="bg-amber-500 hover:bg-amber-600 text-white">
+              <Plus className="h-4 w-4" /> Add product
+            </Button>
           </div>
+        </div>
+
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search by name, code, type, finish or size…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 w-80"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         <div className="rounded-[10px] border bg-card shadow-card overflow-hidden">
@@ -150,13 +209,13 @@ export default function AdminProducts() {
               {sorted.map((p) => {
                 const m = calcMargin(p.cost_price, p.price_gbp);
                 return (
-                  <tr key={p.id} className={`border-t ${!p.is_active ? "opacity-40" : ""}`}>
+                  <tr key={p.id} className="border-t">
                     <td className="px-3 py-2">
                       {p.image_url
                         ? <img src={p.image_url} alt="" className="h-10 w-10 rounded object-cover bg-muted" />
                         : <div className="h-10 w-10 rounded bg-muted flex items-center justify-center"><ImageIcon className="h-4 w-4 text-muted-foreground" /></div>}
                     </td>
-                    <td className="px-3 py-2 font-medium">{p.product_description ?? p.name}{!p.is_active && <span className="ml-2 text-xs text-muted-foreground">(inactive)</span>}</td>
+                    <td className="px-3 py-2 font-medium">{p.product_description ?? p.name}</td>
                     <td className="px-3 py-2 font-mono text-xs">{p.code}</td>
                     <td className="px-3 py-2"><Badge variant="outline">{p.cylinder_type}</Badge></td>
                     <td className="px-3 py-2">{p.finish}</td>
@@ -180,7 +239,11 @@ export default function AdminProducts() {
                 );
               })}
               {sorted.length === 0 && (
-                <tr><td colSpan={11} className="text-center text-muted-foreground py-10">No products yet</td></tr>
+                <tr>
+                  <td colSpan={11} className="text-center text-muted-foreground py-10">
+                    {search ? `No products matching "${search}"` : "No products yet"}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -202,7 +265,7 @@ export default function AdminProducts() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {deleteTarget?.product_description ?? deleteTarget?.name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove it from the catalogue. Any systems currently using this product code will not be affected — the cylinder type will remain on existing nodes but the product will no longer be selectable for new cylinders.
+              This will permanently remove the product from the catalogue. Any existing orders or quotes referencing this product will be unaffected.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -348,7 +411,7 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
           <section className="space-y-3">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Product image</div>
             <p className="text-[11px] text-muted-foreground mb-2">
-              Square format recommended · 400×400px · PNG or WebP · white or transparent background
+              Square format (1:1) · Minimum 800×800px · PNG or WebP · white or transparent background
             </p>
             {p.image_url ? (
               <div className="flex items-center gap-3">
@@ -381,14 +444,48 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
   );
 }
 
-const CSV_HEADERS = ["product_description","code","cylinder_type","finish","size","cost_price","price_gbp"];
+const CSV_HEADERS = [
+  "product_description",
+  "code",
+  "cylinder_type",
+  "cylinder_profile",
+  "finish",
+  "size",
+  "cost_price",
+  "price_gbp",
+  "description",
+];
 
 function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenChange: (b: boolean) => void; onDone: () => void }) {
   const [rows, setRows] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
 
   const downloadTemplate = () => {
-    const csv = Papa.unparse([CSV_HEADERS, ["Example double cylinder, keyed both sides","EX-12","Double","Satin Nickel","35/35","18.50","42.00"]]);
+    const csv = Papa.unparse([
+      CSV_HEADERS,
+      [
+        "Double cylinder — keyed both sides",
+        "C-DZ36/36",
+        "Double",
+        "Euro",
+        "Satin Nickel",
+        "36/36",
+        "18.50",
+        "42.00",
+        "Standard double cylinder. Keyed both sides, Euro profile.",
+      ],
+      [
+        "Thumbturn cylinder for bathrooms",
+        "TT-30/10",
+        "Thumbturn",
+        "Euro thumbturn",
+        "Nickel Plated",
+        "30/10",
+        "14.00",
+        "52.00",
+        "Thumbturn cylinder for bathrooms and internal doors.",
+      ],
+    ]);
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "products-template.csv"; a.click();
@@ -409,11 +506,16 @@ function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpen
       const desc = r.product_description || "";
       const payload: any = {
         name: (desc || r.code).slice(0, 80),
-        code: r.code, cylinder_type: r.cylinder_type,
-        pin_count: 6, finish: r.finish, size: r.size,
+        code: r.code,
+        cylinder_type: r.cylinder_type || null,
+        cylinder_profile: r.cylinder_profile || null,
+        pin_count: 6,
+        finish: r.finish || null,
+        size: r.size || null,
         cost_price: r.cost_price ? Number(r.cost_price) : null,
         price_gbp: Number(r.price_gbp) || 0,
         product_description: desc || null,
+        description: r.description || null,
         is_active: true,
       };
       const { data: existing } = await supabase.from("products").select("id").eq("code", r.code).maybeSingle();
@@ -435,13 +537,36 @@ function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpen
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Import products from CSV</DialogTitle>
-          <DialogDescription>Upsert by product code. Existing codes are updated.</DialogDescription>
+          <DialogDescription>
+            Matched by product code — existing products are updated, no duplicates created. Export your catalogue first, edit in Excel, then reimport.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={downloadTemplate}><FileDown className="h-4 w-4" /> Download template</Button>
             <Input type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f); }} />
           </div>
+          <details className="text-xs text-muted-foreground border rounded-md p-3">
+            <summary className="cursor-pointer font-medium text-foreground">Column guide</summary>
+            <div className="mt-2 space-y-1">
+              {[
+                ["product_description", "Required. Short product name shown in the catalogue and on documents."],
+                ["code", "Required. Unique product code (e.g. TT-30/10). Used to match existing products on import."],
+                ["cylinder_type", "Lock type family — must match an existing lock type (e.g. Double, Thumbturn, Single, Oval, Mortice)."],
+                ["cylinder_profile", "Lock function (e.g. Euro, Euro thumbturn, Oval). Free text."],
+                ["finish", "Surface finish (e.g. Nickel Plated, Polished Brass, Satin Chrome)."],
+                ["size", "Cylinder size (e.g. 35/35, 30/10, 36/41)."],
+                ["cost_price", "Your supplier cost price excluding VAT. Decimal number (e.g. 18.50)."],
+                ["price_gbp", "Customer selling price excluding VAT. Decimal number (e.g. 42.00)."],
+                ["description", "Optional longer description used on purchase orders and invoices."],
+              ].map(([col, desc]) => (
+                <div key={col} className="flex gap-2">
+                  <span className="font-medium text-foreground w-44 shrink-0">{col}</span>
+                  <span>{desc}</span>
+                </div>
+              ))}
+            </div>
+          </details>
           {rows.length > 0 && (
             <div className="max-h-72 overflow-auto border rounded">
               <table className="w-full text-xs">
