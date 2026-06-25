@@ -61,6 +61,7 @@ export default function AdminProducts() {
   const [editing, setEditing] = useState<AdminProduct | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminProduct | null>(null);
   const [csvOpen, setCsvOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const load = async () => {
     const { data } = await supabase.from("products").select("*").order("cylinder_type").order("price_gbp");
