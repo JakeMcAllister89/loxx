@@ -229,7 +229,14 @@ export default function AdminProducts() {
                     </td>
                      <td className="px-3 py-2 font-medium">{p.product_description ?? p.name}</td>
                     <td className="px-3 py-2 text-xs text-muted-foreground">{p.code}</td>
-                    <td className="px-3 py-2"><Badge variant="outline">{p.cylinder_type}</Badge></td>
+                    <td className="px-3 py-2">
+                      {p.cylinder_type 
+                        ? <Badge variant={p.cylinder_type === "Key" ? "secondary" : "outline"} className={p.cylinder_type === "Key" ? "text-amber-700 bg-amber-50 border-amber-200" : ""}>
+                            {p.cylinder_type}
+                          </Badge>
+                        : <span className="text-muted-foreground text-xs">—</span>
+                      }
+                    </td>
                     <td className="px-3 py-2">{p.finish}</td>
                     <td className="px-3 py-2 text-xs">{p.size}</td>
                     <td className="px-3 py-2 text-xs">{p.cylinder_profile ?? <span className="text-muted-foreground">—</span>}</td>
