@@ -813,18 +813,22 @@ function BuilderInner({ systemId }: { systemId: string }) {
         total += unit * qty;
         const extra = n.extra_keys ?? 0;
         if (extra > 0) {
+          const differKeyProd = keyProductForNode("CYL");
+          const differKeyPrice = differKeyProd ? Number((differKeyProd as any).price_gbp) : 12;
           lines.push({
             kind: "key",
-            key_reference: `Extra keys — ${n.label} (${differRef})`,
+            key_reference: `Extra Differ Keys — ${n.label} (${differRef})`,
+            product_code: (differKeyProd as any)?.code ?? undefined,
+            image_url: (differKeyProd as any)?.image_url ?? undefined,
             room_label: n.label,
             differ_ref: differRef,
             is_extra_key: true,
             hierarchy_refs,
             quantity: extra,
-            unit_price: 12,
+            unit_price: differKeyPrice,
             ...sys,
           });
-          total += 12 * extra;
+          total += differKeyPrice * extra;
         }
       }
       n.children.forEach((c) => walk(c, [...ancestors, n]));
