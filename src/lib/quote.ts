@@ -19,17 +19,31 @@ export function treeToQuoteItems(
   sys: { system_id: string; system_name: string; system_reference: string | null },
 ): CartLine[] {
   const productByCode = new Map(products.map((p) => [p.code, p]));
+  // Map key products by their cylinder_profile (GMK/MK/SMK/Differ)
+  // so we can look up the correct price for each key level
+  const keyProductByProfile = new Map(
+    products
+      .filter(p => p.cylinder_type === "Key")
+      .map(p => [(p as any).cylinder_profile?.toUpperCase() ?? "", p])
+  );
+  const keyPriceForNode = (nodeType: string): { price: number; code: string | null } => {
+    const profileKey = nodeType === "CYL" ? "DIFFER" : nodeType;
+    const p = keyProductByProfile.get(profileKey);
+    return { price: p ? Number(p.price_gbp) : 12, code: p?.code ?? null };
+  };
   const out: CartLine[] = [];
   const walk = (n: TNode, trail: TNode[]) => {
     if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
       normaliseKeys(n).forEach((k) => {
         if (k.qty > 0) {
+          const { price: keyPrice, code: keyCode } = keyPriceForNode(n.type);
           out.push({
             kind: "key",
             key_reference: k.ref,
+            product_code: keyCode ?? undefined,
             room_label: n.location || n.label,
             quantity: k.qty,
-            unit_price: 12,
+            unit_price: keyPrice,
             location: n.type,
             ...sys,
           });
@@ -69,13 +83,15 @@ export function treeToQuoteItems(
       });
       const extra = n.extra_keys ?? 0;
       if (extra > 0) {
+        const { price: differKeyPrice, code: differKeyCode } = keyPriceForNode("CYL");
         out.push({
           kind: "key",
           key_reference: `Extra keys — ${n.label} (${differRef})`,
+          product_code: differKeyCode ?? undefined,
           room_label: n.label,
           differ_ref: differRef,
           quantity: extra,
-          unit_price: 12,
+          unit_price: differKeyPrice,
           location: "extra",
           hierarchy_refs: zoneRef ? [zoneRef] : [],
           ...sys,
