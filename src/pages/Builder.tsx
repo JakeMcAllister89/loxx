@@ -739,13 +739,27 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   const exportToCart = () => {
     if (!tree.root) { toast.error("Nothing to export"); return; }
-    // Flush pending audits so room name / cylinder config is captured before export
     if (labelAuditRef.current) flushLabelAudit();
     if (locationAuditRef.current) flushLocationAudit();
     if (cylConfigRef.current) flushCylConfig();
     const errs = validate(tree).filter((i) => i.level === "error");
     if (errs.length) { toast.error("Fix validation errors before exporting"); setIssues(validate(tree)); setValidateOpen(true); return; }
     const productByCode = new Map(products.map((p) => [p.code, p]));
+    // Look up new-system key products by code suffix "-EXTRA"
+    const extraKeyProducts = products.filter((p: any) => p.code?.toUpperCase().endsWith("-EXTRA"));
+    const keyProductForNode = (nodeType: string) => {
+      const levelHint = nodeType === "CYL" ? "DIFFER"
+        : nodeType === "GMK" ? "GMK"
+        : nodeType === "MK"  ? "MK"
+        : nodeType === "SMK" ? "SMK"
+        : "";
+      if (!levelHint) return null;
+      return extraKeyProducts.find((p: any) => {
+        const profile = p.cylinder_profile?.toUpperCase() ?? "";
+        if (levelHint === "MK") return profile.includes("MK") && !profile.includes("SMK") && !profile.includes("GMK");
+        return profile.includes(levelHint);
+      }) ?? null;
+    };
     const lines: import("@/contexts/CartContext").CartLine[] = [];
     let total = 0;
     const sys = { system_id: systemId, system_name: name, system_reference: reference };
@@ -755,19 +769,23 @@ function BuilderInner({ systemId }: { systemId: string }) {
       if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
         normaliseKeys(n).forEach((k) => {
           if (k.qty > 0) {
+            const keyProd = keyProductForNode(n.type);
+            const keyPrice = keyProd ? Number((keyProd as any).price_gbp) : 12;
             lines.push({
               kind: "key",
               key_reference: k.ref,
+              product_code: (keyProd as any)?.code ?? undefined,
+              image_url: (keyProd as any)?.image_url ?? undefined,
               node_type: n.type,
               key_type_label: KEY_TYPE_LABEL[n.type],
               location: (n.type === "MK" || n.type === "SMK") ? (n.location ?? undefined) : undefined,
               room_label: n.location || n.label,
               hierarchy_refs: [...hierarchy_refs.filter(r => r !== n.label), n.label],
               quantity: k.qty,
-              unit_price: 12,
+              unit_price: keyPrice,
               ...sys,
             });
-            total += 12 * k.qty;
+            total += keyPrice * k.qty;
           }
         });
       }
@@ -795,18 +813,22 @@ function BuilderInner({ systemId }: { systemId: string }) {
         total += unit * qty;
         const extra = n.extra_keys ?? 0;
         if (extra > 0) {
+          const differKeyProd = keyProductForNode("CYL");
+          const differKeyPrice = differKeyProd ? Number((differKeyProd as any).price_gbp) : 12;
           lines.push({
             kind: "key",
-            key_reference: `Extra keys — ${n.label} (${differRef})`,
+            key_reference: `Extra Differ Keys — ${n.label} (${differRef})`,
+            product_code: (differKeyProd as any)?.code ?? undefined,
+            image_url: (differKeyProd as any)?.image_url ?? undefined,
             room_label: n.label,
             differ_ref: differRef,
             is_extra_key: true,
             hierarchy_refs,
             quantity: extra,
-            unit_price: 12,
+            unit_price: differKeyPrice,
             ...sys,
           });
-          total += 12 * extra;
+          total += differKeyPrice * extra;
         }
       }
       n.children.forEach((c) => walk(c, [...ancestors, n]));
