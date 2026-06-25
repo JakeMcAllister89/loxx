@@ -239,7 +239,11 @@ export default function AdminProducts() {
                 );
               })}
               {sorted.length === 0 && (
-                <tr><td colSpan={11} className="text-center text-muted-foreground py-10">No products yet</td></tr>
+                <tr>
+                  <td colSpan={11} className="text-center text-muted-foreground py-10">
+                    {search ? `No products matching "${search}"` : "No products yet"}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
