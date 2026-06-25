@@ -166,8 +166,15 @@ export default function AdminProducts() {
                     <td className="px-3 py-2 font-mono font-semibold">£{Number(p.price_gbp).toFixed(2)}</td>
                     <td className={`px-3 py-2 font-mono ${m == null ? "text-muted-foreground" : marginColor(m)}`}>{m == null ? "—" : `${m.toFixed(1)}%`}</td>
                     <td className="px-3 py-2 text-right">
-                      <Button size="sm" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                      <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(p)}><Trash2 className="h-4 w-4 text-red-600" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => openEdit(p)} title="Edit">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => openDuplicate(p)} title="Duplicate product">
+                        <Copy className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(p)} title="Delete">
+                        <Trash2 className="h-4 w-4 text-red-600" />
+                      </Button>
                     </td>
                   </tr>
                 );
