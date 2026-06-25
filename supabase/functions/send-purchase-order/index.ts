@@ -292,7 +292,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
     <th>MK</th>
     <th>SMK</th>
     <th>Product Code</th>
-    <th>Description</th>
+    <th>Lock type</th>
     <th>Lock function</th>
     <th>Finish</th>
     <th>Size</th>
