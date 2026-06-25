@@ -47,6 +47,7 @@ export function treeToQuoteItems(
             kind: "key",
             key_reference: k.ref,
             product_code: keyProd?.code ?? undefined,
+            image_url: keyProd?.image_url ?? undefined,
             room_label: n.location || n.label,
             quantity: k.qty,
             unit_price: keyProd ? Number(keyProd.price_gbp) : 12,
