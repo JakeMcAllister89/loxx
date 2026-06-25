@@ -318,8 +318,10 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
       name: derivedName,
       code: p.code, cylinder_type: p.cylinder_type, cylinder_profile: p.cylinder_profile,
       pin_count: 6,
-      finish: p.finish, size: p.size, price_gbp: p.price_gbp, cost_price: p.cost_price,
+      finish: p.finish, finish_colour: p.finish_colour || null,
+      size: p.size, price_gbp: p.price_gbp, cost_price: p.cost_price,
       product_description: p.product_description,
+      product_features: p.product_features || null,
       image_url: p.image_url, is_active: p.is_active,
     };
     let error;
