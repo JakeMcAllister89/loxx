@@ -506,11 +506,16 @@ function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpen
       const desc = r.product_description || "";
       const payload: any = {
         name: (desc || r.code).slice(0, 80),
-        code: r.code, cylinder_type: r.cylinder_type,
-        pin_count: 6, finish: r.finish, size: r.size,
+        code: r.code,
+        cylinder_type: r.cylinder_type || null,
+        cylinder_profile: r.cylinder_profile || null,
+        pin_count: 6,
+        finish: r.finish || null,
+        size: r.size || null,
         cost_price: r.cost_price ? Number(r.cost_price) : null,
         price_gbp: Number(r.price_gbp) || 0,
         product_description: desc || null,
+        description: r.description || null,
         is_active: true,
       };
       const { data: existing } = await supabase.from("products").select("id").eq("code", r.code).maybeSingle();
