@@ -23,14 +23,19 @@ export function treeToQuoteItems(
   // Node type → which EXTRA key product to use
   const extraKeyProducts = products.filter(p => p.code?.toUpperCase().endsWith("-EXTRA"));
   const keyProductForNode = (nodeType: string) => {
+    // Use exact word matching to avoid "MK" matching "SMK"
     const levelHint = nodeType === "CYL" ? "DIFFER"
       : nodeType === "GMK" ? "GMK"
       : nodeType === "MK"  ? "MK"
       : nodeType === "SMK" ? "SMK"
       : "";
-    return extraKeyProducts.find(p =>
-      (p as any).cylinder_profile?.toUpperCase().includes(levelHint)
-    ) ?? null;
+    if (!levelHint) return null;
+    return extraKeyProducts.find(p => {
+      const profile = (p as any).cylinder_profile?.toUpperCase() ?? "";
+      // For MK: must contain "MK" but NOT "SMK" and NOT "GMK"
+      if (levelHint === "MK") return profile.includes("MK") && !profile.includes("SMK") && !profile.includes("GMK");
+      return profile.includes(levelHint);
+    }) ?? null;
   };
   const out: CartLine[] = [];
   const walk = (n: TNode, trail: TNode[]) => {
@@ -42,6 +47,7 @@ export function treeToQuoteItems(
             kind: "key",
             key_reference: k.ref,
             product_code: keyProd?.code ?? undefined,
+            image_url: keyProd?.image_url ?? undefined,
             room_label: n.location || n.label,
             quantity: k.qty,
             unit_price: keyProd ? Number(keyProd.price_gbp) : 12,
@@ -89,6 +95,7 @@ export function treeToQuoteItems(
           kind: "key",
           key_reference: `Extra Differ Keys — ${n.label} (${differRef})`,
           product_code: differKeyProd?.code ?? undefined,
+          image_url: differKeyProd?.image_url ?? undefined,
           room_label: n.label,
           differ_ref: differRef,
           quantity: extra,
