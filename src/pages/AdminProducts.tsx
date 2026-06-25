@@ -367,6 +367,18 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
               />
               <p className="text-[11px] text-muted-foreground mt-1">Appears on the catalogue, order confirmations and purchase orders</p>
             </div>
+            <div>
+              <Label>Product features (optional)</Label>
+              <Textarea
+                rows={4}
+                placeholder="One feature per line, e.g.\n6-pin precision cylinder\nAnti-pick mushroom pins\nDrill-resistant hardened inserts"
+                value={p.product_features ?? ""}
+                onChange={e => upd("product_features", e.target.value || null)}
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Shown to customers in the product catalogue. One feature per line or separated by ·
+              </p>
+            </div>
             <div><Label>Product code *</Label><Input className="font-mono" placeholder="e.g. EKZ-12" value={p.code} onChange={e => upd("code", e.target.value)} /></div>
           </section>
 
