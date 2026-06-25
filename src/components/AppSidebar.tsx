@@ -67,7 +67,9 @@ export function AppSidebar() {
     fetchQuotes();
     const channel = supabase
       .channel("sidebar-quotes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "quotes" }, fetchQuotes)
+      .on("postgres_changes", { event: "*", schema: "public", table: "quotes" }, () => {
+        if (document.visibilityState === "visible") fetchQuotes();
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
