@@ -994,6 +994,7 @@ export type Database = {
     Functions: {
       assign_po_number: { Args: never; Returns: string }
       assign_quote_number: { Args: never; Returns: string }
+      check_is_admin: { Args: never; Returns: boolean }
       current_user_org_id: { Args: never; Returns: string }
       current_user_org_role: { Args: never; Returns: string }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
