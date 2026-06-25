@@ -149,7 +149,8 @@ export default function AdminProducts() {
 
   const confirmDelete = async () => {
     if (!deleteTarget?.id) return;
-    const { error } = await supabase.from("products").delete().eq("id", deleteTarget.id);
+    let error: any = null;
+    try { await adminCatalogue("delete_product", { id: deleteTarget.id }); } catch (e: any) { error = e; }
     if (error) { toast.error(error.message); return; }
     toast.success("Product deleted");
     setDeleteTarget(null);
