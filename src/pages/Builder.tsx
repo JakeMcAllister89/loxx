@@ -2063,32 +2063,42 @@ function DetailPanel({
 
 function SaveStatusIndicator({
   status,
+  lastSavedAt,
   onRetry,
 }: {
   status: "idle" | "pending" | "saving" | "saved" | "error";
+  lastSavedAt: number | null;
   onRetry: () => void;
 }) {
+  const [, forceUpdate] = useState(0);
+  // Re-render every 30s so the "X minutes ago" stays current
+  useEffect(() => {
+    const t = setInterval(() => forceUpdate(n => n + 1), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const timeAgo = (ts: number) => {
+    const s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 10) return "just now";
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`;
+    return `${Math.floor(m / 60)}h ago`;
+  };
+
   if (status === "pending") {
     return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground px-2" title="Unsaved changes">
-        <span className="h-2 w-2 rounded-full bg-warning animate-pulse" />
-        Unsaved changes
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground px-2" title="Saving changes…">
+        <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+        Saving…
       </div>
     );
   }
   if (status === "saving") {
     return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground px-2">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground px-2">
+        <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
         Saving…
-      </div>
-    );
-  }
-  if (status === "saved") {
-    return (
-      <div className="flex items-center gap-2 text-xs text-success px-2 transition-opacity">
-        <Check className="h-3.5 w-3.5" />
-        Saved
       </div>
     );
   }
@@ -2096,16 +2106,23 @@ function SaveStatusIndicator({
     return (
       <button
         onClick={onRetry}
-        className="flex items-center gap-2 text-xs text-destructive px-2 hover:underline"
+        className="flex items-center gap-1.5 text-xs text-destructive px-2 hover:underline"
         title="Retry save"
       >
-        <AlertCircle className="h-3.5 w-3.5" />
+        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
         Save failed — retry
         <RotateCw className="h-3.5 w-3.5" />
       </button>
     );
   }
-  return <div className="w-[88px]" aria-hidden />;
+
+  // idle or saved — show last saved time if available
+  return (
+    <div className="flex items-center gap-1.5 text-xs text-muted-foreground px-2 whitespace-nowrap" title={lastSavedAt ? `Last saved ${timeAgo(lastSavedAt)}` : "All changes are saved automatically"}>
+      <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
+      {lastSavedAt ? `Saved ${timeAgo(lastSavedAt)}` : "All changes saved"}
+    </div>
+  );
 }
 
 /* ------------------------- Key Manager ------------------------- */
