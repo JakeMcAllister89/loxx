@@ -1792,13 +1792,22 @@ function DetailPanel({
         ? "e.g. Ground Floor"
         : "";
 
-  const MK_SUGGESTIONS  = ["Main Building", "North Campus", "Tower Block", "Annexe", "Warehouse"];
-  const SMK_SUGGESTIONS = ["Ground Floor", "First Floor", "Reception", "Offices", "Plant Room", "Car Park", "Server Room"];
+  const MK_SUGGESTIONS = [
+    "Main Building", "North Wing", "South Wing", "East Wing", "West Wing",
+    "Annexe", "Warehouse", "Tower Block", "Sports Hall", "Residential Block",
+  ];
+  const SMK_SUGGESTIONS = [
+    "Ground Floor", "First Floor", "Second Floor", "Third Floor",
+    "Reception", "Offices", "Server Room", "Plant Room", "Car Park",
+    "IT Department", "HR Department", "Finance", "History Department",
+    "Science Block", "Staff Room", "Ward A", "Ward B", "ICU",
+    "Kitchen", "Laundry", "Maintenance", "Store Room",
+  ];
   const suggestions = isMk ? MK_SUGGESTIONS : isSmk ? SMK_SUGGESTIONS : [];
 
   const addButtonLabel = (t: NodeType) =>
-    t === "MK"  ? "+ Add a section (Master Key)"
-  : t === "SMK" ? "+ Add a zone (Sub-Master)"
+    t === "MK"  ? "+ Add a building or wing (Master Key)"
+  : t === "SMK" ? "+ Add a floor or department (Sub-Master)"
   : t === "CYL" ? "+ Add a door (Cylinder)"
   : "+ Add child";
 

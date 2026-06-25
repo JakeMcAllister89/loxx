@@ -42,9 +42,15 @@ const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; bo
 
 const ADD_LABEL: Record<NodeType, string> = {
   GMK: "Add grand master key",
-  MK:  "Add master key",
-  SMK: "Add sub master key",
-  CYL: "Add cylinder",
+  MK:  "Add a building or wing",
+  SMK: "Add a floor or department",
+  CYL: "Add a door",
+};
+
+const NODE_ADD_HINT: Partial<Record<NodeType, string>> = {
+  GMK: "Add a building, wing or door",
+  MK:  "Add a floor, department or door",
+  SMK: "Add a door",
 };
 
 
@@ -318,7 +324,7 @@ function CanvasNodeImpl(props: NodeProps) {
             <div className="pointer-events-none absolute top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 opacity-0 group-hover/add:opacity-100 transition-opacity shadow-md">
               {(addOptions?.length ?? 0) + (extraAddActions?.length ?? 0) === 1 && addOptions?.length === 1
                 ? ADD_LABEL[addOptions[0]]
-                : "Add…"}
+                : NODE_ADD_HINT[node.type] ?? "Add…"}
             </div>
           )}
           {popoverOpen && (

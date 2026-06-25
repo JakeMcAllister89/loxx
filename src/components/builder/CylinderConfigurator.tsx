@@ -128,7 +128,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
       {/* Family / type selector — card-style */}
       <div>
         <Label className="text-xs">Lock type</Label>
-        <div className="grid grid-cols-2 gap-2 mt-1.5">
+        <div className="grid grid-cols-1 gap-2 mt-1.5">
           {Array.from(families.keys()).map((fam) => {
             const isActive = !isCommonEntrance && fam === activeFamily;
             const exemplar = families.get(fam)![0];
@@ -141,11 +141,11 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded bg-muted overflow-hidden shrink-0">
+                  <div className="h-9 w-9 rounded bg-muted overflow-hidden shrink-0">
                     {exemplar.image_url && <img src={exemplar.image_url} alt="" className="h-full w-full object-cover" />}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-semibold truncate">{fam}</div>
+                    <div className="text-xs font-semibold">{fam}</div>
                     <div className="text-[10px] text-muted-foreground">from £{Math.min(...families.get(fam)!.map((p) => Number(p.price_gbp))).toFixed(2)}</div>
                   </div>
                 </div>
@@ -162,7 +162,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
             <div className="flex items-center gap-2">
               <div className="h-7 w-7 rounded bg-muted shrink-0 flex items-center justify-center text-[10px] font-semibold text-muted-foreground">CE</div>
               <div className="min-w-0">
-                <div className="text-xs font-semibold truncate">Common Entrance</div>
+                <div className="text-xs font-semibold">Common Entrance</div>
                 <div className="text-[10px] text-muted-foreground">Shared access</div>
               </div>
             </div>
@@ -271,7 +271,9 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
       <div>
         <TooltipProvider>
           <div className="flex items-center gap-1.5">
-            <Label className="text-xs">Quantity at this door</Label>
+            <Label className="text-xs">
+              {activeFamily === "Key" ? "Number of keys" : "Quantity at this door"}
+            </Label>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button type="button" className="p-0.5 hover:bg-muted rounded-full">
@@ -279,8 +281,9 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
                 </button>
               </TooltipTrigger>
               <TooltipContent className="max-w-[220px] text-xs">
-                Most doors need 1 cylinder. Set to 2 if the door has a lock on both sides 
-                (e.g. a double-cylinder or bathroom lockset).
+                {activeFamily === "Key"
+                  ? "How many of this key type do you need? Each key-holder who needs access at this level will need one."
+                  : "Most doors need 1 cylinder. Set to 2 if the door has a lock on both sides (e.g. a double-cylinder or bathroom lockset)."}
               </TooltipContent>
             </Tooltip>
           </div>
