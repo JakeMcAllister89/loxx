@@ -84,15 +84,15 @@ export function treeToQuoteItems(
       });
       const extra = n.extra_keys ?? 0;
       if (extra > 0) {
-        const { price: differKeyPrice, code: differKeyCode } = keyPriceForNode("CYL");
+        const differKeyProd = keyProductForNode("CYL");
         out.push({
           kind: "key",
-          key_reference: `Extra keys — ${n.label} (${differRef})`,
-          product_code: differKeyCode ?? undefined,
+          key_reference: `Extra Differ Keys — ${n.label} (${differRef})`,
+          product_code: differKeyProd?.code ?? undefined,
           room_label: n.label,
           differ_ref: differRef,
           quantity: extra,
-          unit_price: differKeyPrice,
+          unit_price: differKeyProd ? Number(differKeyProd.price_gbp) : 12,
           location: "extra",
           hierarchy_refs: zoneRef ? [zoneRef] : [],
           ...sys,
