@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Network, Package, ShoppingCart, ClipboardList, Settings, Plus, LogOut, Shield, FileText, ShoppingBag, LayoutGrid, Loader2, Users, UserCheck } from "lucide-react";
+import { LayoutDashboard, Network, Package, ShoppingCart, ClipboardList, Settings, Plus, LogOut, Shield, FileText, ShoppingBag, LayoutGrid, Loader2, Users, UserCheck, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useIsAdmin } from "@/lib/auth";
@@ -32,6 +32,7 @@ export function AppSidebar() {
   const [systems, setSystems] = useState<{ id: string; name: string; door_count: number }[]>([]);
   const [quoteCount, setQuoteCount] = useState<number>(0);
   const [creating, setCreating] = useState(false);
+  const [newSystemConfirm, setNewSystemConfirm] = useState(false);
 
   const isViewOnly = orgRole === "view_only";
   const canCreate = orgRole && orgRole !== "view_only";
@@ -76,6 +77,15 @@ export function AppSidebar() {
 
   const newSystem = async () => {
     if (!user || creating || !canCreate) return;
+    // If currently in the builder, confirm before navigating away
+    if (pathname.startsWith("/builder/")) {
+      setNewSystemConfirm(true);
+      return;
+    }
+    await doCreateSystem();
+  };
+
+  const doCreateSystem = async () => {
     setCreating(true);
     const id = await createSystem(user.id);
     setCreating(false);
@@ -157,6 +167,46 @@ export function AppSidebar() {
           <LogOut className="h-3.5 w-3.5" /> Sign out
         </button>
       </div>
+
+      {newSystemConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-card rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4 text-foreground border border-border">
+            <div className="flex items-start gap-3">
+              <div className="h-9 w-9 rounded-full bg-green-100 dark:bg-green-950 flex items-center justify-center shrink-0">
+                <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-base">Your system is saved</h3>
+                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                  Your current system has been saved automatically. You can find it in your 
+                  systems list at any time.
+                </p>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                  Start a new system now?
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setNewSystemConfirm(false)}
+              >
+                Stay here
+              </Button>
+              <Button
+                className="flex-1 bg-primary hover:bg-primary/90"
+                onClick={async () => {
+                  setNewSystemConfirm(false);
+                  await doCreateSystem();
+                }}
+              >
+                New system
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

@@ -18,10 +18,8 @@ import { toast } from "sonner";
 import Papa from "papaparse";
 
 const adminCatalogue = async (action: string, payload: Record<string, unknown>) => {
-  const { data: { session } } = await supabase.auth.getSession();
   const res = await supabase.functions.invoke("admin-catalogue", {
     body: { action, payload },
-    headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
   });
   if (res.error) throw new Error(res.error.message);
   const body = res.data as any;
@@ -231,7 +229,14 @@ export default function AdminProducts() {
                     </td>
                      <td className="px-3 py-2 font-medium">{p.product_description ?? p.name}</td>
                     <td className="px-3 py-2 text-xs text-muted-foreground">{p.code}</td>
-                    <td className="px-3 py-2"><Badge variant="outline">{p.cylinder_type}</Badge></td>
+                    <td className="px-3 py-2">
+                      {p.cylinder_type 
+                        ? <Badge variant={p.cylinder_type === "Key" ? "secondary" : "outline"} className={p.cylinder_type === "Key" ? "text-amber-700 bg-amber-50 border-amber-200" : ""}>
+                            {p.cylinder_type}
+                          </Badge>
+                        : <span className="text-muted-foreground text-xs">—</span>
+                      }
+                    </td>
                     <td className="px-3 py-2">{p.finish}</td>
                     <td className="px-3 py-2 text-xs">{p.size}</td>
                     <td className="px-3 py-2 text-xs">{p.cylinder_profile ?? <span className="text-muted-foreground">—</span>}</td>
@@ -402,10 +407,18 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Lock type</Label>
-                <Select value={p.cylinder_type} onValueChange={v => upd("cylinder_type", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{types.map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}</SelectContent>
-                </Select>
+                {p.cylinder_type === "Key" ? (
+                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted/40 px-3 text-sm text-muted-foreground">
+                    Key <span className="ml-2 text-xs">(reserved — not editable)</span>
+                  </div>
+                ) : (
+                  <Select value={p.cylinder_type} onValueChange={v => upd("cylinder_type", v)}>
+                    <SelectTrigger><SelectValue placeholder="Select lock type" /></SelectTrigger>
+                    <SelectContent>
+                      {types.map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div><Label>Size</Label><Input placeholder="e.g. 35/35" value={p.size} onChange={e => upd("size", e.target.value)} /></div>
               <div>
