@@ -92,7 +92,7 @@ export default function AdminProducts() {
       return sortDir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
     });
     return arr;
-  }, [products, sortKey, sortDir]);
+  }, [products, sortKey, sortDir, search]);
 
   const toggleSort = (k: keyof AdminProduct) => {
     if (k === sortKey) setSortDir(sortDir === "asc" ? "desc" : "asc");
