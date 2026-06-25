@@ -24,10 +24,12 @@ export interface AdminProduct {
   cylinder_type: string;
   cylinder_profile: string | null;
   finish: string;
+  finish_colour: string | null;
   size: string;
   price_gbp: number;
   cost_price: number | null;
   product_description: string | null;
+  product_features: string | null;
   description: string | null;
   image_url: string | null;
   is_active: boolean;
@@ -37,7 +39,8 @@ interface CylinderType { id: string; name: string; sort_order: number; is_active
 
 const blank = (defaultType = "Double"): AdminProduct => ({
   name: "", code: "", cylinder_type: defaultType, cylinder_profile: "Euro", finish: "Satin Nickel",
-  size: "35/35", price_gbp: 0, cost_price: 0, product_description: "", description: "",
+  finish_colour: null,
+  size: "35/35", price_gbp: 0, cost_price: 0, product_description: "", product_features: null, description: "",
   image_url: null, is_active: true,
 });
 
