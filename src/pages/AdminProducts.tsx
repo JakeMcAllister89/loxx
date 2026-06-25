@@ -112,16 +112,39 @@ export default function AdminProducts() {
     setDrawerOpen(true);
   };
 
+  const exportCsv = () => {
+    const rows = products.map(p => ({
+      product_description: p.product_description ?? p.name ?? "",
+      code: p.code,
+      cylinder_type: p.cylinder_type ?? "",
+      cylinder_profile: p.cylinder_profile ?? "",
+      finish: p.finish ?? "",
+      size: p.size ?? "",
+      cost_price: p.cost_price != null ? Number(p.cost_price).toFixed(2) : "",
+      price_gbp: Number(p.price_gbp).toFixed(2),
+      description: (p as any).description ?? "",
+    }));
+    const csv = Papa.unparse(rows, { columns: CSV_HEADERS });
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `loxx-products-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const confirmDelete = async () => {
     if (!deleteTarget?.id) return;
-    const { error } = await supabase.from("products").update({ is_active: false }).eq("id", deleteTarget.id);
+    const { error } = await supabase.from("products").delete().eq("id", deleteTarget.id);
     if (error) { toast.error(error.message); return; }
-    toast.success("Product removed from catalogue");
+    toast.success("Product deleted");
     setDeleteTarget(null);
     load();
   };
 
-  const activeCount = products.filter(p => p.is_active).length;
+  const activeCount = products.length;
+
 
   return (
     <DashboardLayout>
