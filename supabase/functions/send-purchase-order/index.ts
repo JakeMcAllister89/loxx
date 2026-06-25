@@ -26,7 +26,7 @@ function buildDifferHierarchyMap(root: any): Record<string, { gmk: string; mk: s
     if (node.type === "CYL" && node.differ != null) {
       const ref = `D${String(node.differ).padStart(3, "0")}`;
       map[ref] = {
-        gmk: trail.find(n => n.type === "GMK")?.label ?? "—",
+        gmk: trail.find(n => n.type === "GMK") ? "GMK" : "—",
         mk:  trail.find(n => n.type === "MK")?.label  ?? "—",
         smk: trail.find(n => n.type === "SMK")?.label ?? "—",
       };
@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
           <td>${esc(hierarchy.mk)}</td>
           <td>${esc(hierarchy.smk)}</td>
           <td style="font-size:11px;color:#64748b">${esc(i.product_code ?? "—")}</td>
-          <td style="color:#0f172a">${esc(p.product_description ?? p.name ?? (i as any).cylinder_type ?? "—")}</td>
+          <td style="color:#0f172a">${esc(i.cylinder_type ?? p.cylinder_type ?? "—")}</td>
           <td style="color:#0f172a">${esc(p.cylinder_profile ?? "—")}</td>
           <td>${esc(i.finish ?? p.finish ?? "—")}</td>
           <td>${esc(p.size ?? "—")}</td>
@@ -274,6 +274,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
     <div><strong>Date:</strong> ${esc(today)}</div>
     <div><strong>System reference:</strong> <span style="font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(systemRef)}</span>${systemName ? ` <span class="muted">${esc(systemName)}</span>` : ""}</div>
     <div><strong>Customer PO reference:</strong> ${esc(order.customer_po_ref || "—")}</div>
+    ${(order as any).notes ? `<div style="margin-top:6px"><strong>Special instructions:</strong> <span style="color:#b45309">${esc((order as any).notes)}</span></div>` : ""}
   </div>
   <div class="block" style="flex:1">
     <div class="label">Delivery address</div>
@@ -292,7 +293,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
     <th>MK</th>
     <th>SMK</th>
     <th>Product Code</th>
-    <th>Description</th>
+    <th>Lock type</th>
     <th>Lock function</th>
     <th>Finish</th>
     <th>Size</th>
@@ -336,7 +337,12 @@ ${(masterKeyRows || extraKeyRows) ? `
   <div>All cylinders must be keyed to the master key system and differ references shown. Please confirm keying schedule matches this order before dispatch.</div>
 </div>
 
-${S.po_notes ? `<div class="block" style="margin-top:12px"><div class="label">Notes</div><div>${esc(S.po_notes)}</div></div>` : ""}
+${(order as any).notes ? `
+<div class="block" style="margin-top:12px;border-left:3px solid #b45309;background:#fff7ed">
+  <div class="label">Special instructions from customer</div>
+  <div style="white-space:pre-wrap;color:#0f172a">${esc((order as any).notes)}</div>
+</div>` : ""}
+${S.po_notes ? `<div class="block" style="margin-top:12px"><div class="label">Standard notes</div><div>${esc(S.po_notes)}</div></div>` : ""}
 
 <div style="margin-top:32px;padding-top:12px;border-top:1px solid #e5e7eb;text-align:center;font-size:11px;color:#64748b">
   LOXX — Master key systems made simple · myloxx.co.uk
