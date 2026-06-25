@@ -41,6 +41,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
   const families = useMemo(() => {
     const set = new Map<string, ProductFull[]>();
     for (const p of products) {
+      if (p.cylinder_type === "Key") continue;
       const arr = set.get(p.cylinder_type) ?? [];
       arr.push(p);
       set.set(p.cylinder_type, arr);
