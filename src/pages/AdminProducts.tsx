@@ -407,10 +407,18 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Lock type</Label>
-                <Select value={p.cylinder_type} onValueChange={v => upd("cylinder_type", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{types.map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}</SelectContent>
-                </Select>
+                {p.cylinder_type === "Key" ? (
+                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted/40 px-3 text-sm text-muted-foreground">
+                    Key <span className="ml-2 text-xs">(reserved — not editable)</span>
+                  </div>
+                ) : (
+                  <Select value={p.cylinder_type} onValueChange={v => upd("cylinder_type", v)}>
+                    <SelectTrigger><SelectValue placeholder="Select lock type" /></SelectTrigger>
+                    <SelectContent>
+                      {types.map(t => <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div><Label>Size</Label><Input placeholder="e.g. 35/35" value={p.size} onChange={e => upd("size", e.target.value)} /></div>
               <div>
