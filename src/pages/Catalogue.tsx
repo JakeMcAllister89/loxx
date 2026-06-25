@@ -237,7 +237,7 @@ function FamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
                   title={f}
                   aria-label={f}
                   className={`h-7 w-7 rounded-full border-2 transition-all ${selFinish === f ? "ring-2 ring-primary ring-offset-1" : "border-border"}`}
-                  style={{ background: finishColour(f) }}
+                  style={{ background: fam.finishColours[f] ?? "#888888" }}
                 />
               ))}
             </div>
@@ -245,7 +245,7 @@ function FamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
           </div>
         ) : fam.finishes.length === 1 ? (
           <div className="text-[11px] text-muted-foreground inline-flex items-center gap-2">
-            <span className="h-4 w-4 rounded-full border" style={{ background: finishColour(fam.finishes[0]) }} />
+            <span className="h-4 w-4 rounded-full border" style={{ background: fam.finishColours[fam.finishes[0]] ?? "#888888" }} />
             {fam.finishes[0]}
           </div>
         ) : null}
@@ -352,7 +352,7 @@ function DetailDrawer({ fam, systems, onUseInBuilder }: {
                 onClick={() => setSelFinish(f)}
                 title={f}
                 className={`h-7 w-7 rounded-full border-2 ${selFinish === f ? "ring-2 ring-primary ring-offset-1" : "border-border"}`}
-                style={{ background: finishColour(f) }}
+                style={{ background: fam.finishColours[f] ?? "#888888" }}
               />
             ))}
           </div>
