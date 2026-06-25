@@ -444,7 +444,17 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
   );
 }
 
-const CSV_HEADERS = ["product_description","code","cylinder_type","finish","size","cost_price","price_gbp"];
+const CSV_HEADERS = [
+  "product_description",
+  "code",
+  "cylinder_type",
+  "cylinder_profile",
+  "finish",
+  "size",
+  "cost_price",
+  "price_gbp",
+  "description",
+];
 
 function CsvImportDialog({ open, onOpenChange, onDone }: { open: boolean; onOpenChange: (b: boolean) => void; onDone: () => void }) {
   const [rows, setRows] = useState<any[]>([]);
