@@ -36,12 +36,14 @@ export function treeToQuoteItems(
     if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
       normaliseKeys(n).forEach((k) => {
         if (k.qty > 0) {
+          const { price: keyPrice, code: keyCode } = keyPriceForNode(n.type);
           out.push({
             kind: "key",
             key_reference: k.ref,
+            product_code: keyCode ?? undefined,
             room_label: n.location || n.label,
             quantity: k.qty,
-            unit_price: 12,
+            unit_price: keyPrice,
             location: n.type,
             ...sys,
           });
@@ -81,13 +83,15 @@ export function treeToQuoteItems(
       });
       const extra = n.extra_keys ?? 0;
       if (extra > 0) {
+        const { price: differKeyPrice, code: differKeyCode } = keyPriceForNode("CYL");
         out.push({
           kind: "key",
           key_reference: `Extra keys — ${n.label} (${differRef})`,
+          product_code: differKeyCode ?? undefined,
           room_label: n.label,
           differ_ref: differRef,
           quantity: extra,
-          unit_price: 12,
+          unit_price: differKeyPrice,
           location: "extra",
           hierarchy_refs: zoneRef ? [zoneRef] : [],
           ...sys,
