@@ -90,6 +90,16 @@ export default function AdminProducts() {
 
   const openNew = () => { setEditing(blank(types[0]?.name ?? "Double")); setDrawerOpen(true); };
   const openEdit = (p: AdminProduct) => { setEditing({ ...p }); setDrawerOpen(true); };
+  const openDuplicate = (p: AdminProduct) => {
+    setEditing({
+      ...p,
+      id: undefined as any,
+      code: "",
+      name: `${p.name} — Copy`,
+      image_url: null,
+    });
+    setDrawerOpen(true);
+  };
 
   const confirmDelete = async () => {
     if (!deleteTarget?.id) return;
