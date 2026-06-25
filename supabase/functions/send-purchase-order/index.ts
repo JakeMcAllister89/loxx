@@ -337,7 +337,12 @@ ${(masterKeyRows || extraKeyRows) ? `
   <div>All cylinders must be keyed to the master key system and differ references shown. Please confirm keying schedule matches this order before dispatch.</div>
 </div>
 
-${S.po_notes ? `<div class="block" style="margin-top:12px"><div class="label">Notes</div><div>${esc(S.po_notes)}</div></div>` : ""}
+${(order as any).notes ? `
+<div class="block" style="margin-top:12px;border-left:3px solid #b45309;background:#fff7ed">
+  <div class="label">Special instructions from customer</div>
+  <div style="white-space:pre-wrap;color:#0f172a">${esc((order as any).notes)}</div>
+</div>` : ""}
+${S.po_notes ? `<div class="block" style="margin-top:12px"><div class="label">Standard notes</div><div>${esc(S.po_notes)}</div></div>` : ""}
 
 <div style="margin-top:32px;padding-top:12px;border-top:1px solid #e5e7eb;text-align:center;font-size:11px;color:#64748b">
   LOXX — Master key systems made simple · myloxx.co.uk
