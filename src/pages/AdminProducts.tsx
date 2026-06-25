@@ -398,6 +398,32 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
                 <Input placeholder="e.g. Euro, Oval, Rim, Mortice" value={p.cylinder_profile ?? ""} onChange={e => upd("cylinder_profile", e.target.value || null)} />
               </div>
               <div><Label>Finish</Label><Input value={p.finish} onChange={e => upd("finish", e.target.value)} /></div>
+              <div className="col-span-2">
+                <Label className="text-xs">Finish swatch colour</Label>
+                <div className="flex items-center gap-3 mt-1.5">
+                  <input
+                    type="color"
+                    value={p.finish_colour ?? "#888888"}
+                    onChange={e => upd("finish_colour", e.target.value)}
+                    className="h-9 w-16 rounded border cursor-pointer p-0.5"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {p.finish_colour ?? "Not set — will show grey"}
+                  </span>
+                  {p.finish_colour && (
+                    <button
+                      type="button"
+                      onClick={() => upd("finish_colour", null)}
+                      className="text-xs text-muted-foreground underline hover:text-destructive"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Shown as a colour swatch in the customer product catalogue.
+                </p>
+              </div>
             </div>
           </section>
 
