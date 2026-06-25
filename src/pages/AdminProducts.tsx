@@ -13,7 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, ArrowUpDown, Upload, FileDown, ImageIcon, X } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowUpDown, Upload, FileDown, ImageIcon, X, Copy } from "lucide-react";
 import { toast } from "sonner";
 import Papa from "papaparse";
 
@@ -90,6 +90,16 @@ export default function AdminProducts() {
 
   const openNew = () => { setEditing(blank(types[0]?.name ?? "Double")); setDrawerOpen(true); };
   const openEdit = (p: AdminProduct) => { setEditing({ ...p }); setDrawerOpen(true); };
+  const openDuplicate = (p: AdminProduct) => {
+    setEditing({
+      ...p,
+      id: undefined as any,
+      code: "",
+      name: `${p.name} — Copy`,
+      image_url: null,
+    });
+    setDrawerOpen(true);
+  };
 
   const confirmDelete = async () => {
     if (!deleteTarget?.id) return;
@@ -156,8 +166,15 @@ export default function AdminProducts() {
                     <td className="px-3 py-2 font-mono font-semibold">£{Number(p.price_gbp).toFixed(2)}</td>
                     <td className={`px-3 py-2 font-mono ${m == null ? "text-muted-foreground" : marginColor(m)}`}>{m == null ? "—" : `${m.toFixed(1)}%`}</td>
                     <td className="px-3 py-2 text-right">
-                      <Button size="sm" variant="ghost" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                      <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(p)}><Trash2 className="h-4 w-4 text-red-600" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => openEdit(p)} title="Edit">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => openDuplicate(p)} title="Duplicate product">
+                        <Copy className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(p)} title="Delete">
+                        <Trash2 className="h-4 w-4 text-red-600" />
+                      </Button>
                     </td>
                   </tr>
                 );
@@ -258,8 +275,17 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{p.id ? "Edit product" : "Add product"}</SheetTitle>
-          <SheetDescription>{p.id ? p.code : "Create a new catalogue item"}</SheetDescription>
+          <SheetTitle>
+            {p.id ? "Edit product" : p.name?.endsWith("— Copy") ? "Duplicate product" : "Add product"}
+          </SheetTitle>
+          <SheetDescription>
+            {p.id ? p.code : p.name?.endsWith("— Copy") ? "Create a new copy of this product" : "Create a new catalogue item"}
+          </SheetDescription>
+          {!p.id && p.name?.endsWith("— Copy") && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Spec copied from original — update the product code and any variations, then save.
+            </p>
+          )}
         </SheetHeader>
 
         <div className="space-y-5 py-6">
