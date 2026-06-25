@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,13 @@ export default function Auth() {
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const location = useLocation();
 
-  useEffect(() => { if (user) navigate("/dashboard", { replace: true }); }, [user, navigate]);
+  useEffect(() => {
+    if (user && (location.pathname === "/auth" || location.pathname === "/")) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, navigate, location.pathname]);
 
   const switchMode = (m: "login" | "signup") => { setMode(m); setParams({ mode: m }); };
 
