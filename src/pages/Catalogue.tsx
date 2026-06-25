@@ -18,8 +18,10 @@ import { useNavigate } from "react-router-dom";
 
 interface Product {
   id: string; name: string; code: string; cylinder_type: string;
-  finish: string | null; size: string | null; price_gbp: number;
+  finish: string | null; finish_colour?: string | null;
+  size: string | null; price_gbp: number;
   description: string | null; product_description: string | null;
+  product_features?: string | null;
   cylinder_profile?: string | null; image_url?: string | null;
 }
 
@@ -33,19 +35,10 @@ interface Family {
   profile: string | null;
   image: string | null;
   description: string;
+  features: string | null;
+  finishColours: Record<string, string>;
   minPrice: number;
 }
-
-const FINISH_COLOURS: Record<string, string> = {
-  "Nickel Plated": "#C0C0C0",
-  "Satin Nickel": "#C0C0C0",
-  "Satin Brass": "#B8860B",
-  "Polished Brass": "#CFB53B",
-  "Satin Chrome": "#9E9E9E",
-  "Polished Chrome": "#C0C0C0",
-};
-
-const finishColour = (f: string) => FINISH_COLOURS[f] ?? "#888888";
 
 function buildFamilies(products: Product[]): Family[] {
   const map = new Map<string, Product[]>();
