@@ -356,25 +356,30 @@ function DetailDrawer({ fam, systems, onUseInBuilder }: {
           </div>
         )}
 
-        {fam.sizes.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {fam.sizes.map(s => (
-              <button
-                key={s}
-                onClick={() => setSelSize(s)}
-                className={`px-2.5 py-1 rounded-full text-xs font-mono border ${selSize === s ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border"}`}
-              >{s}</button>
-            ))}
-          </div>
-        )}
+        {fam.sizes.length > 0 && (() => {
+          const sizesForFinish = new Set(
+            fam.variants.filter(v => !selFinish || v.finish === selFinish).map(v => v.size).filter(Boolean) as string[]
+          );
+          return (
+            <div className="flex flex-wrap gap-1.5">
+              {fam.sizes.filter(s => sizesForFinish.has(s)).map(s => (
+                <button
+                  key={s}
+                  onClick={() => setSelSize(s)}
+                  className={`px-2.5 py-1 rounded-full text-xs border ${selSize === s ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border"}`}
+                >{s}</button>
+              ))}
+            </div>
+          );
+        })()}
 
-        <div className="text-3xl font-semibold text-amber-600 font-mono">£{Number(selected.price_gbp).toFixed(2)}</div>
+        <div className="text-3xl font-semibold text-amber-600">£{Number(selected.price_gbp).toFixed(2)}</div>
 
         <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-2">
           {selected.cylinder_profile && (<><dt className="text-muted-foreground">Profile</dt><dd>{selected.cylinder_profile}</dd></>)}
           <dt className="text-muted-foreground">Type</dt><dd>{selected.cylinder_type}</dd>
           {selected.finish && (<><dt className="text-muted-foreground">Finish</dt><dd>{selected.finish}</dd></>)}
-          {selected.size && (<><dt className="text-muted-foreground">Size</dt><dd className="font-mono">{selected.size}</dd></>)}
+          {selected.size && (<><dt className="text-muted-foreground">Size</dt><dd>{selected.size}</dd></>)}
           <dt className="text-muted-foreground">Product code</dt><dd className="font-mono">{selected.code}</dd>
         </dl>
 
@@ -382,18 +387,19 @@ function DetailDrawer({ fam, systems, onUseInBuilder }: {
           <p className="text-sm text-muted-foreground leading-relaxed">{fam.description}</p>
         )}
 
-        <div className="rounded-md border bg-muted/30 p-3">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">All variants</div>
-          <div className="space-y-1">
-            {fam.variants.map(v => (
-              <div key={v.id} className="grid grid-cols-[1fr_auto_auto] gap-3 text-xs items-center">
-                <span>{v.finish ?? "—"}</span>
-                <span className="font-mono text-muted-foreground">{v.size ?? "—"}</span>
-                <span className="font-mono font-semibold">£{Number(v.price_gbp).toFixed(2)}</span>
-              </div>
-            ))}
+        {fam.features && (
+          <div className="rounded-md border bg-muted/30 p-3">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Product features</div>
+            <ul className="space-y-1">
+              {fam.features.split(/\n|·/).map(f => f.trim()).filter(Boolean).map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs">
+                  <span className="text-primary mt-0.5">✓</span>
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
+        )}
 
         <p className="text-[11px] text-muted-foreground leading-relaxed">
           Cylinders are ordered through your system builder. Assign this product to a door in your system and it will be included in your order automatically.
