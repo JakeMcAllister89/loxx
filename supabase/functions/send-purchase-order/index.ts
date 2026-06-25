@@ -274,6 +274,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
     <div><strong>Date:</strong> ${esc(today)}</div>
     <div><strong>System reference:</strong> <span style="font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(systemRef)}</span>${systemName ? ` <span class="muted">${esc(systemName)}</span>` : ""}</div>
     <div><strong>Customer PO reference:</strong> ${esc(order.customer_po_ref || "—")}</div>
+    ${(order as any).notes ? `<div style="margin-top:6px"><strong>Special instructions:</strong> <span style="color:#b45309">${esc((order as any).notes)}</span></div>` : ""}
   </div>
   <div class="block" style="flex:1">
     <div class="label">Delivery address</div>
