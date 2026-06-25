@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
           <td>${esc(hierarchy.mk)}</td>
           <td>${esc(hierarchy.smk)}</td>
           <td style="font-size:11px;color:#64748b">${esc(i.product_code ?? "—")}</td>
-          <td style="color:#0f172a">${esc(p.product_description ?? p.name ?? (i as any).cylinder_type ?? "—")}</td>
+          <td style="color:#0f172a">${esc(i.cylinder_type ?? p.cylinder_type ?? "—")}</td>
           <td style="color:#0f172a">${esc(p.cylinder_profile ?? "—")}</td>
           <td>${esc(i.finish ?? p.finish ?? "—")}</td>
           <td>${esc(p.size ?? "—")}</td>
