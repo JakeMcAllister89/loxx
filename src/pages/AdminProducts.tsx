@@ -74,7 +74,17 @@ export default function AdminProducts() {
   useEffect(() => { load(); loadTypes(); }, []);
 
   const sorted = useMemo(() => {
-    const arr = [...products];
+    const q = search.trim().toLowerCase();
+    const arr = q
+      ? products.filter(p =>
+          (p.product_description ?? p.name ?? "").toLowerCase().includes(q) ||
+          (p.code ?? "").toLowerCase().includes(q) ||
+          (p.cylinder_type ?? "").toLowerCase().includes(q) ||
+          (p.cylinder_profile ?? "").toLowerCase().includes(q) ||
+          (p.finish ?? "").toLowerCase().includes(q) ||
+          (p.size ?? "").toLowerCase().includes(q)
+        )
+      : [...products];
     arr.sort((a, b) => {
       const av = (a as any)[sortKey]; const bv = (b as any)[sortKey];
       if (av == null) return 1; if (bv == null) return -1;
