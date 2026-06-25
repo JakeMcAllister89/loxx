@@ -78,8 +78,6 @@ export default function Catalogue() {
   const [type, setType] = useState<string>("all");
   const [finish, setFinish] = useState<string>("all");
   const [size, setSize] = useState<string>("all");
-  const [maxPrice, setMaxPrice] = useState<number>(200);
-  const [sort, setSort] = useState<"price-asc" | "price-desc" | "name">("price-asc");
   const [detail, setDetail] = useState<Family | null>(null);
   const navigate = useNavigate();
 
@@ -93,27 +91,20 @@ export default function Catalogue() {
   const types = useMemo(() => Array.from(new Set(families.map(f => f.type))).sort(), [families]);
   const allFinishes = useMemo(() => Array.from(new Set(products.map(p => p.finish).filter(Boolean))).sort() as string[], [products]);
   const allSizes = useMemo(() => Array.from(new Set(products.map(p => p.size).filter(Boolean))).sort() as string[], [products]);
-  const priceCap = useMemo(() => Math.max(50, Math.ceil(Math.max(0, ...products.map(p => Number(p.price_gbp))))), [products]);
-
-  useEffect(() => { setMaxPrice(priceCap); }, [priceCap]);
 
   const filtered = useMemo(() => {
-    let out = families.filter(f => {
+    const out = families.filter(f => {
       if (q && !(f.type + " " + f.description + " " + f.variants.map(v => v.code).join(" ")).toLowerCase().includes(q.toLowerCase())) return false;
       if (type !== "all" && f.type !== type) return false;
       if (finish !== "all" && !f.finishes.includes(finish)) return false;
       if (size !== "all" && !f.sizes.includes(size)) return false;
-      if (f.minPrice > maxPrice) return false;
       return true;
     });
-    if (sort === "price-asc") out = out.sort((a, b) => a.minPrice - b.minPrice);
-    if (sort === "price-desc") out = out.sort((a, b) => b.minPrice - a.minPrice);
-    if (sort === "name") out = out.sort((a, b) => a.type.localeCompare(b.type));
-    return out;
-  }, [families, q, type, finish, size, maxPrice, sort]);
+    return out.sort((a, b) => a.minPrice - b.minPrice);
+  }, [families, q, type, finish, size]);
 
-  const clearFilters = () => { setQ(""); setType("all"); setFinish("all"); setSize("all"); setMaxPrice(priceCap); };
-  const filtersActive = q || type !== "all" || finish !== "all" || size !== "all" || maxPrice !== priceCap;
+  const clearFilters = () => { setQ(""); setType("all"); setFinish("all"); setSize("all"); };
+  const filtersActive = q || type !== "all" || finish !== "all" || size !== "all";
 
   return (
     <DashboardLayout>
