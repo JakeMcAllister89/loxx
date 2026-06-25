@@ -769,19 +769,23 @@ function BuilderInner({ systemId }: { systemId: string }) {
       if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
         normaliseKeys(n).forEach((k) => {
           if (k.qty > 0) {
+            const keyProd = keyProductForNode(n.type);
+            const keyPrice = keyProd ? Number((keyProd as any).price_gbp) : 12;
             lines.push({
               kind: "key",
               key_reference: k.ref,
+              product_code: (keyProd as any)?.code ?? undefined,
+              image_url: (keyProd as any)?.image_url ?? undefined,
               node_type: n.type,
               key_type_label: KEY_TYPE_LABEL[n.type],
               location: (n.type === "MK" || n.type === "SMK") ? (n.location ?? undefined) : undefined,
               room_label: n.location || n.label,
               hierarchy_refs: [...hierarchy_refs.filter(r => r !== n.label), n.label],
               quantity: k.qty,
-              unit_price: 12,
+              unit_price: keyPrice,
               ...sys,
             });
-            total += 12 * k.qty;
+            total += keyPrice * k.qty;
           }
         });
       }
