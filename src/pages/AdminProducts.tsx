@@ -275,8 +275,17 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{p.id ? "Edit product" : "Add product"}</SheetTitle>
-          <SheetDescription>{p.id ? p.code : "Create a new catalogue item"}</SheetDescription>
+          <SheetTitle>
+            {p.id ? "Edit product" : p.name?.endsWith("— Copy") ? "Duplicate product" : "Add product"}
+          </SheetTitle>
+          <SheetDescription>
+            {p.id ? p.code : p.name?.endsWith("— Copy") ? "Create a new copy of this product" : "Create a new catalogue item"}
+          </SheetDescription>
+          {!p.id && p.name?.endsWith("— Copy") && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Spec copied from original — update the product code and any variations, then save.
+            </p>
+          )}
         </SheetHeader>
 
         <div className="space-y-5 py-6">
