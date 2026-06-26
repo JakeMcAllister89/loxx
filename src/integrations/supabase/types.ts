@@ -397,6 +397,7 @@ export type Database = {
           id: string
           notes: string | null
           paid_at: string | null
+          payment_method: string
           payment_status: string
           po_number: string | null
           po_sent_at: string | null
@@ -423,6 +424,7 @@ export type Database = {
           id?: string
           notes?: string | null
           paid_at?: string | null
+          payment_method?: string
           payment_status?: string
           po_number?: string | null
           po_sent_at?: string | null
@@ -449,6 +451,7 @@ export type Database = {
           id?: string
           notes?: string | null
           paid_at?: string | null
+          payment_method?: string
           payment_status?: string
           po_number?: string | null
           po_sent_at?: string | null
