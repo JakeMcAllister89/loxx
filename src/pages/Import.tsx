@@ -423,7 +423,7 @@ function ReviewStep({
                   </div>
                   {cyls.map(cyl => {
                     const isSelected = selectedIds.has(cyl.id);
-                    const isConfirmed = !!cyl.cylinder_type;
+                    const isConfirmed = !!cyl.cylinder_type && productCodes.includes(cyl.cylinder_type);
                     const hint = (cyl as any).dom_hint as string | undefined;
                     const size = (cyl as any).size as string | undefined;
                     return (
