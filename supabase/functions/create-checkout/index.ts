@@ -7,7 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
 
 interface CartLine {
-  kind: "cylinder" | "key";
+  kind: "cylinder" | "key" | "delivery";
   product_code?: string;
   product_name?: string;
   cylinder_type?: string;
