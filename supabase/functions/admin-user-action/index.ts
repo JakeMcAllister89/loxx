@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     const { data: prof } = await admin.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
     if (!(prof as any)?.is_admin) return json({ error: "Forbidden" }, 403);
 
-    const { action, user_id, email } = await req.json();
+    const { action, user_id, email, org_id, from_user_id, to_user_id, reason } = await req.json();
 
     if (action === "disable") {
       if (!user_id) return json({ error: "Missing user_id" }, 400);
@@ -63,6 +63,30 @@ Deno.serve(async (req) => {
         return json({ ok: false, error: txt, link }, 502);
       }
       return json({ ok: true, sent: true });
+    }
+
+    if (action === "suspend_user") {
+      if (!user_id) return json({ error: "Missing user_id" }, 400);
+      if (user_id === user.id) return json({ error: "Cannot suspend yourself" }, 400);
+      await admin.from("org_members").update({ status: "suspended" }).eq("user_id", user_id).eq("status", "active");
+      const { error } = await (admin.auth.admin as any).updateUserById(user_id, { ban_duration: "876600h" });
+      if (error) return json({ error: error.message }, 500);
+      return json({ ok: true });
+    }
+
+    if (action === "transfer_master_admin") {
+      if (!org_id || !from_user_id || !to_user_id) {
+        return json({ error: "Missing org_id, from_user_id or to_user_id" }, 400);
+      }
+      const { error } = await admin.rpc("transfer_org_master_admin", {
+        _org_id: org_id,
+        _from_user_id: from_user_id,
+        _to_user_id: to_user_id,
+        _initiated_by: user.id,
+        _reason: reason ?? null,
+      });
+      if (error) return json({ error: error.message }, 500);
+      return json({ ok: true });
     }
 
     return json({ error: "Unknown action" }, 400);

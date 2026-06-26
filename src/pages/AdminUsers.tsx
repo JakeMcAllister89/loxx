@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { MoreHorizontal, Search, Mail, UserX, ChevronDown, ChevronRight, RefreshCw, X } from "lucide-react";
+import { MoreHorizontal, Search, Mail, UserX, ChevronDown, ChevronRight, RefreshCw, X, ArrowLeftRight, Ban } from "lucide-react";
 
 interface ProfileRow {
   id: string;
@@ -87,6 +88,16 @@ export default function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
   const [removeOf, setRemoveOf] = useState<{ id: string; name: string } | null>(null);
+  const [suspendOf, setSuspendOf] = useState<{ id: string; name: string } | null>(null);
+  const [transferState, setTransferState] = useState<{
+    fromUserId: string;
+    fromName: string;
+    orgId: string;
+    orgName: string;
+  } | null>(null);
+  const [transferToId, setTransferToId] = useState<string>("");
+  const [transferReason, setTransferReason] = useState<string>("");
+  const [transferring, setTransferring] = useState(false);
 
   // Invitations
   const [invites, setInvites] = useState<PlatformInvite[]>([]);
@@ -166,6 +177,39 @@ export default function AdminUsers() {
     setRemoveOf(null);
     loadAll();
   };
+
+  const doSuspend = async () => {
+    if (!suspendOf) return;
+    const { data, error } = await supabase.functions.invoke("admin-user-action", {
+      body: { action: "suspend_user", user_id: suspendOf.id },
+    });
+    if (error || !(data as any)?.ok) { toast.error((data as any)?.error ?? "Failed to suspend"); return; }
+    toast.success(`${suspendOf.name} suspended`);
+    setSuspendOf(null);
+    loadAll();
+  };
+
+  const doTransfer = async () => {
+    if (!transferState || !transferToId) return;
+    setTransferring(true);
+    const { data, error } = await supabase.functions.invoke("admin-user-action", {
+      body: {
+        action: "transfer_master_admin",
+        org_id: transferState.orgId,
+        from_user_id: transferState.fromUserId,
+        to_user_id: transferToId,
+        reason: transferReason.trim() || undefined,
+      },
+    });
+    setTransferring(false);
+    if (error || !(data as any)?.ok) { toast.error((data as any)?.error ?? "Transfer failed"); return; }
+    toast.success("Master Admin transferred");
+    setTransferState(null);
+    setTransferToId("");
+    setTransferReason("");
+    loadAll();
+  };
+
 
   const sendInvitation = async () => {
     if (!inv.first_name.trim() || !inv.last_name.trim() || !inv.email.trim() || !inv.company.trim()) {
@@ -286,6 +330,26 @@ export default function AdminUsers() {
                               <DropdownMenuItem onClick={() => u.email && sendReset(u.email)}>
                                 <Mail className="h-4 w-4 mr-2" /> Send password reset
                               </DropdownMenuItem>
+                              {!isSelf && u.org_role === "master_admin" && (
+                                <DropdownMenuItem
+                                  onClick={() => setTransferState({
+                                    fromUserId: u.id,
+                                    fromName: fullName,
+                                    orgId: u.org_id ?? memberFor(u.id)?.org_id ?? "",
+                                    orgName: u.org_name,
+                                  })}
+                                >
+                                  <ArrowLeftRight className="h-4 w-4 mr-2" /> Transfer Master Admin
+                                </DropdownMenuItem>
+                              )}
+                              {!isSelf && (
+                                <DropdownMenuItem
+                                  className="text-amber-700"
+                                  onClick={() => setSuspendOf({ id: u.id, name: fullName })}
+                                >
+                                  <Ban className="h-4 w-4 mr-2" /> Suspend user
+                                </DropdownMenuItem>
+                              )}
                               {!isSelf && (
                                 <DropdownMenuItem className="text-destructive" onClick={() => setRemoveOf({ id: u.id, name: fullName })}>
                                   <UserX className="h-4 w-4 mr-2" /> Remove account
@@ -412,6 +476,74 @@ export default function AdminUsers() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={!!suspendOf} onOpenChange={(o) => !o && setSuspendOf(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Suspend {suspendOf?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will immediately block their access to LOXX. Their data is preserved. You can remove their account separately if needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doSuspend} className="bg-amber-600 hover:bg-amber-700 text-white">
+              Suspend account
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={!!transferState} onOpenChange={(o) => { if (!o) { setTransferState(null); setTransferToId(""); setTransferReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Transfer Master Admin</DialogTitle>
+            <DialogDescription>
+              Reassign the Master Admin role for <strong>{transferState?.orgName}</strong> from <strong>{transferState?.fromName}</strong> to another active member of that organisation. The current Master Admin will be downgraded to Admin.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Transfer to</Label>
+              <Select value={transferToId} onValueChange={setTransferToId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a member…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {enriched
+                    .filter(u =>
+                      u.org_id === transferState?.orgId &&
+                      u.id !== transferState?.fromUserId &&
+                      memberFor(u.id)?.status === "active"
+                    )
+                    .map(u => {
+                      const name = `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.name || u.email || u.id;
+                      return <SelectItem key={u.id} value={u.id}>{name} — {roleLabel[u.org_role] ?? u.org_role}</SelectItem>;
+                    })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Reason (optional)</Label>
+              <Input
+                placeholder="e.g. User has left the organisation"
+                value={transferReason}
+                onChange={e => setTransferReason(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTransferState(null)}>Cancel</Button>
+            <Button
+              disabled={!transferToId || transferring}
+              onClick={doTransfer}
+              className="bg-[#17171a] hover:bg-[#2a2a2e] text-white"
+            >
+              {transferring ? "Transferring…" : "Transfer Master Admin"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
