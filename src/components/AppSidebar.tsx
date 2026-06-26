@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Network, Package, ShoppingCart, ClipboardList, Settings, Plus, LogOut, Shield, FileText, ShoppingBag, LayoutGrid, Loader2, Users, UserCheck, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,7 +107,7 @@ export function AppSidebar() {
               key={item.to}
               to={to}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"
+                active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60 hover:text-amber-500"
               }`}
             >
               <item.icon className="h-4 w-4" />
@@ -131,7 +131,7 @@ export function AppSidebar() {
           <div className="space-y-0.5">
             {systems.length === 0 && <div className="px-3 py-2 text-xs text-sidebar-foreground/40">No systems yet</div>}
             {systems.map((s) => (
-              <NavLink key={s.id} to={`/builder/${s.id}`} className="block px-3 py-1.5 rounded-md text-xs hover:bg-sidebar-accent/60 truncate">
+              <NavLink key={s.id} to={`/builder/${s.id}`} className="block px-3 py-1.5 rounded-md text-xs hover:bg-sidebar-accent/60 hover:text-amber-500 truncate">
                 <span className="truncate">{s.name}</span>
                 <span className="text-sidebar-foreground/40 ml-2">{s.door_count}</span>
               </NavLink>
@@ -152,7 +152,7 @@ export function AppSidebar() {
               { to: "/admin/products", label: "Product catalogue", icon: Package },
               { to: "/admin/settings", label: "Settings", icon: Settings },
             ].map((a) => (
-              <NavLink key={a.to} to={a.to} end={a.end} className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded-md text-sm ${isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60"}`}>
+              <NavLink key={a.to} to={a.to} end={a.end} className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded-md text-sm ${isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60 hover:text-amber-500"}`}>
                 <a.icon className="h-4 w-4" /> {a.label}
               </NavLink>
             ))}
@@ -163,7 +163,12 @@ export function AppSidebar() {
             {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} New System
           </Button>
         )}
-        <button onClick={async () => { await signOut(); navigate("/"); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground">
+        <div className="flex items-center justify-center gap-3 pt-1 pb-1 text-[11px] text-sidebar-foreground/50">
+          <Link to="/terms" className="hover:text-amber-500">Terms</Link>
+          <span>·</span>
+          <Link to="/returns" className="hover:text-amber-500">Returns</Link>
+        </div>
+        <button onClick={async () => { await signOut(); navigate("/"); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-sidebar-foreground/70 hover:text-amber-500">
           <LogOut className="h-3.5 w-3.5" /> Sign out
         </button>
       </div>

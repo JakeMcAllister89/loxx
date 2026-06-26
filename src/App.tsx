@@ -36,6 +36,8 @@ import Team from "./pages/Team";
 import AcceptInvite from "./pages/AcceptInvite";
 import AcceptPlatformInvite from "./pages/AcceptPlatformInvite";
 import NotFound from "./pages/NotFound";
+import Terms from "./pages/Terms";
+import Returns from "./pages/Returns";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +61,8 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/accept-invite" element={<AcceptInvite />} />
               <Route path="/accept-platform-invite" element={<AcceptPlatformInvite />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/returns" element={<Returns />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
               <Route path="/systems" element={<ProtectedRoute><Systems /></ProtectedRoute>} />

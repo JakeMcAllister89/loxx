@@ -41,8 +41,9 @@ function buildDifferHierarchyMap(root: any): Record<string, { gmk: string; mk: s
 
 function buildDifferExtraKeysMap(items: any[]): Record<string, number> {
   const map: Record<string, number> = {};
-  items.filter(i => i.item_type === "key" && i.differ_ref).forEach(i => {
-    map[i.differ_ref] = (map[i.differ_ref] ?? 0) + Number(i.quantity);
+  items.filter(i => i.item_type === "key" && i.differ_ref && i.room_label).forEach(i => {
+    const key = `${i.differ_ref}__${i.room_label}`;
+    map[key] = (map[key] ?? 0) + Number(i.quantity);
   });
   return map;
 }
@@ -167,7 +168,7 @@ Deno.serve(async (req) => {
       const dataRows = rows.map((i: any) => {
         const p = productMap[i.product_code] ?? {};
         const hierarchy = hierarchyMap[i.differ_ref ?? ""] ?? { gmk: "—", mk: "—", smk: "—" };
-        const extraKeys = extraKeysMap[i.differ_ref ?? ""] ?? 0;
+        const extraKeys = extraKeysMap[`${i.differ_ref ?? ""}__${i.room_label ?? ""}`] ?? 0;
         const unitCost = Number(p.cost_price ?? 0);
         const totalCost = unitCost * Number(i.quantity);
         return `<tr>
