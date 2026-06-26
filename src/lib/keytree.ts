@@ -17,6 +17,7 @@ export interface TNode {
   quantity?: number;          // CYL only — units required at this door (default 1)
   extra_keys?: number;        // CYL only — additional keys beyond the 2 included
   is_common_entrance?: boolean; // CYL only — common entrance cylinder (multiple keys operate same lock)
+  keyed_alike_source_differ?: number;  // if set, this node shares a differ with another cylinder
   // Decommissioned cylinder fields — once a cylinder is replaced, the original is preserved in-tree
   decommissioned_at?: string;            // ISO date
   decommissioned_reason?: "lost_key" | "faulty";
