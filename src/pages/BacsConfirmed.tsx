@@ -23,7 +23,7 @@ export default function BacsConfirmed() {
             <div className="text-xs uppercase tracking-wide text-amber-800 mb-1">
               Your order reference
             </div>
-            <div className="font-mono text-2xl font-semibold text-amber-900">
+            <div className="text-2xl font-bold tracking-[0.15em] text-amber-900">
               {ref}
             </div>
           </div>
