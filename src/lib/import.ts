@@ -100,6 +100,9 @@ export function buildTreeFromParsed(nodes: ParsedNode[]): BuildResult {
     if (r.level === "CYL") {
       if (r.cylinder_type) node.cylinder_type = r.cylinder_type;
       if (r.finish) node.finish = r.finish;
+      if ((r as any).extra_keys != null) node.extra_keys = (r as any).extra_keys;
+      if ((r as any).size != null) node.size = (r as any).size as string;
+      if ((r as any).dom_hint) (node as any).dom_hint = (r as any).dom_hint;
     }
     if (r.level === "SMK" && r.key_qty != null) {
       node.keys = r.key_qty;
@@ -292,18 +295,20 @@ export function parseDomXl(buffer: ArrayBuffer): DomXlParseResult {
     const finish = rawColour ? (colourMap[rawColour] ?? rawColour) : null;
     const cylinderProfile = rawDesign ? (designToProfile[rawDesign] ?? null) : null;
     const cylinderFamily = rawTipo ? (tipoToFamily[rawTipo] ?? rawTipo) : null;
-    const decodedType = [cylinderFamily, cylinderProfile].filter(Boolean).join(" / ") || rawTipo;
+    const decodedLabel = [cylinderFamily, cylinderProfile].filter(Boolean).join(" / ") || rawTipo || "Unknown";
+    const extraKeys = keyQty != null ? Math.max(0, keyQty - 2) : 0;
 
     nodes.push({
       level: "CYL",
       label: roomDesc,
       parent_label: parentLabel,
       room_name: roomDesc,
-      cylinder_type: decodedType ?? undefined,
+      cylinder_type: undefined,
       finish: finish ?? undefined,
-      key_qty: keyQty,
+      extra_keys: extraKeys,
       size: size ?? undefined,
-    });
+      dom_hint: decodedLabel,
+    } as any);
   }
 
   if (nodes.filter(n => n.level === "CYL").length === 0) {
