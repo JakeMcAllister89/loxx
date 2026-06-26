@@ -1316,7 +1316,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               onClose={() => setSelectedId(null)}
               isFulfilled={isFulfilled}
               onReplace={() => openReplaceFlow(selected.id)}
-              onCopySpec={() => setCopySpecState({ open: true, sourceId: selected.id, newLabel: "" })}
+              onCopySpec={() => setCopySpecState({ open: true, sourceId: selected.id, newLabel: "", step: "differ-choice", keyedAlike: false })}
               readOnly={readOnly}
             />
           )}
