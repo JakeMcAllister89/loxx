@@ -88,6 +88,16 @@ export default function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
   const [removeOf, setRemoveOf] = useState<{ id: string; name: string } | null>(null);
+  const [suspendOf, setSuspendOf] = useState<{ id: string; name: string } | null>(null);
+  const [transferState, setTransferState] = useState<{
+    fromUserId: string;
+    fromName: string;
+    orgId: string;
+    orgName: string;
+  } | null>(null);
+  const [transferToId, setTransferToId] = useState<string>("");
+  const [transferReason, setTransferReason] = useState<string>("");
+  const [transferring, setTransferring] = useState(false);
 
   // Invitations
   const [invites, setInvites] = useState<PlatformInvite[]>([]);
