@@ -309,24 +309,28 @@ function ReviewStep({
           <div>{counts.CYL} cylinder{counts.CYL !== 1 ? "s" : ""}</div>
         </div>
 
-        {unmatched.length > 0 && (
+        {unmatchedGroups.length > 0 && (
           <div>
-            <div className="text-xs font-semibold mb-1">Unmatched cylinder types</div>
+            <div className="text-xs font-semibold mb-2">
+              {unmatchedGroups.length} cylinder type{unmatchedGroups.length !== 1 ? "s" : ""} need mapping — select the matching DOM product for each.
+            </div>
             <div className="space-y-2">
-              {unmatched.map((u) => (
-                <div key={u.nodeId} className="flex items-center gap-2">
-                  <Badge variant="destructive" className="font-mono text-[10px]">{u.original}</Badge>
-                  <Select onValueChange={(v) => patchNode(u.nodeId, { cylinder_type: v })}>
-                    <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Select…" /></SelectTrigger>
-                    <SelectContent>
-                      {products.map((p) => <SelectItem key={p.id} value={p.code}>{p.code} — {p.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {unmatchedGroups.map((g) => (
+                <UnmatchedGroupRow
+                  key={g.original}
+                  original={g.original}
+                  count={g.nodeIds.length}
+                  products={products}
+                  onSelect={(code) => {
+                    const matched = normalizeCylinderCode(code, productCodes);
+                    g.nodeIds.forEach((id) => patchNode(id, { cylinder_type: matched.matched ?? code }));
+                  }}
+                />
               ))}
             </div>
           </div>
         )}
+
 
         <div className="pt-3 border-t flex items-center justify-between gap-2">
           <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
