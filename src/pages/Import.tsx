@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Papa from "papaparse";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,19 +13,17 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import {
   ParsedNode, buildTreeFromParsed, countByType, normalizeCylinderCode,
-  downloadCsvTemplate,
+  parseDomXl,
 } from "@/lib/import";
-import { TreeData, TNode, NodeType } from "@/lib/keytree";
+import { TreeData, TNode } from "@/lib/keytree";
 import { logAction } from "@/lib/audit";
 import {
-  Upload, FileText, FileSpreadsheet, ArrowLeft, ArrowRight, Loader2,
-  CheckCircle2, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Trash2,
+  Upload, ArrowLeft, ArrowRight, Loader2,
+  CheckCircle2, AlertTriangle, ChevronDown, ChevronRight, Trash2, FileSpreadsheet,
 } from "lucide-react";
 
-// TODO: concierge import flow — accept emailed PDFs from customers and have a team member
-// build the system for them when Claude cannot parse a scanned image PDF.
-
 type Step = "upload" | "review" | "build";
+type Source = "csv" | "pdf" | "domxl";
 
 interface Product { id: string; code: string; name: string }
 
@@ -40,17 +37,17 @@ export default function ImportPage() {
   const [systemName, setSystemName] = useState("Imported system");
   const [products, setProducts] = useState<Product[]>([]);
   const [busy, setBusy] = useState(false);
-  const [source, setSource] = useState<"csv" | "pdf">("csv");
+  const [source, setSource] = useState<Source>("domxl");
 
   useEffect(() => {
     supabase.from("products").select("id,code,name").eq("is_active", true).order("code").then(({ data }) => setProducts((data ?? []) as Product[]));
   }, []);
 
-  const goReview = (nodes: ParsedNode[], srcType: "csv" | "pdf", suggestedName?: string) => {
-    const { tree, warnings } = buildTreeFromParsed(nodes);
+  const goReview = (nodes: ParsedNode[], srcType: Source, suggestedName?: string) => {
+    const { tree, warnings: buildWarnings } = buildTreeFromParsed(nodes);
     setParsedNodes(nodes);
     setTree(tree);
-    setWarnings(warnings);
+    setWarnings(buildWarnings);
     setSource(srcType);
     if (suggestedName) setSystemName(suggestedName);
     setStep("review");
@@ -91,13 +88,13 @@ export default function ImportPage() {
       <div className="p-8 max-w-5xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight">Import existing system</h1>
-          <p className="text-muted-foreground text-sm mt-1">Upload a lockchart PDF or CSV and we'll build the hierarchy for you.</p>
+          <p className="text-muted-foreground text-sm mt-1">Upload your DOM-XL file and we'll build the digital record for you.</p>
         </div>
 
         <Stepper step={step} warningCount={step === "review" ? warnings.length : 0} />
 
         {step === "upload" && (
-          <UploadStep onCsvParsed={(rows) => goReview(rows, "csv")} onPdfParsed={(rows, name) => goReview(rows, "pdf", name)} />
+          <UploadStep onParsed={(rows, name) => goReview(rows, "domxl", name)} />
         )}
         {step === "review" && tree && (
           <ReviewStep
@@ -152,166 +149,76 @@ function Stepper({ step, warningCount = 0 }: { step: Step; warningCount?: number
 
 /* ----------------------------- Upload Step ----------------------------- */
 
-function UploadStep({
-  onCsvParsed, onPdfParsed,
-}: {
-  onCsvParsed: (rows: ParsedNode[]) => void;
-  onPdfParsed: (rows: ParsedNode[], systemName?: string) => void;
-}) {
-  return (
-    <div className="grid md:grid-cols-2 gap-4">
-      <CsvCard onParsed={onCsvParsed} />
-      <PdfCard onParsed={onPdfParsed} />
-    </div>
-  );
-}
-
-function CsvCard({ onParsed }: { onParsed: (rows: ParsedNode[]) => void }) {
+function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [busy, setBusy] = useState(false);
-
-  const parse = () => {
-    if (!file) return;
-    setBusy(true);
-    Papa.parse<Record<string, string>>(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (res) => {
-        setBusy(false);
-        const required = ["level"];
-        const headers = res.meta.fields ?? [];
-        for (const r of required) {
-          if (!headers.includes(r)) { toast.error(`Column '${r}' is required but was not found in your file`); return; }
-        }
-        const rows: ParsedNode[] = res.data.map((r) => ({
-          level: (r.level ?? "").trim() as NodeType,
-          label: (r.label ?? "").trim(),
-          location: (r.location ?? "").trim() || null,
-          parent_label: (r.parent_label ?? "").trim() || null,
-          cylinder_type: (r.cylinder_type ?? "").trim() || null,
-          finish: (r.finish ?? "").trim() || null,
-          room_name: (r.room_name ?? "").trim() || null,
-          key_ref: (r.key_ref ?? "").trim() || null,
-          key_qty: r.key_qty ? Number(r.key_qty) : null,
-        })).filter((r) => r.level || r.label);
-        onParsed(rows);
-      },
-      error: () => { setBusy(false); toast.error("Couldn't parse CSV"); },
-    });
-  };
-
-  return (
-    <div className="rounded-[10px] border bg-card p-6 shadow-card flex flex-col">
-      <div className="flex items-center gap-2"><FileSpreadsheet className="h-5 w-5 text-primary" /><h2 className="font-semibold">CSV upload</h2></div>
-      <p className="text-xs text-muted-foreground mt-1">Best for structured lockchart spreadsheets.</p>
-
-      <label className="mt-4 flex-1 min-h-[140px] rounded-[10px] border-2 border-dashed border-border bg-background hover:bg-muted/40 cursor-pointer flex flex-col items-center justify-center text-sm text-muted-foreground transition-colors p-4">
-        <input ref={inputRef} type="file" accept=".csv" className="hidden"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        <Upload className="h-6 w-6 mb-2" />
-        {file ? <span className="text-foreground">{file.name} · {(file.size / 1024).toFixed(1)} KB</span> : <span>Drop a .csv file or click to browse</span>}
-      </label>
-
-      <button onClick={() => downloadCsvTemplate()} className="text-xs text-primary hover:underline mt-3 text-left">
-        Download CSV template
-      </button>
-
-      <button onClick={() => setShowHelp((s) => !s)} className="mt-2 text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground">
-        {showHelp ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} How to fill this in
-      </button>
-      {showHelp && (
-        <div className="text-[11px] text-muted-foreground mt-2 space-y-1 leading-relaxed">
-          <div><b>level</b>: GMK, MK, SMK, or CYL</div>
-          <div><b>label</b>: the node name (for CYL, use room_name instead)</div>
-          <div><b>parent_label</b>: the label of the parent node</div>
-          <div><b>cylinder_type</b>: product code for CYL rows (e.g. EKZ-12)</div>
-          <div><b>finish</b>: e.g. N.P, S.C</div>
-          <div><b>room_name</b>: door/room name (CYL only)</div>
-          <div><b>key_ref / key_qty</b>: key reference and copies (GMK/MK/SMK rows)</div>
-        </div>
-      )}
-
-      <Button onClick={parse} disabled={!file || busy} className="mt-4 bg-primary hover:bg-primary/90">
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Parse this file
-      </Button>
-    </div>
-  );
-}
-
-function PdfCard({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: string) => void }) {
-  const [file, setFile] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const parse = async () => {
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) { toast.error("File too large — maximum 10MB"); return; }
     setBusy(true); setErr(null);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const { data, error } = await supabase.functions.invoke("parse-lockchart", { body: form });
-      if (error) throw new Error(error.message);
-      if (data?.error === "pinning_schedule") {
-        setBusy(false);
-        setErr(data.message || "This looks like a pinning schedule, not a lockchart. Pinning schedules describe how to cut keys (pin stack heights) — we need a lockchart showing which keys open which doors and the master key hierarchy.");
-        return;
-      }
-      if (data?.error) throw new Error(data.message || data.error);
-      const nodes: ParsedNode[] = (data?.nodes ?? []).map((n: any) => ({
-        level: (n.level ?? "").toUpperCase() as NodeType,
-        label: n.label ?? "",
-        location: n.location ?? null,
-        parent_label: n.parent_label ?? null,
-        cylinder_type: n.cylinder_type ?? null,
-        finish: n.finish ?? null,
-        room_name: n.room_name ?? null,
-        key_ref: n.key_ref ?? null,
-        key_qty: n.key_qty ?? null,
-      }));
-      if (!nodes.length) throw new Error("No nodes extracted");
-
-      const allFlat = nodes.every((n) => !n.parent_label);
-      if (allFlat && nodes.length > 0) {
-        toast.warning(`We found ${nodes.length} doors but couldn't determine the hierarchy. You may need to manually assign master key groups in the next step.`);
-      }
-
-      onParsed(nodes, data?.system_name || file.name.replace(/\.pdf$/i, ""));
+      const buf = await file.arrayBuffer();
+      const { systemName, nodes, warnings } = parseDomXl(buf);
+      warnings.forEach(w => toast.warning(w));
+      onParsed(nodes, systemName);
     } catch (e: any) {
+      setErr(e?.message ?? "Failed to parse file");
+    } finally {
       setBusy(false);
-      setErr(e?.message ?? "Failed to parse PDF");
     }
   };
 
   return (
-    <div className="rounded-[10px] border bg-card p-6 shadow-card flex flex-col">
-      <div className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /><h2 className="font-semibold">PDF upload</h2></div>
-      <p className="text-xs text-muted-foreground mt-1">Works on EVVA, Abloy, Mul-T-Lock and DOM lockchart formats.</p>
-
-      <label className="mt-4 flex-1 min-h-[140px] rounded-[10px] border-2 border-dashed border-border bg-background hover:bg-muted/40 cursor-pointer flex flex-col items-center justify-center text-sm text-muted-foreground p-4">
-        <input type="file" accept="application/pdf,.pdf" className="hidden"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        <Upload className="h-6 w-6 mb-2" />
-        {file ? <span className="text-foreground">{file.name} · {(file.size / 1024).toFixed(1)} KB</span> : <span>Drop a .pdf file or click to browse</span>}
-      </label>
-
-      <div className="text-[11px] text-warning mt-3 flex items-start gap-1">
-        <AlertCircle className="h-3 w-3 mt-0.5 shrink-0" />
-        <span>PDF parsing works on text-based PDFs. Scanned image PDFs may need manual correction in the next step.</span>
-      </div>
-
-      {err && (
-        <div className="text-xs text-destructive mt-3">
-          {err}. Try the CSV template or <a className="underline" href="mailto:support@iron-worx.co.uk">contact support</a>.
-          <div className="mt-2"><Button size="sm" variant="outline" onClick={parse}>Retry</Button></div>
+    <div className="max-w-2xl mx-auto">
+      <div className="rounded-[10px] border bg-card p-6 shadow-card flex flex-col">
+        <div className="flex items-center gap-2">
+          <FileSpreadsheet className="h-5 w-5 text-primary" />
+          <h2 className="font-semibold">Upload DOM-XL file</h2>
         </div>
-      )}
+        <p className="text-xs text-muted-foreground mt-1">
+          Upload the .xlsm file you received from your DOM locksmith or dealer.
+        </p>
 
-      <Button onClick={parse} disabled={!file || busy} className="mt-4 bg-primary hover:bg-primary/90">
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Parse this file
-      </Button>
+        <label className="mt-4 min-h-[180px] rounded-[10px] border-2 border-dashed border-border bg-background hover:bg-muted/40 cursor-pointer flex flex-col items-center justify-center text-sm text-muted-foreground transition-colors p-6">
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".xlsm"
+            className="hidden"
+            onChange={(e) => { setFile(e.target.files?.[0] ?? null); setErr(null); }}
+          />
+          <Upload className="h-7 w-7 mb-2" />
+          {file
+            ? <span className="text-foreground">{file.name} · {(file.size / 1024).toFixed(1)} KB</span>
+            : <span>Drop your .xlsm file or click to browse</span>}
+        </label>
+
+        <button
+          onClick={() => setShowHelp((s) => !s)}
+          className="mt-3 text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground"
+        >
+          {showHelp ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          What is a DOM-XL file?
+        </button>
+        {showHelp && (
+          <div className="text-xs text-muted-foreground mt-2 leading-relaxed bg-muted/40 rounded-md p-3">
+            DOM-XL is the planning file DOM send you when your master key system is designed.
+            It's the Excel file with a name like <code className="font-mono text-[11px]">YOURSITE.xlsm</code>.
+            If you don't have it, contact your DOM dealer and ask for your DOM-XL file.
+          </div>
+        )}
+
+        {err && (
+          <div className="text-xs text-destructive mt-3">{err}</div>
+        )}
+
+        <Button onClick={parse} disabled={!file || busy} className="mt-4 bg-primary hover:bg-primary/90">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Parse file
+        </Button>
+      </div>
     </div>
   );
 }
@@ -333,7 +240,6 @@ function ReviewStep({
   const counts = useMemo(() => countByType(tree), [tree]);
   const productCodes = useMemo(() => products.map((p) => p.code), [products]);
 
-  // Unmatched cylinder codes
   const unmatched = useMemo(() => {
     const out: { nodeId: string; original: string }[] = [];
     const walk = (n: TNode | null) => {
@@ -365,7 +271,6 @@ function ReviewStep({
 
   return (
     <div className="grid md:grid-cols-[1fr_320px] gap-4">
-      {/* Tree preview */}
       <div className="space-y-3">
         {warnings.length > 0 && (
           <div className="rounded-[10px] border border-amber-300 bg-amber-50 p-4 shadow-card">
@@ -387,7 +292,6 @@ function ReviewStep({
         </div>
       </div>
 
-      {/* Summary panel */}
       <div className="rounded-[10px] border bg-card p-5 shadow-card space-y-4 self-start">
         <div>
           <Label className="text-xs">System name</Label>
@@ -400,7 +304,6 @@ function ReviewStep({
           <div>{counts.SMK} sub master{counts.SMK !== 1 ? "s" : ""}</div>
           <div>{counts.CYL} cylinder{counts.CYL !== 1 ? "s" : ""}</div>
         </div>
-
 
         {unmatched.length > 0 && (
           <div>
