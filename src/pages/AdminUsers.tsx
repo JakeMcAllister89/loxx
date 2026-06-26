@@ -178,6 +178,39 @@ export default function AdminUsers() {
     loadAll();
   };
 
+  const doSuspend = async () => {
+    if (!suspendOf) return;
+    const { data, error } = await supabase.functions.invoke("admin-user-action", {
+      body: { action: "suspend_user", user_id: suspendOf.id },
+    });
+    if (error || !(data as any)?.ok) { toast.error((data as any)?.error ?? "Failed to suspend"); return; }
+    toast.success(`${suspendOf.name} suspended`);
+    setSuspendOf(null);
+    loadAll();
+  };
+
+  const doTransfer = async () => {
+    if (!transferState || !transferToId) return;
+    setTransferring(true);
+    const { data, error } = await supabase.functions.invoke("admin-user-action", {
+      body: {
+        action: "transfer_master_admin",
+        org_id: transferState.orgId,
+        from_user_id: transferState.fromUserId,
+        to_user_id: transferToId,
+        reason: transferReason.trim() || undefined,
+      },
+    });
+    setTransferring(false);
+    if (error || !(data as any)?.ok) { toast.error((data as any)?.error ?? "Transfer failed"); return; }
+    toast.success("Master Admin transferred");
+    setTransferState(null);
+    setTransferToId("");
+    setTransferReason("");
+    loadAll();
+  };
+
+
   const sendInvitation = async () => {
     if (!inv.first_name.trim() || !inv.last_name.trim() || !inv.email.trim() || !inv.company.trim()) {
       toast.error("All fields are required"); return;
