@@ -246,7 +246,7 @@ export function parseDomXl(buffer: ArrayBuffer): DomXlParseResult {
       label: roomDesc,
       parent_label: parentLabel,
       room_name: roomDesc,
-      cylinder_type: cylType ?? undefined,
+      cylinder_type: cylType ?? null,
       key_qty: keyQty,
     });
   }
