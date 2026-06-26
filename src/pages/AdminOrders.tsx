@@ -685,9 +685,29 @@ export default function AdminOrders() {
                 </Block>
 
                 <div className="flex gap-2 flex-wrap">
+                  {open.status === "pending_bacs" && (
+                    <Button
+                      size="sm"
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                      onClick={async () => {
+                        await supabase.from('orders').update({
+                          status: 'processing',
+                          payment_status: 'paid',
+                          paid_at: new Date().toISOString(),
+                          payment_method: 'bacs',
+                        }).eq('id', open.id);
+                        toast.success('Order marked as paid — status set to processing');
+                        setOpenId(null);
+                        reload();
+                      }}
+                    >
+                      <Check className="h-3.5 w-3.5" /> Mark paid (BACS)
+                    </Button>
+                  )}
                   {open.status === "paid" && <Button size="sm" variant="outline" onClick={() => updateStatus(open.id, "processing")}>Mark processing</Button>}
                   {open.status !== "shipped" && open.status !== "delivered" && <Button size="sm" variant="outline" onClick={() => updateStatus(open.id, "shipped")}>Mark shipped</Button>}
                   {open.status !== "delivered" && <Button size="sm" variant="outline" onClick={() => updateStatus(open.id, "delivered")}>Mark delivered</Button>}
+
                   <Button size="sm" variant="outline" className="ml-auto text-destructive border-destructive/40 hover:bg-destructive/10" onClick={() => setDeleteId(open.id)}>
                     <Trash2 className="h-3.5 w-3.5" /> Delete order
                   </Button>
