@@ -335,6 +335,7 @@ export type Database = {
           finish: string | null
           id: string
           item_type: string
+          key_reference: string | null
           line_total: number
           order_id: string
           product_code: string | null
@@ -350,6 +351,7 @@ export type Database = {
           finish?: string | null
           id?: string
           item_type: string
+          key_reference?: string | null
           line_total?: number
           order_id: string
           product_code?: string | null
@@ -365,6 +367,7 @@ export type Database = {
           finish?: string | null
           id?: string
           item_type?: string
+          key_reference?: string | null
           line_total?: number
           order_id?: string
           product_code?: string | null

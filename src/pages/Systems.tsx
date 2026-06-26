@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, Upload, Copy, MoreHorizontal, KeyRound, Loader2, ExternalLink } from "lucide-react";
+import { Plus, Upload, Copy, MoreHorizontal, KeyRound, Loader2, ExternalLink, Lock } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { createSystem } from "@/lib/createSystem";
 
-interface Sys { id: string; name: string; reference: string | null; door_count: number; created_at: string; updated_at: string; }
+interface Sys { id: string; name: string; reference: string | null; door_count: number; created_at: string; updated_at: string; has_orders?: boolean; }
 
 function timeAgo(iso: string) {
   const d = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -39,7 +39,14 @@ export default function Systems() {
     if (!user) return;
     setLoading(true);
     const { data } = await supabase.from("key_systems").select("id,name,reference,door_count,created_at,updated_at").order("updated_at", { ascending: false });
-    setSystems(data ?? []);
+    const list = (data ?? []) as Sys[];
+    if (list.length) {
+      const ids = list.map(s => s.id);
+      const { data: orderData } = await supabase.from("orders").select("system_id").in("system_id", ids);
+      const orderedIds = new Set((orderData ?? []).map((o: any) => o.system_id));
+      list.forEach(s => { s.has_orders = orderedIds.has(s.id); });
+    }
+    setSystems(list);
     setLoading(false);
   };
   useEffect(() => { load(); }, [user]);
@@ -139,6 +146,11 @@ export default function Systems() {
                       {s.reference && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">{s.reference}</span>}
                       <span className="text-xs text-muted-foreground">{s.door_count} doors</span>
                       <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-800">Active</span>
+                      {s.has_orders && (
+                        <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                          <Lock className="h-3 w-3" /> Ordered
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1.5">Created {timeAgo(s.created_at)}</div>
                     <div className="text-xs text-muted-foreground">Updated {timeAgo(s.updated_at)}</div>
@@ -154,7 +166,7 @@ export default function Systems() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => { setRenameOf(s); setRenameValue(s.name); }}>Rename</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => toast.info("Archive coming soon")}>Archive</DropdownMenuItem>
-                      {canDelete && <DropdownMenuItem className="text-destructive" onClick={() => setDeleteOf(s)}>Delete</DropdownMenuItem>}
+                      {canDelete && !s.has_orders && <DropdownMenuItem className="text-destructive" onClick={() => setDeleteOf(s)}>Delete</DropdownMenuItem>}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>

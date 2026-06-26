@@ -205,6 +205,11 @@ export default function AdminOrders() {
     reload();
   };
 
+  const deleteItem = async (itemId: string) => {
+    await supabase.from("order_items").delete().eq("id", itemId);
+    setItems((prev) => prev.filter((i) => i.id !== itemId));
+  };
+
   const refLabel = (o: OrderRow) => o.id.slice(0, 8).toUpperCase();
 
   const sendOne = async (orderId: string): Promise<{ ok: boolean; po_number?: string | null; error?: string }> => {
@@ -564,6 +569,7 @@ export default function AdminOrders() {
                         <TableHead>Qty</TableHead>
                         <TableHead>Unit</TableHead>
                         <TableHead>Total</TableHead>
+                        <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -580,6 +586,16 @@ export default function AdminOrders() {
                             <TableCell>{i.quantity}</TableCell>
                             <TableCell>{gbp(Number(i.unit_price))}</TableCell>
                             <TableCell>{gbp(Number(i.line_total))}</TableCell>
+                            <TableCell>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                                onClick={() => deleteItem(i.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         );
                       })}
@@ -597,6 +613,7 @@ export default function AdminOrders() {
                         <TableHead>Qty</TableHead>
                         <TableHead>Unit</TableHead>
                         <TableHead>Total</TableHead>
+                        <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -608,6 +625,16 @@ export default function AdminOrders() {
                           <TableCell>{i.quantity}</TableCell>
                           <TableCell>{gbp(Number(i.unit_price))}</TableCell>
                           <TableCell>{gbp(Number(i.line_total))}</TableCell>
+                          <TableCell>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                              onClick={() => deleteItem(i.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
