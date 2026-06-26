@@ -211,7 +211,22 @@ export default function CartReview() {
                 const d = meta.delivery;
                 const ready = !!(d.contact_name && d.contact_phone && d.line1 && d.city && d.postcode);
                 return <>
-                  <Button onClick={() => setCheckout(true)} disabled={!ready} className="w-full bg-amber-500 hover:bg-amber-600 text-white text-base h-12">
+                  <label className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed px-1">
+                    <input
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      className="mt-0.5 accent-amber-500"
+                    />
+                    <span>
+                      I agree to the{" "}
+                      <Link to="/terms" target="_blank" className="text-amber-600 hover:underline">Terms &amp; Conditions</Link>
+                      {" "}and{" "}
+                      <Link to="/returns" target="_blank" className="text-amber-600 hover:underline">Returns Policy</Link>
+                      . I understand that custom-keyed products cannot be returned once production has commenced.
+                    </span>
+                  </label>
+                  <Button onClick={() => setCheckout(true)} disabled={!ready || !termsAccepted} className="w-full bg-amber-500 hover:bg-amber-600 text-white text-base h-12">
                     Confirm and pay → £{total.toFixed(2)} <ArrowRight className="h-4 w-4 ml-1" />
                   </Button>
                   {!ready && (
