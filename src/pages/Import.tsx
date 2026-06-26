@@ -463,18 +463,18 @@ function ReviewStep({
           </div>
         </div>
 
-        <div className="rounded-[10px] border bg-card shadow-card p-4">
+        <div className="rounded-[10px] border bg-card shadow-card p-4 flex flex-col gap-4">
           {selectedIds.size === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <span className="text-3xl mb-3">☑️</span>
               <p className="text-sm font-medium">Select doors to configure</p>
               <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">
-                Tick one or more doors on the left, then choose a cylinder spec below.
+                Tick one or more doors on the left, then choose a cylinder spec and assign it.
               </p>
             </div>
           ) : (
-            <div>
-              <div className="flex items-center justify-between mb-3">
+            <>
+              <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">
                   {selectedIds.size === 1
                     ? (() => { const allCyls = zones.flatMap(z => z.cyls); return allCyls.find(c => selectedIds.has(c.id))?.label ?? "1 door"; })()
@@ -489,7 +489,14 @@ function ReviewStep({
                   onPatch={handleConfigPatch}
                 />
               )}
-            </div>
+              <Button
+                className="w-full bg-primary hover:bg-primary/90 mt-2"
+                disabled={!draftPatch.cylinder_type}
+                onClick={assignToSelected}
+              >
+                Assign to {selectedIds.size} door{selectedIds.size !== 1 ? "s" : ""}
+              </Button>
+            </>
           )}
         </div>
       </div>
