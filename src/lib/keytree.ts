@@ -193,20 +193,19 @@ export function countDoors(root: TNode | null): number {
 export function assignNextDiffers(tree: TreeData): TreeData {
   if (!tree.root) return { root: null, next_differ: 1 };
   const used = new Set<number>();
-  // Collect decommissioned differs (reserved, never reused)
-  const collect = (n: TNode) => {
-    if (n.type === "CYL" && n.decommissioned_at && n.differ != null) used.add(n.differ);
-    n.children.forEach(collect);
-  };
-  collect(tree.root);
-  // Also reserve keyed-alike pinned differs so they are never handed out as "next free"
-  const collectPinned = (n: TNode) => {
-    if (n.type === "CYL" && !n.decommissioned_at && n.keyed_alike_source_differ != null) {
-      used.add(n.keyed_alike_source_differ);
+  // Pass 1: collect ALL numbers already in use so we never hand them out
+  const collectUsed = (n: TNode) => {
+    if (n.type === "CYL") {
+      // Decommissioned nodes reserve their differ permanently
+      if (n.decommissioned_at && n.differ != null) used.add(n.differ);
+      // Active nodes with an assigned differ keep it — reserve it
+      if (!n.decommissioned_at && n.differ != null) used.add(n.differ);
+      // Keyed alike nodes declare which differ they must share
+      if (!n.decommissioned_at && n.keyed_alike_source_differ != null) used.add(n.keyed_alike_source_differ);
     }
-    n.children.forEach(collectPinned);
+    n.children.forEach(collectUsed);
   };
-  collectPinned(tree.root);
+  collectUsed(tree.root);
   let counter = 1;
   const nextFree = () => {
     while (used.has(counter)) counter++;
@@ -215,11 +214,18 @@ export function assignNextDiffers(tree: TreeData): TreeData {
     counter++;
     return v;
   };
+  // Pass 2: assign differs — preserve existing, pin keyed alike, assign fresh only where null
   const assigned = mapTree(tree.root, (n) => {
     if (n.type === "CYL" && !n.decommissioned_at) {
+      // Keyed alike: always use the pinned source differ
       if (n.keyed_alike_source_differ != null) {
         return { ...n, differ: n.keyed_alike_source_differ };
       }
+      // Already has a differ: keep it
+      if (n.differ != null) {
+        return n;
+      }
+      // Brand new node with no differ yet: assign next free
       return { ...n, differ: nextFree() };
     }
     return n;
