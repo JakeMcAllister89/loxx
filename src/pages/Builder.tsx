@@ -433,6 +433,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         type: "CYL",
         label: newLabel.trim() || `Door ${siblingCount + 1}`,
         differ: assignedDiffer,
+        ...(keyedAlike ? { keyed_alike_source_differ: source.differ } : {}),
         cylinder_type: source.cylinder_type,
         finish: source.finish,
         size: source.size,
@@ -443,9 +444,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       };
       const newRoot = addChild(prev.root, parent.id, newNode);
       dirtyRef.current = true;
-      return keyedAlike
-        ? { ...prev, root: newRoot }
-        : { ...prev, root: newRoot, next_differ: (prev.next_differ ?? 1) + 1 };
+      return assignNextDiffers({ ...prev, root: newRoot });
     });
     setCopySpecState({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false });
     setSelectedId(null);
