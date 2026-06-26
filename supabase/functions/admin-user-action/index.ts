@@ -75,10 +75,18 @@ Deno.serve(async (req) => {
     }
 
     if (action === "transfer_master_admin") {
-      const { org_id, from_user_id, to_user_id, reason } = await (async () => ({} as any))();
-      const body = arguments as any; // unused
-      const parsed = { org_id: (arguments as any), from_user_id: undefined, to_user_id: undefined, reason: undefined } as any;
-      return json({ error: "internal-routing-error" }, 500);
+      if (!org_id || !from_user_id || !to_user_id) {
+        return json({ error: "Missing org_id, from_user_id or to_user_id" }, 400);
+      }
+      const { error } = await admin.rpc("transfer_org_master_admin", {
+        _org_id: org_id,
+        _from_user_id: from_user_id,
+        _to_user_id: to_user_id,
+        _initiated_by: user.id,
+        _reason: reason ?? null,
+      });
+      if (error) return json({ error: error.message }, 500);
+      return json({ ok: true });
     }
 
     return json({ error: "Unknown action" }, 400);
