@@ -38,6 +38,7 @@ import AcceptPlatformInvite from "./pages/AcceptPlatformInvite";
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
 import Returns from "./pages/Returns";
+import BacsConfirmed from "./pages/BacsConfirmed";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +76,7 @@ const App = () => (
               <Route path="/basket/review" element={<RoleRoute allow={["master_admin","admin"]}><CartReview /></RoleRoute>} />
               <Route path="/checkout/return" element={<ProtectedRoute><CheckoutReturn /></ProtectedRoute>} />
               <Route path="/orders" element={<RoleRoute allow={["master_admin","admin","standard"]}><Orders /></RoleRoute>} />
+              <Route path="/orders/bacs-confirmed" element={<ProtectedRoute><BacsConfirmed /></ProtectedRoute>} />
               <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
               <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
