@@ -15,7 +15,9 @@ const ALL_KEYS = [
   "po_notes", "quote_validity_days",
   "quote_terms", "quote_footer",
   "vat_rate", "vat_number",
+  "bank_name", "bank_sort_code", "bank_account_number", "bank_account_name",
 ];
+
 
 export default function AdminSettings() {
   const [values, setValues] = useState<SettingsMap>({});
@@ -76,6 +78,14 @@ export default function AdminSettings() {
           <Field label="VAT rate (%)"><Input type="number" value={values.vat_rate ?? ""} onChange={(e) => set("vat_rate", e.target.value)} /></Field>
           <Field label="VAT number"><Input value={values.vat_number ?? ""} onChange={(e) => set("vat_number", e.target.value)} /></Field>
         </Section>
+
+        <Section title="Bank details" help="Shown on pro-forma invoices for customers paying by BACS." onSave={() => save(["bank_name", "bank_sort_code", "bank_account_number", "bank_account_name"], "Bank details")}>
+          <Field label="Bank name"><Input value={values.bank_name ?? ""} onChange={(e) => set("bank_name", e.target.value)} placeholder="e.g. Barclays" /></Field>
+          <Field label="Sort code" help="Format: XX-XX-XX"><Input value={values.bank_sort_code ?? ""} onChange={(e) => set("bank_sort_code", e.target.value)} placeholder="e.g. 20-00-00" /></Field>
+          <Field label="Account number"><Input value={values.bank_account_number ?? ""} onChange={(e) => set("bank_account_number", e.target.value)} placeholder="e.g. 12345678" /></Field>
+          <Field label="Account name"><Input value={values.bank_account_name ?? ""} onChange={(e) => set("bank_account_name", e.target.value)} placeholder="e.g. LOXX Ltd" /></Field>
+        </Section>
+
       </div>
     </DashboardLayout>
   );

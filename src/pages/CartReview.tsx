@@ -1,7 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Loader2, Building2, CreditCard } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { StripeCheckout } from "@/components/StripeCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { TreeData, TNode } from "@/lib/keytree";
+
 
 interface SystemSummary {
   id: string;
@@ -18,7 +19,7 @@ interface SystemSummary {
 }
 
 export default function CartReview() {
-  const { items, meta, setMeta, cylindersSubtotal, keysSubtotal, subtotal, deliveryCharge, vat, total } = useCart();
+  const { items, meta, setMeta, cylindersSubtotal, keysSubtotal, subtotal, deliveryCharge, vat, total, clear } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [systems, setSystems] = useState<SystemSummary[]>([]);
@@ -27,6 +28,42 @@ export default function CartReview() {
   const [checkout, setCheckout] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [bacsLoading, setBacsLoading] = useState(false);
+  const [bacsError, setBacsError] = useState<string | null>(null);
+
+  const handleBacsOrder = async () => {
+    setBacsLoading(true);
+    setBacsError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Please sign in to place an order.");
+      const deliveryItem = {
+        kind: "delivery" as const,
+        product_name: "Delivery Charge",
+        quantity: 1,
+        unit_price: deliveryCharge,
+      };
+      const payload = {
+        items: [...items, deliveryItem],
+        systemId: systemIds[0] ?? null,
+        customer: profile,
+        customerPoRef: meta.customerPoRef,
+        notes: meta.notes,
+        delivery: meta.delivery,
+      };
+      const { data, error } = await supabase.functions.invoke("create-bacs-order", { body: payload });
+      if (error || (data as any)?.error) {
+        throw new Error((data as any)?.error ?? error?.message ?? "Failed to create order");
+      }
+      const ref = (data as any)?.orderRef ?? "";
+      clear();
+      navigate(`/orders/bacs-confirmed?ref=${encodeURIComponent(ref)}`);
+    } catch (e) {
+      setBacsError((e as Error).message ?? "Something went wrong");
+      setBacsLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     if (items.length === 0) navigate("/cart");
@@ -206,10 +243,11 @@ export default function CartReview() {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {(() => {
                 const d = meta.delivery;
                 const ready = !!(d.contact_name && d.contact_phone && d.line1 && d.city && d.postcode);
+                const canPay = ready && termsAccepted;
                 return <>
                   <label className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed px-1">
                     <input
@@ -226,18 +264,63 @@ export default function CartReview() {
                       . I understand that custom-keyed products cannot be returned once production has commenced.
                     </span>
                   </label>
-                  <Button onClick={() => setCheckout(true)} disabled={!ready || !termsAccepted} className="w-full bg-amber-500 hover:bg-amber-600 text-white text-base h-12">
-                    Confirm and pay → £{total.toFixed(2)} <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                  {!ready && (
-                    <p className="text-xs text-destructive text-center">Complete delivery contact and address in the basket first.</p>
-                  )}
+
+                  <div className="rounded-[10px] border bg-card shadow-card p-5">
+                    <h2 className="font-semibold mb-3">How would you like to pay?</h2>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {/* Card */}
+                      <div className="rounded-md border p-4 flex flex-col">
+                        <div className="flex items-center gap-2 mb-1">
+                          <CreditCard className="h-4 w-4 text-amber-600" />
+                          <div className="font-semibold text-sm">Pay by card</div>
+                        </div>
+                        <p className="text-xs text-muted-foreground flex-1 mb-3">
+                          Instant confirmation via Stripe. Pay now and your order goes straight into processing.
+                        </p>
+                        <Button
+                          onClick={() => setCheckout(true)}
+                          disabled={!canPay}
+                          className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                        >
+                          Pay now → £{total.toFixed(2)} <ArrowRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </div>
+                      {/* BACS */}
+                      <div className="rounded-md border p-4 flex flex-col">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <div className="font-semibold text-sm">Pay by bank transfer</div>
+                        </div>
+                        <p className="text-xs text-muted-foreground flex-1 mb-3">
+                          We'll email you a pro-forma invoice with our bank details. Order is placed once payment clears.
+                        </p>
+                        <Button
+                          variant="outline"
+                          onClick={handleBacsOrder}
+                          disabled={!canPay || bacsLoading}
+                          className="w-full"
+                        >
+                          {bacsLoading
+                            ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Sending…</>
+                            : <><Building2 className="h-4 w-4 mr-1" /> Request pro-forma invoice</>}
+                        </Button>
+                        {bacsError && (
+                          <p className="text-xs text-destructive mt-2">{bacsError}</p>
+                        )}
+                      </div>
+                    </div>
+                    {!ready && (
+                      <p className="text-xs text-destructive text-center mt-3">Complete delivery contact and address in the basket first.</p>
+                    )}
+                  </div>
+
                   <Button asChild variant="outline" className="w-full">
                     <Link to="/cart"><ArrowLeft className="h-4 w-4" /> Edit basket</Link>
                   </Button>
                 </>;
               })()}
             </div>
+
           </aside>
         </div>
       </div>

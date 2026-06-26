@@ -37,7 +37,9 @@ interface OrderRow {
   notes: string | null;
   payment_status: string;
   paid_at: string | null;
+  payment_method: string | null;
 }
+
 interface ItemRow {
   id: string;
   order_id: string;
@@ -54,6 +56,7 @@ interface ItemRow {
 
 const statusColor: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800 border-amber-300",
+  pending_bacs: "bg-purple-100 text-purple-800 border-purple-300",
   paid: "bg-blue-100 text-blue-800 border-blue-300",
   processing: "bg-indigo-100 text-indigo-800 border-indigo-300",
   shipped: "bg-teal-100 text-teal-800 border-teal-300",
@@ -62,13 +65,15 @@ const statusColor: Record<string, string> = {
 };
 const statusLabel: Record<string, string> = {
   pending: "pending",
+  pending_bacs: "Awaiting BACS",
   paid: "Paid ✓",
   processing: "processing",
   shipped: "shipped",
   delivered: "delivered",
   cancelled: "cancelled",
 };
-const STATUS_OPTIONS = ["processing", "shipped", "delivered", "cancelled"];
+const STATUS_OPTIONS = ["pending_bacs", "processing", "shipped", "delivered", "cancelled"];
+
 
 const fmtPaidAt = (iso: string | null) => {
   if (!iso) return "";
@@ -309,12 +314,14 @@ export default function AdminOrders() {
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="pending_bacs">Awaiting BACS</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
               <SelectItem value="processing">Processing</SelectItem>
               <SelectItem value="shipped">Shipped</SelectItem>
               <SelectItem value="delivered">Delivered</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
+
           </Select>
           <Input placeholder="Search order ref, customer, company…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
         </div>
@@ -522,7 +529,16 @@ export default function AdminOrders() {
                   <div className="text-muted-foreground">{open.company ?? profileMap[open.user_id]?.company ?? ""}</div>
                   <div className="text-muted-foreground">{open.customer_email ?? profileMap[open.user_id]?.email ?? ""}</div>
                   <div className="text-muted-foreground">{profileMap[open.user_id]?.phone ?? ""}</div>
+                  <div className="pt-2 flex items-center gap-2">
+                    {open.payment_status === "paid"
+                      ? <Badge className="bg-green-100 text-green-800 border-green-300">Paid ✓</Badge>
+                      : <Badge className="bg-amber-100 text-amber-800 border-amber-300">Unpaid</Badge>}
+                    {open.payment_method === "bacs"
+                      ? <Badge className="bg-purple-100 text-purple-800 border-purple-300">BACS transfer</Badge>
+                      : <Badge className="bg-gray-100 text-gray-800 border-gray-300">Card (Stripe)</Badge>}
+                  </div>
                 </Block>
+
 
                 {open.system_id && (
                   <Block title="System">
@@ -669,9 +685,29 @@ export default function AdminOrders() {
                 </Block>
 
                 <div className="flex gap-2 flex-wrap">
+                  {open.status === "pending_bacs" && (
+                    <Button
+                      size="sm"
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                      onClick={async () => {
+                        await supabase.from('orders').update({
+                          status: 'processing',
+                          payment_status: 'paid',
+                          paid_at: new Date().toISOString(),
+                          payment_method: 'bacs',
+                        }).eq('id', open.id);
+                        toast.success('Order marked as paid — status set to processing');
+                        setOpenId(null);
+                        reload();
+                      }}
+                    >
+                      <Check className="h-3.5 w-3.5" /> Mark paid (BACS)
+                    </Button>
+                  )}
                   {open.status === "paid" && <Button size="sm" variant="outline" onClick={() => updateStatus(open.id, "processing")}>Mark processing</Button>}
                   {open.status !== "shipped" && open.status !== "delivered" && <Button size="sm" variant="outline" onClick={() => updateStatus(open.id, "shipped")}>Mark shipped</Button>}
                   {open.status !== "delivered" && <Button size="sm" variant="outline" onClick={() => updateStatus(open.id, "delivered")}>Mark delivered</Button>}
+
                   <Button size="sm" variant="outline" className="ml-auto text-destructive border-destructive/40 hover:bg-destructive/10" onClick={() => setDeleteId(open.id)}>
                     <Trash2 className="h-3.5 w-3.5" /> Delete order
                   </Button>
