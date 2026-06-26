@@ -36,6 +36,8 @@ import Team from "./pages/Team";
 import AcceptInvite from "./pages/AcceptInvite";
 import AcceptPlatformInvite from "./pages/AcceptPlatformInvite";
 import NotFound from "./pages/NotFound";
+import Terms from "./pages/Terms";
+import Returns from "./pages/Returns";
 
 const queryClient = new QueryClient({
   defaultOptions: {
