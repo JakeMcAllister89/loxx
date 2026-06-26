@@ -24,7 +24,7 @@ import {
 type Step = "upload" | "review" | "build";
 type Source = "csv" | "pdf" | "domxl";
 
-interface Product { id: string; code: string; name: string }
+type Product = ProductFull;
 
 export default function ImportPage() {
   const navigate = useNavigate();
