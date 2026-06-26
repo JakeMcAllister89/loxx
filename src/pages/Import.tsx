@@ -39,7 +39,7 @@ export default function ImportPage() {
   const [source, setSource] = useState<Source>("domxl");
 
   useEffect(() => {
-    supabase.from("products").select("id,code,name").eq("is_active", true).order("code").then(({ data }) => setProducts((data ?? []) as Product[]));
+    supabase.from("products").select("id,code,name,product_description,cylinder_type,cylinder_profile,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as ProductFull[]));
   }, []);
 
   const goReview = (nodes: ParsedNode[], srcType: Source, suggestedName?: string) => {
