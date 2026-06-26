@@ -438,11 +438,11 @@ function ReviewStep({
                       <div
                         key={cyl.id}
                         onClick={() => toggleId(cyl.id)}
-                        className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors border-l-2 ${
+                        className={`group flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors border-l-2 ${
                           isSelected
                             ? "bg-primary/10 border-primary"
                             : isConfirmed
-                              ? "bg-success/8 border-success/40 hover:bg-success/12"
+                              ? "bg-green-50 border-green-300 hover:bg-green-100"
                               : "border-transparent hover:bg-muted/30"
                         }`}
                       >
@@ -457,7 +457,43 @@ function ReviewStep({
                           ? <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                           : <span className="h-4 w-4 rounded-full border-2 border-amber-400 bg-amber-400/20 shrink-0" />
                         }
-                        <span className={`text-sm flex-1 truncate ${isConfirmed && !isSelected ? "text-success" : ""}`}>{cyl.label}</span>
+                        {editingId === cyl.id ? (
+                          <Input
+                            autoFocus
+                            defaultValue={cyl.label}
+                            className="h-7 text-sm flex-1 py-0"
+                            onClick={e => e.stopPropagation()}
+                            onBlur={e => {
+                              const val = e.target.value.trim();
+                              if (val && val !== cyl.label) patchNode(cyl.id, { label: val });
+                              setEditingId(null);
+                            }}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                              if (e.key === "Escape") setEditingId(null);
+                            }}
+                          />
+                        ) : (
+                          <span
+                            className={`text-sm flex-1 truncate ${isConfirmed && !isSelected ? "text-green-700" : ""}`}
+                            onDoubleClick={e => {
+                              e.stopPropagation();
+                              setEditingId(cyl.id);
+                            }}
+                            title="Double-click to rename"
+                          >
+                            {cyl.label}
+                          </span>
+                        )}
+                        {editingId !== cyl.id && (
+                          <button
+                            onClick={e => { e.stopPropagation(); setEditingId(cyl.id); }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted text-muted-foreground shrink-0"
+                            title="Rename door"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                        )}
 
                         <span className="text-[10px] text-muted-foreground shrink-0">
                           {isConfirmed
