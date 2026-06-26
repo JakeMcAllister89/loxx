@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     const { data: prof } = await admin.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
     if (!(prof as any)?.is_admin) return json({ error: "Forbidden" }, 403);
 
-    const { action, user_id, email } = await req.json();
+    const { action, user_id, email, org_id, from_user_id, to_user_id, reason } = await req.json();
 
     if (action === "disable") {
       if (!user_id) return json({ error: "Missing user_id" }, 400);
