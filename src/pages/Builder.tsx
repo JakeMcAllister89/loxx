@@ -419,7 +419,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
     setSelectedId((s) => (s === nodeId ? null : s));
   }, [systemId]);
 
-  const handleCopySpec = useCallback((sourceId: string, newLabel: string) => {
+  const handleCopySpec = useCallback((sourceId: string, newLabel: string, keyedAlike: boolean) => {
     setTree((prev) => {
       pushUndo(prev);
       const source = findNode(prev.root, sourceId);
@@ -427,11 +427,12 @@ function BuilderInner({ systemId }: { systemId: string }) {
       const parent = findParent(prev.root, sourceId);
       if (!parent) return prev;
       const siblingCount = parent.children.length;
+      const assignedDiffer = keyedAlike ? source.differ : prev.next_differ;
       const newNode: TNode = {
         id: newId(),
         type: "CYL",
         label: newLabel.trim() || `Door ${siblingCount + 1}`,
-        differ: prev.next_differ,
+        differ: assignedDiffer,
         cylinder_type: source.cylinder_type,
         finish: source.finish,
         size: source.size,
@@ -442,9 +443,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
       };
       const newRoot = addChild(prev.root, parent.id, newNode);
       dirtyRef.current = true;
-      return { ...prev, root: newRoot, next_differ: (prev.next_differ ?? 1) + 1 };
+      return keyedAlike
+        ? { ...prev, root: newRoot }
+        : { ...prev, root: newRoot, next_differ: (prev.next_differ ?? 1) + 1 };
     });
-    setCopySpecState({ open: false, sourceId: "", newLabel: "" });
+    setCopySpecState({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false });
     setSelectedId(null);
   }, [pushUndo]);
 
