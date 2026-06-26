@@ -41,8 +41,9 @@ function buildDifferHierarchyMap(root: any): Record<string, { gmk: string; mk: s
 
 function buildDifferExtraKeysMap(items: any[]): Record<string, number> {
   const map: Record<string, number> = {};
-  items.filter(i => i.item_type === "key" && i.differ_ref).forEach(i => {
-    map[i.differ_ref] = (map[i.differ_ref] ?? 0) + Number(i.quantity);
+  items.filter(i => i.item_type === "key" && i.differ_ref && i.room_label).forEach(i => {
+    const key = `${i.differ_ref}__${i.room_label}`;
+    map[key] = (map[key] ?? 0) + Number(i.quantity);
   });
   return map;
 }
