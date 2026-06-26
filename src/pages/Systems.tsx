@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { createSystem } from "@/lib/createSystem";
 
-interface Sys { id: string; name: string; reference: string | null; door_count: number; created_at: string; updated_at: string; }
+interface Sys { id: string; name: string; reference: string | null; door_count: number; created_at: string; updated_at: string; has_orders?: boolean; }
 
 function timeAgo(iso: string) {
   const d = (Date.now() - new Date(iso).getTime()) / 1000;
