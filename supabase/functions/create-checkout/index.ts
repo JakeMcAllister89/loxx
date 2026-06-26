@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const itemRows = items.map((it) => {
+    const itemRows = productItems.map((it) => {
       const line_total = it.quantity * it.unit_price;
       const commission_amount = commissionPct != null
         ? Math.round(line_total * commissionPct) / 100
@@ -168,6 +168,20 @@ Deno.serve(async (req) => {
     const stripe = createStripeClient(body.environment);
 
     const line_items = items.map((it) => {
+      if (it.kind === "delivery") {
+        return {
+          quantity: 1,
+          price_data: {
+            currency: "gbp",
+            unit_amount: Math.round(it.unit_price * 100),
+            tax_behavior: "exclusive" as const,
+            product_data: {
+              name: "Delivery Charge",
+              tax_code: PHYSICAL_GOODS_TAX_CODE,
+            },
+          },
+        };
+      }
       const isKey = it.kind === "key";
       const name = isKey
         ? `Key — ${it.key_reference ?? "blank"}`
