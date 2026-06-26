@@ -183,6 +183,48 @@ export function parseDomXl(buffer: ArrayBuffer): DomXlParseResult {
   const sWs = wb.Sheets["S-Plan"];
   const raw: any[][] = XLSX.utils.sheet_to_json(sWs, { header: 1, defval: null });
 
+  // ── Colour lookup (Farbe sheet): code → human name ──
+  const colourMap: Record<string, string> = {
+    "01": "S.N.",
+    "04": "S.C.",
+    "05": "P.B.",
+    "06": "P.B.",
+    "00": "S.S.",
+  };
+  try {
+    const farbeWs = wb.Sheets["Farbe"];
+    if (farbeWs) {
+      const farbe: any[][] = XLSX.utils.sheet_to_json(farbeWs, { header: 1, defval: null });
+      for (const row of farbe.slice(1)) {
+        const num = row[1] ? String(row[1]).trim().padStart(2, "0") : null;
+        const name = row[2] ? String(row[2]).trim() : null;
+        if (num && name && !colourMap[num]) colourMap[num] = name;
+      }
+    }
+  } catch { /* ignore */ }
+
+  // ── Design/function lookup (Ausf sheet): code → LOXX cylinder_profile label ──
+  const designToProfile: Record<string, string> = {
+    "K1": "Thumb Turn",
+    "K2": "Thumb Turn",
+    "K3": "Thumb Turn",
+    "K4": "Thumb Turn",
+    "K6": "Thumb Turn",
+    "T":  "Double",
+    "TB": "Double",
+    "B":  "Double",
+  };
+
+  // ── Tipo lookup: cylinder body type → LOXX cylinder_type family label ──
+  const tipoToFamily: Record<string, string> = {
+    "333":    "Euro Profile Cylinder",
+    "333M":   "Euro Profile Cylinder",
+    "333H":   "Half Cylinder",
+    "333HM":  "Half Cylinder",
+    "333K6":  "Oval Cylinder",
+    "333K6M": "Oval Cylinder",
+  };
+
   const zoneCols: Map<number, { type: "GMK" | "SMK"; label: string }> = new Map();
   const typeRow = raw[2] ?? [];
   const markingRow = raw[6] ?? [];
