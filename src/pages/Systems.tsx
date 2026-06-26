@@ -38,7 +38,7 @@ export default function Systems() {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase.from("key_systems").select("id,name,reference,door_count,updated_at").order("updated_at", { ascending: false });
+    const { data } = await supabase.from("key_systems").select("id,name,reference,door_count,created_at,updated_at").order("updated_at", { ascending: false });
     setSystems(data ?? []);
     setLoading(false);
   };
