@@ -79,7 +79,10 @@ Deno.serve(async (req) => {
       unit_price: Math.max(0, Math.min(100000, Number(it.unit_price) || 0)),
     }));
 
-    const subtotal = items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+    const productItems = items.filter((it) => it.kind !== "delivery");
+    const deliveryItem = items.find((it) => it.kind === "delivery");
+    const subtotal = productItems.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+    const deliveryCharge = deliveryItem?.unit_price ?? 0;
     if (subtotal <= 0) return jsonError("Order total must be greater than zero");
 
     const deliveryText = body.delivery ? [
@@ -99,7 +102,8 @@ Deno.serve(async (req) => {
       status: "pending",
       subtotal,
       vat: 0,
-      total: subtotal,
+      total: subtotal + deliveryCharge,
+      delivery_charge: deliveryCharge,
       customer_email: user.email,
       customer_name: body.customer?.name ?? null,
       company: body.customer?.company ?? null,
