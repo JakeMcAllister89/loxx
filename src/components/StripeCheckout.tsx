@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
-import type { CartLine } from "@/contexts/CartContext";
+import { useCart, type CartLine } from "@/contexts/CartContext";
 
 interface DeliveryAddress {
   contact_name: string; contact_phone: string;
