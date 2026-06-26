@@ -151,3 +151,109 @@ export function downloadCsvTemplate() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+export interface DomXlParseResult {
+  systemName: string;
+  nodes: ParsedNode[];
+  warnings: string[];
+}
+
+export function parseDomXl(buffer: ArrayBuffer): DomXlParseResult {
+  const warnings: string[] = [];
+  const wb = XLSX.read(buffer, { type: "array", cellText: false, cellDates: true });
+
+  if (!wb.SheetNames.includes("S-Plan")) {
+    throw new Error("This doesn't look like a DOM-XL file — 'S-Plan' sheet not found.");
+  }
+
+  let systemName = "Imported system";
+  try {
+    const startWs = wb.Sheets["Start"];
+    const startData = XLSX.utils.sheet_to_json<any[]>(startWs, { header: 1, defval: null });
+    const startRow = startData[17];
+    const objectName = startRow?.[6];
+    const customerName = startRow?.[3];
+    if (objectName) systemName = String(objectName).trim();
+    else if (customerName) systemName = String(customerName).trim();
+  } catch {
+    warnings.push("Could not read system name from Start sheet — using default.");
+  }
+
+  const sWs = wb.Sheets["S-Plan"];
+  const raw: any[][] = XLSX.utils.sheet_to_json(sWs, { header: 1, defval: null });
+
+  const zoneCols: Map<number, { type: "GMK" | "SMK"; label: string }> = new Map();
+  const typeRow = raw[2] ?? [];
+  const markingRow = raw[6] ?? [];
+  const mkNumberRow = raw[7] ?? [];
+
+  for (let col = 26; col < (raw[2]?.length ?? 40); col++) {
+    const typeVal = typeRow[col];
+    const mkNum = mkNumberRow[col];
+    const marking = markingRow[col];
+    if (!typeVal && !mkNum) continue;
+    if (String(typeVal).trim().toUpperCase() === "GMK" || String(mkNum).trim().toUpperCase() === "GMK") {
+      zoneCols.set(col, { type: "GMK", label: "Grand Master Key" });
+    } else if (String(typeVal).trim().toUpperCase() === "MK") {
+      const label = marking ? String(marking).trim() : (mkNum ? String(mkNum).trim() : `Zone ${col}`);
+      zoneCols.set(col, { type: "SMK", label });
+    }
+  }
+
+  if (zoneCols.size === 0) {
+    throw new Error("No key hierarchy columns found in S-Plan sheet. Is this a valid DOM-XL file?");
+  }
+
+  const nodes: ParsedNode[] = [];
+
+  nodes.push({
+    level: "GMK",
+    label: "Grand Master Key",
+    parent_label: null,
+    key_ref: "GMK",
+  });
+
+  const smkZones = Array.from(zoneCols.entries()).filter(([, z]) => z.type === "SMK");
+  for (const [, zone] of smkZones) {
+    nodes.push({
+      level: "SMK",
+      label: zone.label,
+      parent_label: "Grand Master Key",
+    });
+  }
+
+  for (let i = 10; i < raw.length; i++) {
+    const row = raw[i];
+    if (!row) continue;
+    const keyNo = row[4];
+    if (!keyNo || !String(keyNo).includes("/")) continue;
+    const roomDesc = row[3] ? String(row[3]).trim() : null;
+    if (!roomDesc) continue;
+    const cylType = row[8] ? String(row[8]).trim() : null;
+    const lengthRaw = row[10] ? String(row[10]).trim() : null;
+    const keyQty = row[6] != null ? Number(row[6]) : null;
+
+    let parentLabel = "Grand Master Key";
+    for (const [col, zone] of zoneCols.entries()) {
+      if (zone.type === "SMK" && row[col] === "X") {
+        parentLabel = zone.label;
+        break;
+      }
+    }
+
+    nodes.push({
+      level: "CYL",
+      label: roomDesc,
+      parent_label: parentLabel,
+      room_name: roomDesc,
+      cylinder_type: cylType ?? undefined,
+      key_qty: keyQty,
+    });
+  }
+
+  if (nodes.filter(n => n.level === "CYL").length === 0) {
+    warnings.push("No cylinder rows found — the file may be empty or unrecognised.");
+  }
+
+  return { systemName, nodes, warnings };
+}
