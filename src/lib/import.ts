@@ -11,6 +11,7 @@ export interface ParsedNode {
   room_name?: string | null;
   key_ref?: string | null;
   key_qty?: number | null;
+  size?: string | null;
 }
 
 export interface BuildResult {
