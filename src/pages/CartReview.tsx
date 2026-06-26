@@ -25,6 +25,7 @@ export default function CartReview() {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [profile, setProfile] = useState<{ name?: string; company?: string }>({});
   const [checkout, setCheckout] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
