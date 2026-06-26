@@ -62,6 +62,7 @@ interface CartCtx {
   subtotal: number;
   cylindersSubtotal: number;
   keysSubtotal: number;
+  deliveryCharge: number;
   vat: number;
   total: number;
   count: number;
