@@ -146,6 +146,11 @@ export default function Systems() {
                       {s.reference && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">{s.reference}</span>}
                       <span className="text-xs text-muted-foreground">{s.door_count} doors</span>
                       <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-800">Active</span>
+                      {s.has_orders && (
+                        <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                          <Lock className="h-3 w-3" /> Ordered
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1.5">Created {timeAgo(s.created_at)}</div>
                     <div className="text-xs text-muted-foreground">Updated {timeAgo(s.updated_at)}</div>
