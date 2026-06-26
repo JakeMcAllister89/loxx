@@ -19,7 +19,7 @@ interface SystemSummary {
 }
 
 export default function CartReview() {
-  const { items, meta, setMeta, cylindersSubtotal, keysSubtotal, subtotal, deliveryCharge, vat, total } = useCart();
+  const { items, meta, setMeta, cylindersSubtotal, keysSubtotal, subtotal, deliveryCharge, vat, total, clear } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [systems, setSystems] = useState<SystemSummary[]>([]);
@@ -28,6 +28,42 @@ export default function CartReview() {
   const [checkout, setCheckout] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [bacsLoading, setBacsLoading] = useState(false);
+  const [bacsError, setBacsError] = useState<string | null>(null);
+
+  const handleBacsOrder = async () => {
+    setBacsLoading(true);
+    setBacsError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Please sign in to place an order.");
+      const deliveryItem = {
+        kind: "delivery" as const,
+        product_name: "Delivery Charge",
+        quantity: 1,
+        unit_price: deliveryCharge,
+      };
+      const payload = {
+        items: [...items, deliveryItem],
+        systemId: systemIds[0] ?? null,
+        customer: profile,
+        customerPoRef: meta.customerPoRef,
+        notes: meta.notes,
+        delivery: meta.delivery,
+      };
+      const { data, error } = await supabase.functions.invoke("create-bacs-order", { body: payload });
+      if (error || (data as any)?.error) {
+        throw new Error((data as any)?.error ?? error?.message ?? "Failed to create order");
+      }
+      const ref = (data as any)?.orderRef ?? "";
+      clear();
+      navigate(`/orders/bacs-confirmed?ref=${encodeURIComponent(ref)}`);
+    } catch (e) {
+      setBacsError((e as Error).message ?? "Something went wrong");
+      setBacsLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     if (items.length === 0) navigate("/cart");
