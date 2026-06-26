@@ -15,7 +15,9 @@ const ALL_KEYS = [
   "po_notes", "quote_validity_days",
   "quote_terms", "quote_footer",
   "vat_rate", "vat_number",
+  "bank_name", "bank_sort_code", "bank_account_number", "bank_account_name",
 ];
+
 
 export default function AdminSettings() {
   const [values, setValues] = useState<SettingsMap>({});
