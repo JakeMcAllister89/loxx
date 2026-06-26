@@ -745,12 +745,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
     const errs = validate(tree).filter((i) => i.level === "error");
     if (errs.length) { toast.error("Fix validation errors before exporting"); setIssues(validate(tree)); setValidateOpen(true); return; }
     const productByCode = new Map(products.map((p) => [p.code, p]));
-    // Look up new-system key products by code suffix "-EXTRA"
-    const extraKeyProducts = products.filter((p: any) => p.code?.toUpperCase().endsWith("-EXTRA"));
-    console.log("[LOXX DEBUG] Total products loaded:", products.length);
-    console.log("[LOXX DEBUG] EXTRA key products found:", extraKeyProducts.length);
-    console.log("[LOXX DEBUG] EXTRA products:", extraKeyProducts.map((p: any) => ({ code: p.code, profile: p.cylinder_profile, price: p.price_gbp })));
-    console.log("[LOXX DEBUG] All Key products:", products.filter((p: any) => p.cylinder_type === "Key").map((p: any) => ({ code: p.code, profile: p.cylinder_profile, price: p.price_gbp })));
+    // Look up new-system key products by cylinder_type = "Key" and cylinder_profile
+    // Exclude replacement products (code or profile contains "REP" or "REPLACEMENT")
+    const allKeyProducts = products.filter((p: any) =>
+      p.cylinder_type === "Key" &&
+      !p.code?.toUpperCase().includes("REP") &&
+      !p.cylinder_profile?.toUpperCase().includes("REP") &&
+      !p.cylinder_profile?.toUpperCase().includes("REPLACEMENT")
+    );
     const keyProductForNode = (nodeType: string) => {
       const levelHint = nodeType === "CYL" ? "DIFFER"
         : nodeType === "GMK" ? "GMK"
@@ -758,7 +760,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         : nodeType === "SMK" ? "SMK"
         : "";
       if (!levelHint) return null;
-      return extraKeyProducts.find((p: any) => {
+      return allKeyProducts.find((p: any) => {
         const profile = p.cylinder_profile?.toUpperCase() ?? "";
         if (levelHint === "MK") return profile.includes("MK") && !profile.includes("SMK") && !profile.includes("GMK");
         return profile.includes(levelHint);
