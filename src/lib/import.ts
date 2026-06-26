@@ -1,3 +1,4 @@
+import * as XLSX from "xlsx";
 import { TreeData, TNode, NodeType, newId, assignNextDiffers } from "./keytree";
 
 export interface ParsedNode {
