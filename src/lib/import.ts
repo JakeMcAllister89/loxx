@@ -100,6 +100,9 @@ export function buildTreeFromParsed(nodes: ParsedNode[]): BuildResult {
     if (r.level === "CYL") {
       if (r.cylinder_type) node.cylinder_type = r.cylinder_type;
       if (r.finish) node.finish = r.finish;
+      if ((r as any).extra_keys != null) node.extra_keys = (r as any).extra_keys;
+      if ((r as any).size != null) node.size = (r as any).size as string;
+      if ((r as any).dom_hint) (node as any).dom_hint = (r as any).dom_hint;
     }
     if (r.level === "SMK" && r.key_qty != null) {
       node.keys = r.key_qty;
