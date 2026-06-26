@@ -168,7 +168,7 @@ Deno.serve(async (req) => {
       const dataRows = rows.map((i: any) => {
         const p = productMap[i.product_code] ?? {};
         const hierarchy = hierarchyMap[i.differ_ref ?? ""] ?? { gmk: "—", mk: "—", smk: "—" };
-        const extraKeys = extraKeysMap[i.differ_ref ?? ""] ?? 0;
+        const extraKeys = extraKeysMap[`${i.differ_ref ?? ""}__${i.room_label ?? ""}`] ?? 0;
         const unitCost = Number(p.cost_price ?? 0);
         const totalCost = unitCost * Number(i.quantity);
         return `<tr>
