@@ -243,10 +243,11 @@ export default function CartReview() {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {(() => {
                 const d = meta.delivery;
                 const ready = !!(d.contact_name && d.contact_phone && d.line1 && d.city && d.postcode);
+                const canPay = ready && termsAccepted;
                 return <>
                   <label className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed px-1">
                     <input
@@ -263,18 +264,63 @@ export default function CartReview() {
                       . I understand that custom-keyed products cannot be returned once production has commenced.
                     </span>
                   </label>
-                  <Button onClick={() => setCheckout(true)} disabled={!ready || !termsAccepted} className="w-full bg-amber-500 hover:bg-amber-600 text-white text-base h-12">
-                    Confirm and pay → £{total.toFixed(2)} <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                  {!ready && (
-                    <p className="text-xs text-destructive text-center">Complete delivery contact and address in the basket first.</p>
-                  )}
+
+                  <div className="rounded-[10px] border bg-card shadow-card p-5">
+                    <h2 className="font-semibold mb-3">How would you like to pay?</h2>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {/* Card */}
+                      <div className="rounded-md border p-4 flex flex-col">
+                        <div className="flex items-center gap-2 mb-1">
+                          <CreditCard className="h-4 w-4 text-amber-600" />
+                          <div className="font-semibold text-sm">Pay by card</div>
+                        </div>
+                        <p className="text-xs text-muted-foreground flex-1 mb-3">
+                          Instant confirmation via Stripe. Pay now and your order goes straight into processing.
+                        </p>
+                        <Button
+                          onClick={() => setCheckout(true)}
+                          disabled={!canPay}
+                          className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                        >
+                          Pay now → £{total.toFixed(2)} <ArrowRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </div>
+                      {/* BACS */}
+                      <div className="rounded-md border p-4 flex flex-col">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <div className="font-semibold text-sm">Pay by bank transfer</div>
+                        </div>
+                        <p className="text-xs text-muted-foreground flex-1 mb-3">
+                          We'll email you a pro-forma invoice with our bank details. Order is placed once payment clears.
+                        </p>
+                        <Button
+                          variant="outline"
+                          onClick={handleBacsOrder}
+                          disabled={!canPay || bacsLoading}
+                          className="w-full"
+                        >
+                          {bacsLoading
+                            ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Sending…</>
+                            : <><Building2 className="h-4 w-4 mr-1" /> Request pro-forma invoice</>}
+                        </Button>
+                        {bacsError && (
+                          <p className="text-xs text-destructive mt-2">{bacsError}</p>
+                        )}
+                      </div>
+                    </div>
+                    {!ready && (
+                      <p className="text-xs text-destructive text-center mt-3">Complete delivery contact and address in the basket first.</p>
+                    )}
+                  </div>
+
                   <Button asChild variant="outline" className="w-full">
                     <Link to="/cart"><ArrowLeft className="h-4 w-4" /> Edit basket</Link>
                   </Button>
                 </>;
               })()}
             </div>
+
           </aside>
         </div>
       </div>
