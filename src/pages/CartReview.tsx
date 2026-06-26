@@ -71,6 +71,7 @@ export default function CartReview() {
               returnUrl={returnUrl}
               customer={profile}
               meta={meta}
+              deliveryCharge={deliveryCharge}
               systemId={systemIds[0] ?? null}
               onError={(m) => setErr(m)}
             />
