@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { createSystem } from "@/lib/createSystem";
 
-interface Sys { id: string; name: string; reference: string | null; door_count: number; updated_at: string; }
+interface Sys { id: string; name: string; reference: string | null; door_count: number; created_at: string; updated_at: string; }
 
 function timeAgo(iso: string) {
   const d = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -38,7 +38,7 @@ export default function Systems() {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase.from("key_systems").select("id,name,reference,door_count,updated_at").order("updated_at", { ascending: false });
+    const { data } = await supabase.from("key_systems").select("id,name,reference,door_count,created_at,updated_at").order("updated_at", { ascending: false });
     setSystems(data ?? []);
     setLoading(false);
   };
@@ -140,7 +140,8 @@ export default function Systems() {
                       <span className="text-xs text-muted-foreground">{s.door_count} doors</span>
                       <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-800">Active</span>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1.5">Updated {timeAgo(s.updated_at)}</div>
+                    <div className="text-xs text-muted-foreground mt-1.5">Created {timeAgo(s.created_at)}</div>
+                    <div className="text-xs text-muted-foreground">Updated {timeAgo(s.updated_at)}</div>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4">

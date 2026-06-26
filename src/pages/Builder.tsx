@@ -184,7 +184,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
     open: boolean;
     sourceId: string;
     newLabel: string;
-  }>({ open: false, sourceId: "", newLabel: "" });
+    step: "differ-choice" | "name";
+    keyedAlike: boolean;
+  }>({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false });
   // Beginner guide drawer
   const [guideOpen, setGuideOpen] = useState(false);
   const dirtyRef = useRef(false);
@@ -417,7 +419,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
     setSelectedId((s) => (s === nodeId ? null : s));
   }, [systemId]);
 
-  const handleCopySpec = useCallback((sourceId: string, newLabel: string) => {
+  const handleCopySpec = useCallback((sourceId: string, newLabel: string, keyedAlike: boolean) => {
     setTree((prev) => {
       pushUndo(prev);
       const source = findNode(prev.root, sourceId);
@@ -425,11 +427,12 @@ function BuilderInner({ systemId }: { systemId: string }) {
       const parent = findParent(prev.root, sourceId);
       if (!parent) return prev;
       const siblingCount = parent.children.length;
+      const assignedDiffer = keyedAlike ? source.differ : prev.next_differ;
       const newNode: TNode = {
         id: newId(),
         type: "CYL",
         label: newLabel.trim() || `Door ${siblingCount + 1}`,
-        differ: prev.next_differ,
+        differ: assignedDiffer,
         cylinder_type: source.cylinder_type,
         finish: source.finish,
         size: source.size,
@@ -440,9 +443,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
       };
       const newRoot = addChild(prev.root, parent.id, newNode);
       dirtyRef.current = true;
-      return { ...prev, root: newRoot, next_differ: (prev.next_differ ?? 1) + 1 };
+      return keyedAlike
+        ? { ...prev, root: newRoot }
+        : { ...prev, root: newRoot, next_differ: (prev.next_differ ?? 1) + 1 };
     });
-    setCopySpecState({ open: false, sourceId: "", newLabel: "" });
+    setCopySpecState({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false });
     setSelectedId(null);
   }, [pushUndo]);
 
@@ -1311,7 +1316,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               onClose={() => setSelectedId(null)}
               isFulfilled={isFulfilled}
               onReplace={() => openReplaceFlow(selected.id)}
-              onCopySpec={() => setCopySpecState({ open: true, sourceId: selected.id, newLabel: "" })}
+              onCopySpec={() => setCopySpecState({ open: true, sourceId: selected.id, newLabel: "", step: "differ-choice", keyedAlike: false })}
               readOnly={readOnly}
             />
           )}
@@ -1584,7 +1589,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       {/* Copy spec modal */}
       <Dialog
         open={copySpecState.open}
-        onOpenChange={(o) => !o && setCopySpecState({ open: false, sourceId: "", newLabel: "" })}
+        onOpenChange={(o) => !o && setCopySpecState({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false })}
       >
         <DialogContent>
           <DialogHeader>
@@ -1611,35 +1616,64 @@ function BuilderInner({ systemId }: { systemId: string }) {
               </div>
             </DialogDescription>
           </DialogHeader>
-          <div>
-            <Label htmlFor="copy-spec-label">New room / door name</Label>
-            <Input
-              id="copy-spec-label"
-              autoFocus
-              placeholder="e.g. Director's Office"
-              value={copySpecState.newLabel}
-              onChange={(e) => setCopySpecState((s) => ({ ...s, newLabel: e.target.value }))}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && copySpecState.newLabel.trim()) {
-                  handleCopySpec(copySpecState.sourceId, copySpecState.newLabel);
-                }
-              }}
-              className="mt-1.5"
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setCopySpecState({ open: false, sourceId: "", newLabel: "" })}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => handleCopySpec(copySpecState.sourceId, copySpecState.newLabel)}
-            >
-              Add door
-            </Button>
-          </DialogFooter>
+          {copySpecState.step === "differ-choice" ? (
+            <div className="space-y-3">
+              <Label>How should this door's lock relate to <span className="font-medium">{findNode(tree.root, copySpecState.sourceId)?.label}</span>?</Label>
+              <div className="grid gap-3 mt-1">
+                <button
+                  onClick={() => setCopySpecState(s => ({ ...s, keyedAlike: false, step: "name" }))}
+                  className="w-full text-left rounded-lg border-2 border-border hover:border-amber-400 hover:bg-amber-50 p-4 transition-colors"
+                >
+                  <div className="font-semibold text-sm">New differ key</div>
+                  <div className="text-xs text-muted-foreground mt-1">This door gets its own unique key that opens only this door. Same product spec, different key.</div>
+                </button>
+                <button
+                  onClick={() => setCopySpecState(s => ({ ...s, keyedAlike: true, step: "name" }))}
+                  className="w-full text-left rounded-lg border-2 border-border hover:border-amber-400 hover:bg-amber-50 p-4 transition-colors"
+                >
+                  <div className="font-semibold text-sm">Keyed alike <span className="ml-1.5 text-[11px] font-normal px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200">Same differ key</span></div>
+                  <div className="text-xs text-muted-foreground mt-1">This door will be opened by the exact same differ key as <span className="font-medium">{findNode(tree.root, copySpecState.sourceId)?.label}</span>. Useful for matching doors on a suite or set of identical locks.</div>
+                </button>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setCopySpecState({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false })}>
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {copySpecState.keyedAlike && (
+                <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-900">
+                  <span className="font-semibold">Keyed alike:</span> the same differ key will open both this door and <span className="font-medium">{findNode(tree.root, copySpecState.sourceId)?.label}</span>.
+                </div>
+              )}
+              <div>
+                <Label htmlFor="copy-spec-label">New room / door name</Label>
+                <Input
+                  id="copy-spec-label"
+                  autoFocus
+                  placeholder="e.g. Director's Office"
+                  value={copySpecState.newLabel}
+                  onChange={(e) => setCopySpecState((s) => ({ ...s, newLabel: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && copySpecState.newLabel.trim()) {
+                      handleCopySpec(copySpecState.sourceId, copySpecState.newLabel, copySpecState.keyedAlike);
+                    }
+                  }}
+                  className="mt-1.5"
+                />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setCopySpecState(s => ({ ...s, step: "differ-choice", newLabel: "" }))}>
+                  Back
+                </Button>
+                <Button onClick={() => handleCopySpec(copySpecState.sourceId, copySpecState.newLabel, copySpecState.keyedAlike)}>
+                  Add door
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

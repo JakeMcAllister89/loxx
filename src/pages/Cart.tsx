@@ -116,9 +116,13 @@ export default function Cart() {
                         </>
                       ) : line.is_extra_key || line.key_reference?.startsWith("Extra Differ Keys") || line.key_reference?.startsWith("Extra keys") ? (
                         <>
-                          <div className="h-12 w-12 rounded bg-amber-50 flex items-center justify-center shrink-0">
-                            <KeyRound className="h-5 w-5 text-amber-600" />
-                          </div>
+                          {line.image_url ? (
+                            <img src={line.image_url} alt="" className="h-12 w-12 rounded object-cover bg-muted shrink-0" />
+                          ) : (
+                            <div className="h-12 w-12 rounded bg-amber-50 flex items-center justify-center shrink-0">
+                              <KeyRound className="h-5 w-5 text-amber-600" />
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <div className="font-semibold text-sm">
                               Extra Differ Keys — {line.room_label}{line.differ_ref ? ` (${line.differ_ref})` : ""}
@@ -136,9 +140,13 @@ export default function Cart() {
                               : "Key");
                           return (
                             <>
-                              <div className="h-12 w-12 rounded bg-amber-50 flex items-center justify-center shrink-0">
-                                <KeyRound className="h-5 w-5 text-amber-600" />
-                              </div>
+                              {line.image_url ? (
+                                <img src={line.image_url} alt="" className="h-12 w-12 rounded object-cover bg-muted shrink-0" />
+                              ) : (
+                                <div className="h-12 w-12 rounded bg-amber-50 flex items-center justify-center shrink-0">
+                                  <KeyRound className="h-5 w-5 text-amber-600" />
+                                </div>
+                              )}
                               <div className="flex-1 min-w-0">
                                 <div className="font-semibold text-sm">{ref}</div>
                                 <div className="text-xs text-muted-foreground mt-0.5">{derivedLabel}</div>
