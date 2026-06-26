@@ -142,7 +142,10 @@ export default function AdminOrders() {
 
   useEffect(() => {
     (async () => {
-      const { data: prods } = await supabase.from("products").select("code,cost_price,product_description,name,cylinder_profile,size");
+      const { data: prodsData } = await supabase.functions.invoke("admin-catalogue", {
+        body: { action: "list" },
+      });
+      const prods = prodsData?.products ?? [];
       const cMap: Record<string, number> = {};
       const dMap: Record<string, any> = {};
       (prods ?? []).forEach((p: any) => {
