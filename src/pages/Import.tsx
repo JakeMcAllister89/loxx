@@ -182,7 +182,23 @@ function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: 
           Upload the .xlsm file you received from your DOM locksmith or dealer.
         </p>
 
-        <label className="mt-4 min-h-[180px] rounded-[10px] border-2 border-dashed border-border bg-background hover:bg-muted/40 cursor-pointer flex flex-col items-center justify-center text-sm text-muted-foreground transition-colors p-6">
+        <div
+          className={`mt-4 min-h-[180px] rounded-[10px] border-2 border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center text-sm text-muted-foreground p-6 ${
+            dragging
+              ? "border-primary bg-accent-light"
+              : "border-border bg-background hover:bg-muted/40"
+          }`}
+          onClick={() => inputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragEnter={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            const dropped = e.dataTransfer.files?.[0];
+            if (dropped) { setFile(dropped); setErr(null); }
+          }}
+        >
           <input
             ref={inputRef}
             type="file"
@@ -194,7 +210,7 @@ function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: 
           {file
             ? <span className="text-foreground">{file.name} · {(file.size / 1024).toFixed(1)} KB</span>
             : <span>Drop your .xlsm file or click to browse</span>}
-        </label>
+        </div>
 
         <button
           onClick={() => setShowHelp((s) => !s)}
