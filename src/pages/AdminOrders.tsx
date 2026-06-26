@@ -142,7 +142,10 @@ export default function AdminOrders() {
 
   useEffect(() => {
     (async () => {
-      const { data: prods } = await supabase.from("products").select("code,cost_price,product_description,name,cylinder_profile,size");
+      const { data: prodsData } = await supabase.functions.invoke("admin-catalogue", {
+        body: { action: "list" },
+      });
+      const prods = prodsData?.products ?? [];
       const cMap: Record<string, number> = {};
       const dMap: Record<string, any> = {};
       (prods ?? []).forEach((p: any) => {
@@ -173,8 +176,10 @@ export default function AdminOrders() {
   const costFor = (oid: string) => items.filter((i) => i.order_id === oid).reduce((s, i) => s + Number(i.quantity) * (costMap[i.product_code ?? ""] ?? 0), 0);
 
   const totals = useMemo(() => {
-    const rev = filtered.reduce((s, o) => s + Number(o.total), 0);
-    const cost = filtered.reduce((s, o) => s + costFor(o.id), 0);
+    const countableStatuses = ["paid", "processing", "shipped", "delivered"];
+    const countable = filtered.filter(o => countableStatuses.includes(o.status));
+    const rev = countable.reduce((s, o) => s + Number(o.total), 0);
+    const cost = countable.reduce((s, o) => s + costFor(o.id), 0);
     const profit = rev - cost;
     const margin = rev > 0 ? (profit / rev) * 100 : 0;
     return { rev, cost, profit, margin };

@@ -26,6 +26,14 @@ Deno.serve(async (req) => {
 
     const { action, payload } = await req.json();
 
+    if (action === "list") {
+      const { data, error } = await admin
+        .from("products")
+        .select("code,cost_price,product_description,name,cylinder_profile,size");
+      if (error) return json({ error: error.message }, 500);
+      return json({ products: data ?? [] });
+    }
+
     if (action === "insert_cylinder_type") {
       const { name, sort_order } = payload;
       const { data, error } = await admin.from("cylinder_types").insert({ name, sort_order, is_active: true }).select().single();

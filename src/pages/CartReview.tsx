@@ -71,6 +71,7 @@ export default function CartReview() {
               returnUrl={returnUrl}
               customer={profile}
               meta={meta}
+              deliveryCharge={deliveryCharge}
               systemId={systemIds[0] ?? null}
               onError={(m) => setErr(m)}
             />
@@ -272,11 +273,19 @@ function HierarchyView({ root }: { root: TNode }) {
         {(n.type === "MK" || n.type === "SMK") && n.location && (
           <span className="text-xs text-muted-foreground">({n.location})</span>
         )}
+        {(n.type === "GMK" || n.type === "MK" || n.type === "SMK") && (() => {
+          const keysArr = Array.isArray(n.keys) ? n.keys : [];
+          const totalKeys = keysArr.reduce((s: number, k: any) => s + (k.qty ?? 0), 0);
+          return totalKeys > 0 ? (
+            <span className="text-xs text-muted-foreground">· {totalKeys} key{totalKeys === 1 ? "" : "s"}</span>
+          ) : null;
+        })()}
         {n.type === "CYL" && (
           <span className="text-xs text-muted-foreground ml-1">
             {n.differ != null && <span className="mr-2 text-amber-700 font-medium">D{String(n.differ).padStart(3, "0")}</span>}
             {n.cylinder_type && <span className="text-muted-foreground">{n.cylinder_type}</span>}
             {n.finish && <span> · {n.finish}</span>}
+            <span className="ml-2 font-medium text-foreground">× {n.quantity ?? 1}</span>
           </span>
         )}
       </div>
