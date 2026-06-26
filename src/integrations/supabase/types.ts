@@ -577,6 +577,44 @@ export type Database = {
           },
         ]
       }
+      org_ownership_transfers: {
+        Row: {
+          created_at: string
+          from_user_id: string
+          id: string
+          initiated_by: string
+          org_id: string
+          reason: string | null
+          to_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_user_id: string
+          id?: string
+          initiated_by: string
+          org_id: string
+          reason?: string | null
+          to_user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          initiated_by?: string
+          org_id?: string
+          reason?: string | null
+          to_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_ownership_transfers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organisations: {
         Row: {
           created_at: string
@@ -1010,6 +1048,16 @@ export type Database = {
       is_org_master_admin: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
+      }
+      transfer_org_master_admin: {
+        Args: {
+          _from_user_id: string
+          _initiated_by: string
+          _org_id: string
+          _reason?: string
+          _to_user_id: string
+        }
+        Returns: undefined
       }
       user_in_org: {
         Args: { _org_id: string; _user_id: string }
