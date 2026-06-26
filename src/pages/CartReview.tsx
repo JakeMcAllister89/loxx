@@ -18,7 +18,7 @@ interface SystemSummary {
 }
 
 export default function CartReview() {
-  const { items, meta, setMeta, cylindersSubtotal, keysSubtotal, subtotal, vat, total } = useCart();
+  const { items, meta, setMeta, cylindersSubtotal, keysSubtotal, subtotal, deliveryCharge, vat, total } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [systems, setSystems] = useState<SystemSummary[]>([]);
