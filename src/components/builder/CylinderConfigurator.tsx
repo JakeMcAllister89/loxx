@@ -128,8 +128,6 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
     });
   };
 
-  const activeFinish = node.finish ?? selected?.finish ?? null;
-  const activeSize = node.size ?? selected?.size ?? null;
   const isCommonEntrance = !!node.is_common_entrance;
 
   return (
