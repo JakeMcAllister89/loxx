@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { CylinderConfigurator, ProductFull } from "@/components/builder/CylinderConfigurator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
@@ -25,7 +24,7 @@ import {
 type Step = "upload" | "review" | "build";
 type Source = "csv" | "pdf" | "domxl";
 
-interface Product { id: string; code: string; name: string }
+type Product = ProductFull;
 
 export default function ImportPage() {
   const navigate = useNavigate();
@@ -40,7 +39,7 @@ export default function ImportPage() {
   const [source, setSource] = useState<Source>("domxl");
 
   useEffect(() => {
-    supabase.from("products").select("id,code,name").eq("is_active", true).order("code").then(({ data }) => setProducts((data ?? []) as Product[]));
+    supabase.from("products").select("id,code,name,product_description,cylinder_type,cylinder_profile,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as ProductFull[]));
   }, []);
 
   const goReview = (nodes: ParsedNode[], srcType: Source, suggestedName?: string) => {
@@ -155,6 +154,7 @@ function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: 
   const [busy, setBusy] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   const parse = async () => {
     if (!file) return;
@@ -182,7 +182,23 @@ function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: 
           Upload the .xlsm file you received from your DOM locksmith or dealer.
         </p>
 
-        <label className="mt-4 min-h-[180px] rounded-[10px] border-2 border-dashed border-border bg-background hover:bg-muted/40 cursor-pointer flex flex-col items-center justify-center text-sm text-muted-foreground transition-colors p-6">
+        <div
+          className={`mt-4 min-h-[180px] rounded-[10px] border-2 border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center text-sm text-muted-foreground p-6 ${
+            dragging
+              ? "border-primary bg-accent-light"
+              : "border-border bg-background hover:bg-muted/40"
+          }`}
+          onClick={() => inputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragEnter={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            const dropped = e.dataTransfer.files?.[0];
+            if (dropped) { setFile(dropped); setErr(null); }
+          }}
+        >
           <input
             ref={inputRef}
             type="file"
@@ -194,7 +210,7 @@ function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: 
           {file
             ? <span className="text-foreground">{file.name} · {(file.size / 1024).toFixed(1)} KB</span>
             : <span>Drop your .xlsm file or click to browse</span>}
-        </label>
+        </div>
 
         <button
           onClick={() => setShowHelp((s) => !s)}
@@ -239,6 +255,7 @@ function ReviewStep({
 }) {
   const counts = useMemo(() => countByType(tree), [tree]);
   const productCodes = useMemo(() => products.map((p) => p.code), [products]);
+  const [configuringGroup, setConfiguringGroup] = useState<string | null>(null);
 
   const unmatchedGroups = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -312,31 +329,72 @@ function ReviewStep({
         {unmatchedGroups.length > 0 && (
           <div>
             <div className="text-xs font-semibold mb-2">
-              {unmatchedGroups.length} cylinder type{unmatchedGroups.length !== 1 ? "s" : ""} need mapping — select the matching DOM product for each.
+              {unmatchedGroups.length} cylinder type{unmatchedGroups.length !== 1 ? "s" : ""} need configuring
             </div>
             <div className="space-y-2">
               {unmatchedGroups.map((g) => (
-                <UnmatchedGroupRow
-                  key={g.original}
-                  original={g.original}
-                  count={g.nodeIds.length}
-                  products={products}
-                  onSelect={(code) => {
-                    const matched = normalizeCylinderCode(code, productCodes);
-                    g.nodeIds.forEach((id) => patchNode(id, { cylinder_type: matched.matched ?? code }));
-                  }}
-                />
+                <div key={g.original} className="flex items-center gap-2 flex-wrap rounded-md border p-2">
+                  <Badge variant="destructive" className="font-mono text-[10px]">{g.original}</Badge>
+                  <span className="text-[11px] text-muted-foreground">× {g.nodeIds.length} cylinder{g.nodeIds.length !== 1 ? "s" : ""}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="ml-auto h-7 text-xs"
+                    onClick={() => setConfiguringGroup(g.original)}
+                  >
+                    Configure →
+                  </Button>
+                </div>
               ))}
             </div>
           </div>
         )}
-
 
         <div className="pt-3 border-t flex items-center justify-between gap-2">
           <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
           <Button onClick={onBuild} className="bg-primary hover:bg-primary/90">Build system <ArrowRight className="h-3.5 w-3.5" /></Button>
         </div>
       </div>
+
+      {(() => {
+        const group = unmatchedGroups.find((g) => g.original === configuringGroup);
+        const repNode: TNode | null = (() => {
+          if (!group) return null;
+          const walk = (n: TNode): TNode | null => {
+            if (group.nodeIds.includes(n.id)) return n;
+            for (const c of n.children) { const f = walk(c); if (f) return f; }
+            return null;
+          };
+          return tree.root ? walk(tree.root) : null;
+        })();
+
+        const handlePatch = (patch: Partial<TNode>) => {
+          group?.nodeIds.forEach((id) => patchNode(id, patch));
+        };
+
+        return (
+          <Sheet open={!!configuringGroup} onOpenChange={(o) => { if (!o) setConfiguringGroup(null); }}>
+            <SheetContent className="w-[420px] sm:max-w-[420px] overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Configure cylinder type</SheetTitle>
+                <p className="text-xs text-muted-foreground">
+                  This selection will apply to all {group?.nodeIds.length ?? 0} cylinders with code "{configuringGroup}".
+                </p>
+              </SheetHeader>
+              {repNode && (
+                <div className="mt-4">
+                  <CylinderConfigurator node={repNode} products={products} onPatch={handlePatch} />
+                </div>
+              )}
+              <div className="mt-6">
+                <Button className="w-full" onClick={() => setConfiguringGroup(null)}>
+                  Done — apply to all {group?.nodeIds.length ?? 0} cylinders
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        );
+      })()}
     </div>
   );
 }
@@ -385,51 +443,4 @@ function ReviewRow({ node, depth, onRename, onDelete }: { node: TNode; depth: nu
   );
 }
 
-function UnmatchedGroupRow({
-  original, count, products, onSelect,
-}: {
-  original: string;
-  count: number;
-  products: Product[];
-  onSelect: (code: string) => void;
-}) {
-  const [query, setQuery] = useState("");
-  const [value, setValue] = useState<string>("");
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return products;
-    return products.filter((p) => p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
-  }, [query, products]);
-  return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <Badge variant="destructive" className="font-mono text-[10px]">{original}</Badge>
-      <span className="text-[11px] text-muted-foreground">× {count} cylinder{count !== 1 ? "s" : ""}</span>
-      <Select
-        value={value}
-        onValueChange={(v) => { setValue(v); onSelect(v); }}
-      >
-        <SelectTrigger className="h-7 text-xs min-w-[180px]"><SelectValue placeholder="Select DOM product…" /></SelectTrigger>
-        <SelectContent>
-          <div className="p-2 sticky top-0 bg-popover z-10 border-b">
-            <Input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.stopPropagation()}
-              placeholder="Filter products…"
-              className="h-7 text-xs"
-            />
-          </div>
-          {filtered.length === 0 ? (
-            <div className="px-2 py-3 text-xs text-muted-foreground text-center">No products match</div>
-          ) : (
-            filtered.map((p) => (
-              <SelectItem key={p.id} value={p.code}>{p.code} — {p.name}</SelectItem>
-            ))
-          )}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
 
