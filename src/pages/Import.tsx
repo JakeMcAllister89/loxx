@@ -255,6 +255,7 @@ function ReviewStep({
 }) {
   const counts = useMemo(() => countByType(tree), [tree]);
   const productCodes = useMemo(() => products.map((p) => p.code), [products]);
+  const [configuringGroup, setConfiguringGroup] = useState<string | null>(null);
 
   const unmatchedGroups = useMemo(() => {
     const map = new Map<string, string[]>();
