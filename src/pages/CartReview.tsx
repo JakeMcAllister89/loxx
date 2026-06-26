@@ -267,7 +267,7 @@ export default function CartReview() {
 
                   <div className="rounded-[10px] border bg-card shadow-card p-5">
                     <h2 className="font-semibold mb-3">How would you like to pay?</h2>
-                    <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-3">
                       {/* Card */}
                       <div className="rounded-md border p-4 flex flex-col">
                         <div className="flex items-center gap-2 mb-1">
