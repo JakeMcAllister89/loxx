@@ -329,31 +329,72 @@ function ReviewStep({
         {unmatchedGroups.length > 0 && (
           <div>
             <div className="text-xs font-semibold mb-2">
-              {unmatchedGroups.length} cylinder type{unmatchedGroups.length !== 1 ? "s" : ""} need mapping — select the matching DOM product for each.
+              {unmatchedGroups.length} cylinder type{unmatchedGroups.length !== 1 ? "s" : ""} need configuring
             </div>
             <div className="space-y-2">
               {unmatchedGroups.map((g) => (
-                <UnmatchedGroupRow
-                  key={g.original}
-                  original={g.original}
-                  count={g.nodeIds.length}
-                  products={products}
-                  onSelect={(code) => {
-                    const matched = normalizeCylinderCode(code, productCodes);
-                    g.nodeIds.forEach((id) => patchNode(id, { cylinder_type: matched.matched ?? code }));
-                  }}
-                />
+                <div key={g.original} className="flex items-center gap-2 flex-wrap rounded-md border p-2">
+                  <Badge variant="destructive" className="font-mono text-[10px]">{g.original}</Badge>
+                  <span className="text-[11px] text-muted-foreground">× {g.nodeIds.length} cylinder{g.nodeIds.length !== 1 ? "s" : ""}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="ml-auto h-7 text-xs"
+                    onClick={() => setConfiguringGroup(g.original)}
+                  >
+                    Configure →
+                  </Button>
+                </div>
               ))}
             </div>
           </div>
         )}
-
 
         <div className="pt-3 border-t flex items-center justify-between gap-2">
           <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
           <Button onClick={onBuild} className="bg-primary hover:bg-primary/90">Build system <ArrowRight className="h-3.5 w-3.5" /></Button>
         </div>
       </div>
+
+      {(() => {
+        const group = unmatchedGroups.find((g) => g.original === configuringGroup);
+        const repNode: TNode | null = (() => {
+          if (!group) return null;
+          const walk = (n: TNode): TNode | null => {
+            if (group.nodeIds.includes(n.id)) return n;
+            for (const c of n.children) { const f = walk(c); if (f) return f; }
+            return null;
+          };
+          return tree.root ? walk(tree.root) : null;
+        })();
+
+        const handlePatch = (patch: Partial<TNode>) => {
+          group?.nodeIds.forEach((id) => patchNode(id, patch));
+        };
+
+        return (
+          <Sheet open={!!configuringGroup} onOpenChange={(o) => { if (!o) setConfiguringGroup(null); }}>
+            <SheetContent className="w-[420px] sm:max-w-[420px] overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Configure cylinder type</SheetTitle>
+                <p className="text-xs text-muted-foreground">
+                  This selection will apply to all {group?.nodeIds.length ?? 0} cylinders with code "{configuringGroup}".
+                </p>
+              </SheetHeader>
+              {repNode && (
+                <div className="mt-4">
+                  <CylinderConfigurator node={repNode} products={products} onPatch={handlePatch} />
+                </div>
+              )}
+              <div className="mt-6">
+                <Button className="w-full" onClick={() => setConfiguringGroup(null)}>
+                  Done — apply to all {group?.nodeIds.length ?? 0} cylinders
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        );
+      })()}
     </div>
   );
 }
