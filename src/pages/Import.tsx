@@ -256,6 +256,9 @@ function ReviewStep({
   const counts = useMemo(() => countByType(tree), [tree]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
+  const [draftPatch, setDraftPatch] = useState<Partial<TNode>>({});
+
+  const productCodes = useMemo(() => products.map(p => p.code), [products]);
 
   const zones = useMemo(() => {
     const result: { zoneId: string; zoneLabel: string; cyls: TNode[] }[] = [];
@@ -303,15 +306,23 @@ function ReviewStep({
     const first = sel[0];
     const sharedFinish = sel.every(c => c.finish === first.finish) ? first.finish : undefined;
     const sharedSize = sel.every(c => (c as any).size === (first as any).size) ? (first as any).size : undefined;
-    const sharedType = sel.every(c => c.cylinder_type === first.cylinder_type) ? first.cylinder_type : undefined;
-    return { ...first, finish: sharedFinish, size: sharedSize, cylinder_type: sharedType };
-  }, [selectedIds, zones]);
+    const sharedType = sel.every(c => c.cylinder_type === first.cylinder_type && !!c.cylinder_type) ? first.cylinder_type : undefined;
+    return { ...first, finish: sharedFinish, size: sharedSize, cylinder_type: sharedType, ...draftPatch };
+  }, [selectedIds, zones, draftPatch]);
 
   const handleConfigPatch = useCallback((patch: Partial<TNode>) => {
-    patchMany(Array.from(selectedIds), patch);
-  }, [selectedIds, patchMany]);
+    setDraftPatch(prev => ({ ...prev, ...patch }));
+  }, []);
+
+  const assignToSelected = useCallback(() => {
+    if (selectedIds.size === 0 || !draftPatch.cylinder_type) return;
+    patchMany(Array.from(selectedIds), draftPatch);
+    setSelectedIds(new Set());
+    setDraftPatch({});
+  }, [selectedIds, draftPatch, patchMany]);
 
   const toggleId = (id: string) => {
+    setDraftPatch({});
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -320,6 +331,7 @@ function ReviewStep({
   };
 
   const toggleZone = (cyls: TNode[]) => {
+    setDraftPatch({});
     const ids = cyls.map(c => c.id);
     const allSelected = ids.every(id => selectedIds.has(id));
     setSelectedIds(prev => {
@@ -330,12 +342,12 @@ function ReviewStep({
     });
   };
 
-  const selectAll = () => setSelectedIds(new Set(allVisibleIds));
-  const clearAll = () => setSelectedIds(new Set());
+  const selectAll = () => { setDraftPatch({}); setSelectedIds(new Set(allVisibleIds)); };
+  const clearAll = () => { setDraftPatch({}); setSelectedIds(new Set()); };
 
   const confirmedCount = useMemo(() =>
-    zones.flatMap(z => z.cyls).filter(c => !!c.cylinder_type).length,
-    [zones]);
+    zones.flatMap(z => z.cyls).filter(c => !!c.cylinder_type && productCodes.includes(c.cylinder_type)).length,
+    [zones, productCodes]);
   const totalCyls = counts.CYL;
   const allConfirmed = confirmedCount === totalCyls;
 
