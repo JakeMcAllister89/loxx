@@ -529,7 +529,16 @@ export default function AdminOrders() {
                   <div className="text-muted-foreground">{open.company ?? profileMap[open.user_id]?.company ?? ""}</div>
                   <div className="text-muted-foreground">{open.customer_email ?? profileMap[open.user_id]?.email ?? ""}</div>
                   <div className="text-muted-foreground">{profileMap[open.user_id]?.phone ?? ""}</div>
+                  <div className="pt-2 flex items-center gap-2">
+                    {open.payment_status === "paid"
+                      ? <Badge className="bg-green-100 text-green-800 border-green-300">Paid ✓</Badge>
+                      : <Badge className="bg-amber-100 text-amber-800 border-amber-300">Unpaid</Badge>}
+                    {open.payment_method === "bacs"
+                      ? <Badge className="bg-purple-100 text-purple-800 border-purple-300">BACS transfer</Badge>
+                      : <Badge className="bg-gray-100 text-gray-800 border-gray-300">Card (Stripe)</Badge>}
+                  </div>
                 </Block>
+
 
                 {open.system_id && (
                   <Block title="System">
