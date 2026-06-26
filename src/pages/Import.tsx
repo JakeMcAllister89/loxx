@@ -240,18 +240,22 @@ function ReviewStep({
   const counts = useMemo(() => countByType(tree), [tree]);
   const productCodes = useMemo(() => products.map((p) => p.code), [products]);
 
-  const unmatched = useMemo(() => {
-    const out: { nodeId: string; original: string }[] = [];
+  const unmatchedGroups = useMemo(() => {
+    const map = new Map<string, string[]>();
     const walk = (n: TNode | null) => {
       if (!n) return;
       if (n.type === "CYL" && n.cylinder_type) {
         const m = normalizeCylinderCode(n.cylinder_type, productCodes);
-        if (!m.matched) out.push({ nodeId: n.id, original: m.original });
+        if (!m.matched) {
+          const arr = map.get(m.original) ?? [];
+          arr.push(n.id);
+          map.set(m.original, arr);
+        }
       }
       n.children.forEach(walk);
     };
     walk(tree.root);
-    return out;
+    return Array.from(map.entries()).map(([original, nodeIds]) => ({ original, nodeIds }));
   }, [tree, productCodes]);
 
   const patchNode = (id: string, patch: Partial<TNode>) => {
@@ -305,24 +309,28 @@ function ReviewStep({
           <div>{counts.CYL} cylinder{counts.CYL !== 1 ? "s" : ""}</div>
         </div>
 
-        {unmatched.length > 0 && (
+        {unmatchedGroups.length > 0 && (
           <div>
-            <div className="text-xs font-semibold mb-1">Unmatched cylinder types</div>
+            <div className="text-xs font-semibold mb-2">
+              {unmatchedGroups.length} cylinder type{unmatchedGroups.length !== 1 ? "s" : ""} need mapping — select the matching DOM product for each.
+            </div>
             <div className="space-y-2">
-              {unmatched.map((u) => (
-                <div key={u.nodeId} className="flex items-center gap-2">
-                  <Badge variant="destructive" className="font-mono text-[10px]">{u.original}</Badge>
-                  <Select onValueChange={(v) => patchNode(u.nodeId, { cylinder_type: v })}>
-                    <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Select…" /></SelectTrigger>
-                    <SelectContent>
-                      {products.map((p) => <SelectItem key={p.id} value={p.code}>{p.code} — {p.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {unmatchedGroups.map((g) => (
+                <UnmatchedGroupRow
+                  key={g.original}
+                  original={g.original}
+                  count={g.nodeIds.length}
+                  products={products}
+                  onSelect={(code) => {
+                    const matched = normalizeCylinderCode(code, productCodes);
+                    g.nodeIds.forEach((id) => patchNode(id, { cylinder_type: matched.matched ?? code }));
+                  }}
+                />
               ))}
             </div>
           </div>
         )}
+
 
         <div className="pt-3 border-t flex items-center justify-between gap-2">
           <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
@@ -376,3 +384,52 @@ function ReviewRow({ node, depth, onRename, onDelete }: { node: TNode; depth: nu
     </div>
   );
 }
+
+function UnmatchedGroupRow({
+  original, count, products, onSelect,
+}: {
+  original: string;
+  count: number;
+  products: Product[];
+  onSelect: (code: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [value, setValue] = useState<string>("");
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter((p) => p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
+  }, [query, products]);
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <Badge variant="destructive" className="font-mono text-[10px]">{original}</Badge>
+      <span className="text-[11px] text-muted-foreground">× {count} cylinder{count !== 1 ? "s" : ""}</span>
+      <Select
+        value={value}
+        onValueChange={(v) => { setValue(v); onSelect(v); }}
+      >
+        <SelectTrigger className="h-7 text-xs min-w-[180px]"><SelectValue placeholder="Select DOM product…" /></SelectTrigger>
+        <SelectContent>
+          <div className="p-2 sticky top-0 bg-popover z-10 border-b">
+            <Input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              placeholder="Filter products…"
+              className="h-7 text-xs"
+            />
+          </div>
+          {filtered.length === 0 ? (
+            <div className="px-2 py-3 text-xs text-muted-foreground text-center">No products match</div>
+          ) : (
+            filtered.map((p) => (
+              <SelectItem key={p.id} value={p.code}>{p.code} — {p.name}</SelectItem>
+            ))
+          )}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
