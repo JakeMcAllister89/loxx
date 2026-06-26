@@ -232,7 +232,7 @@ function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: 
         )}
 
         <Button onClick={parse} disabled={!file || busy} className="mt-4 bg-primary hover:bg-primary/90">
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Parse file
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Upload file
         </Button>
       </div>
     </div>
@@ -256,6 +256,9 @@ function ReviewStep({
   const counts = useMemo(() => countByType(tree), [tree]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
+  const [draftPatch, setDraftPatch] = useState<Partial<TNode>>({});
+
+  const productCodes = useMemo(() => products.map(p => p.code), [products]);
 
   const zones = useMemo(() => {
     const result: { zoneId: string; zoneLabel: string; cyls: TNode[] }[] = [];
@@ -303,15 +306,23 @@ function ReviewStep({
     const first = sel[0];
     const sharedFinish = sel.every(c => c.finish === first.finish) ? first.finish : undefined;
     const sharedSize = sel.every(c => (c as any).size === (first as any).size) ? (first as any).size : undefined;
-    const sharedType = sel.every(c => c.cylinder_type === first.cylinder_type) ? first.cylinder_type : undefined;
-    return { ...first, finish: sharedFinish, size: sharedSize, cylinder_type: sharedType };
-  }, [selectedIds, zones]);
+    const sharedType = sel.every(c => c.cylinder_type === first.cylinder_type && !!c.cylinder_type) ? first.cylinder_type : undefined;
+    return { ...first, finish: sharedFinish, size: sharedSize, cylinder_type: sharedType, ...draftPatch };
+  }, [selectedIds, zones, draftPatch]);
 
   const handleConfigPatch = useCallback((patch: Partial<TNode>) => {
-    patchMany(Array.from(selectedIds), patch);
-  }, [selectedIds, patchMany]);
+    setDraftPatch(prev => ({ ...prev, ...patch }));
+  }, []);
+
+  const assignToSelected = useCallback(() => {
+    if (selectedIds.size === 0 || !draftPatch.cylinder_type) return;
+    patchMany(Array.from(selectedIds), draftPatch);
+    setSelectedIds(new Set());
+    setDraftPatch({});
+  }, [selectedIds, draftPatch, patchMany]);
 
   const toggleId = (id: string) => {
+    setDraftPatch({});
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
@@ -320,6 +331,7 @@ function ReviewStep({
   };
 
   const toggleZone = (cyls: TNode[]) => {
+    setDraftPatch({});
     const ids = cyls.map(c => c.id);
     const allSelected = ids.every(id => selectedIds.has(id));
     setSelectedIds(prev => {
@@ -330,12 +342,12 @@ function ReviewStep({
     });
   };
 
-  const selectAll = () => setSelectedIds(new Set(allVisibleIds));
-  const clearAll = () => setSelectedIds(new Set());
+  const selectAll = () => { setDraftPatch({}); setSelectedIds(new Set(allVisibleIds)); };
+  const clearAll = () => { setDraftPatch({}); setSelectedIds(new Set()); };
 
   const confirmedCount = useMemo(() =>
-    zones.flatMap(z => z.cyls).filter(c => !!c.cylinder_type).length,
-    [zones]);
+    zones.flatMap(z => z.cyls).filter(c => !!c.cylinder_type && productCodes.includes(c.cylinder_type)).length,
+    [zones, productCodes]);
   const totalCyls = counts.CYL;
   const allConfirmed = confirmedCount === totalCyls;
 
@@ -411,7 +423,7 @@ function ReviewStep({
                   </div>
                   {cyls.map(cyl => {
                     const isSelected = selectedIds.has(cyl.id);
-                    const isConfirmed = !!cyl.cylinder_type;
+                    const isConfirmed = !!cyl.cylinder_type && productCodes.includes(cyl.cylinder_type);
                     const hint = (cyl as any).dom_hint as string | undefined;
                     const size = (cyl as any).size as string | undefined;
                     return (
@@ -451,18 +463,18 @@ function ReviewStep({
           </div>
         </div>
 
-        <div className="rounded-[10px] border bg-card shadow-card p-4">
+        <div className="rounded-[10px] border bg-card shadow-card p-4 flex flex-col gap-4">
           {selectedIds.size === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <span className="text-3xl mb-3">☑️</span>
               <p className="text-sm font-medium">Select doors to configure</p>
               <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">
-                Tick one or more doors on the left, then choose a cylinder spec below.
+                Tick one or more doors on the left, then choose a cylinder spec and assign it.
               </p>
             </div>
           ) : (
-            <div>
-              <div className="flex items-center justify-between mb-3">
+            <>
+              <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">
                   {selectedIds.size === 1
                     ? (() => { const allCyls = zones.flatMap(z => z.cyls); return allCyls.find(c => selectedIds.has(c.id))?.label ?? "1 door"; })()
@@ -477,7 +489,14 @@ function ReviewStep({
                   onPatch={handleConfigPatch}
                 />
               )}
-            </div>
+              <Button
+                className="w-full bg-primary hover:bg-primary/90 mt-2"
+                disabled={!draftPatch.cylinder_type}
+                onClick={assignToSelected}
+              >
+                Assign to {selectedIds.size} door{selectedIds.size !== 1 ? "s" : ""}
+              </Button>
+            </>
           )}
         </div>
       </div>

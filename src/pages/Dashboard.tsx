@@ -113,7 +113,7 @@ export default function Dashboard() {
               <Upload className="h-4 w-4 text-primary" />
             </div>
             <div className="font-semibold">Import existing system</div>
-            <p className="text-xs text-muted-foreground mt-1">Upload a lockchart PDF or CSV and we'll build the hierarchy.</p>
+            <p className="text-xs text-muted-foreground mt-1">Upload your DOM-XL file and we'll digitise your existing master key system.</p>
           </Link>
         </div>
 
