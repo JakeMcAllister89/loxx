@@ -299,6 +299,15 @@ function ReviewStep({
     setTree({ ...tree, root: tree.root ? walk(tree.root) : null });
   }, [setTree, tree]);
 
+  const patchNode = useCallback((id: string, patch: Partial<TNode>) => {
+    setTree(prev => {
+      const walk = (n: TNode): TNode => n.id === id
+        ? { ...n, ...patch }
+        : { ...n, children: n.children.map(walk) };
+      return { ...prev, root: prev.root ? walk(prev.root) : null };
+    });
+  }, [setTree]);
+
   const repNode = useMemo((): TNode | null => {
     if (selectedIds.size === 0) return null;
     const allCyls = zones.flatMap(z => z.cyls);
