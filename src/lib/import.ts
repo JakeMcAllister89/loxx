@@ -284,13 +284,25 @@ export function parseDomXl(buffer: ArrayBuffer): DomXlParseResult {
       }
     }
 
+    const rawDesign = row[9] ? String(row[9]).trim() : null;
+    const rawColour = row[11] ? String(row[11]).trim() : null;
+    const rawTipo = cylType;
+    const size = lengthRaw;
+
+    const finish = rawColour ? (colourMap[rawColour] ?? rawColour) : null;
+    const cylinderProfile = rawDesign ? (designToProfile[rawDesign] ?? null) : null;
+    const cylinderFamily = rawTipo ? (tipoToFamily[rawTipo] ?? rawTipo) : null;
+    const decodedType = [cylinderFamily, cylinderProfile].filter(Boolean).join(" / ") || rawTipo;
+
     nodes.push({
       level: "CYL",
       label: roomDesc,
       parent_label: parentLabel,
       room_name: roomDesc,
-      cylinder_type: cylType ?? null,
+      cylinder_type: decodedType ?? undefined,
+      finish: finish ?? undefined,
       key_qty: keyQty,
+      size: size ?? undefined,
     });
   }
 
