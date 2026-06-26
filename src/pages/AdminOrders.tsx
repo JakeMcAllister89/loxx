@@ -176,8 +176,10 @@ export default function AdminOrders() {
   const costFor = (oid: string) => items.filter((i) => i.order_id === oid).reduce((s, i) => s + Number(i.quantity) * (costMap[i.product_code ?? ""] ?? 0), 0);
 
   const totals = useMemo(() => {
-    const rev = filtered.reduce((s, o) => s + Number(o.total), 0);
-    const cost = filtered.reduce((s, o) => s + costFor(o.id), 0);
+    const countableStatuses = ["paid", "processing", "shipped", "delivered"];
+    const countable = filtered.filter(o => countableStatuses.includes(o.status));
+    const rev = countable.reduce((s, o) => s + Number(o.total), 0);
+    const cost = countable.reduce((s, o) => s + costFor(o.id), 0);
     const profit = rev - cost;
     const margin = rev > 0 ? (profit / rev) * 100 : 0;
     return { rev, cost, profit, margin };
