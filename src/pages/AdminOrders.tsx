@@ -56,6 +56,7 @@ interface ItemRow {
 
 const statusColor: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800 border-amber-300",
+  pending_bacs: "bg-purple-100 text-purple-800 border-purple-300",
   paid: "bg-blue-100 text-blue-800 border-blue-300",
   processing: "bg-indigo-100 text-indigo-800 border-indigo-300",
   shipped: "bg-teal-100 text-teal-800 border-teal-300",
@@ -64,13 +65,15 @@ const statusColor: Record<string, string> = {
 };
 const statusLabel: Record<string, string> = {
   pending: "pending",
+  pending_bacs: "Awaiting BACS",
   paid: "Paid ✓",
   processing: "processing",
   shipped: "shipped",
   delivered: "delivered",
   cancelled: "cancelled",
 };
-const STATUS_OPTIONS = ["processing", "shipped", "delivered", "cancelled"];
+const STATUS_OPTIONS = ["pending_bacs", "processing", "shipped", "delivered", "cancelled"];
+
 
 const fmtPaidAt = (iso: string | null) => {
   if (!iso) return "";
