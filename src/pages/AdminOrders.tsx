@@ -205,6 +205,11 @@ export default function AdminOrders() {
     reload();
   };
 
+  const deleteItem = async (itemId: string) => {
+    await supabase.from("order_items").delete().eq("id", itemId);
+    setItems((prev) => prev.filter((i) => i.id !== itemId));
+  };
+
   const refLabel = (o: OrderRow) => o.id.slice(0, 8).toUpperCase();
 
   const sendOne = async (orderId: string): Promise<{ ok: boolean; po_number?: string | null; error?: string }> => {
