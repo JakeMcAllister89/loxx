@@ -39,7 +39,14 @@ export default function Systems() {
     if (!user) return;
     setLoading(true);
     const { data } = await supabase.from("key_systems").select("id,name,reference,door_count,created_at,updated_at").order("updated_at", { ascending: false });
-    setSystems(data ?? []);
+    const list = (data ?? []) as Sys[];
+    if (list.length) {
+      const ids = list.map(s => s.id);
+      const { data: orderData } = await supabase.from("orders").select("system_id").in("system_id", ids);
+      const orderedIds = new Set((orderData ?? []).map((o: any) => o.system_id));
+      list.forEach(s => { s.has_orders = orderedIds.has(s.id); });
+    }
+    setSystems(list);
     setLoading(false);
   };
   useEffect(() => { load(); }, [user]);
