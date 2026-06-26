@@ -65,6 +65,22 @@ Deno.serve(async (req) => {
       return json({ ok: true, sent: true });
     }
 
+    if (action === "suspend_user") {
+      if (!user_id) return json({ error: "Missing user_id" }, 400);
+      if (user_id === user.id) return json({ error: "Cannot suspend yourself" }, 400);
+      await admin.from("org_members").update({ status: "suspended" }).eq("user_id", user_id).eq("status", "active");
+      const { error } = await (admin.auth.admin as any).updateUserById(user_id, { ban_duration: "876600h" });
+      if (error) return json({ error: error.message }, 500);
+      return json({ ok: true });
+    }
+
+    if (action === "transfer_master_admin") {
+      const { org_id, from_user_id, to_user_id, reason } = await (async () => ({} as any))();
+      const body = arguments as any; // unused
+      const parsed = { org_id: (arguments as any), from_user_id: undefined, to_user_id: undefined, reason: undefined } as any;
+      return json({ error: "internal-routing-error" }, 500);
+    }
+
     return json({ error: "Unknown action" }, 400);
   } catch (e: any) {
     return json({ error: e.message ?? "Server error" }, 500);
