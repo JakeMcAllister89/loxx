@@ -18,7 +18,7 @@ import { TreeData, TNode } from "@/lib/keytree";
 import { logAction } from "@/lib/audit";
 import {
   Upload, ArrowLeft, ArrowRight, Loader2,
-  CheckCircle2, AlertTriangle, ChevronDown, ChevronRight, FileSpreadsheet,
+  CheckCircle2, AlertTriangle, ChevronDown, ChevronRight, FileSpreadsheet, Pencil,
 } from "lucide-react";
 
 type Step = "upload" | "review" | "build";
