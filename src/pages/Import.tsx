@@ -154,6 +154,7 @@ function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: 
   const [busy, setBusy] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   const parse = async () => {
     if (!file) return;
