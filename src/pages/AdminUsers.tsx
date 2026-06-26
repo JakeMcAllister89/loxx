@@ -330,6 +330,26 @@ export default function AdminUsers() {
                               <DropdownMenuItem onClick={() => u.email && sendReset(u.email)}>
                                 <Mail className="h-4 w-4 mr-2" /> Send password reset
                               </DropdownMenuItem>
+                              {!isSelf && u.org_role === "master_admin" && (
+                                <DropdownMenuItem
+                                  onClick={() => setTransferState({
+                                    fromUserId: u.id,
+                                    fromName: fullName,
+                                    orgId: u.org_id ?? memberFor(u.id)?.org_id ?? "",
+                                    orgName: u.org_name,
+                                  })}
+                                >
+                                  <ArrowLeftRight className="h-4 w-4 mr-2" /> Transfer Master Admin
+                                </DropdownMenuItem>
+                              )}
+                              {!isSelf && (
+                                <DropdownMenuItem
+                                  className="text-amber-700"
+                                  onClick={() => setSuspendOf({ id: u.id, name: fullName })}
+                                >
+                                  <Ban className="h-4 w-4 mr-2" /> Suspend user
+                                </DropdownMenuItem>
+                              )}
                               {!isSelf && (
                                 <DropdownMenuItem className="text-destructive" onClick={() => setRemoveOf({ id: u.id, name: fullName })}>
                                   <UserX className="h-4 w-4 mr-2" /> Remove account
