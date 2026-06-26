@@ -747,6 +747,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
     const productByCode = new Map(products.map((p) => [p.code, p]));
     // Look up new-system key products by code suffix "-EXTRA"
     const extraKeyProducts = products.filter((p: any) => p.code?.toUpperCase().endsWith("-EXTRA"));
+    console.log("[LOXX DEBUG] Total products loaded:", products.length);
+    console.log("[LOXX DEBUG] EXTRA key products found:", extraKeyProducts.length);
+    console.log("[LOXX DEBUG] EXTRA products:", extraKeyProducts.map((p: any) => ({ code: p.code, profile: p.cylinder_profile, price: p.price_gbp })));
+    console.log("[LOXX DEBUG] All Key products:", products.filter((p: any) => p.cylinder_type === "Key").map((p: any) => ({ code: p.code, profile: p.cylinder_profile, price: p.price_gbp })));
     const keyProductForNode = (nodeType: string) => {
       const levelHint = nodeType === "CYL" ? "DIFFER"
         : nodeType === "GMK" ? "GMK"
