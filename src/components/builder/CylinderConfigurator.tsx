@@ -67,14 +67,22 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
   const activeProfile = (selected as any)?.cylinder_profile ?? null;
 
 
-  const finishesForFamily = useMemo(
-    () => Array.from(new Set(variants.map((v) => v.finish).filter(Boolean))) as string[],
-    [variants],
-  );
-  const sizesForFamily = useMemo(
-    () => Array.from(new Set(variants.map((v) => v.size).filter(Boolean))) as string[],
-    [variants],
-  );
+  const activeFinish = node.finish ?? selected?.finish ?? null;
+  const activeSize = node.size ?? selected?.size ?? null;
+
+  const finishesForFamily = useMemo(() => {
+    const filtered = activeProfile
+      ? variants.filter((v) => (v as any).cylinder_profile === activeProfile)
+      : variants;
+    return Array.from(new Set(filtered.map((v) => v.finish).filter(Boolean))) as string[];
+  }, [variants, activeProfile]);
+  const sizesForFamily = useMemo(() => {
+    const filtered = activeFinish
+      ? variants.filter((v) => v.finish === activeFinish)
+      : variants;
+    return Array.from(new Set(filtered.map((v) => v.size).filter(Boolean))) as string[];
+  }, [variants, activeFinish]);
+
 
   const setProfile = (profile: string) => {
     if (!activeFamily) return;
