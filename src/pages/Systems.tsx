@@ -166,7 +166,7 @@ export default function Systems() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => { setRenameOf(s); setRenameValue(s.name); }}>Rename</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => toast.info("Archive coming soon")}>Archive</DropdownMenuItem>
-                      {canDelete && <DropdownMenuItem className="text-destructive" onClick={() => setDeleteOf(s)}>Delete</DropdownMenuItem>}
+                      {canDelete && !s.has_orders && <DropdownMenuItem className="text-destructive" onClick={() => setDeleteOf(s)}>Delete</DropdownMenuItem>}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
