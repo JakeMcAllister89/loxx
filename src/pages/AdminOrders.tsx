@@ -37,7 +37,9 @@ interface OrderRow {
   notes: string | null;
   payment_status: string;
   paid_at: string | null;
+  payment_method: string | null;
 }
+
 interface ItemRow {
   id: string;
   order_id: string;
