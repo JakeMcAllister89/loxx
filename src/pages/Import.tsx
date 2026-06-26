@@ -430,8 +430,12 @@ function ReviewStep({
                       <div
                         key={cyl.id}
                         onClick={() => toggleId(cyl.id)}
-                        className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors ${
-                          isSelected ? "bg-primary/8 border-l-2 border-primary" : "hover:bg-muted/30 border-l-2 border-transparent"
+                        className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors border-l-2 ${
+                          isSelected
+                            ? "bg-primary/10 border-primary"
+                            : isConfirmed
+                              ? "bg-success/8 border-success/40 hover:bg-success/12"
+                              : "border-transparent hover:bg-muted/30"
                         }`}
                       >
                         <input
@@ -442,10 +446,11 @@ function ReviewStep({
                           className="h-3.5 w-3.5 accent-primary shrink-0"
                         />
                         {isConfirmed
-                          ? <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
-                          : <span className="h-3.5 w-3.5 rounded-full border-2 border-amber-400 shrink-0" />
+                          ? <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                          : <span className="h-4 w-4 rounded-full border-2 border-amber-400 bg-amber-400/20 shrink-0" />
                         }
-                        <span className="text-sm flex-1 truncate">{cyl.label}</span>
+                        <span className={`text-sm flex-1 truncate ${isConfirmed && !isSelected ? "text-success" : ""}`}>{cyl.label}</span>
+
                         <span className="text-[10px] text-muted-foreground shrink-0">
                           {isConfirmed
                             ? cyl.cylinder_type
