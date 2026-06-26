@@ -240,18 +240,22 @@ function ReviewStep({
   const counts = useMemo(() => countByType(tree), [tree]);
   const productCodes = useMemo(() => products.map((p) => p.code), [products]);
 
-  const unmatched = useMemo(() => {
-    const out: { nodeId: string; original: string }[] = [];
+  const unmatchedGroups = useMemo(() => {
+    const map = new Map<string, string[]>();
     const walk = (n: TNode | null) => {
       if (!n) return;
       if (n.type === "CYL" && n.cylinder_type) {
         const m = normalizeCylinderCode(n.cylinder_type, productCodes);
-        if (!m.matched) out.push({ nodeId: n.id, original: m.original });
+        if (!m.matched) {
+          const arr = map.get(m.original) ?? [];
+          arr.push(n.id);
+          map.set(m.original, arr);
+        }
       }
       n.children.forEach(walk);
     };
     walk(tree.root);
-    return out;
+    return Array.from(map.entries()).map(([original, nodeIds]) => ({ original, nodeIds }));
   }, [tree, productCodes]);
 
   const patchNode = (id: string, patch: Partial<TNode>) => {
