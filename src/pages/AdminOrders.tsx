@@ -314,12 +314,14 @@ export default function AdminOrders() {
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="pending_bacs">Awaiting BACS</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
               <SelectItem value="processing">Processing</SelectItem>
               <SelectItem value="shipped">Shipped</SelectItem>
               <SelectItem value="delivered">Delivered</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
+
           </Select>
           <Input placeholder="Search order ref, customer, company…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
         </div>
