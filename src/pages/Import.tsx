@@ -232,7 +232,7 @@ function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: 
         )}
 
         <Button onClick={parse} disabled={!file || busy} className="mt-4 bg-primary hover:bg-primary/90">
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Parse file
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Upload file
         </Button>
       </div>
     </div>
