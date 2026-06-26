@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { MoreHorizontal, Search, Mail, UserX, ChevronDown, ChevronRight, RefreshCw, X } from "lucide-react";
+import { MoreHorizontal, Search, Mail, UserX, ChevronDown, ChevronRight, RefreshCw, X, ArrowLeftRight, Ban } from "lucide-react";
 
 interface ProfileRow {
   id: string;
