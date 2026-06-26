@@ -257,6 +257,7 @@ function ReviewStep({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [draftPatch, setDraftPatch] = useState<Partial<TNode>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const productCodes = useMemo(() => products.map(p => p.code), [products]);
 
