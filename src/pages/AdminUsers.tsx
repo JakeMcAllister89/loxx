@@ -476,6 +476,74 @@ export default function AdminUsers() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={!!suspendOf} onOpenChange={(o) => !o && setSuspendOf(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Suspend {suspendOf?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will immediately block their access to LOXX. Their data is preserved. You can remove their account separately if needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doSuspend} className="bg-amber-600 hover:bg-amber-700 text-white">
+              Suspend account
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={!!transferState} onOpenChange={(o) => { if (!o) { setTransferState(null); setTransferToId(""); setTransferReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Transfer Master Admin</DialogTitle>
+            <DialogDescription>
+              Reassign the Master Admin role for <strong>{transferState?.orgName}</strong> from <strong>{transferState?.fromName}</strong> to another active member of that organisation. The current Master Admin will be downgraded to Admin.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Transfer to</Label>
+              <Select value={transferToId} onValueChange={setTransferToId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a member…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {enriched
+                    .filter(u =>
+                      u.org_id === transferState?.orgId &&
+                      u.id !== transferState?.fromUserId &&
+                      memberFor(u.id)?.status === "active"
+                    )
+                    .map(u => {
+                      const name = `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || u.name || u.email || u.id;
+                      return <SelectItem key={u.id} value={u.id}>{name} — {roleLabel[u.org_role] ?? u.org_role}</SelectItem>;
+                    })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Reason (optional)</Label>
+              <Input
+                placeholder="e.g. User has left the organisation"
+                value={transferReason}
+                onChange={e => setTransferReason(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTransferState(null)}>Cancel</Button>
+            <Button
+              disabled={!transferToId || transferring}
+              onClick={doTransfer}
+              className="bg-[#17171a] hover:bg-[#2a2a2e] text-white"
+            >
+              {transferring ? "Transferring…" : "Transfer Master Admin"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
