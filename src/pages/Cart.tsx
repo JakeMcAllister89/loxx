@@ -12,7 +12,7 @@ import { toast } from "sonner";
 interface GroupKey { system_id: string | null | undefined; system_name: string | null | undefined; system_reference: string | null | undefined }
 
 export default function Cart() {
-  const { items, remove, updateQty, cylindersSubtotal, keysSubtotal, subtotal, vat, total, meta, setMeta } = useCart();
+  const { items, remove, updateQty, cylindersSubtotal, keysSubtotal, subtotal, deliveryCharge, vat, total, meta, setMeta } = useCart();
   const navigate = useNavigate();
 
   const grouped = useMemo(() => {
