@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface CartLine {
   kind: "cylinder" | "key";
@@ -61,6 +62,7 @@ interface CartCtx {
   subtotal: number;
   cylindersSubtotal: number;
   keysSubtotal: number;
+  deliveryCharge: number;
   vat: number;
   total: number;
   count: number;
@@ -84,6 +86,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [meta, setMetaState] = useState<OrderMeta>(() => {
     try { const s = localStorage.getItem(META_KEY); return s ? { ...blankMeta(), ...JSON.parse(s) } : blankMeta(); } catch { return blankMeta(); }
   });
+  const [deliveryRates, setDeliveryRates] = useState<{ keys: number; cylinders: number }>({ keys: 7.50, cylinders: 9.50 });
+
+  useEffect(() => {
+    supabase.from("admin_settings")
+      .select("key,value")
+      .in("key", ["delivery_charge_keys_only", "delivery_charge_with_cylinders"])
+      .then(({ data }) => {
+        const m: Record<string, string> = {};
+        (data ?? []).forEach((r: any) => (m[r.key] = r.value));
+        setDeliveryRates({
+          keys: parseFloat(m["delivery_charge_keys_only"] ?? "7.50"),
+          cylinders: parseFloat(m["delivery_charge_with_cylinders"] ?? "9.50"),
+        });
+      });
+  }, []);
+
   useEffect(() => { localStorage.setItem(KEY, JSON.stringify(items)); }, [items]);
   useEffect(() => { localStorage.setItem(META_KEY, JSON.stringify(meta)); }, [meta]);
 
@@ -100,12 +118,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const cylindersSubtotal = items.filter(i => i.kind === "cylinder").reduce((s, i) => s + i.quantity * i.unit_price, 0);
   const keysSubtotal = items.filter(i => i.kind === "key").reduce((s, i) => s + i.quantity * i.unit_price, 0);
   const subtotal = cylindersSubtotal + keysSubtotal;
-  const vat = +(subtotal * 0.2).toFixed(2);
-  const total = +(subtotal + vat).toFixed(2);
+  const deliveryCharge = items.length === 0 ? 0 : cylindersSubtotal > 0 ? deliveryRates.cylinders : deliveryRates.keys;
+  const vat = +((subtotal + deliveryCharge) * 0.2).toFixed(2);
+  const total = +(subtotal + deliveryCharge + vat).toFixed(2);
   const count = items.reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <Ctx.Provider value={{ items, add, remove, updateQty, clear, replace, replaceBySystem, meta, setMeta, subtotal, cylindersSubtotal, keysSubtotal, vat, total, count }}>
+    <Ctx.Provider value={{ items, add, remove, updateQty, clear, replace, replaceBySystem, meta, setMeta, subtotal, cylindersSubtotal, keysSubtotal, deliveryCharge, vat, total, count }}>
+
       {children}
     </Ctx.Provider>
   );

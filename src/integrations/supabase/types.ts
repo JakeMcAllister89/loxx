@@ -390,6 +390,7 @@ export type Database = {
           customer_name: string | null
           customer_po_ref: string | null
           delivery_address: Json | null
+          delivery_charge: number
           id: string
           notes: string | null
           paid_at: string | null
@@ -415,6 +416,7 @@ export type Database = {
           customer_name?: string | null
           customer_po_ref?: string | null
           delivery_address?: Json | null
+          delivery_charge?: number
           id?: string
           notes?: string | null
           paid_at?: string | null
@@ -440,6 +442,7 @@ export type Database = {
           customer_name?: string | null
           customer_po_ref?: string | null
           delivery_address?: Json | null
+          delivery_charge?: number
           id?: string
           notes?: string | null
           paid_at?: string | null

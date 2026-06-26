@@ -12,7 +12,7 @@ import { toast } from "sonner";
 interface GroupKey { system_id: string | null | undefined; system_name: string | null | undefined; system_reference: string | null | undefined }
 
 export default function Cart() {
-  const { items, remove, updateQty, cylindersSubtotal, keysSubtotal, subtotal, vat, total, meta, setMeta } = useCart();
+  const { items, remove, updateQty, cylindersSubtotal, keysSubtotal, subtotal, deliveryCharge, vat, total, meta, setMeta } = useCart();
   const navigate = useNavigate();
 
   const grouped = useMemo(() => {
@@ -239,6 +239,7 @@ export default function Cart() {
                     <div className="flex justify-between text-muted-foreground"><span>Cylinders ×{cylQty}</span><span>£{cylindersSubtotal.toFixed(2)}</span></div>
                     {keysSubtotal > 0 && <div className="flex justify-between text-muted-foreground"><span>Keys ×{keyQty}</span><span>£{keysSubtotal.toFixed(2)}</span></div>}
                     <div className="flex justify-between border-t pt-2 mt-2"><span>Subtotal (ex VAT)</span><span>£{subtotal.toFixed(2)}</span></div>
+                    <div className="flex justify-between text-muted-foreground"><span>Delivery Charge</span><span>£{deliveryCharge.toFixed(2)}</span></div>
                     <div className="flex justify-between text-muted-foreground"><span>VAT (20%)</span><span>£{vat.toFixed(2)}</span></div>
                     <div className="flex justify-between text-lg font-bold text-amber-600 border-t pt-2 mt-2"><span>Total inc VAT</span><span>£{total.toFixed(2)}</span></div>
                   </div>

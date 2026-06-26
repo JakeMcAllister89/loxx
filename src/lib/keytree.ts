@@ -17,6 +17,7 @@ export interface TNode {
   quantity?: number;          // CYL only — units required at this door (default 1)
   extra_keys?: number;        // CYL only — additional keys beyond the 2 included
   is_common_entrance?: boolean; // CYL only — common entrance cylinder (multiple keys operate same lock)
+  keyed_alike_source_differ?: number;  // if set, this node shares a differ with another cylinder
   // Decommissioned cylinder fields — once a cylinder is replaced, the original is preserved in-tree
   decommissioned_at?: string;            // ISO date
   decommissioned_reason?: "lost_key" | "faulty";
@@ -192,20 +193,35 @@ export function countDoors(root: TNode | null): number {
 export function assignNextDiffers(tree: TreeData): TreeData {
   if (!tree.root) return { root: null, next_differ: 1 };
   const used = new Set<number>();
+  // Collect decommissioned differs (reserved, never reused)
   const collect = (n: TNode) => {
     if (n.type === "CYL" && n.decommissioned_at && n.differ != null) used.add(n.differ);
     n.children.forEach(collect);
   };
   collect(tree.root);
+  // Also reserve keyed-alike pinned differs so they are never handed out as "next free"
+  const collectPinned = (n: TNode) => {
+    if (n.type === "CYL" && !n.decommissioned_at && n.keyed_alike_source_differ != null) {
+      used.add(n.keyed_alike_source_differ);
+    }
+    n.children.forEach(collectPinned);
+  };
+  collectPinned(tree.root);
   let counter = 1;
   const nextFree = () => {
     while (used.has(counter)) counter++;
     const v = counter;
+    used.add(v);
     counter++;
     return v;
   };
   const assigned = mapTree(tree.root, (n) => {
-    if (n.type === "CYL" && !n.decommissioned_at) return { ...n, differ: nextFree() };
+    if (n.type === "CYL" && !n.decommissioned_at) {
+      if (n.keyed_alike_source_differ != null) {
+        return { ...n, differ: n.keyed_alike_source_differ };
+      }
+      return { ...n, differ: nextFree() };
+    }
     return n;
   });
   const max = Math.max(counter - 1, ...Array.from(used), 0);

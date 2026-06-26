@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
-import type { CartLine } from "@/contexts/CartContext";
+import { useCart, type CartLine } from "@/contexts/CartContext";
 
 interface DeliveryAddress {
   contact_name: string; contact_phone: string;
@@ -24,15 +24,22 @@ interface Props {
 }
 
 export function StripeCheckout({ items, returnUrl, systemId, customer, meta, onError }: Props) {
+  const { deliveryCharge } = useCart();
   const fetchClientSecret = useCallback(async (): Promise<string> => {
     if (!items || items.length === 0) {
       const msg = "Your basket is empty.";
       onError?.(msg);
       throw new Error(msg);
     }
+    const deliveryItem = {
+      kind: "delivery" as const,
+      product_name: "Delivery Charge",
+      quantity: 1,
+      unit_price: deliveryCharge,
+    };
     const { data, error } = await supabase.functions.invoke("create-checkout", {
       body: {
-        items, returnUrl, systemId, customer,
+        items: [...items, deliveryItem], returnUrl, systemId, customer,
         environment: getStripeEnvironment(),
         customerPoRef: meta?.customerPoRef,
         notes: meta?.notes,
@@ -45,7 +52,7 @@ export function StripeCheckout({ items, returnUrl, systemId, customer, meta, onE
       throw new Error(msg);
     }
     return data.clientSecret;
-  }, [items, returnUrl, systemId, customer, meta, onError]);
+  }, [items, returnUrl, systemId, customer, meta, onError, deliveryCharge]);
 
   return (
     <div id="checkout" className="rounded-lg overflow-hidden">

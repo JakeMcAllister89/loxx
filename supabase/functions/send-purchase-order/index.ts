@@ -132,7 +132,8 @@ Deno.serve(async (req) => {
       .filter((i: any) => i.item_type === "key")
       .reduce((sum: number, i: any) => sum + Number(i.unit_price ?? 0) * Number(i.quantity), 0);
     const combinedSubtotal = cylSubtotal + keySubtotal;
-    const exVat = combinedSubtotal;
+    const deliveryCharge = Number((order as any).delivery_charge ?? 0);
+    const exVat = combinedSubtotal + deliveryCharge;
     const vatRate = Number(S.vat_rate ?? 20);
     const vat = +(exVat * vatRate / 100).toFixed(2);
     const inc = +(exVat + vat).toFixed(2);
@@ -327,6 +328,7 @@ ${(masterKeyRows || extraKeyRows) ? `
 
 <table class="totals">
   <tr><td>Subtotal (cost)</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(combinedSubtotal)}</td></tr>
+  ${deliveryCharge > 0 ? `<tr><td>Delivery Charge</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(deliveryCharge)}</td></tr>` : ""}
   <tr><td>Subtotal ex VAT</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(exVat)}</td></tr>
   <tr><td>VAT at ${esc(String(vatRate))}%</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(vat)}</td></tr>
   <tr class="grand"><td>Total inc VAT</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(inc)}</td></tr>
