@@ -19,9 +19,12 @@ export function treeToQuoteItems(
   sys: { system_id: string; system_name: string; system_reference: string | null },
 ): CartLine[] {
   const productByCode = new Map(products.map((p) => [p.code, p]));
-  // Match new-system key products by code suffix "-EXTRA"
-  // Node type → which EXTRA key product to use
-  const extraKeyProducts = products.filter(p => p.code?.toUpperCase().endsWith("-EXTRA"));
+  const allKeyProducts = products.filter(p =>
+    p.cylinder_type === "Key" &&
+    !p.code?.toUpperCase().includes("REP") &&
+    !(p as any).cylinder_profile?.toUpperCase().includes("REP") &&
+    !(p as any).cylinder_profile?.toUpperCase().includes("REPLACEMENT")
+  );
   const keyProductForNode = (nodeType: string) => {
     // Use exact word matching to avoid "MK" matching "SMK"
     const levelHint = nodeType === "CYL" ? "DIFFER"
@@ -30,7 +33,7 @@ export function treeToQuoteItems(
       : nodeType === "SMK" ? "SMK"
       : "";
     if (!levelHint) return null;
-    return extraKeyProducts.find(p => {
+    return allKeyProducts.find(p => {
       const profile = (p as any).cylinder_profile?.toUpperCase() ?? "";
       // For MK: must contain "MK" but NOT "SMK" and NOT "GMK"
       if (levelHint === "MK") return profile.includes("MK") && !profile.includes("SMK") && !profile.includes("GMK");
