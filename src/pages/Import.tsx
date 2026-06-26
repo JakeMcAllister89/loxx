@@ -254,193 +254,236 @@ function ReviewStep({
   onBuild: () => void;
 }) {
   const counts = useMemo(() => countByType(tree), [tree]);
-  const productCodes = useMemo(() => products.map((p) => p.code), [products]);
-  const [configuringGroup, setConfiguringGroup] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
 
-  const unmatchedGroups = useMemo(() => {
-    const map = new Map<string, string[]>();
-    const walk = (n: TNode | null) => {
-      if (!n) return;
-      if (n.type === "CYL" && n.cylinder_type) {
-        const m = normalizeCylinderCode(n.cylinder_type, productCodes);
-        if (!m.matched) {
-          const arr = map.get(m.original) ?? [];
-          arr.push(n.id);
-          map.set(m.original, arr);
-        }
+  const zones = useMemo(() => {
+    const result: { zoneId: string; zoneLabel: string; cyls: TNode[] }[] = [];
+    const walkZone = (n: TNode) => {
+      if (n.type === "SMK" || n.type === "GMK") {
+        const cyls: TNode[] = [];
+        const collectCyls = (child: TNode) => {
+          if (child.type === "CYL") cyls.push(child);
+          else child.children.forEach(collectCyls);
+        };
+        n.children.forEach(collectCyls);
+        if (cyls.length > 0) result.push({ zoneId: n.id, zoneLabel: n.label, cyls });
       }
-      n.children.forEach(walk);
+      n.children.forEach(walkZone);
     };
-    walk(tree.root);
-    return Array.from(map.entries()).map(([original, nodeIds]) => ({ original, nodeIds }));
-  }, [tree, productCodes]);
+    if (tree.root) walkZone(tree.root);
+    return result;
+  }, [tree]);
 
-  const patchNode = (id: string, patch: Partial<TNode>) => {
-    const walk = (n: TNode): TNode => n.id === id
-      ? { ...n, ...patch }
+  const filteredZones = useMemo(() => {
+    if (!search.trim()) return zones;
+    const q = search.toLowerCase();
+    return zones.map(z => ({
+      ...z,
+      cyls: z.cyls.filter(c => c.label.toLowerCase().includes(q)),
+    })).filter(z => z.cyls.length > 0);
+  }, [zones, search]);
+
+  const allVisibleIds = useMemo(() =>
+    filteredZones.flatMap(z => z.cyls.map(c => c.id)), [filteredZones]);
+
+  const patchMany = useCallback((ids: string[], patch: Partial<TNode>) => {
+    const idSet = new Set(ids);
+    const walk = (n: TNode): TNode => idSet.has(n.id)
+      ? { ...n, ...patch, children: n.children.map(walk) }
       : { ...n, children: n.children.map(walk) };
     setTree({ ...tree, root: tree.root ? walk(tree.root) : null });
-  };
+  }, [setTree, tree]);
 
-  const deleteNode = (id: string) => {
-    const walk = (n: TNode): TNode => ({
-      ...n,
-      children: n.children.filter((c) => c.id !== id).map(walk),
+  const repNode = useMemo((): TNode | null => {
+    if (selectedIds.size === 0) return null;
+    const allCyls = zones.flatMap(z => z.cyls);
+    const sel = allCyls.filter(c => selectedIds.has(c.id));
+    if (sel.length === 0) return null;
+    const first = sel[0];
+    const sharedFinish = sel.every(c => c.finish === first.finish) ? first.finish : undefined;
+    const sharedSize = sel.every(c => (c as any).size === (first as any).size) ? (first as any).size : undefined;
+    const sharedType = sel.every(c => c.cylinder_type === first.cylinder_type) ? first.cylinder_type : undefined;
+    return { ...first, finish: sharedFinish, size: sharedSize, cylinder_type: sharedType };
+  }, [selectedIds, zones]);
+
+  const handleConfigPatch = useCallback((patch: Partial<TNode>) => {
+    patchMany(Array.from(selectedIds), patch);
+  }, [selectedIds, patchMany]);
+
+  const toggleId = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
     });
-    setTree({ ...tree, root: tree.root ? walk(tree.root) : null });
   };
 
-  return (
-    <div className="grid md:grid-cols-[1fr_320px] gap-4">
-      <div className="space-y-3">
-        {warnings.length > 0 && (
-          <div className="rounded-[10px] border border-amber-300 bg-amber-50 p-4 shadow-card">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-700 mt-0.5 shrink-0" />
-              <div className="flex-1">
-                <div className="text-sm font-semibold text-amber-900">
-                  {warnings.length} issue{warnings.length !== 1 ? "s" : ""} to review before building
-                </div>
-                <ul className="text-xs text-amber-900/90 space-y-1 list-disc pl-4 mt-2">
-                  {warnings.map((w, i) => <li key={i}>{w}</li>)}
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="rounded-[10px] border bg-card p-4 shadow-card max-h-[60vh] overflow-auto">
-          {tree.root && <ReviewRow node={tree.root} depth={0} onRename={(id, label) => patchNode(id, { label })} onDelete={deleteNode} />}
-        </div>
-      </div>
+  const toggleZone = (cyls: TNode[]) => {
+    const ids = cyls.map(c => c.id);
+    const allSelected = ids.every(id => selectedIds.has(id));
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (allSelected) ids.forEach(id => next.delete(id));
+      else ids.forEach(id => next.add(id));
+      return next;
+    });
+  };
 
-      <div className="rounded-[10px] border bg-card p-5 shadow-card space-y-4 self-start">
-        <div>
+  const selectAll = () => setSelectedIds(new Set(allVisibleIds));
+  const clearAll = () => setSelectedIds(new Set());
+
+  const confirmedCount = useMemo(() =>
+    zones.flatMap(z => z.cyls).filter(c => !!c.cylinder_type).length,
+    [zones]);
+  const totalCyls = counts.CYL;
+  const allConfirmed = confirmedCount === totalCyls;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-[10px] border bg-card p-4 shadow-card flex items-center gap-4 flex-wrap">
+        <div className="flex-1 min-w-[200px]">
           <Label className="text-xs">System name</Label>
-          <Input value={systemName} onChange={(e) => setSystemName(e.target.value)} />
+          <Input value={systemName} onChange={(e) => setSystemName(e.target.value)} className="mt-1" />
         </div>
-
-        <div className="text-xs text-muted-foreground space-y-1">
-          <div>{counts.GMK} grand master</div>
-          <div>{counts.MK} master key{counts.MK !== 1 ? "s" : ""}</div>
-          <div>{counts.SMK} sub master{counts.SMK !== 1 ? "s" : ""}</div>
-          <div>{counts.CYL} cylinder{counts.CYL !== 1 ? "s" : ""}</div>
-        </div>
-
-        {unmatchedGroups.length > 0 && (
-          <div>
-            <div className="text-xs font-semibold mb-2">
-              {unmatchedGroups.length} cylinder type{unmatchedGroups.length !== 1 ? "s" : ""} need configuring
-            </div>
-            <div className="space-y-2">
-              {unmatchedGroups.map((g) => (
-                <div key={g.original} className="flex items-center gap-2 flex-wrap rounded-md border p-2">
-                  <Badge variant="destructive" className="font-mono text-[10px]">{g.original}</Badge>
-                  <span className="text-[11px] text-muted-foreground">× {g.nodeIds.length} cylinder{g.nodeIds.length !== 1 ? "s" : ""}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="ml-auto h-7 text-xs"
-                    onClick={() => setConfiguringGroup(g.original)}
-                  >
-                    Configure →
-                  </Button>
-                </div>
-              ))}
-            </div>
+        <div className="flex-1 min-w-[200px]">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+            <span>Cylinders configured</span>
+            <span className={allConfirmed ? "text-success font-medium" : ""}>{confirmedCount} / {totalCyls}</span>
           </div>
-        )}
-
-        <div className="pt-3 border-t flex items-center justify-between gap-2">
-          <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-3.5 w-3.5" /> Back</Button>
-          <Button onClick={onBuild} className="bg-primary hover:bg-primary/90">Build system <ArrowRight className="h-3.5 w-3.5" /></Button>
+          <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-success transition-all"
+              style={{ width: totalCyls > 0 ? `${(confirmedCount / totalCyls) * 100}%` : "0%" }}
+            />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back</Button>
+          <Button onClick={onBuild} className="bg-primary hover:bg-primary/90">
+            Build system <ArrowRight className="h-3.5 w-3.5 ml-1" />
+          </Button>
         </div>
       </div>
 
-      {(() => {
-        const group = unmatchedGroups.find((g) => g.original === configuringGroup);
-        const repNode: TNode | null = (() => {
-          if (!group) return null;
-          const walk = (n: TNode): TNode | null => {
-            if (group.nodeIds.includes(n.id)) return n;
-            for (const c of n.children) { const f = walk(c); if (f) return f; }
-            return null;
-          };
-          return tree.root ? walk(tree.root) : null;
-        })();
+      {warnings.length > 0 && (
+        <div className="rounded-[10px] border border-amber-300 bg-amber-50 p-3 shadow-card">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-700 mt-0.5 shrink-0" />
+            <ul className="text-xs text-amber-900/90 space-y-0.5 list-disc pl-3">
+              {warnings.map((w, i) => <li key={i}>{w}</li>)}
+            </ul>
+          </div>
+        </div>
+      )}
 
-        const handlePatch = (patch: Partial<TNode>) => {
-          group?.nodeIds.forEach((id) => patchNode(id, patch));
-        };
-
-        return (
-          <Sheet open={!!configuringGroup} onOpenChange={(o) => { if (!o) setConfiguringGroup(null); }}>
-            <SheetContent className="w-[420px] sm:max-w-[420px] overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Configure cylinder type</SheetTitle>
-                <p className="text-xs text-muted-foreground">
-                  This selection will apply to all {group?.nodeIds.length ?? 0} cylinders with code "{configuringGroup}".
-                </p>
-              </SheetHeader>
-              {repNode && (
-                <div className="mt-4">
-                  <CylinderConfigurator node={repNode} products={products} onPatch={handlePatch} />
+      <div className="grid grid-cols-[1fr_340px] gap-4 items-start">
+        <div className="rounded-[10px] border bg-card shadow-card flex flex-col">
+          <div className="flex items-center gap-2 p-3 border-b">
+            <Input
+              placeholder="Search doors…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="h-8 text-sm flex-1"
+            />
+            <Button variant="ghost" size="sm" className="text-xs h-8 px-2" onClick={selectAll}>All</Button>
+            <Button variant="ghost" size="sm" className="text-xs h-8 px-2" onClick={clearAll}>None</Button>
+            {selectedIds.size > 0 && (
+              <span className="text-xs text-muted-foreground whitespace-nowrap">{selectedIds.size} selected</span>
+            )}
+          </div>
+          <div className="overflow-auto max-h-[65vh] divide-y">
+            {filteredZones.map(({ zoneId, zoneLabel, cyls }) => {
+              const zoneAllSelected = cyls.every(c => selectedIds.has(c.id));
+              const zoneSomeSelected = cyls.some(c => selectedIds.has(c.id));
+              return (
+                <div key={zoneId}>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-muted/40 sticky top-0 z-10">
+                    <input
+                      type="checkbox"
+                      checked={zoneAllSelected}
+                      ref={el => { if (el) el.indeterminate = zoneSomeSelected && !zoneAllSelected; }}
+                      onChange={() => toggleZone(cyls)}
+                      className="h-3.5 w-3.5 accent-primary"
+                    />
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{zoneLabel}</span>
+                    <span className="text-[10px] text-muted-foreground ml-auto">{cyls.filter(c => !!c.cylinder_type).length}/{cyls.length}</span>
+                  </div>
+                  {cyls.map(cyl => {
+                    const isSelected = selectedIds.has(cyl.id);
+                    const isConfirmed = !!cyl.cylinder_type;
+                    const hint = (cyl as any).dom_hint as string | undefined;
+                    const size = (cyl as any).size as string | undefined;
+                    return (
+                      <div
+                        key={cyl.id}
+                        onClick={() => toggleId(cyl.id)}
+                        className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors ${
+                          isSelected ? "bg-primary/8 border-l-2 border-primary" : "hover:bg-muted/30 border-l-2 border-transparent"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleId(cyl.id)}
+                          onClick={e => e.stopPropagation()}
+                          className="h-3.5 w-3.5 accent-primary shrink-0"
+                        />
+                        {isConfirmed
+                          ? <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
+                          : <span className="h-3.5 w-3.5 rounded-full border-2 border-amber-400 shrink-0" />
+                        }
+                        <span className="text-sm flex-1 truncate">{cyl.label}</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0">
+                          {isConfirmed
+                            ? cyl.cylinder_type
+                            : hint
+                              ? `${hint}${size ? ` · ${size}` : ""}`
+                              : "Unassigned"
+                          }
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
-              <div className="mt-6">
-                <Button className="w-full" onClick={() => setConfiguringGroup(null)}>
-                  Done — apply to all {group?.nodeIds.length ?? 0} cylinders
-                </Button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="rounded-[10px] border bg-card shadow-card p-4">
+          {selectedIds.size === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <span className="text-3xl mb-3">☑️</span>
+              <p className="text-sm font-medium">Select doors to configure</p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">
+                Tick one or more doors on the left, then choose a cylinder spec below.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-medium">
+                  {selectedIds.size === 1
+                    ? (() => { const allCyls = zones.flatMap(z => z.cyls); return allCyls.find(c => selectedIds.has(c.id))?.label ?? "1 door"; })()
+                    : `${selectedIds.size} doors selected`}
+                </p>
+                <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={clearAll}>Clear</Button>
               </div>
-            </SheetContent>
-          </Sheet>
-        );
-      })()}
+              {repNode && (
+                <CylinderConfigurator
+                  node={repNode}
+                  products={products}
+                  onPatch={handleConfigPatch}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-function ReviewRow({ node, depth, onRename, onDelete }: { node: TNode; depth: number; onRename: (id: string, label: string) => void; onDelete: (id: string) => void }) {
-  const colors: Record<string, string> = {
-    GMK: "hsl(var(--node-gmk))", MK: "hsl(var(--node-mk))", SMK: "hsl(var(--node-smk))", CYL: "hsl(var(--node-cyl))", CK: "hsl(var(--node-ck))",
-  };
-  const [editing, setEditing] = useState(false);
-  const [val, setVal] = useState(node.label);
-  return (
-    <div>
-      <div className="group flex items-center gap-2 py-1 text-sm" style={{ paddingLeft: depth * 16 }}>
-        <span className="h-2 w-2 rounded-full shrink-0" style={{ background: colors[node.type] }} />
-        {editing ? (
-          <Input
-            autoFocus
-            value={val}
-            onChange={(e) => setVal(e.target.value)}
-            onBlur={() => { setEditing(false); if (val !== node.label) onRename(node.id, val); }}
-            onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-            className="h-6 text-sm w-64"
-          />
-        ) : (
-          <button onClick={() => setEditing(true)} className="hover:underline truncate text-left">
-            {node.label || <span className="italic text-muted-foreground">Unnamed</span>}
-          </button>
-        )}
-        <span className="text-[10px] font-mono uppercase text-muted-foreground">{node.type}</span>
-        {node.type === "CYL" && node.cylinder_type && (
-          <span className="text-[10px] font-mono text-muted-foreground">· {node.cylinder_type}</span>
-        )}
-        {node.type === "CYL" && (
-          <button
-            onClick={() => onDelete(node.id)}
-            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-1 rounded"
-            title="Remove this door from the import"
-            aria-label="Remove this door"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
-      {node.children.map((c) => <ReviewRow key={c.id} node={c} depth={depth + 1} onRename={onRename} onDelete={onDelete} />)}
-    </div>
-  );
-}
 
 
