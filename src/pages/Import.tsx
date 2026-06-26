@@ -11,14 +11,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import {
-  ParsedNode, buildTreeFromParsed, countByType, normalizeCylinderCode,
+  ParsedNode, buildTreeFromParsed, countByType,
   parseDomXl,
 } from "@/lib/import";
 import { TreeData, TNode } from "@/lib/keytree";
 import { logAction } from "@/lib/audit";
 import {
   Upload, ArrowLeft, ArrowRight, Loader2,
-  CheckCircle2, AlertTriangle, ChevronDown, ChevronRight, Trash2, FileSpreadsheet,
+  CheckCircle2, AlertTriangle, ChevronDown, ChevronRight, FileSpreadsheet,
 } from "lucide-react";
 
 type Step = "upload" | "review" | "build";
