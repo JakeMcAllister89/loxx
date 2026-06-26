@@ -140,7 +140,8 @@ export default function Systems() {
                       <span className="text-xs text-muted-foreground">{s.door_count} doors</span>
                       <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-800">Active</span>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1.5">Updated {timeAgo(s.updated_at)}</div>
+                    <div className="text-xs text-muted-foreground mt-1.5">Created {timeAgo(s.created_at)}</div>
+                    <div className="text-xs text-muted-foreground">Updated {timeAgo(s.updated_at)}</div>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4">
