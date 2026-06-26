@@ -184,7 +184,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
     open: boolean;
     sourceId: string;
     newLabel: string;
-  }>({ open: false, sourceId: "", newLabel: "" });
+    step: "differ-choice" | "name";
+    keyedAlike: boolean;
+  }>({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false });
   // Beginner guide drawer
   const [guideOpen, setGuideOpen] = useState(false);
   const dirtyRef = useRef(false);
