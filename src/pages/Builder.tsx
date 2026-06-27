@@ -1127,6 +1127,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
               onToggleReveal={toggleRevealParent}
               getExtraAddActions={getExtraAddActions}
               readOnly={readOnly}
+              collapsed={collapsed}
+              onToggleCollapsed={(id) => {
+                setCollapsed((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(id)) next.delete(id); else next.add(id);
+                  return next;
+                });
+              }}
             />
           )}
         </div>
