@@ -1,6 +1,6 @@
 import { memo, useState, useRef, useEffect } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
-import { AlertCircle, Plus, Key, History, KeyRound } from "lucide-react";
+import { AlertCircle, Plus, Key, History, KeyRound, ChevronDown, ChevronRight } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { NodeType, TNode } from "@/lib/keytree";
 import { colorForFinish } from "@/lib/finishes";
@@ -31,6 +31,9 @@ export interface CanvasNodeData {
   /** SMK only — whether the per-branch reveal is on */
   revealDecommissioned?: boolean;
   onToggleRevealDecommissioned?: () => void;
+  isCollapsed?: boolean;
+  hasChildren?: boolean;
+  onToggleCollapsed?: () => void;
 }
 
 const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string; tintHsl: string; description: string }> = {
@@ -299,7 +302,26 @@ function CanvasNodeImpl(props: NodeProps) {
             <History className="h-3 w-3" />
           </button>
         )}
+
+        {d.isCollapsed && d.node.children.length > 0 && (
+          <div className="mt-1 text-center text-[10px] text-muted-foreground">
+            {d.node.children.length} hidden
+          </div>
+        )}
       </div>
+
+      {d.hasChildren && (
+        <button
+          onClick={(e) => { e.stopPropagation(); d.onToggleCollapsed?.(); }}
+          className="absolute bottom-1 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full bg-muted border border-border flex items-center justify-center hover:bg-muted/80 transition-colors z-10"
+          title={d.isCollapsed ? "Expand" : "Collapse"}
+        >
+          {d.isCollapsed
+            ? <ChevronRight className="h-3 w-3 text-muted-foreground" />
+            : <ChevronDown className="h-3 w-3 text-muted-foreground" />
+          }
+        </button>
+      )}
 
       {canAdd && (
         <div

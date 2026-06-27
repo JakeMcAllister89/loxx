@@ -33,6 +33,8 @@ interface Props {
   getExtraAddActions?: (node: TNode) => { id: string; label: string; onClick: () => void }[];
   /** When true: disable add popovers / extra actions (view-only mode). */
   readOnly?: boolean;
+  collapsed?: Set<string>;
+  onToggleCollapsed?: (id: string) => void;
 }
 
 const nodeTypes = { keynode: CanvasNode };
@@ -48,18 +50,19 @@ interface Laid {
 }
 
 /** Tidy tree layout: post-order width assignment, parents centred over children. */
-function layout(root: TNode): { laid: Laid[]; width: number; height: number } {
+function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]; width: number; height: number } {
   const laid: Laid[] = [];
 
   const measure = (n: TNode): { w: number } => {
-    if (n.children.length === 0) return { w: NODE_WIDTH };
+    if (n.children.length === 0 || collapsed.has(n.id)) return { w: NODE_WIDTH };
     const childW = n.children.reduce((sum, c, i) => sum + measure(c).w + (i > 0 ? HGAP : 0), 0);
     return { w: Math.max(NODE_WIDTH, childW) };
   };
 
   const place = (n: TNode, x: number, depth: number): { x: number; w: number } => {
     const subW = measure(n).w;
-    if (n.children.length === 0) {
+    const isCollapsed = collapsed.has(n.id);
+    if (n.children.length === 0 || isCollapsed) {
       laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
       return { x: x + NODE_WIDTH / 2, w: NODE_WIDTH };
     }
@@ -86,13 +89,15 @@ function layout(root: TNode): { laid: Laid[]; width: number; height: number } {
 function CanvasInner({
   tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, onPaneClick, registerFitView,
   parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly,
+  collapsed, onToggleCollapsed,
 }: Props) {
   const { fitView, setCenter } = useReactFlow();
   const lastNodeCount = useRef(0);
 
   const { nodes, edges } = useMemo(() => {
     if (!tree.root) return { nodes: [] as Node[], edges: [] as Edge[] };
-    const { laid } = layout(tree.root);
+    const collapsedSet = collapsed ?? new Set<string>();
+    const { laid } = layout(tree.root, collapsedSet);
 
     const totalDoors = countDoors(tree.root);
 
@@ -124,12 +129,16 @@ function CanvasInner({
           hasDecommissionedChildren: parentsWithDecomm?.has(l.id) ?? false,
           revealDecommissioned: revealedDecomm?.has(l.id) ?? false,
           onToggleRevealDecommissioned: () => onToggleReveal?.(l.id),
+          isCollapsed: collapsedSet.has(l.id),
+          hasChildren: l.node.children.length > 0,
+          onToggleCollapsed: () => onToggleCollapsed?.(l.id),
         },
       };
     });
 
     const edges: Edge[] = [];
     const collectEdges = (n: TNode) => {
+      if (collapsedSet.has(n.id)) return;
       for (const c of n.children) {
         edges.push({
           id: `${n.id}->${c.id}`,
@@ -143,7 +152,7 @@ function CanvasInner({
     };
     if (tree.root) collectEdges(tree.root);
     return { nodes, edges };
-  }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly]);
+  }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly, collapsed, onToggleCollapsed]);
 
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState(nodes);
   const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState(edges);

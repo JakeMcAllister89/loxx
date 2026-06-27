@@ -18,6 +18,7 @@ import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
   Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert, History, BookOpen, Undo2, Copy,
+  ChevronsDownUp, ChevronsUpDown,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -363,6 +364,25 @@ function BuilderInner({ systemId }: { systemId: string }) {
     supabase.from("partners").select("id, name, company, partner_type, default_commission_pct").eq("is_active", true).order("name")
       .then(({ data }) => setPartners((data as any) ?? []));
   }, [systemId, navigate]);
+
+  // Auto-collapse to SMK level for large systems on initial load
+  useEffect(() => {
+    if (!tree.root) return;
+    let cylCount = 0;
+    const count = (n: TNode) => { if (n.type === "CYL") cylCount++; n.children.forEach(count); };
+    count(tree.root);
+    if (cylCount > 30) {
+      const toCollapse = new Set<string>();
+      const walk = (n: TNode) => {
+        if (n.type === "SMK") { toCollapse.add(n.id); return; }
+        n.children.forEach(walk);
+      };
+      walk(tree.root);
+      setCollapsed(toCollapse);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tree.root?.id]);
+
 
   // Flush pending debounced audits when selectedId changes
   const prevSelectedRef = useRef<string | null>(null);
@@ -919,6 +939,19 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <div className="flex-1" />
         <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import</Link></Button>
         <Button variant="outline" onClick={() => fitViewRef.current?.()}><Maximize2 className="h-4 w-4" /> Fit view</Button>
+        <Button variant="outline" onClick={() => {
+          const toCollapse = new Set<string>();
+          const walk = (n: TNode) => {
+            if (n.children.length > 0 && n.type !== "CYL") { toCollapse.add(n.id); n.children.forEach(walk); }
+          };
+          if (tree.root) walk(tree.root);
+          setCollapsed(toCollapse);
+        }}>
+          <ChevronsDownUp className="h-4 w-4" /> Collapse all
+        </Button>
+        <Button variant="outline" onClick={() => setCollapsed(new Set())}>
+          <ChevronsUpDown className="h-4 w-4" /> Expand all
+        </Button>
         <Button variant="outline" size="sm" onClick={handleUndo} disabled={!canUndo} title="Undo last action (Ctrl+Z)">
           <Undo2 className="h-4 w-4" />
         </Button>
@@ -1113,6 +1146,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
               onToggleReveal={toggleRevealParent}
               getExtraAddActions={getExtraAddActions}
               readOnly={readOnly}
+              collapsed={collapsed}
+              onToggleCollapsed={(id) => {
+                setCollapsed((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(id)) next.delete(id); else next.add(id);
+                  return next;
+                });
+              }}
             />
           )}
         </div>
