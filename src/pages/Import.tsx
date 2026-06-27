@@ -265,12 +265,8 @@ function ReviewStep({
     const result: { zoneId: string; zoneLabel: string; cyls: TNode[] }[] = [];
     const walkZone = (n: TNode) => {
       if (n.type === "SMK" || n.type === "GMK") {
-        const cyls: TNode[] = [];
-        const collectCyls = (child: TNode) => {
-          if (child.type === "CYL") cyls.push(child);
-          else child.children.forEach(collectCyls);
-        };
-        n.children.forEach(collectCyls);
+        // Only collect DIRECT CYL children — do not recurse into nested nodes
+        const cyls = n.children.filter(c => c.type === "CYL");
         if (cyls.length > 0) result.push({ zoneId: n.id, zoneLabel: n.label, cyls });
       }
       n.children.forEach(walkZone);
