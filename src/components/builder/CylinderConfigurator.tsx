@@ -22,6 +22,7 @@ export interface ProductFull {
   cylinder_profile?: string | null;
   pin_count: number | null;
   finish: string | null;
+  finish_colour?: string | null;
   size: string | null;
   price_gbp: number;
   bs_en_1303: boolean | null;
@@ -47,6 +48,16 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
       set.set(p.cylinder_type, arr);
     }
     return set;
+  }, [products]);
+
+  const finishColourMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const p of products) {
+      if (p.finish && p.finish_colour) {
+        map[p.finish] = p.finish_colour;
+      }
+    }
+    return map;
   }, [products]);
 
   // Currently selected product (matched by code)
@@ -219,7 +230,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
                   className={`h-9 w-9 rounded-full border-2 transition-all hover:scale-105 ${
                     isActive ? "ring-2 ring-primary ring-offset-2" : ""
                   }`}
-                  style={{ background: colorForFinish(f), borderColor: FINISH_BORDER[f] ?? "hsl(var(--border))" }}
+                  style={{ background: finishColourMap[f] ?? colorForFinish(f), borderColor: FINISH_BORDER[f] ?? "hsl(var(--border))" }}
                   aria-label={f}
                 />
               );
@@ -285,7 +296,7 @@ export function CylinderConfigurator({ node, products, onPatch }: Props) {
       </div>
 
       {/* Additional keys — hidden for Key type products */}
-      {activeFamily !== "Key" && <div className="pt-3 border-t">
+      {activeFamily !== "Key" && node.type !== "CE" && <div className="pt-3 border-t">
         <Label className="text-xs">Additional keys</Label>
         <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
           2 differ keys are included with each cylinder. Add extras here if more key-holders 

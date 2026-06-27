@@ -70,6 +70,7 @@ export function validChildTypes(parentType: NodeType): NodeType[] {
   if (parentType === "GMK") return ["MK", "CYL", "CE"];
   if (parentType === "MK")  return ["SMK", "CYL", "CE"];
   if (parentType === "SMK") return ["CYL", "CE"];
+  if (parentType === "CE")  return ["CYL"];
   return [];
 }
 
