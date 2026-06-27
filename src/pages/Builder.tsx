@@ -53,6 +53,7 @@ const TYPE_META: Record<NodeType, { label: string; color: string; pill: string; 
   MK:  { label: "Master Key",       color: "hsl(var(--node-mk))",  pill: "bg-[hsl(178_70%_94%)] text-[hsl(var(--node-mk))] border-[hsl(var(--node-mk))]/30",   description: "Opens all doors in one building or section — one per area or wing." },
   SMK: { label: "Sub Master Key",   color: "hsl(var(--node-smk))", pill: "bg-[hsl(154_60%_95%)] text-[hsl(var(--node-smk))] border-[hsl(var(--node-smk))]/30", description: "Opens all doors in one floor or zone — e.g. Ground Floor, IT Department." },
   CYL: { label: "Cylinder",         color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30",  description: "The physical lock cylinder on a single door. Its differ key opens only this door — but Sub-Master, Master, and Grand Master keys above it can also open this lock." },
+  CE:  { label: "Common Entrance",  color: "hsl(var(--node-ce))",  pill: "bg-[hsl(199_85%_94%)] text-[hsl(var(--node-ce))] border-[hsl(var(--node-ce))]/30",   description: "A shared entrance opened by every differ key in the group below it — no individual differ key is issued for it." },
 };
 
 const KEY_TYPE_LABEL: Record<string, string> = {
@@ -66,6 +67,7 @@ const CHILD_LABEL: Record<NodeType, string> = {
   MK:  "Sub Master Key",
   SMK: "Cylinder",
   CYL: "",
+  CE:  "",
 };
 
 
@@ -418,7 +420,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setSelectedId(child.id);
       setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
       logAction({ system_id: systemId, action: "node_added", node_type: child.type, node_label: child.label });
-      if (child.type === "CYL") {
+      if (child.type === "CYL" || child.type === "CE") {
         cylConfigRef.current = { nodeId: child.id, originalLabel: child.label };
       }
       return next;
@@ -459,7 +461,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         size: source.size,
         quantity: source.quantity ?? 1,
         extra_keys: source.extra_keys ?? 0,
-        is_common_entrance: source.is_common_entrance ?? false,
+        
         children: [],
       };
       const newRoot = addChild(prev.root, parent.id, newNode);
@@ -515,7 +517,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         size: original.size,
         quantity: original.quantity ?? 1,
         extra_keys: 0,
-        is_common_entrance: original.is_common_entrance,
+        
         children: [],
       };
       const decommissionedRoot = updateNode(prev.root, targetId, {
@@ -1840,6 +1842,7 @@ const LEGEND_DESC: Record<NodeType, string> = {
   MK:  "opens one building",
   SMK: "opens a zone",
   CYL: "physical hardware",
+  CE:  "shared entrance",
 };
 
 function Legend({ type }: { type: NodeType }) {
@@ -1873,6 +1876,7 @@ function DetailPanel({
 }) {
   const meta = TYPE_META[node.type];
   const isCyl = node.type === "CYL";
+  const isCE = node.type === "CE";
   const isMk = node.type === "MK";
   const isSmk = node.type === "SMK";
   const isMkOrSmk = isMk || isSmk;
@@ -1881,18 +1885,22 @@ function DetailPanel({
 
   const nameFieldLabel = isCyl
     ? "Room / door name"
-    : isMk
-      ? "Building / location name"
-      : isSmk
-        ? "Zone / area name"
-        : "Label";
+    : isCE
+      ? "Door / entrance name"
+      : isMk
+        ? "Building / location name"
+        : isSmk
+          ? "Zone / area name"
+          : "Label";
   const namePlaceholder = isCyl
     ? "e.g. Director's Office"
-    : isMk
-      ? "e.g. Main Building"
-      : isSmk
-        ? "e.g. Ground Floor"
-        : "";
+    : isCE
+      ? "e.g. Block A Entrance"
+      : isMk
+        ? "e.g. Main Building"
+        : isSmk
+          ? "e.g. Ground Floor"
+          : "";
 
   const MK_SUGGESTIONS = [
     "Main Building", "North Wing", "South Wing", "East Wing", "West Wing",
@@ -1911,6 +1919,7 @@ function DetailPanel({
     t === "MK"  ? "+ Add a building or wing (Master Key)"
   : t === "SMK" ? "+ Add a floor or department (Sub-Master)"
   : t === "CYL" ? "+ Add a door (Cylinder)"
+  : t === "CE"  ? "+ Add a common entrance"
   : "+ Add child";
 
   const NEXT_STEP: Record<NodeType, string> = {
@@ -1918,8 +1927,9 @@ function DetailPanel({
     MK:  "Add Sub-Masters for each floor or zone — or add Cylinders directly for simpler sites.",
     SMK: "Add a Cylinder for each door this zone covers.",
     CYL: "Give this door a name and choose a cylinder type from the options above.",
+    CE:  "Give this entrance a name and select the cylinder type, finish and size.",
   };
-  const showNextStepHint = isCyl ? !node.cylinder_type : node.children.length === 0;
+  const showNextStepHint = (isCyl || isCE) ? !node.cylinder_type : node.children.length === 0;
 
   // Build the access trail for CYL nodes (chain of keys that can open this door).
   // trail includes the selected node itself, so slice it to ancestors only.
@@ -2036,7 +2046,7 @@ function DetailPanel({
         )}
 
 
-        {isCyl && (
+        {(isCyl || isCE) && (
           <CylinderConfigurator node={node} products={products} onPatch={onPatch} />
         )}
 
@@ -2083,6 +2093,60 @@ function DetailPanel({
             </div>
             <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
               The differ key only opens this one door. Every key above it in the tree can also open this lock — plus all other doors in their group.
+            </p>
+          </div>
+        )}
+
+        {isCE && (
+          <div className="rounded-md border bg-muted/30 p-3">
+            <div className="text-xs font-semibold mb-1">🔑 Who can open this door?</div>
+            <p className="text-[10px] text-muted-foreground mb-3 leading-relaxed">
+              This is a common entrance. It has no individual differ key — it is opened by every differ key in the group below it, plus all master keys above.
+            </p>
+            <div className="space-y-1">
+              {ancestors.map((t, i) => {
+                const dot = ({
+                  GMK: "hsl(var(--node-gmk))",
+                  MK:  "hsl(var(--node-mk))",
+                  SMK: "hsl(var(--node-smk))",
+                } as Record<string, string>)[t.type] ?? "hsl(var(--node-ce))";
+                const suffix = ({
+                  GMK: "— every door in the system",
+                  MK:  "— all doors in this section",
+                  SMK: "— all doors in this zone",
+                } as Record<string, string>)[t.type] ?? "";
+                const keyLabel = t.type === "GMK" ? "Grand Master key"
+                  : t.type === "MK" ? "Master key"
+                  : "Sub-Master key";
+                const label = (t.type === "MK" || t.type === "SMK") && t.location?.trim()
+                  ? t.location.trim()
+                  : t.label;
+                return (
+                  <div key={t.id} className="flex items-start gap-2 text-[11px]">
+                    <div className="flex flex-col items-center pt-1">
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ background: dot }} />
+                      {i < ancestors.length - 1 && (
+                        <span className="w-px flex-1 bg-border mt-1" style={{ minHeight: 12 }} />
+                      )}
+                    </div>
+                    <div className="flex-1 leading-relaxed">
+                      <span className="font-medium text-foreground">{label}</span>
+                      <span className="text-muted-foreground"> ({keyLabel})</span>
+                      <span className="text-muted-foreground"> {suffix}</span>
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="flex items-start gap-2 text-[11px] mt-1">
+                <span className="h-2 w-2 rounded-full shrink-0 mt-1" style={{ background: "hsl(var(--node-cyl))" }} />
+                <div className="flex-1 leading-relaxed">
+                  <span className="font-medium text-foreground">All differ keys in this group</span>
+                  <span className="text-muted-foreground"> — each one also opens this entrance</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+              This is the only door in the system where keys lower in the tree also have access. Residents or occupants use their individual key — no separate common entrance key is issued.
             </p>
           </div>
         )}
@@ -2342,6 +2406,13 @@ function GuidePanel({ onClose }: { onClose: () => void }) {
       desc: "Each cylinder represents one physical door lock. Add a cylinder for every door that needs to be part of the system.",
       tip: "Example: 'Server Room', 'Director's Office', 'Room 14'",
     },
+    {
+      step: "5",
+      color: "hsl(var(--node-ce))",
+      title: "Common Entrance",
+      desc: "A shared door opened by every key in the group below it — no separate entrance key is issued. Residents use their own flat or office key to access the shared entrance.",
+      tip: "Example: 'Block A Entrance', 'Main Gate', 'Car Park Barrier'",
+    },
   ];
 
   return (
@@ -2387,9 +2458,7 @@ function GuidePanel({ onClose }: { onClose: () => void }) {
           <span>🔑</span> How access works
         </div>
         <p className="text-[11px] text-muted-foreground leading-relaxed">
-          Every door has its own differ key — 
-          it only opens that one door. But every key above it in your tree can 
-          also open it.
+          Every door has its own differ key — it only opens that one door. But every key above it in your tree can also open it. Common entrances are the exception: they have no differ key of their own and are opened by all keys in the group below them.
         </p>
         <div className="space-y-2">
           {[
@@ -2397,6 +2466,7 @@ function GuidePanel({ onClose }: { onClose: () => void }) {
             { color: "hsl(var(--node-smk))", label: "Sub-Master key", desc: "Opens all doors in its zone" },
             { color: "hsl(var(--node-mk))",  label: "Master key",     desc: "Opens all doors in its section" },
             { color: "hsl(var(--node-gmk))", label: "Grand Master key", desc: "Opens every door in the system" },
+            { color: "hsl(var(--node-ce))",  label: "Common entrance", desc: "Opened by all differ keys below it, and all master keys above" },
           ].map(({ color, label, desc }) => (
             <div key={label} className="flex items-center gap-2 text-[10px]">
               <span className="h-2 w-2 rounded-full shrink-0" style={{ background: color }} />
@@ -2405,6 +2475,9 @@ function GuidePanel({ onClose }: { onClose: () => void }) {
             </div>
           ))}
         </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed mt-3">
+          Common entrance doors are unique — every differ key in the group below also opens them, alongside all master keys above. There is no individual differ key for a common entrance.
+        </p>
         <p className="text-[11px] italic text-muted-foreground leading-relaxed">
           Example: the cleaner holds a Sub-Master key for Ground Floor — 
           they can open every ground floor door, but not the floors above.

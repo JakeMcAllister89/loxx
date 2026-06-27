@@ -1,4 +1,4 @@
-export type NodeType = "GMK" | "MK" | "SMK" | "CYL";
+export type NodeType = "GMK" | "MK" | "SMK" | "CYL" | "CE";
 
 export interface KeyEntry {
   ref: string;
@@ -16,7 +16,7 @@ export interface TNode {
   size?: string;              // CYL only — e.g. "35/35"
   quantity?: number;          // CYL only — units required at this door (default 1)
   extra_keys?: number;        // CYL only — additional keys beyond the 2 included
-  is_common_entrance?: boolean; // CYL only — common entrance cylinder (multiple keys operate same lock)
+  
   keyed_alike_source_differ?: number;  // if set, this node shares a differ with another cylinder
   // Decommissioned cylinder fields — once a cylinder is replaced, the original is preserved in-tree
   decommissioned_at?: string;            // ISO date
@@ -67,9 +67,9 @@ export function createGMK(label = "Grand Master Key"): TNode {
  * non-leaf level (e.g. a shared estate gate keyed to the GMK).
  */
 export function validChildTypes(parentType: NodeType): NodeType[] {
-  if (parentType === "GMK") return ["MK", "CYL"];
-  if (parentType === "MK")  return ["SMK", "CYL"];
-  if (parentType === "SMK") return ["CYL"];
+  if (parentType === "GMK") return ["MK", "CYL", "CE"];
+  if (parentType === "MK")  return ["SMK", "CYL", "CE"];
+  if (parentType === "SMK") return ["CYL", "CE"];
   return [];
 }
 
@@ -86,6 +86,9 @@ export function makeChild(parentType: NodeType, index: number, childType?: NodeT
       : ALPHABET[0];
     const label = `SMK-${parentLetter}${index + 1}`;
     return { id: newId(), type: "SMK", label, keys: [{ ref: label, qty: 2 }], children: [] };
+  }
+  if (t === "CE") {
+    return { id: newId(), type: "CE", label: "Common Entrance", children: [] };
   }
   return { id: newId(), type: "CYL", label: `Door ${index + 1}`, children: [] };
 }
@@ -216,6 +219,8 @@ export function assignNextDiffers(tree: TreeData): TreeData {
   };
   // Pass 2: assign differs — preserve existing, pin keyed alike, assign fresh only where null
   const assigned = mapTree(tree.root, (n) => {
+    // CE (Common Entrance) nodes intentionally receive no differ number —
+    // they are opened by all keys in their parent group, not by an individual differ key.
     if (n.type === "CYL" && !n.decommissioned_at) {
       // Keyed alike: always use the pinned source differ
       if (n.keyed_alike_source_differ != null) {

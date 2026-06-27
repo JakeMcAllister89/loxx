@@ -41,6 +41,7 @@ const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; bo
   MK:  { label: "Master Key",       tone: "text-[hsl(var(--node-mk))]",  dot: "hsl(var(--node-mk))",  border: "hsl(var(--node-mk))",  tintHsl: "var(--node-mk)",  description: "Opens all doors in one building or section." },
   SMK: { label: "Sub Master Key",   tone: "text-[hsl(var(--node-smk))]", dot: "hsl(var(--node-smk))", border: "hsl(var(--node-smk))", tintHsl: "var(--node-smk)", description: "Opens all doors in one floor or zone." },
   CYL: { label: "Cylinder",         tone: "text-[hsl(var(--node-cyl))]", dot: "hsl(var(--node-cyl))", border: "hsl(var(--node-cyl))", tintHsl: "var(--node-cyl)", description: "The physical lock cylinder on a single door. Has its own differ key, but Sub-Master, Master and Grand Master keys above it can also open this lock." },
+  CE:  { label: "Common Entrance",  tone: "text-[hsl(var(--node-ce))]",  dot: "hsl(var(--node-ce))",  border: "hsl(var(--node-ce))",  tintHsl: "var(--node-ce)",  description: "A shared entrance opened by every differ key in the group below it — no individual differ key is issued for it." },
 };
 
 const ADD_LABEL: Record<NodeType, string> = {
@@ -48,6 +49,7 @@ const ADD_LABEL: Record<NodeType, string> = {
   MK:  "Add a building or wing",
   SMK: "Add a floor or department",
   CYL: "Add a door",
+  CE:  "Add common entrance",
 };
 
 const NODE_ADD_HINT: Partial<Record<NodeType, string>> = {
@@ -255,6 +257,14 @@ function CanvasNodeImpl(props: NodeProps) {
                 <Key className="h-2 w-2" />+{node.extra_keys}
               </span>
             )}
+          </div>
+        )}
+
+        {node.type === "CE" && (
+          <div className="flex items-center justify-center gap-1 mt-1">
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded border border-[hsl(var(--node-ce))] text-[hsl(var(--node-ce))] bg-[hsl(var(--node-ce))]/10">
+              CE
+            </span>
           </div>
         )}
 

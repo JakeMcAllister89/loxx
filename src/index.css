@@ -58,6 +58,7 @@
    --node-smk: 154 71% 36%;           /* green — Sub Master */
    --node-ck:  210 73% 54%;           /* legacy — Door Group (kept for back-compat) */
    --node-cyl: 33 91% 44%;            /* amber — Cylinder */
+   --node-ce:  199 85% 38%;           /* cyan-blue — Common Entrance */
 
     --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
 

@@ -24,6 +24,7 @@ const LEVEL_ALIASES: Record<string, NodeType> = {
   mk: "MK", "master": "MK", "master key": "MK", "building": "MK",
   smk: "SMK", "sub master": "SMK", "sub-master": "SMK", "sub master key": "SMK",
   cyl: "CYL", cylinder: "CYL",
+  ce: "CE", "common entrance": "CE",
 };
 
 export function normalizeLevel(raw: string): NodeType | null {
@@ -117,7 +118,7 @@ export function buildTreeFromParsed(nodes: ParsedNode[]): BuildResult {
 }
 
 export function countByType(tree: TreeData): Record<NodeType, number> {
-  const counts: Record<NodeType, number> = { GMK: 0, MK: 0, SMK: 0, CYL: 0 };
+  const counts: Record<NodeType, number> = { GMK: 0, MK: 0, SMK: 0, CYL: 0, CE: 0 };
   const walk = (n: TNode | null) => {
     if (!n) return;
     if (counts[n.type] != null) counts[n.type]++;
@@ -272,7 +273,9 @@ export function parseDomXl(buffer: ArrayBuffer): DomXlParseResult {
     const row = raw[i];
     if (!row) continue;
     const keyNo = row[4];
-    if (!keyNo || !String(keyNo).includes("/")) continue;
+    const keyRef = keyNo ? String(keyNo).trim() : "";
+    const isZRow = /^Z/i.test(keyRef) && !keyRef.includes("/");
+    if (!keyNo || (!keyRef.includes("/") && !isZRow)) continue;
     const roomDesc = row[3] ? String(row[3]).trim() : null;
     if (!roomDesc) continue;
     const cylType = row[8] ? String(row[8]).trim() : null;
@@ -299,6 +302,19 @@ export function parseDomXl(buffer: ArrayBuffer): DomXlParseResult {
     const cylinderFamily = rawTipo ? (tipoToFamily[rawTipo] ?? rawTipo) : null;
     const decodedLabel = [cylinderFamily, cylinderProfile].filter(Boolean).join(" / ") || rawTipo || "Unknown";
     const extraKeys = keyQty != null ? Math.max(0, keyQty - 2) : 0;
+
+    if (isZRow) {
+      nodes.push({
+        level: "CE",
+        label: roomDesc,
+        parent_label: parentLabel,
+        room_name: roomDesc,
+        finish: finish ?? undefined,
+        size: size ?? undefined,
+        dom_hint: decodedLabel,
+      } as any);
+      continue;
+    }
 
     nodes.push({
       level: "CYL",

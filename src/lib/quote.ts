@@ -109,6 +109,36 @@ export function treeToQuoteItems(
         });
       }
     }
+    if (n.type === "CE" && n.cylinder_type) {
+      const p = productByCode.get(n.cylinder_type);
+      const unit = Number(p?.price_gbp ?? 0);
+      const qty = n.quantity ?? 1;
+      const mkNode  = trail.find(t => t.type === "MK");
+      const smkNode = trail.find(t => t.type === "SMK");
+      const hierarchyRefs: string[] = [
+        ...(mkNode  ? [mkNode.label]  : []),
+        ...(smkNode ? [smkNode.label] : []),
+      ];
+      const zoneNode = smkNode ?? mkNode;
+      const zoneLabel = zoneNode ? (zoneNode.location?.trim() || zoneNode.label) : undefined;
+      out.push({
+        kind: "cylinder",
+        product_code: n.cylinder_type,
+        product_name: (p as any)?.product_description ?? p?.name,
+        cylinder_type: p?.cylinder_type,
+        cylinder_profile: "Common Entrance",
+        finish: n.finish ?? p?.finish ?? undefined,
+        size: p?.size ?? undefined,
+        image_url: p?.image_url ?? undefined,
+        room_label: n.label,
+        differ_ref: "CE",
+        quantity: qty,
+        unit_price: unit,
+        hierarchy_refs: hierarchyRefs,
+        location: zoneLabel,
+        ...sys,
+      });
+    }
     n.children.forEach(c => walk(c, [...trail, n]));
   };
   if (tree.root) walk(tree.root, []);
