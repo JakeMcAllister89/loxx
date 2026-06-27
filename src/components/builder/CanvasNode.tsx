@@ -178,6 +178,7 @@ function CanvasNodeImpl(props: NodeProps) {
       style={{
         width: cardWidth,
         borderLeft: `3px solid ${isDecommissioned ? "hsl(var(--muted-foreground))" : meta.border}`,
+        borderRight: d.isCollapsed ? "2px solid hsl(38 92% 50%)" : undefined,
         boxShadow: hovered || selected || highlight ? "0 4px 14px rgba(0,0,0,0.10)" : "0 1px 2px rgba(0,0,0,0.04)",
         background: isDecommissioned ? undefined
           : selected ? `hsl(${meta.tintHsl} / 0.18)`
