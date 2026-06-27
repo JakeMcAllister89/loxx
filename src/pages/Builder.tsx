@@ -2097,6 +2097,60 @@ function DetailPanel({
           </div>
         )}
 
+        {isCE && (
+          <div className="rounded-md border bg-muted/30 p-3">
+            <div className="text-xs font-semibold mb-1">🔑 Who can open this door?</div>
+            <p className="text-[10px] text-muted-foreground mb-3 leading-relaxed">
+              This is a common entrance. It has no individual differ key — it is opened by every differ key in the group below it, plus all master keys above.
+            </p>
+            <div className="space-y-1">
+              {ancestors.map((t, i) => {
+                const dot = ({
+                  GMK: "hsl(var(--node-gmk))",
+                  MK:  "hsl(var(--node-mk))",
+                  SMK: "hsl(var(--node-smk))",
+                } as Record<string, string>)[t.type] ?? "hsl(var(--node-ce))";
+                const suffix = ({
+                  GMK: "— every door in the system",
+                  MK:  "— all doors in this section",
+                  SMK: "— all doors in this zone",
+                } as Record<string, string>)[t.type] ?? "";
+                const keyLabel = t.type === "GMK" ? "Grand Master key"
+                  : t.type === "MK" ? "Master key"
+                  : "Sub-Master key";
+                const label = (t.type === "MK" || t.type === "SMK") && t.location?.trim()
+                  ? t.location.trim()
+                  : t.label;
+                return (
+                  <div key={t.id} className="flex items-start gap-2 text-[11px]">
+                    <div className="flex flex-col items-center pt-1">
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ background: dot }} />
+                      {i < ancestors.length - 1 && (
+                        <span className="w-px flex-1 bg-border mt-1" style={{ minHeight: 12 }} />
+                      )}
+                    </div>
+                    <div className="flex-1 leading-relaxed">
+                      <span className="font-medium text-foreground">{label}</span>
+                      <span className="text-muted-foreground"> ({keyLabel})</span>
+                      <span className="text-muted-foreground"> {suffix}</span>
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="flex items-start gap-2 text-[11px] mt-1">
+                <span className="h-2 w-2 rounded-full shrink-0 mt-1" style={{ background: "hsl(var(--node-cyl))" }} />
+                <div className="flex-1 leading-relaxed">
+                  <span className="font-medium text-foreground">All differ keys in this group</span>
+                  <span className="text-muted-foreground"> — each one also opens this entrance</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+              This is the only door in the system where keys lower in the tree also have access. Residents or occupants use their individual key — no separate common entrance key is issued.
+            </p>
+          </div>
+        )}
+
         {showNextStepHint && !readOnly && (
           <div className="rounded-md border border-amber-300 bg-amber-50 p-2.5 flex items-start gap-2">
             <span className="text-base leading-none">💡</span>
@@ -2351,6 +2405,13 @@ function GuidePanel({ onClose }: { onClose: () => void }) {
       title: "Cylinders (Doors)",
       desc: "Each cylinder represents one physical door lock. Add a cylinder for every door that needs to be part of the system.",
       tip: "Example: 'Server Room', 'Director's Office', 'Room 14'",
+    },
+    {
+      step: "5",
+      color: "hsl(var(--node-ce))",
+      title: "Common Entrance",
+      desc: "A shared door opened by every key in the group below it — no separate entrance key is issued. Residents use their own flat or office key to access the shared entrance.",
+      tip: "Example: 'Block A Entrance', 'Main Gate', 'Car Park Barrier'",
     },
   ];
 
