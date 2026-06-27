@@ -31,6 +31,9 @@ export interface CanvasNodeData {
   /** SMK only — whether the per-branch reveal is on */
   revealDecommissioned?: boolean;
   onToggleRevealDecommissioned?: () => void;
+  isCollapsed?: boolean;
+  hasChildren?: boolean;
+  onToggleCollapsed?: () => void;
 }
 
 const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string; tintHsl: string; description: string }> = {
