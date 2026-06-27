@@ -357,7 +357,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setTree(loaded.root ? assignNextDiffers(loaded) : loaded);
       setLoading(false);
     });
-    supabase.from("products").select("id,code,name,product_description,cylinder_type,cylinder_profile,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as any));
+    supabase.from("products").select("id,code,name,product_description,cylinder_type,cylinder_profile,pin_count,finish,finish_colour,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as any));
     // Determine if this system has been supplied/delivered — enables the "Replace cylinder" action.
     supabase.from("orders").select("status").eq("system_id", systemId).then(({ data }) => {
       const fulfilledStatuses = new Set(["delivered", "fulfilled", "shipped", "complete", "completed"]);
@@ -1281,7 +1281,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
 
         {/* Right detail panel */}
-        <aside className="w-full md:w-[360px] md:shrink-0 border-t md:border-t-0 md:border-l bg-card overflow-auto no-print max-h-[60vh] md:max-h-none">
+        <aside className="w-full md:w-[360px] md:shrink-0 border-t md:border-t-0 md:border-l bg-card overflow-auto no-print max-h-[60vh] md:max-h-none md:h-full">
           {!selected ? (
             <div className="p-6 text-sm text-muted-foreground">
               <h3 className="text-base font-semibold text-foreground mb-1">Details</h3>
@@ -1933,10 +1933,12 @@ function DetailPanel({
   const ancestors = trail.slice(0, Math.max(0, trail.length - 1));
   const accessTrail = isCyl
     ? [
-        ...ancestors.map((t) => ({
-          node: t,
-          label: (t.type === "MK" || t.type === "SMK") && t.location?.trim() ? t.location.trim() : t.label,
-        })),
+        ...ancestors
+          .filter((t) => t.type !== "CE")
+          .map((t) => ({
+            node: t,
+            label: (t.type === "MK" || t.type === "SMK") && t.location?.trim() ? t.location.trim() : t.label,
+          })),
         { node, label: node.label || "This door" },
       ]
     : [];
@@ -2413,7 +2415,7 @@ function GuidePanel({ onClose }: { onClose: () => void }) {
   ];
 
   return (
-    <aside className="w-72 shrink-0 border-r bg-card p-5 overflow-auto no-print">
+    <aside className="w-72 shrink-0 border-r bg-card p-5 overflow-auto no-print h-full">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold">How to build your system</h3>
         <button
