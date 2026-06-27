@@ -46,10 +46,10 @@ const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; bo
 
 const ADD_LABEL: Record<NodeType, string> = {
   GMK: "Add grand master key",
-  MK:  "Add a building or wing",
-  SMK: "Add a floor or department",
-  CYL: "Add a door",
-  CE:  "Add common entrance",
+  MK:  "Add a building or wing (Master Key)",
+  SMK: "Add a floor or department (Sub-Master Key)",
+  CYL: "Add a door (Cylinder)",
+  CE:  "Add a common entrance",
 };
 
 const NODE_ADD_HINT: Partial<Record<NodeType, string>> = {
@@ -71,7 +71,7 @@ function CanvasNodeImpl(props: NodeProps) {
     extraAddActions, hasDecommissionedChildren, revealDecommissioned, onToggleRevealDecommissioned,
   } = d;
   const meta = TYPE_META[node.type] ?? TYPE_META.SMK;
-  const isCyl = node.type === "CYL";
+  const isCyl = node.type === "CYL" || node.type === "CE";
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
@@ -193,7 +193,7 @@ function CanvasNodeImpl(props: NodeProps) {
 
       <div className={`${padding} text-center`}>
         {/* Row 1 — type label */}
-        <TooltipProvider delayDuration={300}>
+        <TooltipProvider delayDuration={800}>
           <Tooltip>
             <TooltipTrigger asChild>
               <div
@@ -203,7 +203,7 @@ function CanvasNodeImpl(props: NodeProps) {
                 {meta.label}
               </div>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs max-w-[200px]">
+            <TooltipContent side="top" className="text-xs max-w-[180px] text-center z-[9999]">
               {meta.description}
             </TooltipContent>
           </Tooltip>

@@ -102,7 +102,7 @@ function CanvasInner({
     const totalDoors = countDoors(tree.root);
 
     const nodes: Node[] = laid.map((l) => {
-      const product = l.node.type === "CYL" && l.node.cylinder_type
+      const product = (l.node.type === "CYL" || l.node.type === "CE") && l.node.cylinder_type
         ? productsByCode.get(l.node.cylinder_type) ?? null
         : null;
       const kids = l.node.children;

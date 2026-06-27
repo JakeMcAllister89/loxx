@@ -77,15 +77,14 @@ export function validChildTypes(parentType: NodeType): NodeType[] {
 export function makeChild(parentType: NodeType, index: number, childType?: NodeType, parentLabel?: string): TNode {
   const t: NodeType = childType ?? (validChildTypes(parentType)[0] ?? "CYL");
   if (t === "MK") {
-    const letter = ALPHABET[index] ?? String(index + 1);
-    const label = `MK-${letter}`;
+    const label = `MK-${index + 1}`;
     return { id: newId(), type: "MK", label, keys: [{ ref: label, qty: 2 }], children: [] };
   }
   if (t === "SMK") {
-    const parentLetter = parentLabel?.startsWith("MK-")
+    const parentNum = parentLabel?.startsWith("MK-")
       ? parentLabel.slice(3)
-      : ALPHABET[0];
-    const label = `SMK-${parentLetter}${index + 1}`;
+      : "1";
+    const label = `SMK-${parentNum}-${index + 1}`;
     return { id: newId(), type: "SMK", label, keys: [{ ref: label, qty: 2 }], children: [] };
   }
   if (t === "CE") {
