@@ -435,9 +435,17 @@ function ProductDrawer({ open, onOpenChange, product, types, onSaved }: {
                     onChange={e => upd("finish_colour", e.target.value)}
                     className="h-9 w-16 rounded border cursor-pointer p-0.5"
                   />
-                  <span className="text-xs text-muted-foreground">
-                    {p.finish_colour ?? "Not set — will show grey"}
-                  </span>
+                  <input
+                    type="text"
+                    value={p.finish_colour ?? ""}
+                    placeholder="#888888"
+                    maxLength={7}
+                    onChange={e => {
+                      const v = e.target.value;
+                      if (v === "" || /^#[0-9a-fA-F]{0,6}$/.test(v)) upd("finish_colour", v || null);
+                    }}
+                    className="text-xs font-mono w-24 border rounded px-2 py-1 bg-background text-foreground"
+                  />
                   {p.finish_colour && (
                     <button
                       type="button"
