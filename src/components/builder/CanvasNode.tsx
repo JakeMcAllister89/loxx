@@ -1,6 +1,6 @@
 import { memo, useState, useRef, useEffect } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
-import { AlertCircle, Plus, Key, History, KeyRound, ChevronDown, ChevronRight } from "lucide-react";
+import { AlertCircle, Plus, Key, History, KeyRound, ChevronDown, ChevronRight, ChevronLeft } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { NodeType, TNode } from "@/lib/keytree";
 import { colorForFinish } from "@/lib/finishes";
