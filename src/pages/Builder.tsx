@@ -53,6 +53,7 @@ const TYPE_META: Record<NodeType, { label: string; color: string; pill: string; 
   MK:  { label: "Master Key",       color: "hsl(var(--node-mk))",  pill: "bg-[hsl(178_70%_94%)] text-[hsl(var(--node-mk))] border-[hsl(var(--node-mk))]/30",   description: "Opens all doors in one building or section — one per area or wing." },
   SMK: { label: "Sub Master Key",   color: "hsl(var(--node-smk))", pill: "bg-[hsl(154_60%_95%)] text-[hsl(var(--node-smk))] border-[hsl(var(--node-smk))]/30", description: "Opens all doors in one floor or zone — e.g. Ground Floor, IT Department." },
   CYL: { label: "Cylinder",         color: "hsl(var(--node-cyl))", pill: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30",  description: "The physical lock cylinder on a single door. Its differ key opens only this door — but Sub-Master, Master, and Grand Master keys above it can also open this lock." },
+  CE:  { label: "Common Entrance",  color: "hsl(var(--node-ce))",  pill: "bg-[hsl(199_85%_94%)] text-[hsl(var(--node-ce))] border-[hsl(var(--node-ce))]/30",   description: "A shared entrance opened by every differ key in the group below it — no individual differ key is issued for it." },
 };
 
 const KEY_TYPE_LABEL: Record<string, string> = {
@@ -66,6 +67,7 @@ const CHILD_LABEL: Record<NodeType, string> = {
   MK:  "Sub Master Key",
   SMK: "Cylinder",
   CYL: "",
+  CE:  "",
 };
 
 
@@ -418,7 +420,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setSelectedId(child.id);
       setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
       logAction({ system_id: systemId, action: "node_added", node_type: child.type, node_label: child.label });
-      if (child.type === "CYL") {
+      if (child.type === "CYL" || child.type === "CE") {
         cylConfigRef.current = { nodeId: child.id, originalLabel: child.label };
       }
       return next;
@@ -459,7 +461,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         size: source.size,
         quantity: source.quantity ?? 1,
         extra_keys: source.extra_keys ?? 0,
-        is_common_entrance: source.is_common_entrance ?? false,
+        
         children: [],
       };
       const newRoot = addChild(prev.root, parent.id, newNode);
@@ -515,7 +517,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         size: original.size,
         quantity: original.quantity ?? 1,
         extra_keys: 0,
-        is_common_entrance: original.is_common_entrance,
+        
         children: [],
       };
       const decommissionedRoot = updateNode(prev.root, targetId, {
@@ -1840,6 +1842,7 @@ const LEGEND_DESC: Record<NodeType, string> = {
   MK:  "opens one building",
   SMK: "opens a zone",
   CYL: "physical hardware",
+  CE:  "shared entrance",
 };
 
 function Legend({ type }: { type: NodeType }) {
@@ -1873,6 +1876,7 @@ function DetailPanel({
 }) {
   const meta = TYPE_META[node.type];
   const isCyl = node.type === "CYL";
+  const isCE = node.type === "CE";
   const isMk = node.type === "MK";
   const isSmk = node.type === "SMK";
   const isMkOrSmk = isMk || isSmk;
@@ -1881,18 +1885,22 @@ function DetailPanel({
 
   const nameFieldLabel = isCyl
     ? "Room / door name"
-    : isMk
-      ? "Building / location name"
-      : isSmk
-        ? "Zone / area name"
-        : "Label";
+    : isCE
+      ? "Door / entrance name"
+      : isMk
+        ? "Building / location name"
+        : isSmk
+          ? "Zone / area name"
+          : "Label";
   const namePlaceholder = isCyl
     ? "e.g. Director's Office"
-    : isMk
-      ? "e.g. Main Building"
-      : isSmk
-        ? "e.g. Ground Floor"
-        : "";
+    : isCE
+      ? "e.g. Block A Entrance"
+      : isMk
+        ? "e.g. Main Building"
+        : isSmk
+          ? "e.g. Ground Floor"
+          : "";
 
   const MK_SUGGESTIONS = [
     "Main Building", "North Wing", "South Wing", "East Wing", "West Wing",
@@ -1911,6 +1919,7 @@ function DetailPanel({
     t === "MK"  ? "+ Add a building or wing (Master Key)"
   : t === "SMK" ? "+ Add a floor or department (Sub-Master)"
   : t === "CYL" ? "+ Add a door (Cylinder)"
+  : t === "CE"  ? "+ Add a common entrance"
   : "+ Add child";
 
   const NEXT_STEP: Record<NodeType, string> = {
@@ -1918,8 +1927,9 @@ function DetailPanel({
     MK:  "Add Sub-Masters for each floor or zone — or add Cylinders directly for simpler sites.",
     SMK: "Add a Cylinder for each door this zone covers.",
     CYL: "Give this door a name and choose a cylinder type from the options above.",
+    CE:  "Give this entrance a name and select the cylinder type, finish and size.",
   };
-  const showNextStepHint = isCyl ? !node.cylinder_type : node.children.length === 0;
+  const showNextStepHint = (isCyl || isCE) ? !node.cylinder_type : node.children.length === 0;
 
   // Build the access trail for CYL nodes (chain of keys that can open this door).
   // trail includes the selected node itself, so slice it to ancestors only.
@@ -2036,7 +2046,7 @@ function DetailPanel({
         )}
 
 
-        {isCyl && (
+        {(isCyl || isCE) && (
           <CylinderConfigurator node={node} products={products} onPatch={onPatch} />
         )}
 
