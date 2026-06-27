@@ -70,6 +70,7 @@ export function validChildTypes(parentType: NodeType): NodeType[] {
   if (parentType === "GMK") return ["MK", "CYL", "CE"];
   if (parentType === "MK")  return ["SMK", "CYL", "CE"];
   if (parentType === "SMK") return ["CYL", "CE"];
+  if (parentType === "CE")  return ["CYL"];
   return [];
 }
 
@@ -180,7 +181,7 @@ export function countDoors(root: TNode | null): number {
   if (!root) return 0;
   let n = 0;
   const w = (x: TNode) => {
-    if (x.type === "CYL") n++;
+    if (x.type === "CYL" || x.type === "CE") n++;
     x.children.forEach(w);
   };
   w(root);

@@ -917,7 +917,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   return (
     <div className="flex flex-col h-screen">
       {/* Top bar */}
-      <div className="border-b bg-card px-6 py-3 flex items-center gap-3 no-print">
+      <div className="border-b bg-card px-4 py-3 flex items-center gap-2 no-print">
         <Input value={name} onChange={(e) => { setName(e.target.value); dirtyRef.current = true; }} className="max-w-xs font-semibold" />
         {reference && (
           <span className="text-xs font-medium text-foreground bg-muted px-2.5 py-1 rounded-full whitespace-nowrap">
@@ -939,9 +939,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
         </div>
 
         <div className="flex-1" />
-        <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import</Link></Button>
-        <Button variant="outline" onClick={() => fitViewRef.current?.()}><Maximize2 className="h-4 w-4" /> Fit view</Button>
-        <Button variant="outline" onClick={() => {
+        <Button variant="outline" size="sm" asChild title="Import existing system"><Link to="/import"><Upload className="h-4 w-4" /></Link></Button>
+        <Button variant="outline" size="sm" onClick={() => fitViewRef.current?.()} title="Fit view"><Maximize2 className="h-4 w-4" /></Button>
+        <Button variant="outline" size="sm" title="Collapse all" onClick={() => {
           const toCollapse = new Set<string>();
           const walk = (n: TNode) => {
             if (n.children.length > 0 && n.type !== "CYL") { toCollapse.add(n.id); n.children.forEach(walk); }
@@ -949,19 +949,16 @@ function BuilderInner({ systemId }: { systemId: string }) {
           if (tree.root) walk(tree.root);
           setCollapsed(toCollapse);
         }}>
-          <ChevronsDownUp className="h-4 w-4" /> Collapse all
+          <ChevronsDownUp className="h-4 w-4" />
         </Button>
-        <Button variant="outline" onClick={() => setCollapsed(new Set())}>
-          <ChevronsUpDown className="h-4 w-4" /> Expand all
+        <Button variant="outline" size="sm" title="Expand all" onClick={() => setCollapsed(new Set())}>
+          <ChevronsUpDown className="h-4 w-4" />
         </Button>
         <Button variant="outline" size="sm" onClick={handleUndo} disabled={!canUndo} title="Undo last action (Ctrl+Z)">
           <Undo2 className="h-4 w-4" />
         </Button>
-        <Button variant="outline" onClick={runValidate}><ShieldCheck className="h-4 w-4" /> Validate</Button>
-        <Button variant="outline" onClick={() => setGuideOpen(v => !v)} className="gap-1.5">
-          <BookOpen className="h-4 w-4" />
-          Guide
-        </Button>
+        <Button variant="outline" size="sm" onClick={runValidate} title="Validate"><ShieldCheck className="h-4 w-4" /></Button>
+        <Button variant="outline" size="sm" onClick={() => setGuideOpen(v => !v)} title="Guide"><BookOpen className="h-4 w-4" /></Button>
         {hasAnyDecomm && (
           <Button
             variant={showAllDecomm ? "default" : "outline"}
@@ -972,9 +969,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
           </Button>
         )}
         <SaveStatusIndicator status={saveStatus} lastSavedAt={lastSavedAt} onRetry={save} />
-        <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" /> Export PDF</Button>
+        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4" /> Export PDF</Button>
         {!readOnly && (
-          <Button variant="outline" onClick={() => {
+          <Button variant="outline" size="sm" onClick={() => {
             if (!tree.root) { toast.error("Nothing to quote"); return; }
             const items = treeToQuoteItems(tree, products as any, { system_id: systemId, system_name: name, system_reference: reference });
             if (items.length === 0) { toast.error("Add at least one configured cylinder before requesting a quote."); return; }
@@ -1290,7 +1287,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
               <h3 className="text-base font-semibold text-foreground mb-1">Details</h3>
               <p>Click any row to edit its properties, or hover and tap <kbd className="px-1 rounded bg-muted text-xs">+</kbd> to add a child.</p>
               <div className="mt-6 space-y-2 text-xs">
-                <Legend type="GMK" /><Legend type="MK" /><Legend type="SMK" /><Legend type="CYL" />
+                <Legend type="GMK" /><Legend type="MK" /><Legend type="SMK" /><Legend type="CYL" /><Legend type="CE" />
               </div>
               {isAdmin && (
               <div className="mt-8 pt-5 border-t">
