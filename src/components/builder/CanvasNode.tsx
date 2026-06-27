@@ -313,12 +313,16 @@ function CanvasNodeImpl(props: NodeProps) {
       {d.hasChildren && (
         <button
           onClick={(e) => { e.stopPropagation(); d.onToggleCollapsed?.(); }}
-          className="absolute bottom-1 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full bg-muted border border-border flex items-center justify-center hover:bg-muted/80 transition-colors z-10"
+          className={`nodrag absolute top-1/2 -translate-y-1/2 right-0 translate-x-full h-8 w-4 rounded-r-md flex items-center justify-center transition-colors z-10 shadow-sm ${
+            d.isCollapsed
+              ? "bg-amber-500 hover:bg-amber-600 text-white"
+              : "bg-amber-100 hover:bg-amber-200 text-amber-600"
+          }`}
           title={d.isCollapsed ? "Expand" : "Collapse"}
         >
           {d.isCollapsed
-            ? <ChevronRight className="h-3 w-3 text-muted-foreground" />
-            : <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            ? <ChevronRight className="h-3 w-3" />
+            : <ChevronLeft className="h-3 w-3" />
           }
         </button>
       )}
