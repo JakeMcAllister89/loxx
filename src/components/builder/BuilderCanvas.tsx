@@ -89,13 +89,15 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 function CanvasInner({
   tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, onPaneClick, registerFitView,
   parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly,
+  collapsed, onToggleCollapsed,
 }: Props) {
   const { fitView, setCenter } = useReactFlow();
   const lastNodeCount = useRef(0);
 
   const { nodes, edges } = useMemo(() => {
     if (!tree.root) return { nodes: [] as Node[], edges: [] as Edge[] };
-    const { laid } = layout(tree.root);
+    const collapsedSet = collapsed ?? new Set<string>();
+    const { laid } = layout(tree.root, collapsedSet);
 
     const totalDoors = countDoors(tree.root);
 
@@ -127,12 +129,16 @@ function CanvasInner({
           hasDecommissionedChildren: parentsWithDecomm?.has(l.id) ?? false,
           revealDecommissioned: revealedDecomm?.has(l.id) ?? false,
           onToggleRevealDecommissioned: () => onToggleReveal?.(l.id),
+          isCollapsed: collapsedSet.has(l.id),
+          hasChildren: l.node.children.length > 0,
+          onToggleCollapsed: () => onToggleCollapsed?.(l.id),
         },
       };
     });
 
     const edges: Edge[] = [];
     const collectEdges = (n: TNode) => {
+      if (collapsedSet.has(n.id)) return;
       for (const c of n.children) {
         edges.push({
           id: `${n.id}->${c.id}`,
@@ -146,7 +152,7 @@ function CanvasInner({
     };
     if (tree.root) collectEdges(tree.root);
     return { nodes, edges };
-  }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly]);
+  }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly, collapsed, onToggleCollapsed]);
 
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState(nodes);
   const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState(edges);
