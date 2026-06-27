@@ -920,6 +920,19 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <div className="flex-1" />
         <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import</Link></Button>
         <Button variant="outline" onClick={() => fitViewRef.current?.()}><Maximize2 className="h-4 w-4" /> Fit view</Button>
+        <Button variant="outline" onClick={() => {
+          const toCollapse = new Set<string>();
+          const walk = (n: TNode) => {
+            if (n.children.length > 0 && n.type !== "CYL") { toCollapse.add(n.id); n.children.forEach(walk); }
+          };
+          if (tree.root) walk(tree.root);
+          setCollapsed(toCollapse);
+        }}>
+          <ChevronsDownUp className="h-4 w-4" /> Collapse all
+        </Button>
+        <Button variant="outline" onClick={() => setCollapsed(new Set())}>
+          <ChevronsUpDown className="h-4 w-4" /> Expand all
+        </Button>
         <Button variant="outline" size="sm" onClick={handleUndo} disabled={!canUndo} title="Undo last action (Ctrl+Z)">
           <Undo2 className="h-4 w-4" />
         </Button>
