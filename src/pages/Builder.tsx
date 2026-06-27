@@ -18,6 +18,7 @@ import {
   Plus, X, Save, ShieldCheck, ShoppingCart, Search, Loader2,
   AlertCircle, AlertTriangle, ChevronRight, ChevronDown, KeyRound, Printer, Upload, Info, Maximize2,
   Check, RotateCw, FileText, RefreshCw, ArrowRight, Lock, Replace, ShieldAlert, History, BookOpen, Undo2, Copy,
+  ChevronsDownUp, ChevronsUpDown,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
