@@ -50,18 +50,19 @@ interface Laid {
 }
 
 /** Tidy tree layout: post-order width assignment, parents centred over children. */
-function layout(root: TNode): { laid: Laid[]; width: number; height: number } {
+function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]; width: number; height: number } {
   const laid: Laid[] = [];
 
   const measure = (n: TNode): { w: number } => {
-    if (n.children.length === 0) return { w: NODE_WIDTH };
+    if (n.children.length === 0 || collapsed.has(n.id)) return { w: NODE_WIDTH };
     const childW = n.children.reduce((sum, c, i) => sum + measure(c).w + (i > 0 ? HGAP : 0), 0);
     return { w: Math.max(NODE_WIDTH, childW) };
   };
 
   const place = (n: TNode, x: number, depth: number): { x: number; w: number } => {
     const subW = measure(n).w;
-    if (n.children.length === 0) {
+    const isCollapsed = collapsed.has(n.id);
+    if (n.children.length === 0 || isCollapsed) {
       laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
       return { x: x + NODE_WIDTH / 2, w: NODE_WIDTH };
     }
