@@ -365,6 +365,25 @@ function BuilderInner({ systemId }: { systemId: string }) {
       .then(({ data }) => setPartners((data as any) ?? []));
   }, [systemId, navigate]);
 
+  // Auto-collapse to SMK level for large systems on initial load
+  useEffect(() => {
+    if (!tree.root) return;
+    let cylCount = 0;
+    const count = (n: TNode) => { if (n.type === "CYL") cylCount++; n.children.forEach(count); };
+    count(tree.root);
+    if (cylCount > 30) {
+      const toCollapse = new Set<string>();
+      const walk = (n: TNode) => {
+        if (n.type === "SMK") { toCollapse.add(n.id); return; }
+        n.children.forEach(walk);
+      };
+      walk(tree.root);
+      setCollapsed(toCollapse);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tree.root?.id]);
+
+
   // Flush pending debounced audits when selectedId changes
   const prevSelectedRef = useRef<string | null>(null);
   useEffect(() => {
