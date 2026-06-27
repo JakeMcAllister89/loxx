@@ -33,6 +33,8 @@ interface Props {
   getExtraAddActions?: (node: TNode) => { id: string; label: string; onClick: () => void }[];
   /** When true: disable add popovers / extra actions (view-only mode). */
   readOnly?: boolean;
+  collapsed?: Set<string>;
+  onToggleCollapsed?: (id: string) => void;
 }
 
 const nodeTypes = { keynode: CanvasNode };
