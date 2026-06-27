@@ -863,6 +863,28 @@ function BuilderInner({ systemId }: { systemId: string }) {
           total += differKeyPrice * extra;
         }
       }
+      if (n.type === "CE" && n.cylinder_type) {
+        const p = productByCode.get(n.cylinder_type);
+        const unit = Number(p?.price_gbp ?? 0);
+        const qty = n.quantity ?? 1;
+        lines.push({
+          kind: "cylinder",
+          product_code: n.cylinder_type,
+          product_name: (p as any)?.product_description ?? p?.name,
+          cylinder_type: p?.cylinder_type,
+          cylinder_profile: "Common Entrance",
+          finish: n.finish ?? p?.finish ?? undefined,
+          size: p?.size ?? undefined,
+          image_url: p?.image_url ?? undefined,
+          room_label: n.label,
+          differ_ref: "CE",
+          hierarchy_refs,
+          quantity: qty,
+          unit_price: unit,
+          ...sys,
+        });
+        total += unit * qty;
+      }
       n.children.forEach((c) => walk(c, [...ancestors, n]));
     };
     walk(tree.root, []);
