@@ -2458,9 +2458,7 @@ function GuidePanel({ onClose }: { onClose: () => void }) {
           <span>🔑</span> How access works
         </div>
         <p className="text-[11px] text-muted-foreground leading-relaxed">
-          Every door has its own differ key — 
-          it only opens that one door. But every key above it in your tree can 
-          also open it.
+          Every door has its own differ key — it only opens that one door. But every key above it in your tree can also open it. Common entrances are the exception: they have no differ key of their own and are opened by all keys in the group below them.
         </p>
         <div className="space-y-2">
           {[
@@ -2468,6 +2466,7 @@ function GuidePanel({ onClose }: { onClose: () => void }) {
             { color: "hsl(var(--node-smk))", label: "Sub-Master key", desc: "Opens all doors in its zone" },
             { color: "hsl(var(--node-mk))",  label: "Master key",     desc: "Opens all doors in its section" },
             { color: "hsl(var(--node-gmk))", label: "Grand Master key", desc: "Opens every door in the system" },
+            { color: "hsl(var(--node-ce))",  label: "Common entrance", desc: "Opened by all differ keys below it, and all master keys above" },
           ].map(({ color, label, desc }) => (
             <div key={label} className="flex items-center gap-2 text-[10px]">
               <span className="h-2 w-2 rounded-full shrink-0" style={{ background: color }} />
@@ -2476,6 +2475,9 @@ function GuidePanel({ onClose }: { onClose: () => void }) {
             </div>
           ))}
         </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed mt-3">
+          Common entrance doors are unique — every differ key in the group below also opens them, alongside all master keys above. There is no individual differ key for a common entrance.
+        </p>
         <p className="text-[11px] italic text-muted-foreground leading-relaxed">
           Example: the cleaner holds a Sub-Master key for Ground Floor — 
           they can open every ground floor door, but not the floors above.
