@@ -1,6 +1,6 @@
 import { memo, useState, useRef, useEffect } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
-import { AlertCircle, Plus, Key, History, KeyRound, ChevronDown, ChevronRight, ChevronLeft } from "lucide-react";
+import { AlertCircle, Plus, Key, History, KeyRound, ChevronRight, ChevronDown, ChevronLeft } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { NodeType, TNode } from "@/lib/keytree";
 import { colorForFinish } from "@/lib/finishes";
@@ -172,7 +172,7 @@ function CanvasNodeImpl(props: NodeProps) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       title={decommTooltip}
-      className={`relative rounded-lg cursor-pointer transition-[box-shadow,background-color] duration-150 ${ringClass} ${
+      className={`relative rounded-lg cursor-pointer transition-[box-shadow,background-color] duration-150 overflow-visible ${ringClass} ${
         isDecommissioned ? "bg-muted/60 opacity-80" : "bg-card"
       }`}
       style={{

@@ -281,6 +281,8 @@ export function parseDomXl(buffer: ArrayBuffer): DomXlParseResult {
 
     let parentLabel = "Grand Master Key";
     for (const [col, zone] of zoneCols.entries()) {
+      // Skip GMK column — its X mark means the GMK key opens this door, not that the door belongs directly to the GMK
+      if (zone.type === "GMK") continue;
       if (zone.type === "SMK" && row[col] === "X") {
         parentLabel = zone.label;
         break;
