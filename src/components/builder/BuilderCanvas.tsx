@@ -145,25 +145,21 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 
       });
 
-      // CYL children go to the RIGHT of the CE column, at depth+1
+      // CYL children stack VERTICALLY to the right of the CE column
 
-      // (same vertical level as the first sub-CE or just one below this CE)
+      // Each CYL sits one depth level below the previous
 
-      const cylDepth = depth + 1;
-
-      const cylStartX = x + NODE_WIDTH + HGAP;
-
-      let cylCursor = cylStartX;
+      const cylX = x + NODE_WIDTH + HGAP;
 
       let lastCylCX = x + NODE_WIDTH / 2; // fallback to CE center if no CYLs
 
-      cyls.forEach((c) => {
+      cyls.forEach((c, i) => {
 
-        const r = place(c, cylCursor, cylDepth);
+        const cylDepth = depth + 1 + i;
 
-        lastCylCX = r.cx;
+        laid.push({ id: c.id, node: c, x: cylX, y: cylDepth * (NODE_HEIGHT + VGAP) });
 
-        cylCursor += measure(c) + HGAP;
+        lastCylCX = cylX + NODE_WIDTH / 2;
 
       });
 
