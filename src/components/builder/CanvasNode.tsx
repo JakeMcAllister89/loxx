@@ -15,7 +15,7 @@ export interface CanvasNodeData {
   node: TNode;
   selected: boolean;
   hasError: boolean;
-  product?: { name: string; image_url: string | null } | null;
+  product?: { code?: string; name: string; image_url: string | null; finish_colour?: string | null; finish?: string | null; size?: string | null; price_gbp?: number | null } | null;
   childMkCount?: number;
   childSmkCount?: number;
   childCylCount?: number;
