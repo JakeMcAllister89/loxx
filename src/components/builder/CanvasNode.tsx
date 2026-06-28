@@ -202,7 +202,7 @@ function CanvasNodeImpl(props: NodeProps) {
             <TooltipTrigger asChild>
               <div
                 className={`font-sans uppercase ${meta.tone} cursor-help inline-block`}
-                style={{ fontSize: 9, letterSpacing: "0.08em", marginBottom: 3 }}
+                style={{ fontSize: 10, letterSpacing: "0.08em", marginBottom: 3 }}
               >
                 {meta.label}
               </div>
