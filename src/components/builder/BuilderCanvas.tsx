@@ -53,72 +53,81 @@ interface Laid {
   node: TNode;
 }
 
-/** Tidy tree layout: post-order width assignment, parents centred over children. */
+/** Tidy tree layout: post-order width assignment, parents centred over children.
+ *  CE nodes at GMK/MK/SMK level each get their own horizontal column.
+ *  Sub-CE nodes (Z1.1) stack vertically below their primary CE.
+ *  CYL siblings of sub-CE nodes sit to the right of the CE column.
+ */
 function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]; width: number; height: number } {
   const laid: Laid[] = [];
 
-  const measure = (n: TNode): { w: number } => {
-    if (n.children.length === 0 || collapsed.has(n.id)) return { w: NODE_WIDTH };
-    const ceChildren  = n.children.filter(c => c.type === "CE");
-    const cylChildren = n.children.filter(c => c.type !== "CE");
-    const ceW = ceChildren.length > 0 ? NODE_WIDTH : 0;
-    const cylW = cylChildren.reduce((sum, c, i) => sum + measure(c).w + (i > 0 ? HGAP : 0), 0);
-    if (ceChildren.length > 0 && cylChildren.length > 0) return { w: ceW + HGAP + cylW };
-    if (ceChildren.length > 0) return { w: ceW };
-    return { w: Math.max(NODE_WIDTH, cylW) };
+  const measure = (n: TNode): number => {
+    if (n.children.length === 0 || collapsed.has(n.id)) return NODE_WIDTH;
+    if (n.type === "CE") {
+      const subCEs = n.children.filter(c => c.type === "CE");
+      const cyls   = n.children.filter(c => c.type === "CYL");
+      const cylW = cyls.length > 0
+        ? cyls.reduce((s, c, i) => s + measure(c) + (i > 0 ? HGAP : 0), 0)
+        : 0;
+      if (subCEs.length > 0 && cylW > 0) return NODE_WIDTH + HGAP + cylW;
+      if (cylW > 0) return Math.max(NODE_WIDTH, cylW);
+      return NODE_WIDTH;
+    }
+    return Math.max(
+      NODE_WIDTH,
+      n.children.reduce((s, c, i) => s + measure(c) + (i > 0 ? HGAP : 0), 0)
+    );
   };
 
-  const place = (n: TNode, x: number, depth: number): { x: number; w: number } => {
+  const place = (n: TNode, x: number, depth: number): { cx: number; w: number } => {
     const isCollapsed = collapsed.has(n.id);
     if (n.children.length === 0 || isCollapsed) {
       laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
-      return { x: x + NODE_WIDTH / 2, w: NODE_WIDTH };
+      return { cx: x + NODE_WIDTH / 2, w: NODE_WIDTH };
     }
-    const ceChildren  = n.children.filter(c => c.type === "CE");
-    const cylChildren = n.children.filter(c => c.type !== "CE");
-    const hasCEChildren = ceChildren.length > 0;
 
-    if (hasCEChildren) {
-      const ceColX = x;
-      ceChildren.forEach((ce, i) => {
-        const ceDepth = depth + 1 + i;
-        laid.push({ id: ce.id, node: ce, x: ceColX, y: ceDepth * (NODE_HEIGHT + VGAP) });
-        if (ce.children.length > 0 && !collapsed.has(ce.id)) {
-          let cursor = ceColX;
-          ce.children.forEach((c) => {
-            place(c, cursor, ceDepth + 1);
-            cursor += measure(c).w + HGAP;
-          });
+    if (n.type === "CE") {
+      const subCEs = n.children.filter(c => c.type === "CE");
+      const cyls   = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
+
+      subCEs.forEach((sub, i) => {
+        const subDepth = depth + 1 + i;
+        laid.push({ id: sub.id, node: sub, x, y: subDepth * (NODE_HEIGHT + VGAP) });
+        if (sub.children.length > 0 && !collapsed.has(sub.id)) {
+          let cur = x + NODE_WIDTH + HGAP;
+          sub.children.forEach(c => { place(c, cur, subDepth); cur += measure(c) + HGAP; });
         }
       });
-      let cylStartX = ceChildren.length > 0 ? ceColX + NODE_WIDTH + HGAP : ceColX;
+
+      const cylX = x + NODE_WIDTH + HGAP;
       const cylDepth = depth + 1;
-      let lastCylCenter = 0;
-      if (cylChildren.length > 0) {
-        cylChildren.forEach((c) => {
-          const r = place(c, cylStartX, cylDepth);
-          lastCylCenter = r.x;
-          cylStartX += measure(c).w + HGAP;
-        });
-      }
-      const ceCenter = ceColX + NODE_WIDTH / 2;
-      const parentCenter = cylChildren.length > 0 ? (ceCenter + lastCylCenter) / 2 : ceCenter;
-      laid.push({ id: n.id, node: n, x: parentCenter - NODE_WIDTH / 2, y: depth * (NODE_HEIGHT + VGAP) });
-      return { x: parentCenter, w: measure(n).w };
+      let cylCursor = cylX;
+      let lastCylCX = 0;
+      cyls.forEach((c, i) => {
+        const r = place(c, cylCursor, cylDepth);
+        if (i === 0) { /* firstCylCX */ }
+        lastCylCX = r.cx;
+        cylCursor += measure(c) + HGAP;
+      });
+
+      const ceCX = x + NODE_WIDTH / 2;
+      const parentCX = cyls.length > 0 ? (ceCX + lastCylCX) / 2 : ceCX;
+      laid.push({ id: n.id, node: n, x: parentCX - NODE_WIDTH / 2, y: depth * (NODE_HEIGHT + VGAP) });
+      return { cx: parentCX, w: measure(n) };
     }
 
     let cursor = x;
-    let firstCenter = 0;
-    let lastCenter = 0;
+    let firstCX = 0;
+    let lastCX = 0;
     n.children.forEach((c, i) => {
       const r = place(c, cursor, depth + 1);
-      if (i === 0) firstCenter = r.x;
-      lastCenter = r.x;
-      cursor += measure(c).w + HGAP;
+      if (i === 0) firstCX = r.cx;
+      lastCX = r.cx;
+      cursor += measure(c) + HGAP;
     });
-    const centerX = (firstCenter + lastCenter) / 2;
-    laid.push({ id: n.id, node: n, x: centerX - NODE_WIDTH / 2, y: depth * (NODE_HEIGHT + VGAP) });
-    return { x: centerX, w: measure(n).w };
+    const cx = (firstCX + lastCX) / 2;
+    laid.push({ id: n.id, node: n, x: cx - NODE_WIDTH / 2, y: depth * (NODE_HEIGHT + VGAP) });
+    return { cx, w: measure(n) };
   };
 
   place(root, 0, 0);
