@@ -262,6 +262,9 @@ export function assignNextZRefs(root: TNode | null): TNode | null {
     }
     return n;
   });
+}
+
+
 
 /** Returns a new tree with decommissioned cylinders filtered out, optionally keeping those whose parent SMK is in `revealSmkIds`. */
 export function filterDecommissioned(
