@@ -198,23 +198,12 @@ function CanvasNodeImpl(props: NodeProps) {
 
       <div className={`${padding} text-center`}>
         {/* Row 1 — type label */}
-        <TooltipProvider delayDuration={800}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div
-                className={`font-sans uppercase ${meta.tone} cursor-help inline-block`}
-                style={{ fontSize: 11, letterSpacing: "0.08em", marginBottom: 3 }}
-              >
-                {meta.label}
-              </div>
-            </TooltipTrigger>
-            <TooltipPortal>
-              <TooltipContent side="top" className="text-xs max-w-[180px] text-center z-[9999]">
-                {meta.description}
-              </TooltipContent>
-            </TooltipPortal>
-          </Tooltip>
-        </TooltipProvider>
+        <div
+          className={`font-sans uppercase ${meta.tone} inline-block`}
+          style={{ fontSize: 11, letterSpacing: "0.08em", marginBottom: 3 }}
+        >
+          {meta.label}
+        </div>
 
         {/* Row 2 — main label */}
         <div
