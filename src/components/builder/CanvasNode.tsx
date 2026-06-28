@@ -370,10 +370,15 @@ function CanvasNodeImpl(props: NodeProps) {
             </div>
           )}
           {popoverOpen && (
-            <div
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-50"
-              onKeyDown={(e) => { if (e.key === "Escape") setPopoverOpen(false); }}
-            >
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={(e) => { e.stopPropagation(); setPopoverOpen(false); }}
+              />
+              <div
+                className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-50"
+                onKeyDown={(e) => { if (e.key === "Escape") setPopoverOpen(false); }}
+              >
               {addOptions?.map((t) => (
                 <button
                   key={t}
