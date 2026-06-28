@@ -84,13 +84,24 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
       laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
 
       // Stack sub-CEs vertically below in same column
+      // Sub-CEs are NEVER collapsed — always render them and their children
       subCEs.forEach((sub, i) => {
         const subDepth = depth + 1 + i;
         laid.push({ id: sub.id, node: sub, x, y: subDepth * (NODE_HEIGHT + VGAP) });
+        // Place CYL children of this sub-CE (ignore collapsed state for sub-CEs)
+        const subCyls = sub.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
+        const subCylStart = subDepth + 1;
+        subCyls.forEach((c, j) => {
+          laid.push({ id: c.id, node: c, x, y: (subCylStart + j) * (NODE_HEIGHT + VGAP) });
+        });
       });
 
-      // Stack CYLs vertically below sub-CEs in same column
-      const cylStartDepth = depth + 1 + subCEs.length;
+      // Stack CYLs that are direct children of this CE vertically below sub-CEs
+      const maxSubCEDepth = subCEs.length > 0
+        ? depth + 1 + subCEs.length - 1 + Math.max(0, ...subCEs.map(s => s.children.filter(c => c.type === "CYL").length))
+        : depth;
+
+      const cylStartDepth = maxSubCEDepth + 1;
       cyls.forEach((c, i) => {
         laid.push({ id: c.id, node: c, x, y: (cylStartDepth + i) * (NODE_HEIGHT + VGAP) });
       });
@@ -166,7 +177,7 @@ function CanvasInner({
           revealDecommissioned: revealedDecomm?.has(l.id) ?? false,
           onToggleRevealDecommissioned: () => onToggleReveal?.(l.id),
           isCollapsed: collapsedSet.has(l.id),
-          hasChildren: l.node.children.length > 0,
+          hasChildren: l.node.children.length > 0 && !isSubCE,
           onToggleCollapsed: () => onToggleCollapsed?.(l.id),
         },
       };
