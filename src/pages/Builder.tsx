@@ -2396,7 +2396,7 @@ function DetailPanel({
               <Copy className="h-4 w-4" /> Copy spec to new door
             </Button>
           )}
-          {!readOnly && isCE && node.cylinder_type && onAddCE && (
+          {!readOnly && isCE && onAddCE && (
             <Button variant="outline" onClick={onAddCE} className="w-full">
               <Plus className="h-4 w-4" /> Add another common entrance
             </Button>
