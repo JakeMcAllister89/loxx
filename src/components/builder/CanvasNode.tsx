@@ -264,8 +264,11 @@ function CanvasNodeImpl(props: NodeProps) {
 
         {node.type === "CE" && (
           <div className="flex items-center justify-center gap-1 mt-1">
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded border border-[hsl(var(--node-ce))] text-[hsl(var(--node-ce))] bg-[hsl(var(--node-ce))]/10">
-              CE
+            <span
+              className="font-mono px-1.5 py-0.5 rounded bg-[hsl(var(--node-ce))]/15 text-[hsl(var(--node-ce))]"
+              style={{ fontSize: 9 }}
+            >
+              {node.z_ref ?? "CE"}
             </span>
           </div>
         )}
