@@ -39,6 +39,7 @@ import {
   countDoors, assignNextDiffers, assignNextZRefs, pathOf, validate, ValidationIssue,
   hasLegacyCK, flattenCK, normaliseKeys, countKeys,
   filterDecommissioned, parentsWithDecommissionedChildren,
+  collectCENodes, nextSubZRef, nextTopLevelZRef,
 } from "@/lib/keytree";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -190,6 +191,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
     step: "differ-choice" | "name";
     keyedAlike: boolean;
   }>({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false });
+  const [ceModalState, setCeModalState] = useState<
+    | { open: false }
+    | { open: true; parentId: string; existingCEs: { id: string; label: string; z_ref: string }[] }
+  >({ open: false });
   // Beginner guide drawer
   const [guideOpen, setGuideOpen] = useState(false);
   const dirtyRef = useRef(false);
@@ -412,6 +417,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const addRoot = () => { pushUndo(tree); mutate((t) => ({ ...t, root: createGMK(), next_differ: 1 })); };
 
   const handleAddChild = useCallback((parentId: string, childType?: NodeType) => {
+    if (childType === "CE") {
+      const existingCEs = collectCENodes(tree.root)
+        .filter((n) => n.z_ref && !n.z_ref.includes("."))
+        .map((n) => ({ id: n.id, label: n.label, z_ref: n.z_ref! }));
+      if (existingCEs.length > 0) {
+        setCeModalState({ open: true, parentId, existingCEs });
+        return;
+      }
+    }
     setTree((prev) => {
       pushUndo(prev);
       const parent = findNode(prev.root, parentId);
@@ -432,6 +446,38 @@ function BuilderInner({ systemId }: { systemId: string }) {
       if (child.type === "CYL" || child.type === "CE") {
         cylConfigRef.current = { nodeId: child.id, originalLabel: child.label };
       }
+      return next;
+    });
+  }, [systemId, tree.root]);
+
+  const handleCEModalConfirm = useCallback((
+    parentId: string,
+    choice: "new" | "existing",
+    groupZRef?: string,
+  ) => {
+    setCeModalState({ open: false });
+    setTree((prev) => {
+      pushUndo(prev);
+      const parent = findNode(prev.root, parentId);
+      if (!parent) return prev;
+      const allZRefs = collectCENodes(prev.root).map((n) => n.z_ref).filter(Boolean) as string[];
+      const z_ref = choice === "existing" && groupZRef
+        ? nextSubZRef(groupZRef, allZRefs)
+        : nextTopLevelZRef(allZRefs);
+      const child: TNode = {
+        id: newId(),
+        type: "CE",
+        label: "Common Entrance",
+        children: [],
+        z_ref,
+      };
+      const root = addChild(prev.root, parentId, child);
+      const next: TreeData = { ...prev, root };
+      dirtyRef.current = true;
+      setSelectedId(child.id);
+      setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
+      logAction({ system_id: systemId, action: "node_added", node_type: "CE", node_label: child.label });
+      cylConfigRef.current = { nodeId: child.id, originalLabel: child.label };
       return next;
     });
   }, [systemId]);
@@ -1753,11 +1799,90 @@ function BuilderInner({ systemId }: { systemId: string }) {
           )}
         </DialogContent>
       </Dialog>
+
+      {ceModalState.open && (
+        <CEBuildingModal
+          existingCEs={ceModalState.existingCEs}
+          parentId={ceModalState.parentId}
+          onConfirm={handleCEModalConfirm}
+          onCancel={() => setCeModalState({ open: false })}
+        />
+      )}
     </div>
   );
 }
 
+function CEBuildingModal({
+  existingCEs,
+  parentId,
+  onConfirm,
+  onCancel,
+}: {
+  existingCEs: { id: string; label: string; z_ref: string }[];
+  parentId: string;
+  onConfirm: (parentId: string, choice: "new" | "existing", groupZRef?: string) => void;
+  onCancel: () => void;
+}) {
+  const [ceChoice, setCeChoice] = useState<"new" | "existing">("new");
+  const [selectedGroup, setSelectedGroup] = useState(existingCEs[0]?.z_ref ?? "");
+  return (
+    <Dialog open onOpenChange={(o) => !o && onCancel()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Common Entrance</DialogTitle>
+          <DialogDescription>
+            Is this common entrance cylinder part of an existing building or a new building?
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setCeChoice("existing")}
+            className={`w-full text-left rounded-md border p-3 text-sm transition-colors ${ceChoice === "existing" ? "border-primary bg-primary/5" : "hover:bg-muted"}`}
+          >
+            <div className="font-semibold">Existing building</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Add to a building that already has a common entrance</div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setCeChoice("new")}
+            className={`w-full text-left rounded-md border p-3 text-sm transition-colors ${ceChoice === "new" ? "border-primary bg-primary/5" : "hover:bg-muted"}`}
+          >
+            <div className="font-semibold">New building</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Start a new building group with its own Z reference</div>
+          </button>
+          {ceChoice === "existing" && (
+            <div className="space-y-1.5">
+              <Label>Which building?</Label>
+              <select
+                value={selectedGroup}
+                onChange={(e) => setSelectedGroup(e.target.value)}
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+              >
+                {existingCEs.map((ce) => (
+                  <option key={ce.id} value={ce.z_ref}>
+                    {ce.z_ref} — {ce.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button
+            onClick={() => onConfirm(parentId, ceChoice, ceChoice === "existing" ? selectedGroup : undefined)}
+          >
+            Add common entrance
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /* ------------------------- Tree Row ------------------------- */
+
 
 function TreeRow({
   node, depth, selectedId, collapsed, errorIds, searchMatch, highlightIds,
