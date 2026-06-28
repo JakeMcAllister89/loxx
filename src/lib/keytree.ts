@@ -233,7 +233,34 @@ export function assignNextDiffers(tree: TreeData): TreeData {
       }
       // Brand new node with no differ yet: assign next free
       return { ...n, differ: nextFree() };
-    }
+}
+
+export function collectCENodes(root: TNode | null): TNode[] {
+  if (!root) return [];
+  const result: TNode[] = [];
+  const walk = (n: TNode) => {
+    if (n.type === "CE") result.push(n);
+    n.children.forEach(walk);
+  };
+  walk(root);
+  return result;
+}
+
+// Given a parent Z ref (e.g. "Z1") and all existing z_refs in the tree,
+// returns the next available sub-ref e.g. "Z1.1", "Z1.2" etc.
+export function nextSubZRef(parentZRef: string, existingZRefs: string[]): string {
+  let i = 1;
+  while (existingZRefs.includes(`${parentZRef}.${i}`)) i++;
+  return `${parentZRef}.${i}`;
+}
+
+// Returns the next available top-level Z ref (Z1, Z2, Z3...) not already in use
+export function nextTopLevelZRef(existingZRefs: string[]): string {
+  const topLevel = existingZRefs.filter((r) => !r.includes("."));
+  let i = 1;
+  while (topLevel.includes(`Z${i}`)) i++;
+  return `Z${i}`;
+}
     return n;
   });
   const max = Math.max(counter - 1, ...Array.from(used), 0);

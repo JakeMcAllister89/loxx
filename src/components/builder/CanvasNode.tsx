@@ -1,4 +1,5 @@
 import { memo, useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { AlertCircle, Plus, Key, History, KeyRound, ChevronRight, ChevronDown, ChevronLeft } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -406,12 +407,16 @@ function CanvasNodeImpl(props: NodeProps) {
           )}
           {popoverOpen && (
             <>
+              {createPortal(
+                <div
+                  className="fixed inset-0 z-[9998]"
+                  style={{ pointerEvents: "all" }}
+                  onMouseDown={(e) => { e.stopPropagation(); setPopoverOpen(false); }}
+                />,
+                document.body
+              )}
               <div
-                className="fixed inset-0 z-40"
-                onClick={(e) => { e.stopPropagation(); setPopoverOpen(false); }}
-              />
-              <div
-                className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-50"
+                className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-[9999]"
                 onKeyDown={(e) => { if (e.key === "Escape") setPopoverOpen(false); }}
               >
               {addOptions?.map((t) => (
