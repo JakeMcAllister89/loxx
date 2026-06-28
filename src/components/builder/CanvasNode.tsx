@@ -387,11 +387,11 @@ function CanvasNodeImpl(props: NodeProps) {
         <div
           ref={popRef}
           className="absolute -bottom-5 left-1/2 -translate-x-1/2 nodrag nopan"
-          onMouseEnter={() => setPlusHovered(true)}
-          onMouseLeave={() => setPlusHovered(false)}
         >
           <button
             ref={plusBtnRef}
+            onMouseEnter={() => setPlusHovered(true)}
+            onMouseLeave={() => setPlusHovered(false)}
             onMouseDown={(e) => {
               e.stopPropagation();
               e.preventDefault();

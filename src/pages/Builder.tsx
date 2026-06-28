@@ -458,44 +458,30 @@ function BuilderInner({ systemId }: { systemId: string }) {
     setCeModalState({ open: false });
     setTree((prev) => {
       pushUndo(prev);
+      const parent = findNode(prev.root, parentId);
+      if (!parent) return prev;
+
       const allZRefs = collectCENodes(prev.root).map((n) => n.z_ref).filter(Boolean) as string[];
-      if (choice === "existing" && groupZRef) {
-        const groupCE = collectCENodes(prev.root).find(n => n.z_ref === groupZRef);
-        if (!groupCE) return prev;
-        const z_ref = nextSubZRef(groupZRef, allZRefs);
-        const child: TNode = {
-          id: newId(),
-          type: "CE",
-          label: "Common Entrance",
-          children: [],
-          z_ref,
-        };
-        const root = addChild(prev.root, groupCE.id, child);
-        dirtyRef.current = true;
-        setSelectedId(child.id);
-        setCollapsed((c) => { const n = new Set(c); n.delete(groupCE.id); return n; });
-        logAction({ system_id: systemId, action: "node_added", node_type: "CE", node_label: child.label });
-        cylConfigRef.current = { nodeId: child.id, originalLabel: child.label };
-        return { ...prev, root };
-      } else {
-        const parent = findNode(prev.root, parentId);
-        if (!parent) return prev;
-        const z_ref = nextTopLevelZRef(allZRefs);
-        const child: TNode = {
-          id: newId(),
-          type: "CE",
-          label: "Common Entrance",
-          children: [],
-          z_ref,
-        };
-        const root = addChild(prev.root, parentId, child);
-        dirtyRef.current = true;
-        setSelectedId(child.id);
-        setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
-        logAction({ system_id: systemId, action: "node_added", node_type: "CE", node_label: child.label });
-        cylConfigRef.current = { nodeId: child.id, originalLabel: child.label };
-        return { ...prev, root };
-      }
+
+      const z_ref = choice === "existing" && groupZRef
+        ? nextSubZRef(groupZRef, allZRefs)
+        : nextTopLevelZRef(allZRefs);
+
+      const child: TNode = {
+        id: newId(),
+        type: "CE",
+        label: "Common Entrance",
+        children: [],
+        z_ref,
+      };
+
+      const root = addChild(prev.root, parentId, child);
+      dirtyRef.current = true;
+      setSelectedId(child.id);
+      setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
+      logAction({ system_id: systemId, action: "node_added", node_type: "CE", node_label: child.label });
+      cylConfigRef.current = { nodeId: child.id, originalLabel: child.label };
+      return { ...prev, root };
     });
   }, [systemId]);
 
