@@ -199,8 +199,9 @@ function CanvasNodeImpl(props: NodeProps) {
       <div className={`${padding} text-center`}>
         {/* Row 1 — type label */}
         <div
-          className={`font-sans uppercase ${meta.tone} inline-block`}
+          className={`font-sans uppercase ${meta.tone} inline-block cursor-help`}
           style={{ fontSize: 11, letterSpacing: "0.08em", marginBottom: 3 }}
+          title={meta.description}
         >
           {meta.label}
         </div>
