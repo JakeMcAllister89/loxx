@@ -39,7 +39,7 @@ import {
   countDoors, assignNextDiffers, assignNextZRefs, pathOf, validate, ValidationIssue,
   hasLegacyCK, flattenCK, normaliseKeys, countKeys,
   filterDecommissioned, parentsWithDecommissionedChildren,
-  collectCENodes, nextSubZRef, nextTopLevelZRef,
+  collectCENodes, nextSubZRef, nextTopLevelZRef, mapTree,
 } from "@/lib/keytree";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
