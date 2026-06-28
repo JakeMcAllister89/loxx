@@ -87,15 +87,9 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 
     if (n.type === "CE") {
 
-      const cyls = n.children.filter(c => c.type === "CYL");
+      // All children (sub-CEs and CYLs) stack vertically in the same column
 
-      // Sub-CEs and CYLs both stack vertically in the same column or adjacent column
-
-      // CE column = NODE_WIDTH, CYL column = NODE_WIDTH to the right
-
-      if (cyls.length === 0) return NODE_WIDTH;
-
-      return NODE_WIDTH + HGAP + NODE_WIDTH;
+      return NODE_WIDTH;
 
     }
 
@@ -145,27 +139,17 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 
       });
 
-      // CYL children stack VERTICALLY to the right of the CE column
+      // CYL children stack vertically in the SAME column as the CE, below all sub-CEs
 
-      // Each CYL sits one depth level below the previous
-
-      const cylX = x + NODE_WIDTH + HGAP;
-
-      let lastCylCX = x + NODE_WIDTH / 2; // fallback to CE center if no CYLs
+      const cylStartDepth = depth + 1 + subCEs.length;
 
       cyls.forEach((c, i) => {
 
-        const cylDepth = depth + 1 + i;
-
-        laid.push({ id: c.id, node: c, x: cylX, y: cylDepth * (NODE_HEIGHT + VGAP) });
-
-        lastCylCX = cylX + NODE_WIDTH / 2;
+        laid.push({ id: c.id, node: c, x, y: (cylStartDepth + i) * (NODE_HEIGHT + VGAP) });
 
       });
 
-      const ceCX = x + NODE_WIDTH / 2;
-
-      return { cx: cyls.length > 0 ? (ceCX + lastCylCX) / 2 : ceCX };
+      return { cx: x + NODE_WIDTH / 2 };
 
     }
 
