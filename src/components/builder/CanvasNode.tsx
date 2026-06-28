@@ -15,7 +15,7 @@ export interface CanvasNodeData {
   node: TNode;
   selected: boolean;
   hasError: boolean;
-  product?: { name: string; image_url: string | null } | null;
+  product?: { code?: string; name: string; image_url: string | null; finish_colour?: string | null; finish?: string | null; size?: string | null; price_gbp?: number | null } | null;
   childMkCount?: number;
   childSmkCount?: number;
   childCylCount?: number;
@@ -197,7 +197,7 @@ function CanvasNodeImpl(props: NodeProps) {
           <Tooltip>
             <TooltipTrigger asChild>
               <div
-                className={`font-mono uppercase ${meta.tone} cursor-help inline-block`}
+                className={`font-sans uppercase ${meta.tone} cursor-help inline-block`}
                 style={{ fontSize: 9, letterSpacing: "0.08em", marginBottom: 3 }}
               >
                 {meta.label}
@@ -222,7 +222,7 @@ function CanvasNodeImpl(props: NodeProps) {
 
         {/* Row 3 — reference code (MK/SMK only, when location set) */}
         {showRefSubLabel && (
-          <div className="font-mono text-[hsl(var(--node-cyl))] truncate" style={{ fontSize: 10, marginTop: 1 }}>
+          <div className="font-sans text-[hsl(var(--node-cyl))] truncate" style={{ fontSize: 10, marginTop: 1 }}>
             {node.label}
           </div>
         )}
@@ -232,7 +232,7 @@ function CanvasNodeImpl(props: NodeProps) {
           <div className="flex items-center justify-center gap-1 mt-1">
             {node.differ != null && (
               <span
-                className={`font-mono px-1.5 py-0.5 rounded ${
+                className={`font-sans font-semibold px-1.5 py-0.5 rounded ${
                   isDecommissioned
                     ? "bg-destructive/10 text-destructive line-through"
                     : "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]"
@@ -244,7 +244,7 @@ function CanvasNodeImpl(props: NodeProps) {
             )}
             {isDecommissioned && (
               <span
-                className="font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground"
+                className="font-sans uppercase tracking-wider px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground"
                 style={{ fontSize: 8, letterSpacing: "0.08em" }}
               >
                 Replaced
@@ -252,7 +252,7 @@ function CanvasNodeImpl(props: NodeProps) {
             )}
             {!isDecommissioned && (node.extra_keys ?? 0) > 0 && (
               <span
-                className="inline-flex items-center gap-0.5 font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]"
+                className="inline-flex items-center gap-0.5 font-sans font-semibold px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]"
                 style={{ fontSize: 9 }}
                 title={`${node.extra_keys} extra key(s)`}
               >
@@ -265,7 +265,7 @@ function CanvasNodeImpl(props: NodeProps) {
         {node.type === "CE" && (
           <div className="flex items-center justify-center gap-1 mt-1">
             <span
-              className="font-mono px-1.5 py-0.5 rounded bg-[hsl(var(--node-ce))]/15 text-[hsl(var(--node-ce))]"
+              className="font-sans font-semibold px-1.5 py-0.5 rounded bg-[hsl(var(--node-ce))]/15 text-[hsl(var(--node-ce))]"
               style={{ fontSize: 9 }}
             >
               {node.z_ref ?? "CE"}
@@ -286,13 +286,48 @@ function CanvasNodeImpl(props: NodeProps) {
                 {node.finish && (
                   <span
                     className="h-2.5 w-2.5 rounded-full shrink-0 border"
-                    style={{ background: colorForFinish(node.finish), borderColor: "hsl(var(--border))" }}
+                    style={{ background: product?.finish_colour ?? colorForFinish(node.finish), borderColor: "hsl(var(--border))" }}
                     title={node.finish}
                   />
                 )}
-                <span className="text-muted-foreground truncate" style={{ fontSize: 10 }} title={product.name}>
-                  {product.name}
-                </span>
+                <TooltipProvider delayDuration={400}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-muted-foreground truncate cursor-default" style={{ fontSize: 10 }}>
+                        {product.name}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipPortal>
+                      <TooltipContent side="right" className="p-0 overflow-hidden rounded-lg shadow-elevated z-[9999] w-56" sideOffset={8}>
+                        {product.image_url && (
+                          <div className="bg-muted flex items-center justify-center p-3">
+                            <img src={product.image_url} alt={product.name} className="h-14 w-auto object-contain" />
+                          </div>
+                        )}
+                        <div className="p-3 space-y-1.5">
+                          <p className="text-xs font-semibold leading-tight text-foreground">{product.name}</p>
+                          <p className="text-[10px] text-muted-foreground font-mono">{product.code}</p>
+                          <div className="flex flex-wrap gap-1 pt-0.5">
+                            {product.finish && (
+                              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                                {product.finish_colour && (
+                                  <span className="h-2 w-2 rounded-full border shrink-0" style={{ background: product.finish_colour }} />
+                                )}
+                                {product.finish}
+                              </span>
+                            )}
+                            {product.size && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{product.size}</span>
+                            )}
+                          </div>
+                          {product.price_gbp != null && (
+                            <p className="text-xs font-semibold text-[hsl(var(--node-cyl))] pt-0.5">£{Number(product.price_gbp).toFixed(2)}</p>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </TooltipPortal>
+                  </Tooltip>
+                </TooltipProvider>
               </>
             ) : (
               <span className="font-medium uppercase tracking-wide px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/30" style={{ fontSize: 9 }}>
