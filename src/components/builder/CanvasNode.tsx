@@ -57,6 +57,7 @@ const NODE_ADD_HINT: Partial<Record<NodeType, string>> = {
   GMK: "Add a building, wing or door",
   MK:  "Add a floor, department or door",
   SMK: "Add a door",
+  CE:  "Add a door",
 };
 
 
@@ -202,7 +203,7 @@ function CanvasNodeImpl(props: NodeProps) {
             <TooltipTrigger asChild>
               <div
                 className={`font-sans uppercase ${meta.tone} cursor-help inline-block`}
-                style={{ fontSize: 10, letterSpacing: "0.08em", marginBottom: 3 }}
+                style={{ fontSize: 11, letterSpacing: "0.08em", marginBottom: 3 }}
               >
                 {meta.label}
               </div>
@@ -386,11 +387,11 @@ function CanvasNodeImpl(props: NodeProps) {
         <div
           ref={popRef}
           className="absolute -bottom-5 left-1/2 -translate-x-1/2 nodrag nopan"
-          onMouseEnter={() => setPlusHovered(true)}
-          onMouseLeave={() => setPlusHovered(false)}
         >
           <button
             ref={plusBtnRef}
+            onMouseEnter={() => setPlusHovered(true)}
+            onMouseLeave={() => setPlusHovered(false)}
             onMouseDown={(e) => {
               e.stopPropagation();
               e.preventDefault();
