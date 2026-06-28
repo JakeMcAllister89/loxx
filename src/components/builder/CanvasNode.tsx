@@ -75,6 +75,7 @@ function CanvasNodeImpl(props: NodeProps) {
   const isCyl = node.type === "CYL" || node.type === "CE";
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [plusHovered, setPlusHovered] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
   const plusBtnRef = useRef<HTMLButtonElement>(null);
   const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
@@ -201,7 +202,7 @@ function CanvasNodeImpl(props: NodeProps) {
             <TooltipTrigger asChild>
               <div
                 className={`font-sans uppercase ${meta.tone} cursor-help inline-block`}
-                style={{ fontSize: 9, letterSpacing: "0.08em", marginBottom: 3 }}
+                style={{ fontSize: 10, letterSpacing: "0.08em", marginBottom: 3 }}
               >
                 {meta.label}
               </div>
@@ -384,7 +385,9 @@ function CanvasNodeImpl(props: NodeProps) {
       {canAdd && (
         <div
           ref={popRef}
-          className="absolute -bottom-5 left-1/2 -translate-x-1/2 nodrag group/add"
+          className="absolute -bottom-5 left-1/2 -translate-x-1/2 nodrag"
+          onMouseEnter={() => setPlusHovered(true)}
+          onMouseLeave={() => setPlusHovered(false)}
         >
           <button
             ref={plusBtnRef}
@@ -405,8 +408,8 @@ function CanvasNodeImpl(props: NodeProps) {
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
-          {!popoverOpen && (
-            <div className="pointer-events-none absolute top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 opacity-0 group-hover/add:opacity-100 transition-opacity shadow-md">
+          {!popoverOpen && plusHovered && (
+            <div className="pointer-events-none absolute top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 shadow-md">
               {(addOptions?.length ?? 0) + (extraAddActions?.length ?? 0) === 1 && addOptions?.length === 1
                 ? ADD_LABEL[addOptions[0]]
                 : NODE_ADD_HINT[node.type] ?? "Add…"}

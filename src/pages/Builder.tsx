@@ -39,7 +39,7 @@ import {
   countDoors, assignNextDiffers, assignNextZRefs, pathOf, validate, ValidationIssue,
   hasLegacyCK, flattenCK, normaliseKeys, countKeys,
   filterDecommissioned, parentsWithDecommissionedChildren,
-  collectCENodes, nextSubZRef, nextTopLevelZRef,
+  collectCENodes, nextSubZRef, nextTopLevelZRef, mapTree,
 } from "@/lib/keytree";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -193,7 +193,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   }>({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false });
   const [ceModalState, setCeModalState] = useState<
     | { open: false }
-    | { open: true; parentId: string; existingCEs: { id: string; label: string; z_ref: string }[] }
+    | { open: true; parentId: string; existingCEs: { id: string; label: string; z_ref: string }[]; defaultGroupZRef?: string }
   >({ open: false });
   // Beginner guide drawer
   const [guideOpen, setGuideOpen] = useState(false);
@@ -471,8 +471,28 @@ function BuilderInner({ systemId }: { systemId: string }) {
         children: [],
         z_ref,
       };
-      const root = addChild(prev.root, parentId, child);
-      const next: TreeData = { ...prev, root };
+      let root = addChild(prev.root, parentId, child);
+      // If adding to an existing group, copy CYL children from the group's primary CE to the new CE
+      if (choice === "existing" && groupZRef) {
+        const groupCE = collectCENodes(root).find(n => n.z_ref === groupZRef);
+        if (groupCE && groupCE.children.some(c => c.type === "CYL")) {
+          const cylChildren = groupCE.children
+            .filter(c => c.type === "CYL" && !c.decommissioned_at)
+            .map(c => ({
+              ...c,
+              id: newId(),
+              differ: undefined as number | undefined,
+              keyed_alike_source_differ: undefined as number | undefined,
+            }));
+          root = mapTree(root, (n) => {
+            if (n.id === child.id) {
+              return { ...n, children: [...n.children, ...cylChildren] };
+            }
+            return n;
+          })!;
+        }
+      }
+      const next = assignNextDiffers({ ...prev, root });
       dirtyRef.current = true;
       setSelectedId(child.id);
       setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
@@ -1447,7 +1467,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
                     .filter(n => n.z_ref && !n.z_ref.includes("."))
                     .map(n => ({ id: n.id, label: n.label, z_ref: n.z_ref! }));
                   if (existingCEs.length > 0) {
-                    setCeModalState({ open: true, parentId: parent.id, existingCEs });
+                    const currentTopLevel = selected.z_ref?.includes(".")
+                      ? selected.z_ref.split(".")[0]
+                      : selected.z_ref;
+                    setCeModalState({
+                      open: true,
+                      parentId: parent.id,
+                      existingCEs,
+                      defaultGroupZRef: currentTopLevel ?? existingCEs[0]?.z_ref,
+                    });
                   } else {
                     handleAddChild(parent.id, "CE");
                   }
@@ -1817,6 +1845,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <CEBuildingModal
           existingCEs={ceModalState.existingCEs}
           parentId={ceModalState.parentId}
+          defaultGroupZRef={ceModalState.open ? ceModalState.defaultGroupZRef : undefined}
           onConfirm={handleCEModalConfirm}
           onCancel={() => setCeModalState({ open: false })}
         />
@@ -1830,14 +1859,16 @@ function CEBuildingModal({
   parentId,
   onConfirm,
   onCancel,
+  defaultGroupZRef,
 }: {
   existingCEs: { id: string; label: string; z_ref: string }[];
   parentId: string;
+  defaultGroupZRef?: string;
   onConfirm: (parentId: string, choice: "new" | "existing", groupZRef?: string) => void;
   onCancel: () => void;
 }) {
-  const [ceChoice, setCeChoice] = useState<"new" | "existing">("new");
-  const [selectedGroup, setSelectedGroup] = useState(existingCEs[0]?.z_ref ?? "");
+  const [ceChoice, setCeChoice] = useState<"new" | "existing">(defaultGroupZRef ? "existing" : "new");
+  const [selectedGroup, setSelectedGroup] = useState(defaultGroupZRef ?? existingCEs[0]?.z_ref ?? "");
   return (
     <Dialog open onOpenChange={(o) => !o && onCancel()}>
       <DialogContent>
