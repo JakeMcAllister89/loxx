@@ -11,6 +11,7 @@ export interface TNode {
   label: string;
   location?: string;          // MK/SMK only — optional reference e.g. "Block B", "Floors 1-3"
   differ?: number;            // CYL only
+  z_ref?: string;             // CE only — DOM Z reference e.g. "Z1", "Z2", "ZG"
   cylinder_type?: string;     // CYL only — product code
   finish?: string;            // CYL only
   size?: string;              // CYL only — e.g. "35/35"

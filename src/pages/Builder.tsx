@@ -36,7 +36,7 @@ import {
   TNode, TreeData, NodeType, KeyEntry,
   emptyTree, createGMK, makeChild, childTypeOf, validChildTypes, newId,
   findNode, findParent, updateNode, addChild, removeNode, insertSiblingAfter,
-  countDoors, assignNextDiffers, pathOf, validate, ValidationIssue,
+  countDoors, assignNextDiffers, assignNextZRefs, pathOf, validate, ValidationIssue,
   hasLegacyCK, flattenCK, normaliseKeys, countKeys,
   filterDecommissioned, parentsWithDecommissionedChildren,
 } from "@/lib/keytree";
@@ -416,6 +416,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       const root = addChild(prev.root, parentId, child);
       let next: TreeData = { ...prev, root };
       if (child.type === "CYL") next = assignNextDiffers(next);
+      if (child.type === "CE") next = { ...next, root: assignNextZRefs(next.root) };
       dirtyRef.current = true;
       setSelectedId(child.id);
       setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
@@ -867,6 +868,13 @@ function BuilderInner({ systemId }: { systemId: string }) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
+        const mkAnc  = ancestors.find(a => a.type === "MK");
+        const smkAnc = ancestors.find(a => a.type === "SMK");
+        const gmkAnc = ancestors.find(a => a.type === "GMK");
+        const ceHierarchyRefs: string[] = [
+          ...(mkAnc  ? [mkAnc.label]  : (gmkAnc ? [gmkAnc.label] : [])),
+          ...(smkAnc ? [smkAnc.label] : []),
+        ];
         lines.push({
           kind: "cylinder",
           product_code: n.cylinder_type,
@@ -877,8 +885,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
           size: p?.size ?? undefined,
           image_url: p?.image_url ?? undefined,
           room_label: n.label,
-          differ_ref: "CE",
-          hierarchy_refs,
+          differ_ref: n.z_ref ?? "CE",
+          hierarchy_refs: ceHierarchyRefs,
           quantity: qty,
           unit_price: unit,
           ...sys,
