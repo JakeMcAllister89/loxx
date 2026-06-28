@@ -945,7 +945,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Top bar */}
       <div className="border-b bg-card px-4 py-3 flex items-center gap-2 no-print">
         <Input value={name} onChange={(e) => { setName(e.target.value); dirtyRef.current = true; }} className="max-w-xs font-semibold" />
