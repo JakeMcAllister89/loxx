@@ -203,9 +203,11 @@ function CanvasNodeImpl(props: NodeProps) {
                 {meta.label}
               </div>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs max-w-[180px] text-center z-[9999]">
-              {meta.description}
-            </TooltipContent>
+            <TooltipPortal>
+              <TooltipContent side="top" className="text-xs max-w-[180px] text-center z-[9999]">
+                {meta.description}
+              </TooltipContent>
+            </TooltipPortal>
           </Tooltip>
         </TooltipProvider>
 
