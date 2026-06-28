@@ -1440,6 +1440,19 @@ function BuilderInner({ systemId }: { systemId: string }) {
               isFulfilled={isFulfilled}
               onReplace={() => openReplaceFlow(selected.id)}
               onCopySpec={() => setCopySpecState({ open: true, sourceId: selected.id, newLabel: "", step: "differ-choice", keyedAlike: false })}
+              onAddCE={selected.type === "CE" ? () => {
+                const parent = findParent(tree.root, selected.id);
+                if (parent) {
+                  const existingCEs = collectCENodes(tree.root)
+                    .filter(n => n.z_ref && !n.z_ref.includes("."))
+                    .map(n => ({ id: n.id, label: n.label, z_ref: n.z_ref! }));
+                  if (existingCEs.length > 0) {
+                    setCeModalState({ open: true, parentId: parent.id, existingCEs });
+                  } else {
+                    handleAddChild(parent.id, "CE");
+                  }
+                }
+              } : undefined}
               readOnly={readOnly}
             />
           )}
@@ -2020,7 +2033,7 @@ function Legend({ type }: { type: NodeType }) {
 
 function DetailPanel({
   node, parent, trail, products, onPatch, addOptions, onAddChildType, onDelete, isRoot, onClose,
-  isFulfilled, onReplace, onCopySpec, readOnly = false,
+  isFulfilled, onReplace, onCopySpec, onAddCE, readOnly = false,
 }: {
   node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
@@ -2032,6 +2045,7 @@ function DetailPanel({
   isFulfilled: boolean;
   onReplace: () => void;
   onCopySpec?: () => void;
+  onAddCE?: () => void;
   readOnly?: boolean;
 }) {
   const meta = TYPE_META[node.type];
@@ -2366,6 +2380,11 @@ function DetailPanel({
           {!readOnly && isCyl && node.cylinder_type && onCopySpec && (
             <Button variant="outline" onClick={onCopySpec} className="w-full">
               <Copy className="h-4 w-4" /> Copy spec to new door
+            </Button>
+          )}
+          {!readOnly && isCE && node.cylinder_type && onAddCE && (
+            <Button variant="outline" onClick={onAddCE} className="w-full">
+              <Plus className="h-4 w-4" /> Add another common entrance
             </Button>
           )}
           {!readOnly && !isRoot && (
