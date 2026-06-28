@@ -1845,6 +1845,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         <CEBuildingModal
           existingCEs={ceModalState.existingCEs}
           parentId={ceModalState.parentId}
+          defaultGroupZRef={ceModalState.open ? ceModalState.defaultGroupZRef : undefined}
           onConfirm={handleCEModalConfirm}
           onCancel={() => setCeModalState({ open: false })}
         />
@@ -1858,14 +1859,16 @@ function CEBuildingModal({
   parentId,
   onConfirm,
   onCancel,
+  defaultGroupZRef,
 }: {
   existingCEs: { id: string; label: string; z_ref: string }[];
   parentId: string;
+  defaultGroupZRef?: string;
   onConfirm: (parentId: string, choice: "new" | "existing", groupZRef?: string) => void;
   onCancel: () => void;
 }) {
-  const [ceChoice, setCeChoice] = useState<"new" | "existing">("new");
-  const [selectedGroup, setSelectedGroup] = useState(existingCEs[0]?.z_ref ?? "");
+  const [ceChoice, setCeChoice] = useState<"new" | "existing">(defaultGroupZRef ? "existing" : "new");
+  const [selectedGroup, setSelectedGroup] = useState(defaultGroupZRef ?? existingCEs[0]?.z_ref ?? "");
   return (
     <Dialog open onOpenChange={(o) => !o && onCancel()}>
       <DialogContent>
