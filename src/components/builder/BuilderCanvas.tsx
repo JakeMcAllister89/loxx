@@ -87,23 +87,15 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 
     if (n.type === "CE") {
 
-      // CE column width = NODE_WIDTH
-
-      // CYL children sit BELOW the CE stack, so they contribute width
-
-      // but only if there are no sub-CEs (CYLs are always children of the primary CE)
-
       const cyls = n.children.filter(c => c.type === "CYL");
+
+      // Sub-CEs and CYLs both stack vertically in the same column or adjacent column
+
+      // CE column = NODE_WIDTH, CYL column = NODE_WIDTH to the right
 
       if (cyls.length === 0) return NODE_WIDTH;
 
-      const cylTotalW = cyls.reduce((s, c, i) => s + measure(c) + (i > 0 ? HGAP : 0), 0);
-
-      // CE column and CYL children are in the same horizontal band — CE takes NODE_WIDTH,
-
-      // CYLs spread to the right
-
-      return NODE_WIDTH + HGAP + cylTotalW;
+      return NODE_WIDTH + HGAP + NODE_WIDTH;
 
     }
 
