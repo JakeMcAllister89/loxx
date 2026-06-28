@@ -1,7 +1,7 @@
 import { memo, useState, useRef, useEffect } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { AlertCircle, Plus, Key, History, KeyRound, ChevronRight, ChevronDown, ChevronLeft } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipPortal, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { NodeType, TNode } from "@/lib/keytree";
 import { colorForFinish } from "@/lib/finishes";
 
@@ -203,9 +203,11 @@ function CanvasNodeImpl(props: NodeProps) {
                 {meta.label}
               </div>
             </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs max-w-[180px] text-center z-[9999]">
-              {meta.description}
-            </TooltipContent>
+            <TooltipPortal>
+              <TooltipContent side="top" className="text-xs max-w-[180px] text-center z-[9999]">
+                {meta.description}
+              </TooltipContent>
+            </TooltipPortal>
           </Tooltip>
         </TooltipProvider>
 
@@ -262,8 +264,11 @@ function CanvasNodeImpl(props: NodeProps) {
 
         {node.type === "CE" && (
           <div className="flex items-center justify-center gap-1 mt-1">
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded border border-[hsl(var(--node-ce))] text-[hsl(var(--node-ce))] bg-[hsl(var(--node-ce))]/10">
-              CE
+            <span
+              className="font-mono px-1.5 py-0.5 rounded bg-[hsl(var(--node-ce))]/15 text-[hsl(var(--node-ce))]"
+              style={{ fontSize: 9 }}
+            >
+              {node.z_ref ?? "CE"}
             </span>
           </div>
         )}
@@ -365,10 +370,15 @@ function CanvasNodeImpl(props: NodeProps) {
             </div>
           )}
           {popoverOpen && (
-            <div
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-50"
-              onKeyDown={(e) => { if (e.key === "Escape") setPopoverOpen(false); }}
-            >
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={(e) => { e.stopPropagation(); setPopoverOpen(false); }}
+              />
+              <div
+                className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-50"
+                onKeyDown={(e) => { if (e.key === "Escape") setPopoverOpen(false); }}
+              >
               {addOptions?.map((t) => (
                 <button
                   key={t}
@@ -391,6 +401,7 @@ function CanvasNodeImpl(props: NodeProps) {
                 </button>
               ))}
             </div>
+            </>
           )}
         </div>
       )}

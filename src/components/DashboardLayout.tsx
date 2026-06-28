@@ -1,10 +1,18 @@
 import { AppSidebar } from "./AppSidebar";
 
-export function DashboardLayout({ children }: { children: React.ReactNode }) {
+export function DashboardLayout({
+  children,
+  noScroll = false,
+}: {
+  children: React.ReactNode;
+  noScroll?: boolean;
+}) {
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className={`flex w-full bg-background ${noScroll ? "h-screen overflow-hidden" : "min-h-screen"}`}>
       <AppSidebar />
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className={`flex-1 min-w-0 ${noScroll ? "overflow-hidden flex flex-col" : "overflow-auto"}`}>
+        {children}
+      </main>
     </div>
   );
 }
