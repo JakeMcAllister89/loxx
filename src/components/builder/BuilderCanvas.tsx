@@ -193,6 +193,38 @@ function CanvasInner({
       }
     };
     if (tree.root) collectEdges(tree.root);
+
+    // Dashed cross-edges from sub-CE nodes (Z1.1, Z1.2) to sibling CYL nodes
+    const addCrossEdges = (n: TNode) => {
+      if (collapsedSet.has(n.id)) return;
+      const subCEs = n.children.filter(
+        c => c.type === "CE" && typeof c.z_ref === "string" && c.z_ref.includes(".")
+      );
+      const cylSiblings = n.children.filter(
+        c => c.type === "CYL" && !c.decommissioned_at
+      );
+      if (subCEs.length > 0 && cylSiblings.length > 0) {
+        for (const subCE of subCEs) {
+          for (const cyl of cylSiblings) {
+            edges.push({
+              id: `cross-${subCE.id}->${cyl.id}`,
+              source: subCE.id,
+              target: cyl.id,
+              type: "smoothstep",
+              style: {
+                stroke: "hsl(var(--node-ce))",
+                strokeWidth: 1.5,
+                strokeDasharray: "4 3",
+                opacity: 0.6,
+              },
+            });
+          }
+        }
+      }
+      n.children.forEach(addCrossEdges);
+    };
+    if (tree.root) addCrossEdges(tree.root);
+
     return { nodes, edges };
   }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly, collapsed, onToggleCollapsed]);
 
