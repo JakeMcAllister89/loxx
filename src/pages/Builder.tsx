@@ -193,7 +193,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   }>({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false });
   const [ceModalState, setCeModalState] = useState<
     | { open: false }
-    | { open: true; parentId: string; existingCEs: { id: string; label: string; z_ref: string }[] }
+    | { open: true; parentId: string; existingCEs: { id: string; label: string; z_ref: string }[]; defaultGroupZRef?: string }
   >({ open: false });
   // Beginner guide drawer
   const [guideOpen, setGuideOpen] = useState(false);
