@@ -401,6 +401,7 @@ function CanvasNodeImpl(props: NodeProps) {
                 </button>
               ))}
             </div>
+            </>
           )}
         </div>
       )}
