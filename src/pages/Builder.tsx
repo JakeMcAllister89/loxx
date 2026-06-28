@@ -2020,7 +2020,7 @@ function Legend({ type }: { type: NodeType }) {
 
 function DetailPanel({
   node, parent, trail, products, onPatch, addOptions, onAddChildType, onDelete, isRoot, onClose,
-  isFulfilled, onReplace, onCopySpec, readOnly = false,
+  isFulfilled, onReplace, onCopySpec, onAddCE, readOnly = false,
 }: {
   node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
@@ -2032,6 +2032,7 @@ function DetailPanel({
   isFulfilled: boolean;
   onReplace: () => void;
   onCopySpec?: () => void;
+  onAddCE?: () => void;
   readOnly?: boolean;
 }) {
   const meta = TYPE_META[node.type];
