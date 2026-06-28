@@ -5,7 +5,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-import { TNode, TreeData, NodeType, countDoors, validChildTypes } from "@/lib/keytree";
+import { TNode, TreeData, NodeType, countDoors, validChildTypes, collectCENodes } from "@/lib/keytree";
 import { CanvasNode, NODE_WIDTH, NODE_HEIGHT } from "./CanvasNode";
 
 export interface CanvasProduct {
@@ -59,17 +59,54 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 
   const measure = (n: TNode): { w: number } => {
     if (n.children.length === 0 || collapsed.has(n.id)) return { w: NODE_WIDTH };
-    const childW = n.children.reduce((sum, c, i) => sum + measure(c).w + (i > 0 ? HGAP : 0), 0);
-    return { w: Math.max(NODE_WIDTH, childW) };
+    const ceChildren  = n.children.filter(c => c.type === "CE");
+    const cylChildren = n.children.filter(c => c.type !== "CE");
+    const ceW = ceChildren.length > 0 ? NODE_WIDTH : 0;
+    const cylW = cylChildren.reduce((sum, c, i) => sum + measure(c).w + (i > 0 ? HGAP : 0), 0);
+    if (ceChildren.length > 0 && cylChildren.length > 0) return { w: ceW + HGAP + cylW };
+    if (ceChildren.length > 0) return { w: ceW };
+    return { w: Math.max(NODE_WIDTH, cylW) };
   };
 
   const place = (n: TNode, x: number, depth: number): { x: number; w: number } => {
-    const subW = measure(n).w;
     const isCollapsed = collapsed.has(n.id);
     if (n.children.length === 0 || isCollapsed) {
       laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
       return { x: x + NODE_WIDTH / 2, w: NODE_WIDTH };
     }
+    const ceChildren  = n.children.filter(c => c.type === "CE");
+    const cylChildren = n.children.filter(c => c.type !== "CE");
+    const hasCEChildren = ceChildren.length > 0;
+
+    if (hasCEChildren) {
+      const ceColX = x;
+      ceChildren.forEach((ce, i) => {
+        const ceDepth = depth + 1 + i;
+        laid.push({ id: ce.id, node: ce, x: ceColX, y: ceDepth * (NODE_HEIGHT + VGAP) });
+        if (ce.children.length > 0 && !collapsed.has(ce.id)) {
+          let cursor = ceColX;
+          ce.children.forEach((c) => {
+            place(c, cursor, ceDepth + 1);
+            cursor += measure(c).w + HGAP;
+          });
+        }
+      });
+      let cylStartX = ceChildren.length > 0 ? ceColX + NODE_WIDTH + HGAP : ceColX;
+      const cylDepth = depth + 1;
+      let lastCylCenter = 0;
+      if (cylChildren.length > 0) {
+        cylChildren.forEach((c) => {
+          const r = place(c, cylStartX, cylDepth);
+          lastCylCenter = r.x;
+          cylStartX += measure(c).w + HGAP;
+        });
+      }
+      const ceCenter = ceColX + NODE_WIDTH / 2;
+      const parentCenter = cylChildren.length > 0 ? (ceCenter + lastCylCenter) / 2 : ceCenter;
+      laid.push({ id: n.id, node: n, x: parentCenter - NODE_WIDTH / 2, y: depth * (NODE_HEIGHT + VGAP) });
+      return { x: parentCenter, w: measure(n).w };
+    }
+
     let cursor = x;
     let firstCenter = 0;
     let lastCenter = 0;
@@ -77,11 +114,11 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
       const r = place(c, cursor, depth + 1);
       if (i === 0) firstCenter = r.x;
       lastCenter = r.x;
-      cursor += r.w + HGAP;
+      cursor += measure(c).w + HGAP;
     });
     const centerX = (firstCenter + lastCenter) / 2;
     laid.push({ id: n.id, node: n, x: centerX - NODE_WIDTH / 2, y: depth * (NODE_HEIGHT + VGAP) });
-    return { x: centerX, w: subW };
+    return { x: centerX, w: measure(n).w };
   };
 
   place(root, 0, 0);
@@ -156,6 +193,38 @@ function CanvasInner({
       }
     };
     if (tree.root) collectEdges(tree.root);
+
+    // Dashed cross-edges from sub-CE nodes (Z1.1, Z1.2) to sibling CYL nodes
+    const addCrossEdges = (n: TNode) => {
+      if (collapsedSet.has(n.id)) return;
+      const subCEs = n.children.filter(
+        c => c.type === "CE" && typeof c.z_ref === "string" && c.z_ref.includes(".")
+      );
+      const cylSiblings = n.children.filter(
+        c => c.type === "CYL" && !c.decommissioned_at
+      );
+      if (subCEs.length > 0 && cylSiblings.length > 0) {
+        for (const subCE of subCEs) {
+          for (const cyl of cylSiblings) {
+            edges.push({
+              id: `cross-${subCE.id}->${cyl.id}`,
+              source: subCE.id,
+              target: cyl.id,
+              type: "smoothstep",
+              style: {
+                stroke: "hsl(var(--node-ce))",
+                strokeWidth: 1.5,
+                strokeDasharray: "4 3",
+                opacity: 0.6,
+              },
+            });
+          }
+        }
+      }
+      n.children.forEach(addCrossEdges);
+    };
+    if (tree.root) addCrossEdges(tree.root);
+
     return { nodes, edges };
   }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly, collapsed, onToggleCollapsed]);
 

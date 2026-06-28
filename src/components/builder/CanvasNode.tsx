@@ -423,7 +423,7 @@ function CanvasNodeImpl(props: NodeProps) {
               <div
                 className="fixed inset-0 z-[9998]"
                 style={{ pointerEvents: "all" }}
-                onMouseDown={(e) => { e.stopPropagation(); setPopoverOpen(false); }}
+                onClick={(e) => { e.stopPropagation(); setPopoverOpen(false); }}
               />
               {/* Menu */}
               <div
@@ -433,6 +433,7 @@ function CanvasNodeImpl(props: NodeProps) {
                   left: popoverPos.left,
                   transform: "translate(-50%, -100%)",
                 }}
+                onMouseDown={(e) => { e.stopPropagation(); }}
                 onKeyDown={(e) => { if (e.key === "Escape") setPopoverOpen(false); }}
               >
                 {addOptions?.map((t) => (
