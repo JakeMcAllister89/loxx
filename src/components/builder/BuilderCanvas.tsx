@@ -59,17 +59,54 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 
   const measure = (n: TNode): { w: number } => {
     if (n.children.length === 0 || collapsed.has(n.id)) return { w: NODE_WIDTH };
-    const childW = n.children.reduce((sum, c, i) => sum + measure(c).w + (i > 0 ? HGAP : 0), 0);
-    return { w: Math.max(NODE_WIDTH, childW) };
+    const ceChildren  = n.children.filter(c => c.type === "CE");
+    const cylChildren = n.children.filter(c => c.type !== "CE");
+    const ceW = ceChildren.length > 0 ? NODE_WIDTH : 0;
+    const cylW = cylChildren.reduce((sum, c, i) => sum + measure(c).w + (i > 0 ? HGAP : 0), 0);
+    if (ceChildren.length > 0 && cylChildren.length > 0) return { w: ceW + HGAP + cylW };
+    if (ceChildren.length > 0) return { w: ceW };
+    return { w: Math.max(NODE_WIDTH, cylW) };
   };
 
   const place = (n: TNode, x: number, depth: number): { x: number; w: number } => {
-    const subW = measure(n).w;
     const isCollapsed = collapsed.has(n.id);
     if (n.children.length === 0 || isCollapsed) {
       laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
       return { x: x + NODE_WIDTH / 2, w: NODE_WIDTH };
     }
+    const ceChildren  = n.children.filter(c => c.type === "CE");
+    const cylChildren = n.children.filter(c => c.type !== "CE");
+    const hasCEChildren = ceChildren.length > 0;
+
+    if (hasCEChildren) {
+      const ceColX = x;
+      ceChildren.forEach((ce, i) => {
+        const ceDepth = depth + 1 + i;
+        laid.push({ id: ce.id, node: ce, x: ceColX, y: ceDepth * (NODE_HEIGHT + VGAP) });
+        if (ce.children.length > 0 && !collapsed.has(ce.id)) {
+          let cursor = ceColX;
+          ce.children.forEach((c) => {
+            place(c, cursor, ceDepth + 1);
+            cursor += measure(c).w + HGAP;
+          });
+        }
+      });
+      let cylStartX = ceChildren.length > 0 ? ceColX + NODE_WIDTH + HGAP : ceColX;
+      const cylDepth = depth + 1;
+      let lastCylCenter = 0;
+      if (cylChildren.length > 0) {
+        cylChildren.forEach((c) => {
+          const r = place(c, cylStartX, cylDepth);
+          lastCylCenter = r.x;
+          cylStartX += measure(c).w + HGAP;
+        });
+      }
+      const ceCenter = ceColX + NODE_WIDTH / 2;
+      const parentCenter = cylChildren.length > 0 ? (ceCenter + lastCylCenter) / 2 : ceCenter;
+      laid.push({ id: n.id, node: n, x: parentCenter - NODE_WIDTH / 2, y: depth * (NODE_HEIGHT + VGAP) });
+      return { x: parentCenter, w: measure(n).w };
+    }
+
     let cursor = x;
     let firstCenter = 0;
     let lastCenter = 0;
@@ -77,11 +114,11 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
       const r = place(c, cursor, depth + 1);
       if (i === 0) firstCenter = r.x;
       lastCenter = r.x;
-      cursor += r.w + HGAP;
+      cursor += measure(c).w + HGAP;
     });
     const centerX = (firstCenter + lastCenter) / 2;
     laid.push({ id: n.id, node: n, x: centerX - NODE_WIDTH / 2, y: depth * (NODE_HEIGHT + VGAP) });
-    return { x: centerX, w: subW };
+    return { x: centerX, w: measure(n).w };
   };
 
   place(root, 0, 0);
