@@ -85,7 +85,7 @@ export default function Builder() {
   const { id } = useParams();
   if (!id) {
     return (
-      <DashboardLayout>
+      <DashboardLayout noScroll>
         <BuilderEmptyState />
       </DashboardLayout>
     );
