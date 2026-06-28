@@ -54,143 +54,71 @@ interface Laid {
 }
 
 /** Tidy tree layout: post-order width assignment, parents centred over children.
-
  *  Special case: when a CE node has sub-CE children (Z1.1, Z1.2), they stack
-
  *  vertically below the primary CE, and CYL children sit below the whole CE stack.
-
  */
-
 function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]; width: number; height: number } {
-
   const laid: Laid[] = [];
 
-  // Count how many vertical levels a CE subtree occupies
-
-  // (the CE itself + all sub-CE children stacked below it)
-
-  const ceLevels = (ce: TNode): number => {
-
-    if (collapsed.has(ce.id)) return 1;
-
-    const subCEs = ce.children.filter(c => c.type === "CE");
-
-    return 1 + subCEs.length;
-
-  };
-
-  // Measure horizontal width needed for a subtree
-
   const measure = (n: TNode): number => {
-
     if (n.children.length === 0 || collapsed.has(n.id)) return NODE_WIDTH;
-
-    if (n.type === "CE") {
-
-      // All children (sub-CEs and CYLs) stack vertically in the same column
-
-      return NODE_WIDTH;
-
-    }
-
-    // Standard: sum children horizontally
-
+    if (n.type === "CE") return NODE_WIDTH;
     return Math.max(
-
       NODE_WIDTH,
-
       n.children.reduce((s, c, i) => s + measure(c) + (i > 0 ? HGAP : 0), 0)
-
     );
-
   };
 
   const place = (n: TNode, x: number, depth: number): { cx: number } => {
-
     const isCollapsed = collapsed.has(n.id);
-
     if (n.children.length === 0 || isCollapsed) {
-
       laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
-
       return { cx: x + NODE_WIDTH / 2 };
-
     }
 
     if (n.type === "CE") {
-
       const subCEs = n.children.filter(c => c.type === "CE");
-
       const cyls   = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
 
-      // Place this CE at (x, depth)
-
+      // Place this CE node
       laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
 
-      // Stack sub-CEs vertically below this CE, each in the same x column
-
+      // Stack sub-CEs vertically below in same column
       subCEs.forEach((sub, i) => {
-
         const subDepth = depth + 1 + i;
-
         laid.push({ id: sub.id, node: sub, x, y: subDepth * (NODE_HEIGHT + VGAP) });
-
-        // Sub-CEs have no children in this model
-
       });
 
-      // CYL children stack vertically in the SAME column as the CE, below all sub-CEs
-
+      // Stack CYLs vertically below sub-CEs in same column
       const cylStartDepth = depth + 1 + subCEs.length;
-
       cyls.forEach((c, i) => {
-
         laid.push({ id: c.id, node: c, x, y: (cylStartDepth + i) * (NODE_HEIGHT + VGAP) });
-
       });
 
       return { cx: x + NODE_WIDTH / 2 };
-
     }
 
-    // Standard horizontal layout for GMK / MK / SMK / CYL
-
+    // Standard horizontal layout
     let cursor = x;
-
     let firstCX = 0;
-
     let lastCX = 0;
-
     n.children.forEach((c, i) => {
-
       const w = measure(c);
-
       const r = place(c, cursor, depth + 1);
-
       if (i === 0) firstCX = r.cx;
-
       lastCX = r.cx;
-
       cursor += w + HGAP;
-
     });
-
     const cx = (firstCX + lastCX) / 2;
-
     laid.push({ id: n.id, node: n, x: cx - NODE_WIDTH / 2, y: depth * (NODE_HEIGHT + VGAP) });
-
     return { cx };
-
   };
 
   place(root, 0, 0);
 
   const maxX = Math.max(...laid.map((l) => l.x + NODE_WIDTH));
-
   const maxY = Math.max(...laid.map((l) => l.y + NODE_HEIGHT));
-
   return { laid, width: maxX, height: maxY };
-
 }
 
 function CanvasInner({
