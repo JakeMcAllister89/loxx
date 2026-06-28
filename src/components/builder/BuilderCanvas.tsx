@@ -12,6 +12,10 @@ export interface CanvasProduct {
   code: string;
   name: string;
   image_url: string | null;
+  finish_colour?: string | null;
+  finish?: string | null;
+  size?: string | null;
+  price_gbp?: number | null;
 }
 
 interface Props {

@@ -331,7 +331,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
   const productsByCode = useMemo(() => {
     const m = new Map<string, CanvasProduct>();
-    products.forEach((p) => m.set(p.code, { code: p.code, name: (p as any).product_description ?? p.name, image_url: p.image_url }));
+    products.forEach((p) => m.set(p.code, {
+      code: p.code,
+      name: (p as any).product_description ?? p.name,
+      image_url: p.image_url,
+      finish_colour: (p as any).finish_colour ?? null,
+      finish: (p as any).finish ?? null,
+      size: (p as any).size ?? null,
+      price_gbp: (p as any).price_gbp ?? null,
+    }));
     return m;
   }, [products]);
 
@@ -1825,7 +1833,7 @@ function TreeRow({
         <div className="flex-1" />
 
         {/* type pill */}
-        <span className={`text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${meta.pill}`}>
+        <span className={`text-[10px] font-sans uppercase tracking-wider px-1.5 py-0.5 rounded border ${meta.pill}`}>
           {node.type}
         </span>
 
@@ -1877,7 +1885,7 @@ function Legend({ type }: { type: NodeType }) {
   return (
     <div className="flex items-center gap-2">
       <span className="h-2.5 w-2.5 rounded-full" style={{ background: m.color }} />
-      <span className="font-mono uppercase text-[10px] tracking-wider text-muted-foreground">{type}</span>
+      <span className="font-sans uppercase text-[10px] tracking-wider text-muted-foreground">{type}</span>
       <span>{m.label}</span>
       <span className="text-muted-foreground">— {LEGEND_DESC[type]}</span>
     </div>
@@ -1991,18 +1999,23 @@ function DetailPanel({
         <span className="h-2.5 w-2.5 rounded-full" style={{ background: meta.color }} />
         <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{meta.label}</span>
         {isMkOrSmk && node.location?.trim() && (
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border border-[hsl(var(--node-cyl))]/30">
+          <span className="text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border border-[hsl(var(--node-cyl))]/30">
             {node.label}
           </span>
         )}
         {isCyl && node.differ != null && (
-          <Badge className="ml-auto font-mono bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border border-[hsl(var(--node-cyl))]/30">
+          <Badge className="ml-auto font-sans font-semibold bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border border-[hsl(var(--node-cyl))]/30">
             D{String(node.differ).padStart(3, "0")}
+          </Badge>
+        )}
+        {isCE && node.z_ref && (
+          <Badge className="ml-auto font-sans font-semibold bg-[hsl(var(--node-ce))]/15 text-[hsl(var(--node-ce))] border border-[hsl(var(--node-ce))]/30">
+            {node.z_ref}
           </Badge>
         )}
         <button
           onClick={onClose}
-          className={`${isCyl && node.differ != null ? "" : "ml-auto"} h-6 w-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors`}
+          className={`${(isCyl && node.differ != null) || (isCE && node.z_ref) ? "" : "ml-auto"} h-6 w-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors`}
           aria-label="Close panel"
           title="Close"
         >
@@ -2126,12 +2139,6 @@ function DetailPanel({
           </div>
         )}
 
-        {isCE && node.z_ref && (
-          <div className="rounded-md border bg-muted/30 p-3 mb-2 flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">DOM reference:</span>
-            <span className="text-xs font-semibold font-mono">{node.z_ref}</span>
-          </div>
-        )}
 
         {isCE && (
           <div className="rounded-md border bg-muted/30 p-3">
