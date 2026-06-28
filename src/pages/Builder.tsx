@@ -2126,6 +2126,13 @@ function DetailPanel({
           </div>
         )}
 
+        {isCE && node.z_ref && (
+          <div className="rounded-md border bg-muted/30 p-3 mb-2 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">DOM reference:</span>
+            <span className="text-xs font-semibold font-mono">{node.z_ref}</span>
+          </div>
+        )}
+
         {isCE && (
           <div className="rounded-md border bg-muted/30 p-3">
             <div className="text-xs font-semibold mb-1">🔑 Who can open this door?</div>
