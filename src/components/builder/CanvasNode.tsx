@@ -385,14 +385,15 @@ function CanvasNodeImpl(props: NodeProps) {
       {canAdd && (
         <div
           ref={popRef}
-          className="absolute -bottom-5 left-1/2 -translate-x-1/2 nodrag"
+          className="absolute -bottom-5 left-1/2 -translate-x-1/2 nodrag nopan"
           onMouseEnter={() => setPlusHovered(true)}
           onMouseLeave={() => setPlusHovered(false)}
         >
           <button
             ref={plusBtnRef}
-            onClick={(e) => {
+            onMouseDown={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               if ((addOptions?.length ?? 0) + (extraAddActions?.length ?? 0) > 1) {
                 if (!popoverOpen && plusBtnRef.current) {
                   const rect = plusBtnRef.current.getBoundingClientRect();
@@ -400,7 +401,7 @@ function CanvasNodeImpl(props: NodeProps) {
                 }
                 setPopoverOpen((v) => !v);
               } else {
-                handlePlusClick(e);
+                handlePlusClick(e as any);
               }
             }}
             className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90"
