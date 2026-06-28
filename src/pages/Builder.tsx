@@ -471,8 +471,28 @@ function BuilderInner({ systemId }: { systemId: string }) {
         children: [],
         z_ref,
       };
-      const root = addChild(prev.root, parentId, child);
-      const next: TreeData = { ...prev, root };
+      let root = addChild(prev.root, parentId, child);
+      // If adding to an existing group, copy CYL children from the group's primary CE to the new CE
+      if (choice === "existing" && groupZRef) {
+        const groupCE = collectCENodes(root).find(n => n.z_ref === groupZRef);
+        if (groupCE && groupCE.children.some(c => c.type === "CYL")) {
+          const cylChildren = groupCE.children
+            .filter(c => c.type === "CYL" && !c.decommissioned_at)
+            .map(c => ({
+              ...c,
+              id: newId(),
+              differ: undefined as number | undefined,
+              keyed_alike_source_differ: undefined as number | undefined,
+            }));
+          root = mapTree(root, (n) => {
+            if (n.id === child.id) {
+              return { ...n, children: [...n.children, ...cylChildren] };
+            }
+            return n;
+          })!;
+        }
+      }
+      const next = assignNextDiffers({ ...prev, root });
       dirtyRef.current = true;
       setSelectedId(child.id);
       setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
