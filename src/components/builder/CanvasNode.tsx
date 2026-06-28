@@ -76,6 +76,8 @@ function CanvasNodeImpl(props: NodeProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
+  const plusBtnRef = useRef<HTMLButtonElement>(null);
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
 
   useEffect(() => {
     if (!popoverOpen) return;
@@ -385,9 +387,14 @@ function CanvasNodeImpl(props: NodeProps) {
           className="absolute -bottom-5 left-1/2 -translate-x-1/2 nodrag group/add"
         >
           <button
+            ref={plusBtnRef}
             onClick={(e) => {
               e.stopPropagation();
               if ((addOptions?.length ?? 0) + (extraAddActions?.length ?? 0) > 1) {
+                if (!popoverOpen && plusBtnRef.current) {
+                  const rect = plusBtnRef.current.getBoundingClientRect();
+                  setPopoverPos({ top: rect.top - 8, left: rect.left + rect.width / 2 });
+                }
                 setPopoverOpen((v) => !v);
               } else {
                 handlePlusClick(e);
@@ -405,43 +412,48 @@ function CanvasNodeImpl(props: NodeProps) {
                 : NODE_ADD_HINT[node.type] ?? "Add…"}
             </div>
           )}
-          {popoverOpen && (
+          {popoverOpen && popoverPos && createPortal(
             <>
-              {createPortal(
-                <div
-                  className="fixed inset-0 z-[9998]"
-                  style={{ pointerEvents: "all" }}
-                  onMouseDown={(e) => { e.stopPropagation(); setPopoverOpen(false); }}
-                />,
-                document.body
-              )}
+              {/* Backdrop */}
               <div
-                className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card border rounded-md shadow-elevated py-1 min-w-[200px] z-[9999]"
+                className="fixed inset-0 z-[9998]"
+                style={{ pointerEvents: "all" }}
+                onMouseDown={(e) => { e.stopPropagation(); setPopoverOpen(false); }}
+              />
+              {/* Menu */}
+              <div
+                className="fixed z-[9999] bg-card border rounded-md shadow-lg py-1 min-w-[200px]"
+                style={{
+                  top: popoverPos.top,
+                  left: popoverPos.left,
+                  transform: "translate(-50%, -100%)",
+                }}
                 onKeyDown={(e) => { if (e.key === "Escape") setPopoverOpen(false); }}
               >
-              {addOptions?.map((t) => (
-                <button
-                  key={t}
-                  onClick={(e) => { e.stopPropagation(); setPopoverOpen(false); onAddChildType?.(t); }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted text-left"
-                >
-                  <span className="h-2 w-2 rounded-full shrink-0" style={{ background: TYPE_META[t].dot }} />
-                  <span>{ADD_LABEL[t]}</span>
-                </button>
-              ))}
-              {hasExtras && (addOptions?.length ?? 0) > 0 && <div className="my-1 border-t" />}
-              {extraAddActions?.map((a) => (
-                <button
-                  key={a.id}
-                  onClick={(e) => { e.stopPropagation(); setPopoverOpen(false); a.onClick(); }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted text-left"
-                >
-                  <KeyRound className="h-3 w-3 shrink-0 text-amber-600" />
-                  <span>{a.label}</span>
-                </button>
-              ))}
-            </div>
-            </>
+                {addOptions?.map((t) => (
+                  <button
+                    key={t}
+                    onMouseDown={(e) => { e.stopPropagation(); setPopoverOpen(false); onAddChildType?.(t); }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted text-left"
+                  >
+                    <span className="h-2 w-2 rounded-full shrink-0" style={{ background: TYPE_META[t].dot }} />
+                    <span>{ADD_LABEL[t]}</span>
+                  </button>
+                ))}
+                {hasExtras && (addOptions?.length ?? 0) > 0 && <div className="my-1 border-t" />}
+                {extraAddActions?.map((a) => (
+                  <button
+                    key={a.id}
+                    onMouseDown={(e) => { e.stopPropagation(); setPopoverOpen(false); a.onClick(); }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted text-left"
+                  >
+                    <KeyRound className="h-3 w-3 shrink-0 text-amber-600" />
+                    <span>{a.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>,
+            document.body
           )}
         </div>
       )}
