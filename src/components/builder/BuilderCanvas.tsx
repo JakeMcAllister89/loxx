@@ -110,7 +110,8 @@ function CanvasInner({
         ? productsByCode.get(l.node.cylinder_type) ?? null
         : null;
       const kids = l.node.children;
-      const addOptions = readOnly ? [] : validChildTypes(l.node.type);
+      const isSubCE = l.node.type === "CE" && typeof l.node.z_ref === "string" && l.node.z_ref.includes(".");
+      const addOptions = readOnly || isSubCE ? [] : validChildTypes(l.node.type);
       return {
         id: l.id,
         type: "keynode",

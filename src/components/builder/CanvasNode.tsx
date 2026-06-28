@@ -392,9 +392,9 @@ function CanvasNodeImpl(props: NodeProps) {
             ref={plusBtnRef}
             onMouseEnter={() => setPlusHovered(true)}
             onMouseLeave={() => setPlusHovered(false)}
-            onMouseDown={(e) => {
+            onMouseDown={(e) => { e.stopPropagation(); }}
+            onClick={(e) => {
               e.stopPropagation();
-              e.preventDefault();
               if ((addOptions?.length ?? 0) + (extraAddActions?.length ?? 0) > 1) {
                 if (!popoverOpen && plusBtnRef.current) {
                   const rect = plusBtnRef.current.getBoundingClientRect();
@@ -402,7 +402,7 @@ function CanvasNodeImpl(props: NodeProps) {
                 }
                 setPopoverOpen((v) => !v);
               } else {
-                handlePlusClick(e as any);
+                handlePlusClick(e);
               }
             }}
             className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90"
@@ -438,7 +438,7 @@ function CanvasNodeImpl(props: NodeProps) {
                 {addOptions?.map((t) => (
                   <button
                     key={t}
-                    onMouseDown={(e) => { e.stopPropagation(); setPopoverOpen(false); onAddChildType?.(t); }}
+                    onClick={(e) => { e.stopPropagation(); setPopoverOpen(false); onAddChildType?.(t); }}
                     className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted text-left"
                   >
                     <span className="h-2 w-2 rounded-full shrink-0" style={{ background: TYPE_META[t].dot }} />
@@ -449,7 +449,7 @@ function CanvasNodeImpl(props: NodeProps) {
                 {extraAddActions?.map((a) => (
                   <button
                     key={a.id}
-                    onMouseDown={(e) => { e.stopPropagation(); setPopoverOpen(false); a.onClick(); }}
+                    onClick={(e) => { e.stopPropagation(); setPopoverOpen(false); a.onClick(); }}
                     className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted text-left"
                   >
                     <KeyRound className="h-3 w-3 shrink-0 text-amber-600" />
