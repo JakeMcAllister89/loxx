@@ -91,7 +91,7 @@ export default function Builder() {
     );
   }
   return (
-    <DashboardLayout>
+    <DashboardLayout noScroll>
       <BuilderInner systemId={id} />
     </DashboardLayout>
   );
