@@ -5,7 +5,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-import { TNode, TreeData, NodeType, countDoors, validChildTypes } from "@/lib/keytree";
+import { TNode, TreeData, NodeType, countDoors, validChildTypes, collectCENodes } from "@/lib/keytree";
 import { CanvasNode, NODE_WIDTH, NODE_HEIGHT } from "./CanvasNode";
 
 export interface CanvasProduct {
