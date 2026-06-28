@@ -1799,11 +1799,90 @@ function BuilderInner({ systemId }: { systemId: string }) {
           )}
         </DialogContent>
       </Dialog>
+
+      {ceModalState.open && (
+        <CEBuildingModal
+          existingCEs={ceModalState.existingCEs}
+          parentId={ceModalState.parentId}
+          onConfirm={handleCEModalConfirm}
+          onCancel={() => setCeModalState({ open: false })}
+        />
+      )}
     </div>
   );
 }
 
+function CEBuildingModal({
+  existingCEs,
+  parentId,
+  onConfirm,
+  onCancel,
+}: {
+  existingCEs: { id: string; label: string; z_ref: string }[];
+  parentId: string;
+  onConfirm: (parentId: string, choice: "new" | "existing", groupZRef?: string) => void;
+  onCancel: () => void;
+}) {
+  const [ceChoice, setCeChoice] = useState<"new" | "existing">("new");
+  const [selectedGroup, setSelectedGroup] = useState(existingCEs[0]?.z_ref ?? "");
+  return (
+    <Dialog open onOpenChange={(o) => !o && onCancel()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Common Entrance</DialogTitle>
+          <DialogDescription>
+            Is this common entrance cylinder part of an existing building or a new building?
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setCeChoice("existing")}
+            className={`w-full text-left rounded-md border p-3 text-sm transition-colors ${ceChoice === "existing" ? "border-primary bg-primary/5" : "hover:bg-muted"}`}
+          >
+            <div className="font-semibold">Existing building</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Add to a building that already has a common entrance</div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setCeChoice("new")}
+            className={`w-full text-left rounded-md border p-3 text-sm transition-colors ${ceChoice === "new" ? "border-primary bg-primary/5" : "hover:bg-muted"}`}
+          >
+            <div className="font-semibold">New building</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Start a new building group with its own Z reference</div>
+          </button>
+          {ceChoice === "existing" && (
+            <div className="space-y-1.5">
+              <Label>Which building?</Label>
+              <select
+                value={selectedGroup}
+                onChange={(e) => setSelectedGroup(e.target.value)}
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+              >
+                {existingCEs.map((ce) => (
+                  <option key={ce.id} value={ce.z_ref}>
+                    {ce.z_ref} — {ce.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button
+            onClick={() => onConfirm(parentId, ceChoice, ceChoice === "existing" ? selectedGroup : undefined)}
+          >
+            Add common entrance
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /* ------------------------- Tree Row ------------------------- */
+
 
 function TreeRow({
   node, depth, selectedId, collapsed, errorIds, searchMatch, highlightIds,
