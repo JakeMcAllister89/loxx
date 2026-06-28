@@ -75,6 +75,7 @@ function CanvasNodeImpl(props: NodeProps) {
   const isCyl = node.type === "CYL" || node.type === "CE";
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [plusHovered, setPlusHovered] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
   const plusBtnRef = useRef<HTMLButtonElement>(null);
   const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
