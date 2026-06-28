@@ -115,11 +115,12 @@ export function treeToQuoteItems(
       const qty = n.quantity ?? 1;
       const mkNode  = trail.find(t => t.type === "MK");
       const smkNode = trail.find(t => t.type === "SMK");
+      const gmkNode = trail.find(t => t.type === "GMK");
       const hierarchyRefs: string[] = [
-        ...(mkNode  ? [mkNode.label]  : []),
+        ...(mkNode  ? [mkNode.label]  : (gmkNode ? [gmkNode.label] : [])),
         ...(smkNode ? [smkNode.label] : []),
       ];
-      const zoneNode = smkNode ?? mkNode;
+      const zoneNode = smkNode ?? mkNode ?? gmkNode;
       const zoneLabel = zoneNode ? (zoneNode.location?.trim() || zoneNode.label) : undefined;
       out.push({
         kind: "cylinder",
@@ -131,7 +132,7 @@ export function treeToQuoteItems(
         size: p?.size ?? undefined,
         image_url: p?.image_url ?? undefined,
         room_label: n.label,
-        differ_ref: "CE",
+        differ_ref: n.z_ref ?? "CE",
         quantity: qty,
         unit_price: unit,
         hierarchy_refs: hierarchyRefs,

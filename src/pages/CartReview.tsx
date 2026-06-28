@@ -271,18 +271,19 @@ export default function CartReview() {
                       {/* Card */}
                       <div className="rounded-md border p-4 flex flex-col">
                         <div className="flex items-center gap-2 mb-1">
-                          <CreditCard className="h-4 w-4 text-amber-600" />
+                          <CreditCard className="h-4 w-4 text-muted-foreground" />
                           <div className="font-semibold text-sm">Pay by card</div>
                         </div>
                         <p className="text-xs text-muted-foreground flex-1 mb-3">
-                          Instant confirmation via Stripe. Pay now and your order goes straight into processing.
+                          Pay securely by card via Stripe. Your order is confirmed immediately on payment.
                         </p>
                         <Button
+                          variant="outline"
                           onClick={() => setCheckout(true)}
                           disabled={!canPay}
-                          className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                          className="w-full"
                         >
-                          Pay now → £{total.toFixed(2)} <ArrowRight className="h-4 w-4 ml-1" />
+                          <CreditCard className="h-4 w-4 mr-1" /> Pay now → £{total.toFixed(2)}
                         </Button>
                       </div>
                       {/* BACS */}

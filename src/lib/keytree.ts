@@ -11,6 +11,7 @@ export interface TNode {
   label: string;
   location?: string;          // MK/SMK only — optional reference e.g. "Block B", "Floors 1-3"
   differ?: number;            // CYL only
+  z_ref?: string;             // CE only — DOM Z reference e.g. "Z1", "Z2", "ZG"
   cylinder_type?: string;     // CYL only — product code
   finish?: string;            // CYL only
   size?: string;              // CYL only — e.g. "35/35"
@@ -238,6 +239,32 @@ export function assignNextDiffers(tree: TreeData): TreeData {
   const max = Math.max(counter - 1, ...Array.from(used), 0);
   return { root: assigned, next_differ: max + 1 };
 }
+
+export function assignNextZRefs(root: TNode | null): TNode | null {
+  if (!root) return null;
+  const used = new Set<string>();
+  const collectUsed = (n: TNode) => {
+    if (n.type === "CE" && n.z_ref) used.add(n.z_ref);
+    n.children.forEach(collectUsed);
+  };
+  collectUsed(root);
+  let counter = 1;
+  const nextFree = (): string => {
+    let candidate = `Z${counter}`;
+    while (used.has(candidate)) { counter++; candidate = `Z${counter}`; }
+    used.add(candidate);
+    counter++;
+    return candidate;
+  };
+  return mapTree(root, (n) => {
+    if (n.type === "CE" && !n.z_ref) {
+      return { ...n, z_ref: nextFree() };
+    }
+    return n;
+  });
+}
+
+
 
 /** Returns a new tree with decommissioned cylinders filtered out, optionally keeping those whose parent SMK is in `revealSmkIds`. */
 export function filterDecommissioned(
