@@ -1467,7 +1467,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
                     .filter(n => n.z_ref && !n.z_ref.includes("."))
                     .map(n => ({ id: n.id, label: n.label, z_ref: n.z_ref! }));
                   if (existingCEs.length > 0) {
-                    setCeModalState({ open: true, parentId: parent.id, existingCEs });
+                    const currentTopLevel = selected.z_ref?.includes(".")
+                      ? selected.z_ref.split(".")[0]
+                      : selected.z_ref;
+                    setCeModalState({
+                      open: true,
+                      parentId: parent.id,
+                      existingCEs,
+                      defaultGroupZRef: currentTopLevel ?? existingCEs[0]?.z_ref,
+                    });
                   } else {
                     handleAddChild(parent.id, "CE");
                   }
