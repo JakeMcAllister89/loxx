@@ -216,6 +216,49 @@ export default function QuoteDetail() {
               const zones = Array.from(zoneMap.values());
               const isGrouped = zones.length > 1;
 
+              // Build hierarchy map from tree snapshot
+              const hierarchyMap: Record<string, { gmk: string; mk: string; smk: string }> = {};
+              const buildHierarchy = (node: any, trail: any[]) => {
+                if (node.type === "CYL" && node.differ != null) {
+                  const ref = `D${String(node.differ).padStart(3, "0")}`;
+                  hierarchyMap[ref] = {
+                    gmk: trail.find((n: any) => n.type === "GMK") ? "GMK" : "—",
+                    mk: trail.find((n: any) => n.type === "MK")?.label ?? "—",
+                    smk: trail.find((n: any) => n.type === "SMK")?.label ?? "—",
+                  };
+                }
+                if (node.type === "CE" && node.z_ref) {
+                  hierarchyMap[node.z_ref] = {
+                    gmk: trail.find((n: any) => n.type === "GMK") ? "GMK" : "—",
+                    mk: trail.find((n: any) => n.type === "MK")?.label ?? "—",
+                    smk: trail.find((n: any) => n.type === "SMK")?.label ?? "—",
+                  };
+                }
+                for (const child of node.children ?? []) buildHierarchy(child, [...trail, node]);
+              };
+              const treeRoot = (q as any).tree_snapshot?.root ?? null;
+              if (treeRoot) buildHierarchy(treeRoot, []);
+
+              // Build CE differs map
+              const ceDiffersMap: Record<string, string[]> = {};
+              const buildCEDiffers = (node: any) => {
+                if (node.type === "CE" && node.z_ref) {
+                  const collectDiffers = (n: any): string[] => {
+                    const d: string[] = [];
+                    if (n.type === "CYL" && n.differ != null) d.push(`D${String(n.differ).padStart(3, "0")}`);
+                    for (const ch of n.children ?? []) d.push(...collectDiffers(ch));
+                    return d;
+                  };
+                  const differs = Array.from(new Set(collectDiffers(node))).sort();
+                  ceDiffersMap[node.z_ref] = differs;
+                  for (const child of node.children ?? []) {
+                    if (child.type === "CE" && child.z_ref) ceDiffersMap[child.z_ref] = differs;
+                  }
+                }
+                for (const child of node.children ?? []) buildCEDiffers(child);
+              };
+              if (treeRoot) buildCEDiffers(treeRoot);
+
               const masterKeys = keys.filter(k => !k.differ_ref || (k as any).location === "GMK" || (k as any).location === "MK" || (k as any).location === "SMK");
               const extraKeys  = keys.filter(k => k.differ_ref && (k as any).location === "extra");
 
