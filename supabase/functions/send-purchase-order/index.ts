@@ -354,8 +354,9 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
   </div>
   <div>
     <div class="label">Order reference</div>
-    <div style="margin-bottom:2px"><span class="muted" style="font-size:10px">System</span><br/><span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px">${esc(systemRef)}</span>${systemName ? ` <span class="muted">${esc(systemName)}</span>` : ""}</div>
-    <div style="margin-bottom:2px"><span class="muted" style="font-size:10px">Customer PO</span><br/>${esc(order.customer_po_ref || "—")}</div>
+    <div style="margin-bottom:2px"><span class="muted" style="font-size:10px">System</span><br/><span style="font-family:ui-monospace,monospace;font-size:11px">${esc(systemRef)}</span></div>
+    <div style="margin-bottom:2px"><span class="muted" style="font-size:10px">Customer Reference</span><br/>${esc(order.customer_po_ref || "—")}</div>
+    ${(order as any).project_name ? `<div style="margin-bottom:2px"><span class="muted" style="font-size:10px">Project name</span><br/>${esc((order as any).project_name)}</div>` : ""}
   </div>
   <div>
     <div class="label">Deliver to</div>
