@@ -48,6 +48,66 @@ function buildDifferExtraKeysMap(items: any[]): Record<string, number> {
   return map;
 }
 
+function buildCEDiffersMap(root: any): Record<string, string[]> {
+  // For each CE node (z_ref), find all CYL nodes in the same building group
+  // (i.e. CYL nodes that are siblings or cousins under the same primary CE ancestor).
+  // Returns { "Z1": ["D001", "D002"], "Z1.1": ["D001", "D002"], "Z2": ["D003"] }
+  const map: Record<string, string[]> = {};
+
+  const collectCylDiffers = (node: any): string[] => {
+    const differs: string[] = [];
+    if (node.type === "CYL" && node.differ != null) {
+      differs.push(`D${String(node.differ).padStart(3, "0")}`);
+    }
+    for (const child of node.children ?? []) {
+      differs.push(...collectCylDiffers(child));
+    }
+    return differs;
+  };
+
+  const walkCE = (node: any) => {
+    if (node.type === "CE" && node.z_ref) {
+      // Collect all CYL differs that are siblings or descendants under this CE's children
+      // (CYL children of this CE node directly, or under sub-CE children)
+      const differs = collectCylDiffers(node);
+
+      // Also include CYL differs from sub-CE children
+      (node.children ?? []).filter((c: any) => c.type === "CE").forEach((sub: any) => {
+        differs.push(...collectCylDiffers(sub));
+      });
+
+      // Deduplicate and sort
+      const unique = Array.from(new Set(differs)).sort();
+      map[node.z_ref] = unique;
+
+      // Sub-CEs share the same differs as their primary CE
+      (node.children ?? []).filter((c: any) => c.type === "CE" && c.z_ref).forEach((sub: any) => {
+        map[sub.z_ref] = unique;
+      });
+    }
+
+    // Recurse into non-CE children
+    for (const child of node.children ?? []) {
+      if (child.type !== "CE") continue; // already handled CE above
+      walkCE(child);
+    }
+  };
+
+  // Walk from root — handle both CE children of GMK/MK/SMK and nested CEs
+  const walkAll = (node: any) => {
+    if (node.type === "CE") {
+      walkCE(node);
+    } else {
+      for (const child of node.children ?? []) {
+        walkAll(child);
+      }
+    }
+  };
+
+  if (root) walkAll(root);
+  return map;
+}
+
 interface SendBody { order_id?: string; download_only?: boolean }
 
 Deno.serve(async (req) => {
@@ -159,6 +219,8 @@ Deno.serve(async (req) => {
       else zoneGroups.set(zoneKey, { zoneLabel: zoneKey, rows: [i] });
     });
 
+    const ceDiffersMap = buildCEDiffersMap(order.tree_snapshot?.root ?? null);
+
     const isGrouped = zoneGroups.size > 1;
 
     const differRows = Array.from(zoneGroups.values()).map(({ zoneLabel, rows }) => {
@@ -171,6 +233,11 @@ Deno.serve(async (req) => {
         const extraKeys = extraKeysMap[`${i.differ_ref ?? ""}__${i.room_label ?? ""}`] ?? 0;
         const unitCost = Number(p.cost_price ?? 0);
         const totalCost = unitCost * Number(i.quantity);
+        const isCERow = /^Z/i.test(i.differ_ref ?? "");
+        const ceDiffers = isCERow ? (ceDiffersMap[i.differ_ref ?? ""] ?? []) : [];
+        const ceNote = isCERow && ceDiffers.length > 0
+          ? `<tr><td colspan="15" style="padding:2px 10px 8px 10px;font-size:10px;color:#64748b;font-style:italic;border-bottom:1px solid #e2e8f0">Operated by differ keys: ${esc(ceDiffers.join(", "))}</td></tr>`
+          : "";
         return `<tr>
           <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-weight:600">${esc(i.differ_ref ?? "—")}</td>
           <td>${esc(i.room_label ?? "—")}</td>
@@ -187,7 +254,7 @@ Deno.serve(async (req) => {
           <td style="text-align:right">${extraKeys > 0 ? extraKeys : "—"}</td>
           <td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(unitCost)}</td>
           <td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(totalCost)}</td>
-        </tr>`;
+        </tr>${ceNote}`;
       }).join("");
       return header + dataRows;
     }).join("");
