@@ -225,7 +225,7 @@ export default function QuoteNew() {
           <aside className="space-y-4">
             <div className="rounded-[10px] border bg-card shadow-card p-5 space-y-3">
               <h2 className="font-semibold">Quote details</h2>
-              <div><Label className="text-xs">Valid until</Label><Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} /></div>
+              <div><Label className="text-xs">Valid until</Label><Input type="date" value={validUntil} readOnly className="bg-muted cursor-not-allowed" /></div>
               <div><Label className="text-xs">Contact name</Label><Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} /></div>
               <div><Label className="text-xs">Company</Label><Input value={company} onChange={(e) => setCompany(e.target.value)} /></div>
               <div><Label className="text-xs">Contact email</Label><Input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} /></div>
