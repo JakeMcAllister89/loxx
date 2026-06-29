@@ -262,6 +262,10 @@ export default function QuoteDetail() {
 
               const masterKeys = keys.filter(k => !k.differ_ref || (k as any).location === "GMK" || (k as any).location === "MK" || (k as any).location === "SMK");
               const extraKeys  = keys.filter(k => k.differ_ref && (k as any).location === "extra");
+              const extraKeysByDiffer = new Map<string, number>();
+              extraKeys.forEach(k => {
+                if (k.differ_ref) extraKeysByDiffer.set(k.differ_ref, (extraKeysByDiffer.get(k.differ_ref) ?? 0) + k.quantity);
+              });
 
               return (
                 <table className="w-full text-sm">
