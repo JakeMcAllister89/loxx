@@ -33,6 +33,7 @@ export interface CartLine {
 
 
 export interface DeliveryAddress {
+  company_name: string;
   contact_name: string;
   contact_phone: string;
   line1: string;
@@ -41,6 +42,7 @@ export interface DeliveryAddress {
   county: string;
   postcode: string;
 }
+
 
 interface OrderMeta {
   customerPoRef: string;
@@ -76,7 +78,7 @@ const blankMeta = (): OrderMeta => ({
   customerPoRef: "",
   companyName: "",
   notes: "",
-  delivery: { contact_name: "", contact_phone: "", line1: "", line2: "", city: "", county: "", postcode: "" },
+  delivery: { company_name: "", contact_name: "", contact_phone: "", line1: "", line2: "", city: "", county: "", postcode: "" },
 });
 
 export function CartProvider({ children }: { children: ReactNode }) {

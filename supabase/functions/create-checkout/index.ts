@@ -215,15 +215,24 @@ Deno.serve(async (req) => {
       line_items,
       customer_email: user.email ?? undefined,
       automatic_tax: { enabled: true },
-      shipping_address_collection: {
-        allowed_countries: [
-          "GB", "IE", "FR", "DE", "NL", "BE", "LU", "IT", "ES", "PT",
-          "AT", "DK", "SE", "FI", "NO", "PL", "CZ", "SK", "SI", "HU",
-        ],
-      },
       payment_intent_data: {
         description: `LOXX order ${order.id.slice(0, 8).toUpperCase()}`,
+        ...(body.delivery ? {
+          shipping: {
+            name: body.delivery.contact_name ?? "—",
+            phone: body.delivery.contact_phone ?? undefined,
+            address: {
+              line1: body.delivery.line1 ?? "",
+              line2: body.delivery.line2 || undefined,
+              city: body.delivery.city ?? "",
+              state: body.delivery.county || undefined,
+              postal_code: body.delivery.postcode ?? "",
+              country: "GB",
+            },
+          },
+        } : {}),
       },
+
       metadata: {
         userId: user.id,
         orderId: order.id,
