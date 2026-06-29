@@ -205,6 +205,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
+  const newNodeIdsRef = useRef<Set<string>>(new Set());
 
   // Undo history
   const undoStack = useRef<TreeData[]>([]);
