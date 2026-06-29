@@ -326,7 +326,7 @@ export default function QuoteDetail() {
                               </tr>
                               {isCE && ceDiffers.length > 0 && (
                                 <tr>
-                                  <td colSpan={13} className="py-0.5 pb-2 text-[10px] text-muted-foreground italic">
+                                  <td colSpan={15} className="py-0.5 pb-2 text-[10px] text-muted-foreground italic">
                                     Operated by differ keys: {ceDiffers.join(", ")}
                                   </td>
                                 </tr>
