@@ -439,7 +439,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       if (valid.length === 0) return prev;
       const desiredType: NodeType = childType && valid.includes(childType) ? childType : valid[0];
       const sameTypeCount = parent.children.filter((c) => c.type === desiredType).length;
-      const child = makeChild(parent.type, sameTypeCount, desiredType, parent.label);
+      const child = isFulfilled ? { ...makeChild(parent.type, sameTypeCount, desiredType, parent.label), is_new: true } : makeChild(parent.type, sameTypeCount, desiredType, parent.label);
       const root = addChild(prev.root, parentId, child);
       let next: TreeData = { ...prev, root };
       if (child.type === "CYL") next = assignNextDiffers(next);
@@ -873,7 +873,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
     const walk = (n: TNode, ancestors: TNode[]) => {
       // Collect MK/SMK ancestor refs for hierarchy display
       const hierarchy_refs = ancestors.filter(a => a.type === "MK" || a.type === "SMK").map(a => a.label);
-      if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
+      if (!isFulfilled && (n.type === "GMK" || n.type === "MK" || n.type === "SMK")) {
         normaliseKeys(n).forEach((k) => {
           if (k.qty > 0) {
             const keyProd = keyProductForNode(n.type);
@@ -896,7 +896,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           }
         });
       }
-      if (n.type === "CYL" && n.cylinder_type) {
+      if (n.type === "CYL" && n.cylinder_type && (!isFulfilled || n.is_new)) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
@@ -938,7 +938,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           total += differKeyPrice * extra;
         }
       }
-      if (n.type === "CE" && n.cylinder_type) {
+      if (n.type === "CE" && n.cylinder_type && (!isFulfilled || n.is_new)) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
@@ -971,7 +971,21 @@ function BuilderInner({ systemId }: { systemId: string }) {
     };
     walk(tree.root, []);
 
-    replaceBySystem(systemId, lines);
+    if (isFulfilled) {
+      // Fulfilled system — only add new nodes to cart, don't replace existing items
+      lines.forEach((l) => addToCart(l));
+      // Clear is_new flag on all nodes now exported
+      setTree((prev) => {
+        const clearNew = (n: TNode): TNode => ({
+          ...n,
+          is_new: undefined,
+          children: n.children.map(clearNew),
+        });
+        return { ...prev, root: prev.root ? clearNew(prev.root) : null };
+      });
+    } else {
+      replaceBySystem(systemId, lines);
+    }
     logAction({ system_id: systemId, action: "exported_to_cart", metadata: { line_count: lines.length, total_value: total } });
     setExportedAt(Date.now());
     toast.success(`Basket updated — ${lines.length} item${lines.length !== 1 ? "s" : ""} from ${name}`);
