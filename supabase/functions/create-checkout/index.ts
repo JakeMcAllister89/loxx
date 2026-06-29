@@ -34,6 +34,7 @@ interface CheckoutBody {
   customer?: { name?: string; company?: string };
   customerPoRef?: string;
   poRef?: string;
+  projectName?: string;
   notes?: string;
   delivery?: DeliveryAddress;
 }
