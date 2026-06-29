@@ -350,6 +350,7 @@ const TYPE_PILL: Record<string, string> = {
   SMK: "bg-emerald-100 text-emerald-800 border-emerald-200",
   CK:  "bg-sky-100 text-sky-800 border-sky-200",
   CYL: "bg-amber-100 text-amber-900 border-amber-200",
+  CE:  "bg-sky-100 text-sky-800 border-sky-200",
 };
 
 /** Visually flatten legacy CK nodes when summarising for the customer. */
@@ -383,6 +384,14 @@ function HierarchyView({ root }: { root: TNode }) {
         {n.type === "CYL" && (
           <span className="text-xs text-muted-foreground ml-1">
             {n.differ != null && <span className="mr-2 text-amber-700 font-medium">D{String(n.differ).padStart(3, "0")}</span>}
+            {n.cylinder_type && <span className="text-muted-foreground">{n.cylinder_type}</span>}
+            {n.finish && <span> · {n.finish}</span>}
+            <span className="ml-2 font-medium text-foreground">× {n.quantity ?? 1}</span>
+          </span>
+        )}
+        {n.type === "CE" && (
+          <span className="text-xs text-muted-foreground ml-1">
+            {n.z_ref && <span className="mr-2 text-sky-700 font-medium">{n.z_ref}</span>}
             {n.cylinder_type && <span className="text-muted-foreground">{n.cylinder_type}</span>}
             {n.finish && <span> · {n.finish}</span>}
             <span className="ml-2 font-medium text-foreground">× {n.quantity ?? 1}</span>
