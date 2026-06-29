@@ -873,7 +873,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
     const walk = (n: TNode, ancestors: TNode[]) => {
       // Collect MK/SMK ancestor refs for hierarchy display
       const hierarchy_refs = ancestors.filter(a => a.type === "MK" || a.type === "SMK").map(a => a.label);
-      if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
+      if (!isFulfilled && (n.type === "GMK" || n.type === "MK" || n.type === "SMK")) {
         normaliseKeys(n).forEach((k) => {
           if (k.qty > 0) {
             const keyProd = keyProductForNode(n.type);
