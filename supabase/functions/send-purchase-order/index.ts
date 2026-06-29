@@ -31,6 +31,13 @@ function buildDifferHierarchyMap(root: any): Record<string, { gmk: string; mk: s
         smk: trail.find(n => n.type === "SMK")?.label ?? "—",
       };
     }
+    if (node.type === "CE" && node.z_ref) {
+      map[node.z_ref] = {
+        gmk: trail.find(n => n.type === "GMK") ? "GMK" : "—",
+        mk:  trail.find(n => n.type === "MK")?.label  ?? "—",
+        smk: trail.find(n => n.type === "SMK")?.label ?? "—",
+      };
+    }
     for (const child of node.children ?? []) {
       walk(child, [...trail, node]);
     }
