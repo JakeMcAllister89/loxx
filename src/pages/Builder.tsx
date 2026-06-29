@@ -1290,69 +1290,129 @@ function BuilderInner({ systemId }: { systemId: string }) {
             );
           })()}
 
-          {/* CYLINDER SCHEDULE — grouped by zone */}
+          {/* CYLINDER SCHEDULE — mirrors PO format, no pricing */}
           {(() => {
-            if (allCyls.length === 0) return null;
-            const groups: { zoneLabel: string; zoneRef: string; zoneType: string; cyls: TNode[] }[] = [];
-            const walkZones = (n: TNode, currentZone?: { zoneLabel: string; zoneRef: string; zoneType: string }) => {
-              if (n.type === "CYL") {
-                if (currentZone) {
-                  const g = groups.find(g => g.zoneRef === currentZone.zoneRef);
-                  if (g) g.cyls.push(n);
-                  else groups.push({ ...currentZone, cyls: [n] });
-                } else {
-                  const fallback = groups.find(g => g.zoneRef === "ungrouped");
-                  if (fallback) fallback.cyls.push(n);
-                  else groups.push({ zoneLabel: "Other", zoneRef: "ungrouped", zoneType: "", cyls: [n] });
-                }
+            // Build a map of differ ref → hierarchy (GMK/MK/SMK labels)
+            const hierarchyMap: Record<string, { gmk: string; mk: string; smk: string }> = {};
+            const buildHierarchy = (n: TNode, trail: TNode[]) => {
+              if (n.type === "CYL" && n.differ != null) {
+                const ref = `D${String(n.differ).padStart(3, "0")}`;
+                hierarchyMap[ref] = {
+                  gmk: trail.find(t => t.type === "GMK") ? "GMK" : "—",
+                  mk:  trail.find(t => t.type === "MK")?.label  ?? "—",
+                  smk: trail.find(t => t.type === "SMK")?.label ?? "—",
+                };
+              }
+              if (n.type === "CE" && n.z_ref) {
+                hierarchyMap[n.z_ref] = {
+                  gmk: trail.find(t => t.type === "GMK") ? "GMK" : "—",
+                  mk:  trail.find(t => t.type === "MK")?.label  ?? "—",
+                  smk: trail.find(t => t.type === "SMK")?.label ?? "—",
+                };
+              }
+              n.children.forEach(c => buildHierarchy(c, [...trail, n]));
+            };
+            if (tree.root) buildHierarchy(tree.root, []);
+
+            const groups: { zoneLabel: string; zoneRef: string; rows: TNode[] }[] = [];
+            const walkZones = (n: TNode, currentZone?: { zoneLabel: string; zoneRef: string }) => {
+              if (n.type === "CYL" || n.type === "CE") {
+                const zone = currentZone ?? { zoneLabel: "General", zoneRef: "ungrouped" };
+                const g = groups.find(g => g.zoneRef === zone.zoneRef);
+                if (g) g.rows.push(n);
+                else groups.push({ ...zone, rows: [n] });
+                if (n.type === "CE") n.children.forEach(c => walkZones(c, currentZone));
               } else {
-                const zone = (n.type === "SMK" || n.type === "MK" || n.type === "GMK")
-                  ? { zoneLabel: n.location?.trim() || n.label, zoneRef: n.label, zoneType: n.type }
+                const zone = (n.type === "GMK" || n.type === "MK" || n.type === "SMK")
+                  ? { zoneLabel: n.location?.trim() || n.label, zoneRef: n.label }
                   : currentZone;
                 n.children.forEach(c => walkZones(c, zone));
               }
             };
             if (tree.root) walkZones(tree.root);
+            if (groups.length === 0) return null;
 
             return (
               <div>
                 <h2 className="text-lg font-semibold mb-2">Cylinder schedule</h2>
                 {groups.map((group) => (
                   <div key={group.zoneRef} className="mb-5">
-                    <div className="text-sm font-semibold mb-1 pb-1 border-b">
-                      {group.zoneLabel}
-                      {group.zoneRef !== group.zoneLabel && group.zoneRef !== "ungrouped" && (
-                        <span className="text-xs text-muted-foreground font-normal ml-2">({group.zoneRef})</span>
-                      )}
-                    </div>
+                    {groups.length > 1 && (
+                      <div className="text-sm font-semibold mb-1 pb-1 border-b">{group.zoneLabel}</div>
+                    )}
                     <table className="w-full text-xs border-collapse">
                       <thead>
                         <tr className="border-b">
                           <th className="text-left py-1 px-2">Differ</th>
                           <th className="text-left py-1 px-2">Room / Door</th>
+                          <th className="text-left py-1 px-2">GMK</th>
+                          <th className="text-left py-1 px-2">MK</th>
+                          <th className="text-left py-1 px-2">SMK</th>
                           <th className="text-left py-1 px-2">Product code</th>
+                          <th className="text-left py-1 px-2">Lock type</th>
                           <th className="text-left py-1 px-2">Lock function</th>
                           <th className="text-left py-1 px-2">Finish</th>
                           <th className="text-left py-1 px-2">Size</th>
                           <th className="text-right py-1 px-2">Qty</th>
                           <th className="text-right py-1 px-2">Keys inc.</th>
+                          <th className="text-right py-1 px-2">Extra keys</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {group.cyls.map((c) => {
+                        {group.rows.map((c) => {
+                          const isCE = c.type === "CE";
+                          const differRef = isCE
+                            ? (c.z_ref ?? "CE")
+                            : `D${String(c.differ ?? 0).padStart(3, "0")}`;
+                          const h = hierarchyMap[differRef] ?? { gmk: "—", mk: "—", smk: "—" };
                           const prod = c.cylinder_type ? products.find(p => p.code === c.cylinder_type) : null;
                           const extraKeys = c.extra_keys ?? 0;
+                          let ceNote: React.ReactNode = null;
+                          if (isCE && tree.root) {
+                            const siblingDiffers: string[] = [];
+                            const findParentNode = (root: TNode, id: string): TNode | null => {
+                              for (const ch of root.children) {
+                                if (ch.id === id) return root;
+                                const found = findParentNode(ch, id);
+                                if (found) return found;
+                              }
+                              return null;
+                            };
+                            const parentNode = findParentNode(tree.root, c.id);
+                            if (parentNode) {
+                              parentNode.children.forEach(ch => {
+                                if (ch.type === "CYL" && ch.differ != null) siblingDiffers.push(`D${String(ch.differ).padStart(3, "0")}`);
+                              });
+                            }
+                            if (siblingDiffers.length > 0) {
+                              ceNote = (
+                                <tr key={`${c.id}-note`}>
+                                  <td colSpan={13} className="py-0.5 px-2 text-[10px] text-muted-foreground italic border-b">
+                                    Operated by differ keys: {siblingDiffers.join(", ")}
+                                  </td>
+                                </tr>
+                              );
+                            }
+                          }
                           return (
-                            <tr key={c.id} className="border-b">
-                              <td className="py-1 px-2 font-medium text-amber-700">D{String(c.differ ?? 0).padStart(3, "0")}</td>
-                              <td className="py-1 px-2">{c.label}</td>
-                              <td className="py-1 px-2 text-muted-foreground">{c.cylinder_type ?? "—"}</td>
-                              <td className="py-1 px-2">{(prod as any)?.cylinder_profile ?? "—"}</td>
-                              <td className="py-1 px-2">{c.finish ?? "—"}</td>
-                              <td className="py-1 px-2">{c.size ?? "—"}</td>
-                              <td className="py-1 px-2 text-right">{c.quantity ?? 1}</td>
-                              <td className="py-1 px-2 text-right">{2 + extraKeys}</td>
-                            </tr>
+                            <React.Fragment key={c.id}>
+                              <tr className="border-b">
+                                <td className={`py-1 px-2 font-medium ${isCE ? "text-sky-700" : "text-amber-700"}`}>{differRef}</td>
+                                <td className="py-1 px-2">{c.label}</td>
+                                <td className="py-1 px-2 text-muted-foreground">{h.gmk}</td>
+                                <td className="py-1 px-2 text-muted-foreground">{h.mk}</td>
+                                <td className="py-1 px-2 text-muted-foreground">{h.smk}</td>
+                                <td className="py-1 px-2 text-muted-foreground font-mono text-[10px]">{c.cylinder_type ?? "—"}</td>
+                                <td className="py-1 px-2">{(prod as any)?.cylinder_type ?? "—"}</td>
+                                <td className="py-1 px-2">{(prod as any)?.cylinder_profile ?? "—"}</td>
+                                <td className="py-1 px-2">{c.finish ?? "—"}</td>
+                                <td className="py-1 px-2">{c.size ?? "—"}</td>
+                                <td className="py-1 px-2 text-right">{c.quantity ?? 1}</td>
+                                <td className="py-1 px-2 text-right">{isCE ? "—" : 2 + extraKeys}</td>
+                                <td className="py-1 px-2 text-right">{isCE ? "—" : (extraKeys > 0 ? extraKeys : "—")}</td>
+                              </tr>
+                              {ceNote}
+                            </React.Fragment>
                           );
                         })}
                       </tbody>
