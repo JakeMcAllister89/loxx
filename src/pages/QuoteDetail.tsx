@@ -354,7 +354,7 @@ export default function QuoteDetail() {
                     ))}
                     {extraKeys.length > 0 && (
                       <tr className="bg-muted/20">
-                        <td colSpan={13} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <td colSpan={15} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Additional keys
                         </td>
                       </tr>
