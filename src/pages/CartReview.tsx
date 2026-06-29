@@ -424,19 +424,3 @@ function HierarchyView({ root, itemsByDifferRef }: { root: TNode; itemsByDifferR
   );
   return <div>{renderNode(view, 0)}</div>;
 }
-
-function HierarchyFooter({ root }: { root: TNode }) {
-  let mk = 0, smk = 0, cyl = 0;
-  const walk = (n: TNode) => {
-    if (n.type === "MK") mk++;
-    if (n.type === "SMK") smk++;
-    if (n.type === "CYL") cyl++;
-    n.children.forEach(walk);
-  };
-  walk(root);
-  return (
-    <div className="text-xs text-muted-foreground mt-3 pt-3 border-t">
-      {mk} master key{mk === 1 ? "" : "s"} · {smk} sub master{smk === 1 ? "" : "s"} · {cyl} cylinder{cyl === 1 ? "" : "s"}
-    </div>
-  );
-}
