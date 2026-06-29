@@ -20,11 +20,12 @@ interface Props {
   systemId?: string | null;
   customer?: { name?: string; company?: string };
   meta?: OrderMeta;
+  projectName?: string;
   deliveryCharge: number;
   onError?: (msg: string) => void;
 }
 
-export function StripeCheckout({ items, returnUrl, systemId, customer, meta, deliveryCharge, onError }: Props) {
+export function StripeCheckout({ items, returnUrl, systemId, customer, meta, projectName, deliveryCharge, onError }: Props) {
   const fetchClientSecret = useCallback(async (): Promise<string> => {
     if (!items || items.length === 0) {
       const msg = "Your basket is empty.";
@@ -42,6 +43,7 @@ export function StripeCheckout({ items, returnUrl, systemId, customer, meta, del
         items: [...items, deliveryItem], returnUrl, systemId, customer,
         environment: getStripeEnvironment(),
         customerPoRef: meta?.customerPoRef,
+        projectName,
         notes: meta?.notes,
         delivery: meta?.delivery,
       },
@@ -52,7 +54,7 @@ export function StripeCheckout({ items, returnUrl, systemId, customer, meta, del
       throw new Error(msg);
     }
     return data.clientSecret;
-  }, [items, returnUrl, systemId, customer, meta, deliveryCharge, onError]);
+  }, [items, returnUrl, systemId, customer, meta, projectName, deliveryCharge, onError]);
 
   return (
     <div id="checkout" className="rounded-lg overflow-hidden">

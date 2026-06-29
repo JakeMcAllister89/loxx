@@ -156,6 +156,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [saveStatus, setSaveStatus] = useState<"idle" | "pending" | "saving" | "saved" | "error">("idle");
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [exportedAt, setExportedAt] = useState<number | null>(null);
+  const [printProjectName, setPrintProjectName] = React.useState<string>(() => {
+    const v = localStorage.getItem("loxx_print_project_name") ?? "";
+    if (v) localStorage.removeItem("loxx_print_project_name");
+    return v;
+  });
   const [name, setName] = useState("");
   const [reference, setReference] = useState<string | null>(null);
   const [partnerId, setPartnerId] = useState<string | null>(null);
@@ -1060,7 +1065,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
           </Button>
         )}
         <SaveStatusIndicator status={saveStatus} lastSavedAt={lastSavedAt} onRetry={save} />
-        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4" /> Export PDF</Button>
+        <Button variant="outline" size="sm" onClick={() => {
+          try {
+            const raw = localStorage.getItem("loxx_cart_meta_v1");
+            const cartMeta = raw ? JSON.parse(raw) : null;
+            const pn = cartMeta?.projectName ?? "";
+            if (pn) setPrintProjectName(pn);
+          } catch {}
+          setTimeout(() => window.print(), 50);
+        }}><Printer className="h-4 w-4" /> Export PDF</Button>
         {!readOnly && (
           <Button variant="outline" size="sm" onClick={() => {
             if (!tree.root) { toast.error("Nothing to quote"); return; }
@@ -1183,6 +1196,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
       {/* Print header */}
       <div className="print-only px-2 py-4">
         <div className="text-2xl font-semibold">{name}</div>
+        {printProjectName && (
+          <div className="text-base text-muted-foreground mt-0.5">{printProjectName}</div>
+        )}
         <div className="text-sm text-muted-foreground mt-1">
           {reference && <span>{reference} · </span>}
           {countDoors(tree.root)} doors · Printed {new Date().toLocaleDateString("en-GB")}
@@ -1440,6 +1456,51 @@ function BuilderInner({ systemId }: { systemId: string }) {
                     </table>
                   </div>
                 ))}
+                {/* Cylinder summary */}
+                {(() => {
+                  const totalQty = groups.flatMap(g => g.rows).reduce((sum, c) => sum + (c.quantity ?? 1), 0);
+                  const specMap = new Map<string, { label: string; qty: number }>();
+                  groups.flatMap(g => g.rows).forEach(c => {
+                    const prod = c.cylinder_type ? products.find(p => p.code === c.cylinder_type) : null;
+                    const specParts = [
+                      (prod as any)?.cylinder_type ?? c.cylinder_type ?? "Unknown",
+                      (prod as any)?.cylinder_profile ?? null,
+                      c.finish ?? (prod as any)?.finish ?? null,
+                      c.size ?? (prod as any)?.size ?? null,
+                    ].filter(Boolean);
+                    const specKey = specParts.join(" · ");
+                    const existing = specMap.get(specKey);
+                    if (existing) existing.qty += (c.quantity ?? 1);
+                    else specMap.set(specKey, { label: specKey, qty: c.quantity ?? 1 });
+                  });
+                  return (
+                    <div className="mt-6 pt-4 border-t">
+                      <h2 className="text-base font-semibold mb-2">Cylinder summary</h2>
+                      <table className="w-full text-xs border-collapse mb-2">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-1 px-1">Specification</th>
+                            <th className="text-right py-1 px-1">Qty</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Array.from(specMap.values()).map((s, i) => (
+                            <tr key={i} className="border-b">
+                              <td className="py-1 px-1">{s.label}</td>
+                              <td className="py-1 px-1 text-right font-medium">{s.qty}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="border-t-2">
+                            <td className="py-1 px-1 font-semibold">Total cylinders</td>
+                            <td className="py-1 px-1 text-right font-bold text-amber-700">{totalQty}</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })()}

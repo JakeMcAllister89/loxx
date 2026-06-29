@@ -47,6 +47,7 @@ export interface DeliveryAddress {
 interface OrderMeta {
   customerPoRef: string;
   companyName: string;
+  projectName: string;
   notes: string;
   delivery: DeliveryAddress;
 }
@@ -77,6 +78,7 @@ const META_KEY = "loxx_cart_meta_v1";
 const blankMeta = (): OrderMeta => ({
   customerPoRef: "",
   companyName: "",
+  projectName: "",
   notes: "",
   delivery: { company_name: "", contact_name: "", contact_phone: "", line1: "", line2: "", city: "", county: "", postcode: "" },
 });

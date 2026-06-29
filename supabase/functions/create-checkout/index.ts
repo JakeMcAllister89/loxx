@@ -34,6 +34,7 @@ interface CheckoutBody {
   customer?: { name?: string; company?: string };
   customerPoRef?: string;
   poRef?: string;
+  projectName?: string;
   notes?: string;
   delivery?: DeliveryAddress;
 }
@@ -114,6 +115,7 @@ Deno.serve(async (req) => {
     };
     // optional columns added by recent migrations
     if (body.customerPoRef !== undefined) orderInsert.customer_po_ref = body.customerPoRef || null;
+    orderInsert.project_name = body.projectName || null;
 
     const { data: order, error: orderErr } = await supabase
       .from("orders")
