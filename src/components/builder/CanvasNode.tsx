@@ -73,7 +73,7 @@ function CanvasNodeImpl(props: NodeProps) {
     extraAddActions, hasDecommissionedChildren, revealDecommissioned, onToggleRevealDecommissioned,
   } = d;
   const meta = TYPE_META[node.type] ?? TYPE_META.SMK;
-  const isCyl = node.type === "CYL" || node.type === "CE";
+  const isCyl = node.type === "CYL";
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [plusHovered, setPlusHovered] = useState(false);
