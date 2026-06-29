@@ -308,9 +308,8 @@ Deno.serve(async (req) => {
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(displayPo)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <style>
-body{font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;color:#0f172a;padding:32px;max-width:960px;margin:0 auto;font-size:13px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#0f172a;padding:32px;max-width:960px;margin:0 auto;font-size:13px}
 h1{margin:0;font-size:24px}
 table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
 th,td{padding:6px 8px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}
