@@ -62,7 +62,10 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 
   const measure = (n: TNode): number => {
     if (n.children.length === 0 || collapsed.has(n.id)) return NODE_WIDTH;
-    if (n.type === "CE") return NODE_WIDTH;
+    if (n.type === "CE") {
+      // A top-level CE (Z1, Z2) occupies one column — its sub-CEs and CYLs stack vertically within it.
+      return NODE_WIDTH;
+    }
     return Math.max(
       NODE_WIDTH,
       n.children.reduce((s, c, i) => s + measure(c) + (i > 0 ? HGAP : 0), 0)
@@ -77,18 +80,17 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
     }
 
     if (n.type === "CE") {
-      const subCEs = n.children.filter(c => c.type === "CE");
+      // Separate top-level CEs (Z1, Z2 — direct GMK/MK children) from sub-CEs (Z1.1:1, Z1.2)
+      const subCEs = n.children.filter(c => c.type === "CE" && c.z_ref?.includes("."));
       const cyls   = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
 
       // Place this CE node
       laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
 
       // Stack sub-CEs vertically below in same column
-      // Sub-CEs are NEVER collapsed — always render them and their children
       subCEs.forEach((sub, i) => {
         const subDepth = depth + 1 + i;
         laid.push({ id: sub.id, node: sub, x, y: subDepth * (NODE_HEIGHT + VGAP) });
-        // Place CYL children of this sub-CE (ignore collapsed state for sub-CEs)
         const subCyls = sub.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
         const subCylStart = subDepth + 1;
         subCyls.forEach((c, j) => {
@@ -96,7 +98,6 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
         });
       });
 
-      // Stack CYLs that are direct children of this CE vertically below sub-CEs
       const maxSubCEDepth = subCEs.length > 0
         ? depth + 1 + subCEs.length - 1 + Math.max(0, ...subCEs.map(s => s.children.filter(c => c.type === "CYL").length))
         : depth;
