@@ -84,12 +84,15 @@ export async function downloadInvoice(orderId: string) {
   }
 
   let systemRef: string | null = null;
+  let systemName: string | null = null;
+
   if ((order as any).system_id) {
-    const { data: sys } = await supabase.from("key_systems").select("reference").eq("id", (order as any).system_id).single();
+    const { data: sys } = await supabase.from("key_systems").select("reference,name").eq("id", (order as any).system_id).single();
     systemRef = sys?.reference ?? null;
+    systemName = sys?.name ?? null;
   }
 
-  const html = renderInvoiceHtml(order as OrderRow, (items ?? []) as ItemRow[], s, systemRef, productMap, hierarchyMap);
+  const html = renderInvoiceHtml(order as OrderRow, (items ?? []) as ItemRow[], s, systemRef, systemName, productMap, hierarchyMap);
   const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
   window.open(url, "_blank");
