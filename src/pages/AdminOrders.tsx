@@ -677,7 +677,7 @@ export default function AdminOrders() {
                     <div className="text-xs text-muted-foreground">PO not yet sent</div>
                   )}
                   <div className="flex gap-2 mt-2">
-                    <Button size="sm" className="bg-amber-600 hover:bg-amber-700" disabled={!!open.po_number || singleSending === open.id} onClick={() => sendSingle(open.id)}>
+                    <Button size="sm" className="bg-amber-600 hover:bg-amber-700" disabled={!!open.po_sent_at || singleSending === open.id} onClick={() => sendSingle(open.id)}>
                       {singleSending === open.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />} Send PO
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => runDownload([open.id])}>
