@@ -969,6 +969,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       n.children.forEach((c) => walk(c, [...ancestors, n]));
     };
     console.log("[LOXX export] isFulfilled:", isFulfilled, "tree nodes with is_new:", JSON.stringify(tree.root, null, 2).match(/"is_new":true/g)?.length ?? 0);
+    console.log("[LOXX export] newNodeIds:", Array.from(newNodeIdsRef.current));
     walk(tree.root, []);
 
     if (isFulfilled) {
