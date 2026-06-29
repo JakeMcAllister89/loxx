@@ -938,7 +938,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           total += differKeyPrice * extra;
         }
       }
-      if (n.type === "CE" && n.cylinder_type) {
+      if (n.type === "CE" && n.cylinder_type && (!isFulfilled || n.is_new)) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
