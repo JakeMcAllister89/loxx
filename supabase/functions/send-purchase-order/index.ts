@@ -325,7 +325,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 @media print { @page { margin: 16mm; } .noprint { display: none } }
 </style></head><body>
 <div style="text-align:center;padding:20px 0 12px;border-bottom:2px solid #0f172a;margin-bottom:4px">
-  <div style="font-size:32px;font-weight:800;letter-spacing:3px;font-family:'Inter',-apple-system,sans-serif">${esc(S.company_name || "MY LOXX")}</div>
+  <div style="font-size:32px;font-weight:800;letter-spacing:3px">🔑${esc(S.company_name || "MY LOXX")}</div>
   <div style="font-size:11px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px">Master Key Systems</div>
 </div>
 
