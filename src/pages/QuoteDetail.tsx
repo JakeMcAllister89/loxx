@@ -362,7 +362,7 @@ export default function QuoteDetail() {
                     {extraKeys.map((k, i) => (
                       <tr key={`ek${i}`}>
                         <td className="py-2 text-amber-700 font-medium">{k.differ_ref}</td>
-                        <td className="py-2 text-sm" colSpan={9}>{k.key_reference}</td>
+                        <td className="py-2 text-sm" colSpan={11}>{k.key_reference}</td>
                         <td className="py-2 text-right">{k.quantity}</td>
                         <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
                         <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
