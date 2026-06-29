@@ -1,4 +1,4 @@
-// Generates a Purchase Order HTML for an order and (optionally) emails it to the supplier.
+// Sends a supplier purchase order email for a confirmed LOXX order. v2
 // POST { order_id: string, download_only?: boolean }
 // Returns { success: true, po_number, html? }
 
