@@ -86,10 +86,13 @@ function buildCEDiffersMap(root: any): Record<string, string[]> {
       });
     }
 
-    // Recurse into non-CE children
+    // Recurse into sub-CE children ONLY if they are primary CEs (no dot in z_ref)
+    // Sub-CEs (Z1.1, Z1.2) already had their map entry set above — do not overwrite
     for (const child of node.children ?? []) {
-      if (child.type !== "CE") continue; // already handled CE above
-      walkCE(child);
+      if (child.type !== "CE") continue;
+      if (child.z_ref && !child.z_ref.includes(".")) {
+        walkCE(child);
+      }
     }
   };
 
@@ -172,12 +175,15 @@ Deno.serve(async (req) => {
 
     // Assign PO number if missing
     let poNumber = order.po_number as string | null;
-    if (!poNumber && !downloadOnly) {
+    if (!poNumber) {
       const { data: poRes, error: poErr } = await supabase.rpc("assign_po_number");
       if (poErr) return json({ error: `Could not assign PO number: ${poErr.message}` }, 500);
       poNumber = poRes as string;
+      if (!downloadOnly) {
+        await supabase.from("orders").update({ po_number: poNumber }).eq("id", order.id);
+      }
     }
-    const displayPo = poNumber ?? "(preview)";
+    const displayPo = poNumber ?? "PREVIEW";
 
     // Build hierarchy map from tree snapshot and extra keys map from line items
     const hierarchyMap = buildDifferHierarchyMap(systemTreeRoot);
@@ -200,6 +206,7 @@ Deno.serve(async (req) => {
     const inc = +(exVat + vat).toFixed(2);
 
     const d = (order.delivery_address ?? {}) as any;
+    const contactCompany = d.company_name ?? "";
     const contactName = d.contact_name ?? d.name ?? "—";
     const contactPhone = d.contact_phone ?? "—";
     const addrLine = [d.line1, d.line2, d.city, d.county, d.postcode].filter(Boolean).join(", ") || "—";
@@ -334,22 +341,29 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px">
   <div>
-    <div class="label">Supplier</div>
+    <div class="label">From</div>
+    <div style="font-weight:600">${esc(S.company_name || "My LOXX")}</div>
+    ${S.company_address ? `<div class="muted">${esc(S.company_address)}</div>` : ""}
+    ${S.company_email ? `<div class="muted">${esc(S.company_email)}</div>` : ""}
+    ${S.company_phone ? `<div class="muted">${esc(S.company_phone)}</div>` : ""}
+    ${S.vat_number ? `<div class="muted">VAT: ${esc(S.vat_number)}</div>` : ""}
+    <div style="margin-top:8px"><div class="label">Supplier</div>
     <div style="font-weight:600">${esc(S.supplier_name || "—")}</div>
     ${S.supplier_email ? `<div class="muted">${esc(S.supplier_email)}</div>` : ""}
-    ${S.supplier_account ? `<div class="muted">Account: ${esc(S.supplier_account)}</div>` : ""}
+    ${S.supplier_account ? `<div class="muted">Account: ${esc(S.supplier_account)}</div>` : ""}</div>
   </div>
   <div>
     <div class="label">Order reference</div>
-    <div><strong>System:</strong> <span style="font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(systemRef)}</span>${systemName ? ` <span class="muted">${esc(systemName)}</span>` : ""}</div>
-    <div><strong>Customer PO:</strong> ${esc(order.customer_po_ref || "—")}</div>
-    ${(order as any).notes ? `<div style="margin-top:6px;font-size:11px;color:#b45309"><strong>Special instructions:</strong> ${esc((order as any).notes)}</div>` : ""}
+    <div style="margin-bottom:2px"><span class="muted" style="font-size:10px">System</span><br/><span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px">${esc(systemRef)}</span>${systemName ? ` <span class="muted">${esc(systemName)}</span>` : ""}</div>
+    <div style="margin-bottom:2px"><span class="muted" style="font-size:10px">Customer PO</span><br/>${esc(order.customer_po_ref || "—")}</div>
   </div>
   <div>
     <div class="label">Deliver to</div>
-    <div style="font-weight:600">${esc(contactName)}</div>
+    ${contactCompany ? `<div style="font-weight:600">${esc(contactCompany)}</div>` : ""}
+    <div style="font-weight:${contactCompany ? "400" : "600"}">${esc(contactName)}</div>
     <div class="muted">${esc(contactPhone)}</div>
     <div class="muted" style="margin-top:4px">${esc(addrLine)}</div>
+    ${(order as any).notes ? `<div style="margin-top:8px;font-size:11px;color:#b45309;border-top:1px solid #fcd34d;padding-top:6px"><span style="font-weight:600">Special instructions:</span> ${esc((order as any).notes)}</div>` : ""}
   </div>
 </div>
 
