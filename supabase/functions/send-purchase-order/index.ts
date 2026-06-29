@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
           ? `<tr><td colspan="15" style="padding:2px 10px 8px 10px;font-size:10px;color:#64748b;font-style:italic;border-bottom:1px solid #e2e8f0">Operated by differ keys: ${esc(ceDiffers.join(", "))}</td></tr>`
           : "";
         return `<tr>
-          <td style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-weight:600">${esc(i.differ_ref ?? "—")}</td>
+          <td style="font-family:ui-monospace,monospace;font-weight:600">${esc(i.differ_ref ?? "—")}</td>
           <td>${esc(i.room_label ?? "—")}</td>
           <td>${esc(hierarchy.gmk)}</td>
           <td>${esc(hierarchy.mk)}</td>
@@ -266,8 +266,8 @@ Deno.serve(async (req) => {
           <td style="text-align:right">${i.quantity}</td>
           <td style="text-align:right">2</td>
           <td style="text-align:right">${extraKeys > 0 ? extraKeys : "—"}</td>
-          <td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(unitCost)}</td>
-          <td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(totalCost)}</td>
+          <td style="text-align:right;font-family:ui-monospace,monospace">${fmt(unitCost)}</td>
+          <td style="text-align:right;font-family:ui-monospace,monospace">${fmt(totalCost)}</td>
         </tr>${ceNote}`;
       }).join("");
       return header + dataRows;
@@ -319,7 +319,7 @@ th,td{padding:6px 8px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-a
 th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5px;color:#475569}
 .warn{background:#fef3c7;border:1px solid #fcd34d;padding:8px 12px;border-radius:6px;font-size:12px;color:#92400e;margin:16px 0}
 .muted{color:#64748b;font-size:12px}
-.po{font-family:'IBM Plex Mono',ui-monospace,monospace;color:#b45309;font-size:18px}
+.po{font-family:ui-monospace,monospace;color:#b45309;font-size:18px}
 .block{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-top:12px}
 .label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:4px}
 .totals{margin-top:12px;width:300px;margin-left:auto}
@@ -337,7 +337,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
   <div style="text-align:right">
     <div style="display:grid;grid-template-columns:auto auto;gap:2px 16px;font-size:12px">
       <div style="color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">Purchase Order Number</div>
-      <div style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-weight:600;color:#b45309">${esc(displayPo)}</div>
+      <div style="font-family:ui-monospace,monospace;font-weight:600;color:#b45309">${esc(displayPo)}</div>
       <div style="color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">Date</div>
       <div>${esc(today)}</div>
       <div style="color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">VAT Number</div>
@@ -421,11 +421,11 @@ ${(masterKeyRows || extraKeyRows) ? `
 </table>` : ""}
 
 <table class="totals">
-  <tr><td>Subtotal (cost)</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(combinedSubtotal)}</td></tr>
-  ${deliveryCharge > 0 ? `<tr><td>Delivery Charge</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(deliveryCharge)}</td></tr>` : ""}
-  <tr><td>Subtotal ex VAT</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(exVat)}</td></tr>
-  <tr><td>VAT at ${esc(String(vatRate))}%</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(vat)}</td></tr>
-  <tr class="grand"><td>Total inc VAT</td><td style="text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmt(inc)}</td></tr>
+  <tr><td>Subtotal (cost)</td><td style="text-align:right;font-family:ui-monospace,monospace">${fmt(combinedSubtotal)}</td></tr>
+  ${deliveryCharge > 0 ? `<tr><td>Delivery Charge</td><td style="text-align:right;font-family:ui-monospace,monospace">${fmt(deliveryCharge)}</td></tr>` : ""}
+  <tr><td>Subtotal ex VAT</td><td style="text-align:right;font-family:ui-monospace,monospace">${fmt(exVat)}</td></tr>
+  <tr><td>VAT at ${esc(String(vatRate))}%</td><td style="text-align:right;font-family:ui-monospace,monospace">${fmt(vat)}</td></tr>
+  <tr class="grand"><td>Total inc VAT</td><td style="text-align:right;font-family:ui-monospace,monospace">${fmt(inc)}</td></tr>
 </table>
 
 <div class="block" style="margin-top:24px;background:#f8fafc">
