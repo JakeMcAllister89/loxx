@@ -206,6 +206,10 @@ export default function AdminOrders() {
   const updateStatus = async (id: string, s: string) => {
     const { error } = await supabase.from("orders").update({ status: s }).eq("id", id);
     if (error) return toast.error(error.message);
+    const order = orders.find(o => o.id === id);
+    if (order?.system_id && ["shipped", "delivered", "processing"].includes(s)) {
+      await supabase.from("key_systems").update({ is_fulfilled: true }).eq("id", order.system_id);
+    }
     toast.success(`Marked as ${s}`);
     reload();
   };
