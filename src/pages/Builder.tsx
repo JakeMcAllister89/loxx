@@ -880,7 +880,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
             const keyPrice = keyProd ? Number((keyProd as any).price_gbp) : 12;
             lines.push({
               kind: "key",
-              key_reference: k.ref,
+              key_reference: n.label && n.label !== k.ref ? `${k.ref} — ${n.label}` : k.ref,
               product_code: (keyProd as any)?.code ?? undefined,
               image_url: (keyProd as any)?.image_url ?? undefined,
               node_type: n.type,

@@ -84,12 +84,15 @@ export async function downloadInvoice(orderId: string) {
   }
 
   let systemRef: string | null = null;
+  let systemName: string | null = null;
+
   if ((order as any).system_id) {
-    const { data: sys } = await supabase.from("key_systems").select("reference").eq("id", (order as any).system_id).single();
+    const { data: sys } = await supabase.from("key_systems").select("reference,name").eq("id", (order as any).system_id).single();
     systemRef = sys?.reference ?? null;
+    systemName = sys?.name ?? null;
   }
 
-  const html = renderInvoiceHtml(order as OrderRow, (items ?? []) as ItemRow[], s, systemRef, productMap, hierarchyMap);
+  const html = renderInvoiceHtml(order as OrderRow, (items ?? []) as ItemRow[], s, systemRef, systemName, productMap, hierarchyMap);
   const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
   window.open(url, "_blank");
@@ -101,6 +104,7 @@ function renderInvoiceHtml(
   items: ItemRow[],
   s: Record<string, string>,
   systemRef: string | null,
+  systemName: string | null,
   productMap: Record<string, any> = {},
   hierarchyMap: Record<string, { mk: string; smk: string }> = {},
 ): string {
@@ -214,6 +218,7 @@ function renderInvoiceHtml(
     <div class="lbl">Order details</div>
     <div><span class="muted">Order ref:</span> <span class="ref">${esc(ord)}</span></div>
     ${systemRef ? `<div><span class="muted">System ref:</span> <span class="ref">${esc(systemRef)}</span></div>` : ""}
+    ${systemName ? `<div><span class="muted">Project:</span> ${esc(systemName)}</div>` : ""}
     ${order.customer_po_ref || order.purchase_order_ref ? `<div><span class="muted">PO ref:</span> ${esc(order.customer_po_ref || order.purchase_order_ref)}</div>` : ""}
     <div><span class="muted">Payment date:</span> ${esc(date)}</div>
   </div>
