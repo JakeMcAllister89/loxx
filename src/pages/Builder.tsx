@@ -1391,7 +1391,6 @@ function BuilderInner({ systemId }: { systemId: string }) {
                                 });
                               };
                               collectCyls(c);
-                            }
                             } else {
                               // Primary CE (Z1/Z2): collect CYL differs from own children AND sub-CE children recursively
                               const collectCyls = (node: TNode) => {
