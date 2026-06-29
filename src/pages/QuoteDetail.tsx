@@ -273,7 +273,7 @@ export default function QuoteDetail() {
               });
 
               return (
-                <table className="w-full text-xs table-fixed">
+                <table className="w-full table-fixed" style={{fontSize:"11px"}}>
                   <thead className="border-b">
                     <tr className="text-[10px] uppercase tracking-wider text-muted-foreground">
                       <th className="text-left py-2 w-12">Differ</th>
@@ -314,13 +314,13 @@ export default function QuoteDetail() {
                             <React.Fragment key={`c${zi}-${i}`}>
                               <tr>
                                 <td className={`py-2 font-medium ${isCE ? "text-sky-700" : "text-amber-700"}`}>{c.differ_ref}</td>
-                                <td className="py-2 whitespace-nowrap">{c.room_label}</td>
+                                <td className="py-2 pr-3">{c.room_label}</td>
                                 <td className="py-2 text-xs text-muted-foreground">{h.gmk}</td>
                                 <td className="py-2 text-xs text-muted-foreground">{h.mk}</td>
                                 <td className="py-2 text-xs text-muted-foreground">{h.smk}</td>
                                 <td className="py-2 text-[11px] text-muted-foreground">{c.product_code ?? "—"}</td>
-                                <td className="py-2 text-xs text-foreground whitespace-nowrap">{(c as any).cylinder_type ?? "—"}</td>
-                                <td className="py-2 text-xs text-foreground whitespace-nowrap">{c.cylinder_profile ?? "—"}</td>
+                                <td className="py-2 pr-3 text-xs text-foreground">{(c as any).cylinder_type ?? "—"}</td>
+                                <td className="py-2 pr-3 text-xs text-foreground">{c.cylinder_profile ?? "—"}</td>
                                 <td className="py-2 text-xs text-foreground">{c.finish ?? "—"}</td>
                                 <td className="py-2 text-xs text-foreground">{c.size ?? "—"}</td>
                                 <td className="py-2 text-right">{isCE ? "—" : 2}</td>
