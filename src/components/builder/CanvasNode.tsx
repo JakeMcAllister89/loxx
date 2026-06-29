@@ -332,6 +332,54 @@ function CanvasNodeImpl(props: NodeProps) {
           </div>
         )}
 
+        {/* Row 4 — CE product spec (no "No product" warning — CE without spec is valid) */}
+        {node.type === "CE" && product && (
+          <div className="mt-1 flex items-center justify-center gap-1.5">
+            {node.finish && (
+              <span
+                className="h-2.5 w-2.5 rounded-full shrink-0 border"
+                style={{ background: product?.finish_colour ?? colorForFinish(node.finish), borderColor: "hsl(var(--border))" }}
+                title={node.finish}
+              />
+            )}
+            <TooltipProvider delayDuration={400}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-muted-foreground truncate cursor-default" style={{ fontSize: 10 }}>
+                    {product.name}
+                  </span>
+                </TooltipTrigger>
+                <TooltipPortal>
+                  <TooltipContent side="right" className="p-0 overflow-hidden rounded-lg shadow-elevated z-[9999] w-56" sideOffset={8}>
+                    {product.image_url && (
+                      <div className="bg-muted flex items-center justify-center p-3">
+                        <img src={product.image_url} alt={product.name} className="h-14 w-auto object-contain" />
+                      </div>
+                    )}
+                    <div className="p-3 space-y-1.5">
+                      <p className="text-xs font-semibold leading-tight text-foreground">{product.name}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono">{product.code}</p>
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {product.finish && (
+                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                            {product.finish_colour && (
+                              <span className="h-2 w-2 rounded-full border shrink-0" style={{ background: product.finish_colour }} />
+                            )}
+                            {product.finish}
+                          </span>
+                        )}
+                        {product.size && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{product.size}</span>
+                        )}
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </TooltipPortal>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        )}
+
         {hasError && (
           <AlertCircle className="absolute top-1 right-1 h-3 w-3 text-destructive" />
         )}
