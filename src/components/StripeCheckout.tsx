@@ -43,6 +43,7 @@ export function StripeCheckout({ items, returnUrl, systemId, customer, meta, pro
         items: [...items, deliveryItem], returnUrl, systemId, customer,
         environment: getStripeEnvironment(),
         customerPoRef: meta?.customerPoRef,
+        projectName,
         notes: meta?.notes,
         delivery: meta?.delivery,
       },
@@ -53,7 +54,7 @@ export function StripeCheckout({ items, returnUrl, systemId, customer, meta, pro
       throw new Error(msg);
     }
     return data.clientSecret;
-  }, [items, returnUrl, systemId, customer, meta, deliveryCharge, onError]);
+  }, [items, returnUrl, systemId, customer, meta, projectName, deliveryCharge, onError]);
 
   return (
     <div id="checkout" className="rounded-lg overflow-hidden">
