@@ -350,7 +350,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
     ${S.company_address ? `<div class="muted">${esc(S.company_address)}</div>` : ""}
     ${S.company_email ? `<div class="muted">${esc(S.company_email)}</div>` : ""}
     ${S.company_phone ? `<div class="muted">${esc(S.company_phone)}</div>` : ""}
-    ${S.vat_number ? `<div class="muted">VAT: ${esc(S.vat_number)}</div>` : ""}
+    
     <div style="margin-top:8px"><div class="label">Supplier</div>
     <div style="font-weight:600">${esc(S.supplier_name || "—")}</div>
     ${S.supplier_email ? `<div class="muted">${esc(S.supplier_email)}</div>` : ""}
