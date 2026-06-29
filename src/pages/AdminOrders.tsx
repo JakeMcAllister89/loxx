@@ -422,14 +422,14 @@ export default function AdminOrders() {
                     <TableCell className="font-mono text-xs text-amber-700">{o.po_number ?? "—"}</TableCell>
                     <TableCell className="flex gap-1">
                       <Button size="sm" variant="outline" onClick={() => setOpenId(o.id)}>View</Button>
-                      {o.po_number ? (
+{o.po_sent_at ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Badge variant="outline" className="bg-muted text-muted-foreground text-[10px]">
-                              Sent {o.po_sent_at ? new Date(o.po_sent_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : ""}
+                              Sent {new Date(o.po_sent_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                             </Badge>
                           </TooltipTrigger>
-                          <TooltipContent side="left">PO already sent — click View to see details</TooltipContent>
+                          <TooltipContent side="left">PO emailed to supplier — click View to see details</TooltipContent>
                         </Tooltip>
                       ) : (
                         <Tooltip>

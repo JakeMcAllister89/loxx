@@ -1,4 +1,4 @@
-// Sends a supplier purchase order email for a confirmed LOXX order. v9
+// Sends a supplier purchase order email for a confirmed LOXX order. v10
 // POST { order_id: string, download_only?: boolean }
 // Returns { success: true, po_number, html? }
 
@@ -327,10 +327,13 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid #0f172a;margin-bottom:4px">
   <div>
     <div style="display:flex;align-items:center;gap:10px">
-      <span style="font-size:28px">🔑</span>
-      <span style="font-size:26px;font-weight:800;letter-spacing:2px">${esc(S.company_name || "My LOXX")}</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;background:#f59e0b;border-radius:6px;padding:6px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>
+        </svg>
+      </span>
+      <span style="font-size:22px;font-weight:700;letter-spacing:1px">${esc(S.company_name || "LOXX")}</span>
     </div>
-    <div style="font-size:11px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px;margin-left:38px">Master Key Systems</div>
     ${S.company_address ? `<div style="font-size:11px;color:#64748b;margin-top:6px;margin-left:38px;white-space:pre-line">${esc(S.company_address)}</div>` : ""}
     ${S.company_email ? `<div style="font-size:11px;color:#64748b;margin-left:38px">${esc(S.company_email)}</div>` : ""}
     ${S.company_phone ? `<div style="font-size:11px;color:#64748b;margin-left:38px">${esc(S.company_phone)}</div>` : ""}
@@ -350,13 +353,10 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px">
   <div>
-    <div class="label">From</div>
-    <div style="font-weight:600">${esc(S.company_name || "My LOXX")}</div>
-    
-    <div style="margin-top:8px"><div class="label">Supplier</div>
+    <div class="label">Supplier</div>
     <div style="font-weight:600">${esc(S.supplier_name || "—")}</div>
     ${S.supplier_email ? `<div class="muted">${esc(S.supplier_email)}</div>` : ""}
-    ${S.supplier_account ? `<div class="muted">Account: ${esc(S.supplier_account)}</div>` : ""}</div>
+    ${S.supplier_account ? `<div class="muted">Account: ${esc(S.supplier_account)}</div>` : ""}
   </div>
   <div>
     <div class="label">Order reference</div>

@@ -273,24 +273,24 @@ export default function QuoteDetail() {
               });
 
               return (
-                <table className="w-full text-sm">
+                <table className="w-full text-xs table-fixed">
                   <thead className="border-b">
                     <tr className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      <th className="text-left py-2">Differ</th>
-                      <th className="text-left py-2">Room / Door</th>
-                      <th className="text-left py-2">GMK</th>
-                      <th className="text-left py-2">MK</th>
-                      <th className="text-left py-2">SMK</th>
-                      <th className="text-left py-2">Product code</th>
-                      <th className="text-left py-2">Lock type</th>
-                      <th className="text-left py-2">Lock function</th>
-                      <th className="text-left py-2">Finish</th>
-                      <th className="text-left py-2">Size</th>
-                      <th className="text-right py-2">Keys inc.</th>
-                      <th className="text-right py-2">Extra keys</th>
-                      <th className="text-right py-2">Qty</th>
-                      <th className="text-right py-2">Unit</th>
-                      <th className="text-right py-2">Total</th>
+                      <th className="text-left py-2 w-12">Differ</th>
+                      <th className="text-left py-2 w-24">Room / Door</th>
+                      <th className="text-left py-2 w-10">GMK</th>
+                      <th className="text-left py-2 w-16">MK</th>
+                      <th className="text-left py-2 w-16">SMK</th>
+                      <th className="text-left py-2 w-28">Product code</th>
+                      <th className="text-left py-2 w-32 whitespace-nowrap">Lock type</th>
+                      <th className="text-left py-2 w-20 whitespace-nowrap">Lock function</th>
+                      <th className="text-left py-2 w-20">Finish</th>
+                      <th className="text-left py-2 w-16">Size</th>
+                      <th className="text-right py-2 w-14">Keys inc.</th>
+                      <th className="text-right py-2 w-16">Extra keys</th>
+                      <th className="text-right py-2 w-8">Qty</th>
+                      <th className="text-right py-2 w-16">Unit</th>
+                      <th className="text-right py-2 w-16">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -314,7 +314,7 @@ export default function QuoteDetail() {
                             <React.Fragment key={`c${zi}-${i}`}>
                               <tr>
                                 <td className={`py-2 font-medium ${isCE ? "text-sky-700" : "text-amber-700"}`}>{c.differ_ref}</td>
-                                <td className="py-2">{c.room_label}</td>
+                                <td className="py-2 whitespace-nowrap">{c.room_label}</td>
                                 <td className="py-2 text-xs text-muted-foreground">{h.gmk}</td>
                                 <td className="py-2 text-xs text-muted-foreground">{h.mk}</td>
                                 <td className="py-2 text-xs text-muted-foreground">{h.smk}</td>
