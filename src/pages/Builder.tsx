@@ -1396,17 +1396,21 @@ function BuilderInner({ systemId }: { systemId: string }) {
                             };
                             const isSubCE = c.z_ref?.includes(".");
                             if (isSubCE) {
-                              // Sub-CE (Z2.1): collect CYL differs from its own direct children
-                              const collectCyls = (node: TNode) => {
-                                node.children.forEach(ch => {
-                                  if (ch.type === "CYL" && ch.differ != null) {
-                                    siblingDiffers.push(`D${String(ch.differ).padStart(3, "0")}`);
-                                  } else if (ch.type === "CE") {
-                                    collectCyls(ch);
-                                  }
-                                });
-                              };
-                              collectCyls(c);
+                              // Sub-CE (Z1.1, Z1.2): opened by all CYL differs under the parent CE group
+                              // Collect CYL siblings from the parent CE node (not the sub-CE's own children)
+                              const parentNode = findParentNode(tree.root, c.id);
+                              if (parentNode) {
+                                const collectCylsFromGroup = (node: TNode) => {
+                                  node.children.forEach(ch => {
+                                    if (ch.type === "CYL" && ch.differ != null) {
+                                      siblingDiffers.push(`D${String(ch.differ).padStart(3, "0")}`);
+                                    } else if (ch.type === "CE" && ch.id !== c.id) {
+                                      collectCylsFromGroup(ch);
+                                    }
+                                  });
+                                };
+                                collectCylsFromGroup(parentNode);
+                              }
                             } else {
                               // Primary CE (Z1/Z2): collect CYL differs from own children AND sub-CE children recursively
                               const collectCyls = (node: TNode) => {
