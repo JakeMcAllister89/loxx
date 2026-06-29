@@ -368,7 +368,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
     <div style="font-weight:${contactCompany ? "400" : "600"}">${esc(contactName)}</div>
     <div class="muted">${esc(contactPhone)}</div>
     <div class="muted" style="margin-top:4px">${esc(addrLine)}</div>
-    ${(order as any).notes ? `<div style="margin-top:8px;font-size:11px;color:#b45309;border-top:1px solid #fcd34d;padding-top:6px"><span style="font-weight:600">Special instructions:</span> ${esc((order as any).notes)}</div>` : ""}
+    
   </div>
 </div>
 
