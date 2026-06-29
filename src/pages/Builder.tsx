@@ -370,7 +370,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       savedNameRef.current = data.name;
       setReference(data.reference);
       isFulfilledRef.current = !!(data as any).is_fulfilled;
-      setIsFulfilled(!!(data as any).is_fulfilled;
+      setIsFulfilled(!!(data as any).is_fulfilled);
       setPartnerId((data as any).partner_id ?? null);
       setCommissionPct((data as any).commission_pct ?? "");
       const raw = (data.tree_data as unknown as TreeData) ?? emptyTree();
