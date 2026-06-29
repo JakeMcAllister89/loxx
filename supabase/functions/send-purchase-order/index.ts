@@ -313,47 +313,51 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 .totals .grand{border-top:2px solid #0f172a;font-weight:700;font-size:14px}
 @media print { @page { margin: 16mm; } .noprint { display: none } }
 </style></head><body>
-<div style="display:flex;justify-content:space-between;align-items:flex-start">
-  <div><h1>${esc(S.company_name || "LOXX")}</h1><div class="muted">${esc(S.company_address || "")}</div></div>
-  <div style="text-align:right"><div style="font-size:18px;font-weight:700;letter-spacing:1px">PURCHASE ORDER</div><div class="po">${esc(displayPo)}</div></div>
+<div style="text-align:center;padding:20px 0 12px;border-bottom:2px solid #0f172a;margin-bottom:4px">
+  <div style="font-size:32px;font-weight:800;letter-spacing:3px;font-family:'Inter',-apple-system,sans-serif">${esc(S.company_name || "MY LOXX")}</div>
+  <div style="font-size:11px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px">Master Key Systems</div>
 </div>
 
-<div class="warn"><strong>Internal use only.</strong> Unit costs shown are supplier prices. DO NOT share with end customer.</div>
-
-<div style="display:flex;gap:16px">
-  <div class="block" style="flex:1">
-    <div class="label">From</div>
-    <div><strong>${esc(S.company_name || "LOXX")}</strong></div>
-    <div class="muted">${esc(S.company_address || "")}</div>
-    <div class="muted">${esc(S.company_email || "")} · ${esc(S.company_phone || "")}</div>
-    ${S.vat_number ? `<div class="muted">VAT: ${esc(S.vat_number)}</div>` : ""}
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:16px">
+  <div style="font-size:28px;font-weight:700;letter-spacing:1px">PURCHASE ORDER</div>
+  <div style="text-align:right">
+    <div style="display:grid;grid-template-columns:auto auto;gap:2px 16px;font-size:12px">
+      <div style="color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">Purchase Order Number</div>
+      <div style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-weight:600;color:#b45309">${esc(displayPo)}</div>
+      <div style="color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">Date</div>
+      <div>${esc(today)}</div>
+      <div style="color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">VAT Number</div>
+      <div>${esc(S.vat_number || "—")}</div>
+    </div>
   </div>
-  <div class="block" style="flex:1">
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px">
+  <div>
     <div class="label">Supplier</div>
-    <div><strong>${esc(S.supplier_name || "—")}</strong></div>
-    <div class="muted">${esc(S.supplier_email || "")}</div>
+    <div style="font-weight:600">${esc(S.supplier_name || "—")}</div>
+    ${S.supplier_email ? `<div class="muted">${esc(S.supplier_email)}</div>` : ""}
     ${S.supplier_account ? `<div class="muted">Account: ${esc(S.supplier_account)}</div>` : ""}
   </div>
-</div>
-
-<div style="display:flex;gap:16px">
-  <div class="block" style="flex:1">
+  <div>
     <div class="label">Order reference</div>
-    <div><strong>PO Number:</strong> <span style="font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(displayPo)}</span></div>
-    <div><strong>Date:</strong> ${esc(today)}</div>
-    <div><strong>System reference:</strong> <span style="font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(systemRef)}</span>${systemName ? ` <span class="muted">${esc(systemName)}</span>` : ""}</div>
-    <div><strong>Customer PO reference:</strong> ${esc(order.customer_po_ref || "—")}</div>
-    ${(order as any).notes ? `<div style="margin-top:6px"><strong>Special instructions:</strong> <span style="color:#b45309">${esc((order as any).notes)}</span></div>` : ""}
+    <div><strong>System:</strong> <span style="font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(systemRef)}</span>${systemName ? ` <span class="muted">${esc(systemName)}</span>` : ""}</div>
+    <div><strong>Customer PO:</strong> ${esc(order.customer_po_ref || "—")}</div>
+    ${(order as any).notes ? `<div style="margin-top:6px;font-size:11px;color:#b45309"><strong>Special instructions:</strong> ${esc((order as any).notes)}</div>` : ""}
   </div>
-  <div class="block" style="flex:1">
-    <div class="label">Delivery address</div>
-    <div><strong>Contact:</strong> ${esc(contactName)}</div>
-    <div><strong>Telephone:</strong> ${esc(contactPhone)}</div>
+  <div>
+    <div class="label">Deliver to</div>
+    <div style="font-weight:600">${esc(contactName)}</div>
+    <div class="muted">${esc(contactPhone)}</div>
     <div class="muted" style="margin-top:4px">${esc(addrLine)}</div>
   </div>
 </div>
 
-<h3 style="margin-top:24px;margin-bottom:8px">Cylinder Schedule</h3>
+<div class="warn" style="margin-top:16px"><strong>Internal use only.</strong> Unit costs shown are supplier prices. DO NOT share with end customer.</div>
+
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:24px;margin-bottom:8px;border-bottom:2px solid #0f172a;padding-bottom:4px">
+  <h3 style="margin:0">Cylinder Schedule</h3>
+</div>
 <table>
   <thead><tr>
     <th>Differ</th>
