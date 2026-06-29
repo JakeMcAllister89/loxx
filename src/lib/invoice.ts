@@ -104,6 +104,7 @@ function renderInvoiceHtml(
   items: ItemRow[],
   s: Record<string, string>,
   systemRef: string | null,
+  systemName: string | null,
   productMap: Record<string, any> = {},
   hierarchyMap: Record<string, { mk: string; smk: string }> = {},
 ): string {
@@ -217,6 +218,7 @@ function renderInvoiceHtml(
     <div class="lbl">Order details</div>
     <div><span class="muted">Order ref:</span> <span class="ref">${esc(ord)}</span></div>
     ${systemRef ? `<div><span class="muted">System ref:</span> <span class="ref">${esc(systemRef)}</span></div>` : ""}
+    ${systemName ? `<div><span class="muted">Project:</span> ${esc(systemName)}</div>` : ""}
     ${order.customer_po_ref || order.purchase_order_ref ? `<div><span class="muted">PO ref:</span> ${esc(order.customer_po_ref || order.purchase_order_ref)}</div>` : ""}
     <div><span class="muted">Payment date:</span> ${esc(date)}</div>
   </div>
