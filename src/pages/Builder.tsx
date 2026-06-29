@@ -1255,7 +1255,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           {(() => {
             const keyRows: { ref: string; label: string; type: string; qty: number }[] = [];
             const walkKeys = (n: TNode) => {
-              if (n.type !== "CYL") {
+              if (n.type !== "CYL" && n.type !== "CE") {
                 const typeLabel = n.type === "GMK" ? "Grand Master Key" : n.type === "MK" ? "Master Key" : "Sub-Master Key";
                 normaliseKeys(n).forEach((k) => keyRows.push({ ref: k.ref, label: n.label, type: typeLabel, qty: k.qty }));
               }
