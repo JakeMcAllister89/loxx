@@ -184,58 +184,65 @@ export default function CartReview() {
 
           {/* RIGHT — confirmation summary */}
           <aside className="space-y-4">
-            <div className="rounded-[10px] border bg-card shadow-card p-5">
-              <h2 className="font-semibold mb-3">Customer</h2>
-              <div className="text-sm space-y-2">
-                {profile.name && <div>{profile.name}</div>}
+            <div className="rounded-[10px] border bg-card shadow-card p-5 space-y-4">
+              <h2 className="font-semibold">Order details</h2>
+
+              {/* Customer */}
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Customer</div>
+                {profile.name && <div className="text-sm font-medium">{profile.name}</div>}
                 <div>
-                  <label className="text-xs text-muted-foreground">Company name *</label>
                   <input
                     type="text"
                     value={meta.companyName}
                     onChange={(e) => setMeta({ companyName: e.target.value })}
-                    placeholder="Your company / organisation"
+                    placeholder="Company / organisation name *"
                     className="mt-1 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
                   />
                 </div>
-                <div className="text-muted-foreground text-xs">{user?.email}</div>
+                <div className="text-xs text-muted-foreground">{user?.email}</div>
               </div>
-            </div>
 
-            <div className="rounded-[10px] border bg-card shadow-card p-5 space-y-3">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <h2 className="font-semibold text-sm">Delivery address</h2>
+              {/* Delivery address */}
+              <div className="pt-3 border-t space-y-1">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Deliver to</div>
                   <Link to="/cart" className="text-xs text-primary hover:underline">Edit</Link>
                 </div>
-                <div className="text-sm text-muted-foreground space-y-0.5">
-                  {meta.delivery.line1 && meta.delivery.contact_name && meta.delivery.contact_phone ? (
-                    <>
-                      <div className="text-foreground font-medium">{meta.delivery.contact_name}</div>
-                      <div className="text-xs">{meta.delivery.contact_phone}</div>
-                      <div className="pt-1">{meta.delivery.line1}</div>
-                      {meta.delivery.line2 && <div>{meta.delivery.line2}</div>}
-                      <div>{[meta.delivery.city, meta.delivery.county].filter(Boolean).join(", ")}</div>
-                      <div>{meta.delivery.postcode}</div>
-                    </>
-                  ) : <div className="text-destructive text-xs">Delivery contact and address required</div>}
-                </div>
+                {meta.delivery.line1 && meta.delivery.contact_name && meta.delivery.contact_phone ? (
+                  <div className="text-sm space-y-0.5">
+                    {(meta.delivery as any).company_name && (
+                      <div className="font-medium">{(meta.delivery as any).company_name}</div>
+                    )}
+                    <div className="font-medium">{meta.delivery.contact_name}</div>
+                    <div className="text-muted-foreground text-xs">{meta.delivery.contact_phone}</div>
+                    <div className="text-muted-foreground pt-1">{meta.delivery.line1}</div>
+                    {meta.delivery.line2 && <div className="text-muted-foreground">{meta.delivery.line2}</div>}
+                    <div className="text-muted-foreground">{[meta.delivery.city, meta.delivery.county].filter(Boolean).join(", ")}</div>
+                    <div className="text-muted-foreground">{meta.delivery.postcode}</div>
+                  </div>
+                ) : (
+                  <div className="text-destructive text-xs">Delivery contact and address required — <Link to="/cart" className="underline">add in basket</Link></div>
+                )}
               </div>
 
+              {/* PO ref */}
               {meta.customerPoRef && (
                 <div className="pt-3 border-t">
-                  <div className="text-xs text-muted-foreground">Your PO ref</div>
-                  <div className="text-sm">{meta.customerPoRef}</div>
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Your PO ref</div>
+                  <div className="text-sm mt-0.5">{meta.customerPoRef}</div>
                 </div>
               )}
 
+              {/* Special instructions */}
               {meta.notes && (
                 <div className="pt-3 border-t">
-                  <div className="text-xs text-muted-foreground mb-1">Special instructions</div>
-                  <div className="text-sm whitespace-pre-wrap">{meta.notes}</div>
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Special instructions</div>
+                  <div className="text-sm mt-0.5 text-amber-700">{meta.notes}</div>
                 </div>
               )}
             </div>
+
 
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Pricing</h2>
