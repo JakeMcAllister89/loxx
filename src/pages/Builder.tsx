@@ -980,14 +980,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       replaceBySystem(systemId, lines);
       // Only clear is_new flags if something was actually exported
       if (lines.length > 0) {
-        setTree((prev) => {
-          const clearNew = (n: TNode): TNode => ({
-            ...n,
-            is_new: undefined,
-            children: n.children.map(clearNew),
-          });
-          return { ...prev, root: prev.root ? clearNew(prev.root) : null };
-        });
+        newNodeIdsRef.current.clear();
       }
     } else {
       replaceBySystem(systemId, lines);
