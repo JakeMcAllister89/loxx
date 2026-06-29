@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
       else zoneGroups.set(zoneKey, { zoneLabel: zoneKey, rows: [i] });
     });
 
-    const ceDiffersMap = buildCEDiffersMap(order.tree_snapshot?.root ?? null);
+    const ceDiffersMap = buildCEDiffersMap(systemTreeRoot);
 
     const isGrouped = zoneGroups.size > 1;
 

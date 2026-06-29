@@ -941,7 +941,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           product_code: n.cylinder_type,
           product_name: (p as any)?.product_description ?? p?.name,
           cylinder_type: p?.cylinder_type,
-          cylinder_profile: "Common Entrance",
+          cylinder_profile: (p as any)?.cylinder_profile ?? "Common Entrance",
           finish: n.finish ?? p?.finish ?? undefined,
           size: p?.size ?? undefined,
           image_url: p?.image_url ?? undefined,
