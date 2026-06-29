@@ -206,7 +206,15 @@ export default function Cart() {
                 placeholder="Your company / organisation"
                 className="mb-3"
               />
-              <Label className="text-xs">Your PO / order reference (optional)</Label>
+              <div className="mb-3">
+                <Label className="text-xs">Project name (optional)</Label>
+                <Input
+                  value={meta.projectName}
+                  onChange={(e) => setMeta({ projectName: e.target.value })}
+                  placeholder="e.g. Sovereign Court Phase 2"
+                />
+              </div>
+              <Label className="text-xs">Customer Reference (optional)</Label>
               <Input
                 value={meta.customerPoRef}
                 onChange={(e) => setMeta({ customerPoRef: e.target.value })}
