@@ -439,7 +439,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       if (valid.length === 0) return prev;
       const desiredType: NodeType = childType && valid.includes(childType) ? childType : valid[0];
       const sameTypeCount = parent.children.filter((c) => c.type === desiredType).length;
-      const child = makeChild(parent.type, sameTypeCount, desiredType, parent.label);
+      const child = isFulfilled ? { ...makeChild(parent.type, sameTypeCount, desiredType, parent.label), is_new: true } : makeChild(parent.type, sameTypeCount, desiredType, parent.label);
       const root = addChild(prev.root, parentId, child);
       let next: TreeData = { ...prev, root };
       if (child.type === "CYL") next = assignNextDiffers(next);
