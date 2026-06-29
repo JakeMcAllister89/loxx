@@ -194,6 +194,7 @@ export default function QuoteDetail() {
                 </div>
               )}
               {q.customer_po_ref && <div className="text-xs text-muted-foreground mt-2">Customer ref: <span className="font-medium">{q.customer_po_ref}</span></div>}
+              {(q as any).project_name && <div className="text-xs text-muted-foreground mt-1">Project: <span className="font-medium">{(q as any).project_name}</span></div>}
             </div>
             <div>
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground">From</div>
@@ -324,9 +325,9 @@ export default function QuoteDetail() {
                                 <td className="py-2 text-xs text-foreground">{c.size ?? "—"}</td>
                                 <td className="py-2 text-right">{isCE ? "—" : 2}</td>
                                 <td className="py-2 text-right">{isCE ? "—" : (extraKeysByDiffer.get(c.differ_ref ?? "") ?? 0) > 0 ? extraKeysByDiffer.get(c.differ_ref ?? "") : "—"}</td>
-                                <td className="py-2 text-right">{isCE ? "—" : c.quantity}</td>
-                                <td className="py-2 text-right">{isCE ? "—" : `£${c.unit_price.toFixed(2)}`}</td>
-                                <td className="py-2 text-right font-semibold">{isCE ? "—" : `£${(c.unit_price * c.quantity).toFixed(2)}`}</td>
+                                <td className="py-2 text-right">{c.quantity}</td>
+                                <td className="py-2 text-right">£{c.unit_price.toFixed(2)}</td>
+                                <td className="py-2 text-right font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
                               </tr>
                               {isCE && ceDiffers.length > 0 && (
                                 <tr>
