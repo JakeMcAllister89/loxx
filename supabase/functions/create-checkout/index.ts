@@ -217,20 +217,6 @@ Deno.serve(async (req) => {
       automatic_tax: { enabled: true },
       payment_intent_data: {
         description: `LOXX order ${order.id.slice(0, 8).toUpperCase()}`,
-        ...(body.delivery ? {
-          shipping: {
-            name: body.delivery.contact_name ?? "—",
-            phone: body.delivery.contact_phone ?? undefined,
-            address: {
-              line1: body.delivery.line1 ?? "",
-              line2: body.delivery.line2 || undefined,
-              city: body.delivery.city ?? "",
-              state: body.delivery.county || undefined,
-              postal_code: body.delivery.postcode ?? "",
-              country: "GB",
-            },
-          },
-        } : {}),
       },
 
       metadata: {
