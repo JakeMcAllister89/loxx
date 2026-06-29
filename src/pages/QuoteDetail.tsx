@@ -281,6 +281,8 @@ export default function QuoteDetail() {
                       <th className="text-left py-2">Lock function</th>
                       <th className="text-left py-2">Finish</th>
                       <th className="text-left py-2">Size</th>
+                      <th className="text-right py-2">Keys inc.</th>
+                      <th className="text-right py-2">Extra keys</th>
                       <th className="text-right py-2">Qty</th>
                       <th className="text-right py-2">Unit</th>
                       <th className="text-right py-2">Total</th>
