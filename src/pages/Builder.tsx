@@ -971,7 +971,21 @@ function BuilderInner({ systemId }: { systemId: string }) {
     };
     walk(tree.root, []);
 
-    replaceBySystem(systemId, lines);
+    if (isFulfilled) {
+      // Fulfilled system — only add new nodes to cart, don't replace existing items
+      lines.forEach((l) => addToCart(l));
+      // Clear is_new flag on all nodes now exported
+      setTree((prev) => {
+        const clearNew = (n: TNode): TNode => ({
+          ...n,
+          is_new: undefined,
+          children: n.children.map(clearNew),
+        });
+        return { ...prev, root: prev.root ? clearNew(prev.root) : null };
+      });
+    } else {
+      replaceBySystem(systemId, lines);
+    }
     logAction({ system_id: systemId, action: "exported_to_cart", metadata: { line_count: lines.length, total_value: total } });
     setExportedAt(Date.now());
     toast.success(`Basket updated — ${lines.length} item${lines.length !== 1 ? "s" : ""} from ${name}`);
