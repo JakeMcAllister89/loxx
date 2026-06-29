@@ -1340,22 +1340,22 @@ function BuilderInner({ systemId }: { systemId: string }) {
                     {groups.length > 1 && (
                       <div className="text-sm font-semibold mb-1 pb-1 border-b">{group.zoneLabel}</div>
                     )}
-                    <table className="w-full text-xs border-collapse">
+                    <table className="w-full border-collapse" style={{ fontSize: "10px" }}>
                       <thead>
                         <tr className="border-b">
-                          <th className="text-left py-1 px-2">Differ</th>
-                          <th className="text-left py-1 px-2">Room / Door</th>
-                          <th className="text-left py-1 px-2">GMK</th>
-                          <th className="text-left py-1 px-2">MK</th>
-                          <th className="text-left py-1 px-2">SMK</th>
-                          <th className="text-left py-1 px-2">Product code</th>
-                          <th className="text-left py-1 px-2">Lock type</th>
-                          <th className="text-left py-1 px-2">Lock function</th>
-                          <th className="text-left py-1 px-2">Finish</th>
-                          <th className="text-left py-1 px-2">Size</th>
-                          <th className="text-right py-1 px-2">Qty</th>
-                          <th className="text-right py-1 px-2">Keys inc.</th>
-                          <th className="text-right py-1 px-2">Extra keys</th>
+                          <th className="text-left py-1 px-1">Differ</th>
+                          <th className="text-left py-1 px-1">Room / Door</th>
+                          <th className="text-left py-1 px-1">GMK</th>
+                          <th className="text-left py-1 px-1">MK</th>
+                          <th className="text-left py-1 px-1">SMK</th>
+                          <th className="text-left py-1 px-1">Product code</th>
+                          <th className="text-left py-1 px-1">Lock type</th>
+                          <th className="text-left py-1 px-1">Lock function</th>
+                          <th className="text-left py-1 px-1">Finish</th>
+                          <th className="text-left py-1 px-1">Size</th>
+                          <th className="text-right py-1 px-1">Qty</th>
+                          <th className="text-right py-1 px-1">Keys inc.</th>
+                          <th className="text-right py-1 px-1">Extra keys</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1378,16 +1378,25 @@ function BuilderInner({ systemId }: { systemId: string }) {
                               }
                               return null;
                             };
-                            const parentNode = findParentNode(tree.root, c.id);
-                            if (parentNode) {
-                              parentNode.children.forEach(ch => {
+                            const isSubCE = c.z_ref?.includes(".");
+                            if (isSubCE) {
+                              // Sub-CE (Z1.1): collect CYL siblings from parent CE's children
+                              const parentNode = findParentNode(tree.root, c.id);
+                              if (parentNode) {
+                                parentNode.children.forEach(ch => {
+                                  if (ch.type === "CYL" && ch.differ != null) siblingDiffers.push(`D${String(ch.differ).padStart(3, "0")}`);
+                                });
+                              }
+                            } else {
+                              // Primary CE (Z1): collect CYL differs from own children
+                              c.children.forEach(ch => {
                                 if (ch.type === "CYL" && ch.differ != null) siblingDiffers.push(`D${String(ch.differ).padStart(3, "0")}`);
                               });
                             }
                             if (siblingDiffers.length > 0) {
                               ceNote = (
                                 <tr key={`${c.id}-note`}>
-                                  <td colSpan={13} className="py-0.5 px-2 text-[10px] text-muted-foreground italic border-b">
+                                  <td colSpan={13} className="py-0.5 px-1 text-[10px] text-muted-foreground italic border-b">
                                     Operated by differ keys: {siblingDiffers.join(", ")}
                                   </td>
                                 </tr>
@@ -1397,24 +1406,25 @@ function BuilderInner({ systemId }: { systemId: string }) {
                           return (
                             <React.Fragment key={c.id}>
                               <tr className="border-b">
-                                <td className={`py-1 px-2 font-medium ${isCE ? "text-sky-700" : "text-amber-700"}`}>{differRef}</td>
-                                <td className="py-1 px-2">{c.label}</td>
-                                <td className="py-1 px-2 text-muted-foreground">{h.gmk}</td>
-                                <td className="py-1 px-2 text-muted-foreground">{h.mk}</td>
-                                <td className="py-1 px-2 text-muted-foreground">{h.smk}</td>
-                                <td className="py-1 px-2 text-muted-foreground font-mono text-[10px]">{c.cylinder_type ?? "—"}</td>
-                                <td className="py-1 px-2">{(prod as any)?.cylinder_type ?? "—"}</td>
-                                <td className="py-1 px-2">{(prod as any)?.cylinder_profile ?? "—"}</td>
-                                <td className="py-1 px-2">{c.finish ?? "—"}</td>
-                                <td className="py-1 px-2">{c.size ?? "—"}</td>
-                                <td className="py-1 px-2 text-right">{c.quantity ?? 1}</td>
-                                <td className="py-1 px-2 text-right">{isCE ? "—" : 2 + extraKeys}</td>
-                                <td className="py-1 px-2 text-right">{isCE ? "—" : (extraKeys > 0 ? extraKeys : "—")}</td>
+                                <td className={`py-1 px-1 font-medium ${isCE ? "text-sky-700" : "text-amber-700"}`}>{differRef}</td>
+                                <td className="py-1 px-1">{c.label}</td>
+                                <td className="py-1 px-1 text-muted-foreground">{h.gmk}</td>
+                                <td className="py-1 px-1 text-muted-foreground">{h.mk}</td>
+                                <td className="py-1 px-1 text-muted-foreground">{h.smk}</td>
+                                <td className="py-1 px-1 text-muted-foreground font-mono text-[10px]">{c.cylinder_type ?? "—"}</td>
+                                <td className="py-1 px-1">{(prod as any)?.cylinder_type ?? "—"}</td>
+                                <td className="py-1 px-1">{(prod as any)?.cylinder_profile ?? "—"}</td>
+                                <td className="py-1 px-1">{c.finish ?? "—"}</td>
+                                <td className="py-1 px-1">{c.size ?? "—"}</td>
+                                <td className="py-1 px-1 text-right">{c.quantity ?? 1}</td>
+                                <td className="py-1 px-1 text-right">{isCE ? "—" : 2 + extraKeys}</td>
+                                <td className="py-1 px-1 text-right">{isCE ? "—" : (extraKeys > 0 ? extraKeys : "—")}</td>
                               </tr>
                               {ceNote}
                             </React.Fragment>
                           );
                         })}
+
                       </tbody>
                     </table>
                   </div>
