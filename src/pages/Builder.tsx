@@ -540,6 +540,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         
         children: [],
       };
+      if (isFulfilledRef.current) newNodeIdsRef.current.add(newNode.id);
       const newRoot = addChild(prev.root, parent.id, newNode);
       dirtyRef.current = true;
       return assignNextDiffers({ ...prev, root: newRoot });
