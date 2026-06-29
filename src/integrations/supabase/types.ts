@@ -179,6 +179,7 @@ export type Database = {
           created_at: string
           door_count: number
           id: string
+          is_fulfilled: boolean | null
           name: string
           next_differ: number
           org_id: string | null
@@ -193,6 +194,7 @@ export type Database = {
           created_at?: string
           door_count?: number
           id?: string
+          is_fulfilled?: boolean | null
           name: string
           next_differ?: number
           org_id?: string | null
@@ -207,6 +209,7 @@ export type Database = {
           created_at?: string
           door_count?: number
           id?: string
+          is_fulfilled?: boolean | null
           name?: string
           next_differ?: number
           org_id?: string | null
