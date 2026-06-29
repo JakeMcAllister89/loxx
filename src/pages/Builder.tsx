@@ -1188,6 +1188,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
       {/* Print header */}
       <div className="print-only px-2 py-4">
         <div className="text-2xl font-semibold">{name}</div>
+        {printProjectName && (
+          <div className="text-base text-muted-foreground mt-0.5">{printProjectName}</div>
+        )}
         <div className="text-sm text-muted-foreground mt-1">
           {reference && <span>{reference} · </span>}
           {countDoors(tree.root)} doors · Printed {new Date().toLocaleDateString("en-GB")}
