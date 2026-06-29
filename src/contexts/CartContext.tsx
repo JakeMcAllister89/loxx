@@ -47,6 +47,7 @@ export interface DeliveryAddress {
 interface OrderMeta {
   customerPoRef: string;
   companyName: string;
+  projectName: string;
   notes: string;
   delivery: DeliveryAddress;
 }
