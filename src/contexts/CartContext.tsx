@@ -33,6 +33,7 @@ export interface CartLine {
 
 
 export interface DeliveryAddress {
+  company_name: string;
   contact_name: string;
   contact_phone: string;
   line1: string;
@@ -41,6 +42,7 @@ export interface DeliveryAddress {
   county: string;
   postcode: string;
 }
+
 
 interface OrderMeta {
   customerPoRef: string;
