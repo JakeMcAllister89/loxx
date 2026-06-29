@@ -1080,7 +1080,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         {hasAnyDecomm && (
           <Button
             variant={showAllDecomm ? "default" : "outline"}
-            onClick={() => setShowAllDecomm((v) => !v)}
+            onClick={() => { setShowAllDecomm((v) => { if (v) setRevealedDecomm(new Set()); return !v; }); }}
             title="Toggle visibility of decommissioned (replaced) cylinders across the whole tree"
           >
             <History className="h-4 w-4" /> {showAllDecomm ? "Hide replaced" : "Show replaced cylinders"}
