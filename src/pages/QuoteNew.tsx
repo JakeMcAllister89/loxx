@@ -299,6 +299,7 @@ export default function QuoteNew() {
                         company: company || null,
                         delivery_address: delivery,
                         customer_po_ref: poRef || null,
+                        project_name: projectName || null,
                         notes: notes || null,
                         items,
                         subtotal: t.subtotal,
