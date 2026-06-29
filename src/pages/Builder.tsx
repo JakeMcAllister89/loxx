@@ -378,10 +378,6 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setLoading(false);
     });
     supabase.from("products").select("id,code,name,product_description,cylinder_type,cylinder_profile,pin_count,finish,finish_colour,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as any));
-    // Determine if this system has been supplied/delivered — enables the "Replace cylinder" action.
-    supabase.from("key_systems").select("is_fulfilled").eq("id", systemId).single().then(({ data }) => {
-      setIsFulfilled(!!(data as any)?.is_fulfilled);
-    });
     supabase.from("partners").select("id, name, company, partner_type, default_commission_pct").eq("is_active", true).order("name")
       .then(({ data }) => setPartners((data as any) ?? []));
   }, [systemId, navigate]);
