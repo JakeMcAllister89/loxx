@@ -1,4 +1,4 @@
-// Sends a supplier purchase order email for a confirmed LOXX order. v4
+// Sends a supplier purchase order email for a confirmed LOXX order. v6
 // POST { order_id: string, download_only?: boolean }
 // Returns { success: true, po_number, html? }
 
@@ -180,15 +180,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Assign PO number if missing
+    // Assign PO number if missing — always save it so downloads reuse the same number
     let poNumber = order.po_number as string | null;
     if (!poNumber) {
       const { data: poRes, error: poErr } = await supabase.rpc("assign_po_number");
       if (poErr) return json({ error: `Could not assign PO number: ${poErr.message}` }, 500);
       poNumber = poRes as string;
-      if (!downloadOnly) {
-        await supabase.from("orders").update({ po_number: poNumber }).eq("id", order.id);
-      }
+      await supabase.from("orders").update({ po_number: poNumber }).eq("id", order.id);
     }
     const displayPo = poNumber ?? "PREVIEW";
 
@@ -310,9 +308,8 @@ Deno.serve(async (req) => {
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(displayPo)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <style>
-body{font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;color:#0f172a;padding:32px;max-width:960px;margin:0 auto;font-size:13px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#0f172a;padding:32px;max-width:960px;margin:0 auto;font-size:13px}
 h1{margin:0;font-size:24px}
 table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
 th,td{padding:6px 8px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}
@@ -328,7 +325,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 @media print { @page { margin: 16mm; } .noprint { display: none } }
 </style></head><body>
 <div style="text-align:center;padding:20px 0 12px;border-bottom:2px solid #0f172a;margin-bottom:4px">
-  <div style="font-size:32px;font-weight:800;letter-spacing:3px;font-family:'Inter',-apple-system,sans-serif">${esc(S.company_name || "MY LOXX")}</div>
+  <div style="font-size:32px;font-weight:800;letter-spacing:3px">🔑${esc(S.company_name || "MY LOXX")}</div>
   <div style="font-size:11px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px">Master Key Systems</div>
 </div>
 
@@ -353,7 +350,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
     ${S.company_address ? `<div class="muted">${esc(S.company_address)}</div>` : ""}
     ${S.company_email ? `<div class="muted">${esc(S.company_email)}</div>` : ""}
     ${S.company_phone ? `<div class="muted">${esc(S.company_phone)}</div>` : ""}
-    ${S.vat_number ? `<div class="muted">VAT: ${esc(S.vat_number)}</div>` : ""}
+    
     <div style="margin-top:8px"><div class="label">Supplier</div>
     <div style="font-weight:600">${esc(S.supplier_name || "—")}</div>
     ${S.supplier_email ? `<div class="muted">${esc(S.supplier_email)}</div>` : ""}
@@ -371,7 +368,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
     <div style="font-weight:${contactCompany ? "400" : "600"}">${esc(contactName)}</div>
     <div class="muted">${esc(contactPhone)}</div>
     <div class="muted" style="margin-top:4px">${esc(addrLine)}</div>
-    ${(order as any).notes ? `<div style="margin-top:8px;font-size:11px;color:#b45309;border-top:1px solid #fcd34d;padding-top:6px"><span style="font-weight:600">Special instructions:</span> ${esc((order as any).notes)}</div>` : ""}
+    
   </div>
 </div>
 

@@ -1,4 +1,4 @@
-// Creates a Stripe Embedded Checkout session for a cart of LOXX cylinder line items. v3
+// Creates a Stripe Embedded Checkout session for a cart of LOXX cylinder line items. v4
 // UK seller, physical goods → tax calculation only (no managed_payments).
 // Creates a pending order + order_items rows before payment so verify-checkout can finalise.
 
@@ -91,11 +91,7 @@ Deno.serve(async (req) => {
       body.delivery.county, body.delivery.postcode,
     ].filter(Boolean).join(", ") : null;
 
-    const combinedNotes = [
-      body.notes,
-      deliveryText ? `Delivery: ${deliveryText}` : null,
-      body.customerPoRef ? `Customer PO: ${body.customerPoRef}` : null,
-    ].filter(Boolean).join(" | ") || null;
+    const combinedNotes = body.notes || null;
 
     // Create pending order. VAT is finalised on verify-checkout from the real session amounts.
     const orderInsert: Record<string, unknown> = {

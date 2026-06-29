@@ -185,7 +185,8 @@ export default function QuoteDetail() {
           <section className="grid grid-cols-2 gap-8 mt-6">
             <div>
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Prepared for</div>
-              <div className="font-semibold mt-1">{q.customer_name}{q.company ? `, ${q.company}` : ""}</div>
+              <div className="font-semibold mt-1">{q.customer_name}</div>
+              {q.company && <div className="font-semibold">{q.company}</div>}
               {q.customer_email && <div className="text-sm text-muted-foreground">{q.customer_email}</div>}
               {q.delivery_address && (
                 <div className="text-sm mt-2 whitespace-pre-line">
@@ -261,6 +262,10 @@ export default function QuoteDetail() {
 
               const masterKeys = keys.filter(k => !k.differ_ref || (k as any).location === "GMK" || (k as any).location === "MK" || (k as any).location === "SMK");
               const extraKeys  = keys.filter(k => k.differ_ref && (k as any).location === "extra");
+              const extraKeysByDiffer = new Map<string, number>();
+              extraKeys.forEach(k => {
+                if (k.differ_ref) extraKeysByDiffer.set(k.differ_ref, (extraKeysByDiffer.get(k.differ_ref) ?? 0) + k.quantity);
+              });
 
               return (
                 <table className="w-full text-sm">
@@ -276,6 +281,8 @@ export default function QuoteDetail() {
                       <th className="text-left py-2">Lock function</th>
                       <th className="text-left py-2">Finish</th>
                       <th className="text-left py-2">Size</th>
+                      <th className="text-right py-2">Keys inc.</th>
+                      <th className="text-right py-2">Extra keys</th>
                       <th className="text-right py-2">Qty</th>
                       <th className="text-right py-2">Unit</th>
                       <th className="text-right py-2">Total</th>
@@ -286,7 +293,7 @@ export default function QuoteDetail() {
                       <React.Fragment key={`z${zi}`}>
                         {isGrouped && (
                           <tr className="bg-muted/20">
-                            <td colSpan={13} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            <td colSpan={15} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                               {zone.zoneLabel}
                               {zone.zoneRef !== zone.zoneLabel && (
                                 <span className="ml-1.5 text-amber-700 normal-case font-normal">({zone.zoneRef})</span>
@@ -311,13 +318,15 @@ export default function QuoteDetail() {
                                 <td className="py-2 text-xs text-foreground">{c.cylinder_profile ?? "—"}</td>
                                 <td className="py-2 text-xs text-foreground">{c.finish ?? "—"}</td>
                                 <td className="py-2 text-xs text-foreground">{c.size ?? "—"}</td>
+                                <td className="py-2 text-right">{isCE ? "—" : 2}</td>
+                                <td className="py-2 text-right">{isCE ? "—" : (extraKeysByDiffer.get(c.differ_ref ?? "") ?? 0) > 0 ? extraKeysByDiffer.get(c.differ_ref ?? "") : "—"}</td>
                                 <td className="py-2 text-right">{isCE ? "—" : c.quantity}</td>
                                 <td className="py-2 text-right">{isCE ? "—" : `£${c.unit_price.toFixed(2)}`}</td>
                                 <td className="py-2 text-right font-semibold">{isCE ? "—" : `£${(c.unit_price * c.quantity).toFixed(2)}`}</td>
                               </tr>
                               {isCE && ceDiffers.length > 0 && (
                                 <tr>
-                                  <td colSpan={13} className="py-0.5 pb-2 text-[10px] text-muted-foreground italic">
+                                  <td colSpan={15} className="py-0.5 pb-2 text-[10px] text-muted-foreground italic">
                                     Operated by differ keys: {ceDiffers.join(", ")}
                                   </td>
                                 </tr>
@@ -329,7 +338,7 @@ export default function QuoteDetail() {
                     ))}
                     {masterKeys.length > 0 && (
                       <tr className="bg-muted/20">
-                        <td colSpan={13} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <td colSpan={15} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Master keys
                         </td>
                       </tr>
@@ -337,7 +346,7 @@ export default function QuoteDetail() {
                     {masterKeys.map((k, i) => (
                       <tr key={`mk${i}`}>
                         <td className="py-2 text-muted-foreground">—</td>
-                        <td className="py-2 text-sm" colSpan={9}>{k.key_reference}</td>
+                        <td className="py-2 text-sm" colSpan={11}>{k.key_reference}</td>
                         <td className="py-2 text-right">{k.quantity}</td>
                         <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
                         <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
@@ -345,7 +354,7 @@ export default function QuoteDetail() {
                     ))}
                     {extraKeys.length > 0 && (
                       <tr className="bg-muted/20">
-                        <td colSpan={13} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <td colSpan={15} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Additional keys
                         </td>
                       </tr>
@@ -353,7 +362,7 @@ export default function QuoteDetail() {
                     {extraKeys.map((k, i) => (
                       <tr key={`ek${i}`}>
                         <td className="py-2 text-amber-700 font-medium">{k.differ_ref}</td>
-                        <td className="py-2 text-sm" colSpan={9}>{k.key_reference}</td>
+                        <td className="py-2 text-sm" colSpan={11}>{k.key_reference}</td>
                         <td className="py-2 text-right">{k.quantity}</td>
                         <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
                         <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
@@ -361,9 +370,9 @@ export default function QuoteDetail() {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr><td colSpan={12} className="text-right text-muted-foreground pt-3">Subtotal (ex VAT)</td><td className="text-right font-medium pt-3">£{t.subtotal.toFixed(2)}</td></tr>
-                    <tr><td colSpan={12} className="text-right text-muted-foreground">VAT (20%)</td><td className="text-right font-medium">£{t.vat.toFixed(2)}</td></tr>
-                    <tr className="text-lg font-bold text-amber-700"><td colSpan={12} className="text-right pt-2 border-t">Total inc VAT</td><td className="text-right font-semibold pt-2 border-t">£{t.total.toFixed(2)}</td></tr>
+                    <tr><td colSpan={14} className="text-right text-muted-foreground pt-3">Subtotal (ex VAT)</td><td className="text-right font-medium pt-3">£{t.subtotal.toFixed(2)}</td></tr>
+                    <tr><td colSpan={14} className="text-right text-muted-foreground">VAT (20%)</td><td className="text-right font-medium">£{t.vat.toFixed(2)}</td></tr>
+                    <tr className="text-lg font-bold text-amber-700"><td colSpan={14} className="text-right pt-2 border-t">Total inc VAT</td><td className="text-right font-semibold pt-2 border-t">£{t.total.toFixed(2)}</td></tr>
                   </tfoot>
                 </table>
               );
