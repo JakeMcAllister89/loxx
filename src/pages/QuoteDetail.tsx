@@ -370,9 +370,9 @@ export default function QuoteDetail() {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr><td colSpan={12} className="text-right text-muted-foreground pt-3">Subtotal (ex VAT)</td><td className="text-right font-medium pt-3">£{t.subtotal.toFixed(2)}</td></tr>
-                    <tr><td colSpan={12} className="text-right text-muted-foreground">VAT (20%)</td><td className="text-right font-medium">£{t.vat.toFixed(2)}</td></tr>
-                    <tr className="text-lg font-bold text-amber-700"><td colSpan={12} className="text-right pt-2 border-t">Total inc VAT</td><td className="text-right font-semibold pt-2 border-t">£{t.total.toFixed(2)}</td></tr>
+                    <tr><td colSpan={14} className="text-right text-muted-foreground pt-3">Subtotal (ex VAT)</td><td className="text-right font-medium pt-3">£{t.subtotal.toFixed(2)}</td></tr>
+                    <tr><td colSpan={14} className="text-right text-muted-foreground">VAT (20%)</td><td className="text-right font-medium">£{t.vat.toFixed(2)}</td></tr>
+                    <tr className="text-lg font-bold text-amber-700"><td colSpan={14} className="text-right pt-2 border-t">Total inc VAT</td><td className="text-right font-semibold pt-2 border-t">£{t.total.toFixed(2)}</td></tr>
                   </tfoot>
                 </table>
               );
