@@ -86,10 +86,13 @@ function buildCEDiffersMap(root: any): Record<string, string[]> {
       });
     }
 
-    // Recurse into non-CE children
+    // Recurse into sub-CE children ONLY if they are primary CEs (no dot in z_ref)
+    // Sub-CEs (Z1.1, Z1.2) already had their map entry set above — do not overwrite
     for (const child of node.children ?? []) {
-      if (child.type !== "CE") continue; // already handled CE above
-      walkCE(child);
+      if (child.type !== "CE") continue;
+      if (child.z_ref && !child.z_ref.includes(".")) {
+        walkCE(child);
+      }
     }
   };
 
