@@ -273,24 +273,24 @@ export default function QuoteDetail() {
               });
 
               return (
-                <table className="w-full table-fixed" style={{fontSize:"11px"}}>
+                <table className="w-full table-fixed" style={{fontSize:"9px"}}>
                   <thead className="border-b">
-                    <tr className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      <th className="text-left py-2 w-12">Differ</th>
-                      <th className="text-left py-2 w-24">Room / Door</th>
-                      <th className="text-left py-2 w-10">GMK</th>
-                      <th className="text-left py-2 w-16">MK</th>
-                      <th className="text-left py-2 w-16">SMK</th>
-                      <th className="text-left py-2 w-28">Product code</th>
-                      <th className="text-left py-2 w-32 whitespace-nowrap">Lock type</th>
-                      <th className="text-left py-2 w-20 whitespace-nowrap">Lock function</th>
-                      <th className="text-left py-2 w-20">Finish</th>
-                      <th className="text-left py-2 w-16">Size</th>
-                      <th className="text-right py-2 w-14">Keys inc.</th>
-                      <th className="text-right py-2 w-16">Extra keys</th>
-                      <th className="text-right py-2 w-8">Qty</th>
-                      <th className="text-right py-2 w-16">Unit</th>
-                      <th className="text-right py-2 w-16">Total</th>
+                    <tr className="text-[8px] uppercase tracking-wider text-muted-foreground">
+                      <th className="text-left py-1 w-10">Differ</th>
+                      <th className="text-left py-1 w-20">Room / Door</th>
+                      <th className="text-left py-1 w-8">GMK</th>
+                      <th className="text-left py-1 w-12">MK</th>
+                      <th className="text-left py-1 w-12">SMK</th>
+                      <th className="text-left py-1 w-24">Product code</th>
+                      <th className="text-left py-1 w-24 whitespace-nowrap">Lock type</th>
+                      <th className="text-left py-1 w-16 whitespace-nowrap">Lock function</th>
+                      <th className="text-left py-1 w-16">Finish</th>
+                      <th className="text-left py-1 w-12">Size</th>
+                      <th className="text-right py-1 w-10">Keys inc.</th>
+                      <th className="text-right py-1 w-12">Extra keys</th>
+                      <th className="text-right py-1 w-6">Qty</th>
+                      <th className="text-right py-1 w-14">Unit</th>
+                      <th className="text-right py-1 w-14">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -298,7 +298,7 @@ export default function QuoteDetail() {
                       <React.Fragment key={`z${zi}`}>
                         {isGrouped && (
                           <tr className="bg-muted/20">
-                            <td colSpan={15} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            <td colSpan={15} className="py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                               {zone.zoneLabel}
                               {zone.zoneRef !== zone.zoneLabel && (
                                 <span className="ml-1.5 text-amber-700 normal-case font-normal">({zone.zoneRef})</span>
@@ -314,20 +314,20 @@ export default function QuoteDetail() {
                             <React.Fragment key={`c${zi}-${i}`}>
                               <tr>
                                 <td className={`py-2 font-medium ${isCE ? "text-sky-700" : "text-amber-700"}`}>{c.differ_ref}</td>
-                                <td className="py-2 pr-3">{c.room_label}</td>
-                                <td className="py-2 text-xs text-muted-foreground">{h.gmk}</td>
-                                <td className="py-2 text-xs text-muted-foreground">{h.mk}</td>
-                                <td className="py-2 text-xs text-muted-foreground">{h.smk}</td>
-                                <td className="py-2 text-[11px] text-muted-foreground">{c.product_code ?? "—"}</td>
-                                <td className="py-2 pr-3 text-xs text-foreground">{(c as any).cylinder_type ?? "—"}</td>
-                                <td className="py-2 pr-3 text-xs text-foreground">{c.cylinder_profile ?? "—"}</td>
-                                <td className="py-2 text-xs text-foreground">{c.finish ?? "—"}</td>
-                                <td className="py-2 text-xs text-foreground">{c.size ?? "—"}</td>
-                                <td className="py-2 text-right">{isCE ? "—" : 2}</td>
-                                <td className="py-2 text-right">{isCE ? "—" : (extraKeysByDiffer.get(c.differ_ref ?? "") ?? 0) > 0 ? extraKeysByDiffer.get(c.differ_ref ?? "") : "—"}</td>
-                                <td className="py-2 text-right">{c.quantity}</td>
-                                <td className="py-2 text-right">£{c.unit_price.toFixed(2)}</td>
-                                <td className="py-2 text-right font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
+                                <td className="py-1 pr-3">{c.room_label}</td>
+                                <td className="py-1 text-xs text-muted-foreground">{h.gmk}</td>
+                                <td className="py-1 text-xs text-muted-foreground">{h.mk}</td>
+                                <td className="py-1 text-xs text-muted-foreground">{h.smk}</td>
+                                <td className="py-1 text-[11px] text-muted-foreground">{c.product_code ?? "—"}</td>
+                                <td className="py-1 pr-3 text-xs text-foreground">{(c as any).cylinder_type ?? "—"}</td>
+                                <td className="py-1 pr-3 text-xs text-foreground">{c.cylinder_profile ?? "—"}</td>
+                                <td className="py-1 text-xs text-foreground">{c.finish ?? "—"}</td>
+                                <td className="py-1 text-xs text-foreground">{c.size ?? "—"}</td>
+                                <td className="py-1 text-right">{isCE ? "—" : 2}</td>
+                                <td className="py-1 text-right">{isCE ? "—" : (extraKeysByDiffer.get(c.differ_ref ?? "") ?? 0) > 0 ? extraKeysByDiffer.get(c.differ_ref ?? "") : "—"}</td>
+                                <td className="py-1 text-right">{c.quantity}</td>
+                                <td className="py-1 text-right">£{c.unit_price.toFixed(2)}</td>
+                                <td className="py-1 text-right font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
                               </tr>
                               {isCE && ceDiffers.length > 0 && (
                                 <tr>
@@ -343,34 +343,34 @@ export default function QuoteDetail() {
                     ))}
                     {masterKeys.length > 0 && (
                       <tr className="bg-muted/20">
-                        <td colSpan={15} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <td colSpan={15} className="py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Master keys
                         </td>
                       </tr>
                     )}
                     {masterKeys.map((k, i) => (
                       <tr key={`mk${i}`}>
-                        <td className="py-2 text-muted-foreground">—</td>
-                        <td className="py-2 text-sm" colSpan={11}>{k.key_reference}</td>
-                        <td className="py-2 text-right">{k.quantity}</td>
-                        <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
-                        <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
+                        <td className="py-1 text-muted-foreground">—</td>
+                        <td className="py-1 text-sm" colSpan={11}>{k.key_reference}</td>
+                        <td className="py-1 text-right">{k.quantity}</td>
+                        <td className="py-1 text-right">£{k.unit_price.toFixed(2)}</td>
+                        <td className="py-1 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
                       </tr>
                     ))}
                     {extraKeys.length > 0 && (
                       <tr className="bg-muted/20">
-                        <td colSpan={15} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <td colSpan={15} className="py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Additional keys
                         </td>
                       </tr>
                     )}
                     {extraKeys.map((k, i) => (
                       <tr key={`ek${i}`}>
-                        <td className="py-2 text-amber-700 font-medium">{k.differ_ref}</td>
-                        <td className="py-2 text-sm" colSpan={11}>{k.key_reference}</td>
-                        <td className="py-2 text-right">{k.quantity}</td>
-                        <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
-                        <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
+                        <td className="py-1 text-amber-700 font-medium">{k.differ_ref}</td>
+                        <td className="py-1 text-sm" colSpan={11}>{k.key_reference}</td>
+                        <td className="py-1 text-right">{k.quantity}</td>
+                        <td className="py-1 text-right">£{k.unit_price.toFixed(2)}</td>
+                        <td className="py-1 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
