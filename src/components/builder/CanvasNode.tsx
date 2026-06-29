@@ -457,6 +457,8 @@ function CanvasNodeImpl(props: NodeProps) {
 
               {(addOptions?.length ?? 0) + (extraAddActions?.length ?? 0) === 1 && addOptions?.length === 1
                 ? ADD_LABEL[addOptions[0]]
+                : (addOptions?.length ?? 0) + (extraAddActions?.length ?? 0) === 1 && (extraAddActions?.length ?? 0) === 1
+                ? extraAddActions![0].label
                 : NODE_ADD_HINT[node.type] ?? "Add…"}
             </div>
           )}
