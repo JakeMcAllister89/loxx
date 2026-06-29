@@ -2548,7 +2548,7 @@ function DetailPanel({
                       variant="outline"
                       onClick={isFulfilled ? onReplace : undefined}
                       disabled={!isFulfilled}
-                      className="w-full text-muted-foreground hover:text-foreground"
+                      className="w-full"
                     >
                       <Replace className="h-4 w-4" /> Replace cylinder
                     </Button>
