@@ -242,7 +242,7 @@ export default function QuoteDetail() {
 
               // Build CE differs map
               const ceDiffersMap: Record<string, string[]> = {};
-              const buildCEDiffers = (node: any) => {
+              const buildCEDiffers = (node: any, parentDiffers?: string[]) => {
                 if (node.type === "CE" && node.z_ref) {
                   const collectDiffers = (n: any): string[] => {
                     const d: string[] = [];
@@ -250,13 +250,17 @@ export default function QuoteDetail() {
                     for (const ch of n.children ?? []) d.push(...collectDiffers(ch));
                     return d;
                   };
-                  const differs = Array.from(new Set(collectDiffers(node))).sort();
-                  ceDiffersMap[node.z_ref] = differs;
-                  for (const child of node.children ?? []) {
-                    if (child.type === "CE" && child.z_ref) ceDiffersMap[child.z_ref] = differs;
+                  const isSubCE = node.z_ref.includes(".");
+                  if (isSubCE && parentDiffers) {
+                    ceDiffersMap[node.z_ref] = parentDiffers;
+                  } else {
+                    const differs = Array.from(new Set(collectDiffers(node))).sort();
+                    ceDiffersMap[node.z_ref] = differs;
+                    for (const child of node.children ?? []) buildCEDiffers(child, differs);
+                    return;
                   }
                 }
-                for (const child of node.children ?? []) buildCEDiffers(child);
+                for (const child of node.children ?? []) buildCEDiffers(child, parentDiffers);
               };
               if (treeRoot) buildCEDiffers(treeRoot);
 
@@ -314,8 +318,8 @@ export default function QuoteDetail() {
                                 <td className="py-2 text-xs text-muted-foreground">{h.mk}</td>
                                 <td className="py-2 text-xs text-muted-foreground">{h.smk}</td>
                                 <td className="py-2 text-[11px] text-muted-foreground">{c.product_code ?? "—"}</td>
-                                <td className="py-2 text-xs text-foreground">{(c as any).cylinder_type ?? "—"}</td>
-                                <td className="py-2 text-xs text-foreground">{c.cylinder_profile ?? "—"}</td>
+                                <td className="py-2 text-xs text-foreground whitespace-nowrap">{(c as any).cylinder_type ?? "—"}</td>
+                                <td className="py-2 text-xs text-foreground whitespace-nowrap">{c.cylinder_profile ?? "—"}</td>
                                 <td className="py-2 text-xs text-foreground">{c.finish ?? "—"}</td>
                                 <td className="py-2 text-xs text-foreground">{c.size ?? "—"}</td>
                                 <td className="py-2 text-right">{isCE ? "—" : 2}</td>
