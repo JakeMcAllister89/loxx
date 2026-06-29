@@ -20,11 +20,12 @@ interface Props {
   systemId?: string | null;
   customer?: { name?: string; company?: string };
   meta?: OrderMeta;
+  projectName?: string;
   deliveryCharge: number;
   onError?: (msg: string) => void;
 }
 
-export function StripeCheckout({ items, returnUrl, systemId, customer, meta, deliveryCharge, onError }: Props) {
+export function StripeCheckout({ items, returnUrl, systemId, customer, meta, projectName, deliveryCharge, onError }: Props) {
   const fetchClientSecret = useCallback(async (): Promise<string> => {
     if (!items || items.length === 0) {
       const msg = "Your basket is empty.";
