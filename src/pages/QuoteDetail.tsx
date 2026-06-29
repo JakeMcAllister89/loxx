@@ -216,6 +216,49 @@ export default function QuoteDetail() {
               const zones = Array.from(zoneMap.values());
               const isGrouped = zones.length > 1;
 
+              // Build hierarchy map from tree snapshot
+              const hierarchyMap: Record<string, { gmk: string; mk: string; smk: string }> = {};
+              const buildHierarchy = (node: any, trail: any[]) => {
+                if (node.type === "CYL" && node.differ != null) {
+                  const ref = `D${String(node.differ).padStart(3, "0")}`;
+                  hierarchyMap[ref] = {
+                    gmk: trail.find((n: any) => n.type === "GMK") ? "GMK" : "—",
+                    mk: trail.find((n: any) => n.type === "MK")?.label ?? "—",
+                    smk: trail.find((n: any) => n.type === "SMK")?.label ?? "—",
+                  };
+                }
+                if (node.type === "CE" && node.z_ref) {
+                  hierarchyMap[node.z_ref] = {
+                    gmk: trail.find((n: any) => n.type === "GMK") ? "GMK" : "—",
+                    mk: trail.find((n: any) => n.type === "MK")?.label ?? "—",
+                    smk: trail.find((n: any) => n.type === "SMK")?.label ?? "—",
+                  };
+                }
+                for (const child of node.children ?? []) buildHierarchy(child, [...trail, node]);
+              };
+              const treeRoot = (q as any).tree_snapshot?.root ?? null;
+              if (treeRoot) buildHierarchy(treeRoot, []);
+
+              // Build CE differs map
+              const ceDiffersMap: Record<string, string[]> = {};
+              const buildCEDiffers = (node: any) => {
+                if (node.type === "CE" && node.z_ref) {
+                  const collectDiffers = (n: any): string[] => {
+                    const d: string[] = [];
+                    if (n.type === "CYL" && n.differ != null) d.push(`D${String(n.differ).padStart(3, "0")}`);
+                    for (const ch of n.children ?? []) d.push(...collectDiffers(ch));
+                    return d;
+                  };
+                  const differs = Array.from(new Set(collectDiffers(node))).sort();
+                  ceDiffersMap[node.z_ref] = differs;
+                  for (const child of node.children ?? []) {
+                    if (child.type === "CE" && child.z_ref) ceDiffersMap[child.z_ref] = differs;
+                  }
+                }
+                for (const child of node.children ?? []) buildCEDiffers(child);
+              };
+              if (treeRoot) buildCEDiffers(treeRoot);
+
               const masterKeys = keys.filter(k => !k.differ_ref || (k as any).location === "GMK" || (k as any).location === "MK" || (k as any).location === "SMK");
               const extraKeys  = keys.filter(k => k.differ_ref && (k as any).location === "extra");
 
@@ -225,7 +268,11 @@ export default function QuoteDetail() {
                     <tr className="text-[10px] uppercase tracking-wider text-muted-foreground">
                       <th className="text-left py-2">Differ</th>
                       <th className="text-left py-2">Room / Door</th>
+                      <th className="text-left py-2">GMK</th>
+                      <th className="text-left py-2">MK</th>
+                      <th className="text-left py-2">SMK</th>
                       <th className="text-left py-2">Product code</th>
+                      <th className="text-left py-2">Lock type</th>
                       <th className="text-left py-2">Lock function</th>
                       <th className="text-left py-2">Finish</th>
                       <th className="text-left py-2">Size</th>
@@ -239,7 +286,7 @@ export default function QuoteDetail() {
                       <React.Fragment key={`z${zi}`}>
                         {isGrouped && (
                           <tr className="bg-muted/20">
-                            <td colSpan={9} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            <td colSpan={13} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                               {zone.zoneLabel}
                               {zone.zoneRef !== zone.zoneLabel && (
                                 <span className="ml-1.5 text-amber-700 normal-case font-normal">({zone.zoneRef})</span>
@@ -247,24 +294,42 @@ export default function QuoteDetail() {
                             </td>
                           </tr>
                         )}
-                        {zone.items.map((c, i) => (
-                          <tr key={`c${zi}-${i}`}>
-                            <td className="py-2 text-amber-700 font-medium">{c.differ_ref}</td>
-                            <td className="py-2">{c.room_label}</td>
-                            <td className="py-2 text-[11px] text-muted-foreground">{c.product_code ?? "—"}</td>
-                            <td className="py-2 text-xs text-foreground">{c.cylinder_profile ?? "—"}</td>
-                            <td className="py-2 text-xs text-foreground">{c.finish ?? "—"}</td>
-                            <td className="py-2 text-xs text-foreground">{c.size ?? "—"}</td>
-                            <td className="py-2 text-right">{c.quantity}</td>
-                            <td className="py-2 text-right">£{c.unit_price.toFixed(2)}</td>
-                            <td className="py-2 text-right font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
-                          </tr>
-                        ))}
+                        {zone.items.map((c, i) => {
+                          const isCE = /^Z/i.test(c.differ_ref ?? "");
+                          const h = hierarchyMap[c.differ_ref ?? ""] ?? { gmk: "—", mk: "—", smk: "—" };
+                          const ceDiffers = isCE ? (ceDiffersMap[c.differ_ref ?? ""] ?? []) : [];
+                          return (
+                            <React.Fragment key={`c${zi}-${i}`}>
+                              <tr>
+                                <td className={`py-2 font-medium ${isCE ? "text-sky-700" : "text-amber-700"}`}>{c.differ_ref}</td>
+                                <td className="py-2">{c.room_label}</td>
+                                <td className="py-2 text-xs text-muted-foreground">{h.gmk}</td>
+                                <td className="py-2 text-xs text-muted-foreground">{h.mk}</td>
+                                <td className="py-2 text-xs text-muted-foreground">{h.smk}</td>
+                                <td className="py-2 text-[11px] text-muted-foreground">{c.product_code ?? "—"}</td>
+                                <td className="py-2 text-xs text-foreground">{(c as any).cylinder_type ?? "—"}</td>
+                                <td className="py-2 text-xs text-foreground">{c.cylinder_profile ?? "—"}</td>
+                                <td className="py-2 text-xs text-foreground">{c.finish ?? "—"}</td>
+                                <td className="py-2 text-xs text-foreground">{c.size ?? "—"}</td>
+                                <td className="py-2 text-right">{isCE ? "—" : c.quantity}</td>
+                                <td className="py-2 text-right">{isCE ? "—" : `£${c.unit_price.toFixed(2)}`}</td>
+                                <td className="py-2 text-right font-semibold">{isCE ? "—" : `£${(c.unit_price * c.quantity).toFixed(2)}`}</td>
+                              </tr>
+                              {isCE && ceDiffers.length > 0 && (
+                                <tr>
+                                  <td colSpan={13} className="py-0.5 pb-2 text-[10px] text-muted-foreground italic">
+                                    Operated by differ keys: {ceDiffers.join(", ")}
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          );
+                        })}
                       </React.Fragment>
                     ))}
                     {masterKeys.length > 0 && (
                       <tr className="bg-muted/20">
-                        <td colSpan={9} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <td colSpan={13} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Master keys
                         </td>
                       </tr>
@@ -272,7 +337,7 @@ export default function QuoteDetail() {
                     {masterKeys.map((k, i) => (
                       <tr key={`mk${i}`}>
                         <td className="py-2 text-muted-foreground">—</td>
-                        <td className="py-2 text-sm" colSpan={5}>{k.key_reference}</td>
+                        <td className="py-2 text-sm" colSpan={9}>{k.key_reference}</td>
                         <td className="py-2 text-right">{k.quantity}</td>
                         <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
                         <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
@@ -280,7 +345,7 @@ export default function QuoteDetail() {
                     ))}
                     {extraKeys.length > 0 && (
                       <tr className="bg-muted/20">
-                        <td colSpan={9} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <td colSpan={13} className="py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Additional keys
                         </td>
                       </tr>
@@ -288,7 +353,7 @@ export default function QuoteDetail() {
                     {extraKeys.map((k, i) => (
                       <tr key={`ek${i}`}>
                         <td className="py-2 text-amber-700 font-medium">{k.differ_ref}</td>
-                        <td className="py-2 text-sm" colSpan={5}>{k.key_reference}</td>
+                        <td className="py-2 text-sm" colSpan={9}>{k.key_reference}</td>
                         <td className="py-2 text-right">{k.quantity}</td>
                         <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
                         <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
@@ -296,9 +361,9 @@ export default function QuoteDetail() {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr><td colSpan={8} className="text-right text-muted-foreground pt-3">Subtotal (ex VAT)</td><td className="text-right font-medium pt-3">£{t.subtotal.toFixed(2)}</td></tr>
-                    <tr><td colSpan={8} className="text-right text-muted-foreground">VAT (20%)</td><td className="text-right font-medium">£{t.vat.toFixed(2)}</td></tr>
-                    <tr className="text-lg font-bold text-amber-700"><td colSpan={8} className="text-right pt-2 border-t">Total inc VAT</td><td className="text-right font-semibold pt-2 border-t">£{t.total.toFixed(2)}</td></tr>
+                    <tr><td colSpan={12} className="text-right text-muted-foreground pt-3">Subtotal (ex VAT)</td><td className="text-right font-medium pt-3">£{t.subtotal.toFixed(2)}</td></tr>
+                    <tr><td colSpan={12} className="text-right text-muted-foreground">VAT (20%)</td><td className="text-right font-medium">£{t.vat.toFixed(2)}</td></tr>
+                    <tr className="text-lg font-bold text-amber-700"><td colSpan={12} className="text-right pt-2 border-t">Total inc VAT</td><td className="text-right font-semibold pt-2 border-t">£{t.total.toFixed(2)}</td></tr>
                   </tfoot>
                 </table>
               );

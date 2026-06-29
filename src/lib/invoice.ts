@@ -185,7 +185,7 @@ function renderInvoiceHtml(
   .foot{margin-top:40px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;text-align:center}
   .head{display:flex;justify-content:space-between;align-items:flex-start}
   .right{text-align:right}
-  @media print{body{margin:20px}.noprint{display:none}@page{margin:16mm}}
+  @media print{body{margin:0;max-width:100%}.noprint{display:none}@page{margin:18mm 16mm}}
 </style></head><body>
 <div class="head">
   <div>

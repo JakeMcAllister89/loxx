@@ -1,4 +1,4 @@
-// Creates a Stripe Embedded Checkout session for a cart of LOXX cylinder line items. v2
+// Creates a Stripe Embedded Checkout session for a cart of LOXX cylinder line items. v3
 // UK seller, physical goods → tax calculation only (no managed_payments).
 // Creates a pending order + order_items rows before payment so verify-checkout can finalise.
 
