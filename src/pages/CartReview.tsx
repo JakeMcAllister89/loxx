@@ -384,7 +384,7 @@ function HierarchyView({ root, itemsByDifferRef }: { root: TNode; itemsByDifferR
           const keysArr = Array.isArray(n.keys) ? n.keys : [];
           const totalKeys = keysArr.reduce((s: number, k: any) => s + (k.qty ?? 0), 0);
           return totalKeys > 0 ? (
-            <span className="text-xs text-muted-foreground">· {totalKeys} key{totalKeys === 1 ?/*?*/: "s"}</span>
+            <span className="text-xs text-muted-foreground">· {totalKeys} key{totalKeys === 1 ? "" : "s"}</span>
           ) : null;
         })()}
         {n.type === "CYL" && (() => {
