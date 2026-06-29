@@ -203,6 +203,7 @@ Deno.serve(async (req) => {
     const inc = +(exVat + vat).toFixed(2);
 
     const d = (order.delivery_address ?? {}) as any;
+    const contactCompany = d.company_name ?? "";
     const contactName = d.contact_name ?? d.name ?? "—";
     const contactPhone = d.contact_phone ?? "—";
     const addrLine = [d.line1, d.line2, d.city, d.county, d.postcode].filter(Boolean).join(", ") || "—";
