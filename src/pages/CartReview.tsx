@@ -20,6 +20,13 @@ interface SystemSummary {
 
 export default function CartReview() {
   const { items, meta, setMeta, cylindersSubtotal, keysSubtotal, subtotal, deliveryCharge, vat, total, clear } = useCart();
+
+  const itemsByDifferRef = useMemo(() => {
+    const map = new Map<string, typeof items[0]>();
+    items.forEach(i => { if (i.differ_ref) map.set(i.differ_ref, i); });
+    return map;
+  }, [items]);
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const [systems, setSystems] = useState<SystemSummary[]>([]);
@@ -149,8 +156,7 @@ export default function CartReview() {
                   </button>
                   {!isCollapsed && sys.tree_data?.root && (
                     <div className="p-4">
-                      <HierarchyView root={sys.tree_data.root} />
-                      <HierarchyFooter root={sys.tree_data.root} />
+                      <HierarchyView root={sys.tree_data.root} itemsByDifferRef={itemsByDifferRef} />
                     </div>
                   )}
                 </div>
@@ -364,7 +370,7 @@ function flattenCKForDisplay(n: TNode): TNode {
   return { ...n, children: kids };
 }
 
-function HierarchyView({ root }: { root: TNode }) {
+function HierarchyView({ root, itemsByDifferRef }: { root: TNode; itemsByDifferRef?: Map<string, any> }) {
   const view = flattenCKForDisplay(root);
   const renderNode = (n: TNode, depth: number) => (
     <div key={n.id}>
@@ -378,25 +384,40 @@ function HierarchyView({ root }: { root: TNode }) {
           const keysArr = Array.isArray(n.keys) ? n.keys : [];
           const totalKeys = keysArr.reduce((s: number, k: any) => s + (k.qty ?? 0), 0);
           return totalKeys > 0 ? (
-            <span className="text-xs text-muted-foreground">· {totalKeys} key{totalKeys === 1 ? "" : "s"}</span>
+            <span className="text-xs text-muted-foreground">· {totalKeys} key{totalKeys === 1 ?/*?*/: "s"}</span>
           ) : null;
         })()}
-        {n.type === "CYL" && (
-          <span className="text-xs text-muted-foreground ml-1">
-            {n.differ != null && <span className="mr-2 text-amber-700 font-medium">D{String(n.differ).padStart(3, "0")}</span>}
-            {n.cylinder_type && <span className="text-muted-foreground">{n.cylinder_type}</span>}
-            {n.finish && <span> · {n.finish}</span>}
-            <span className="ml-2 font-medium text-foreground">× {n.quantity ?? 1}</span>
-          </span>
-        )}
-        {n.type === "CE" && (
-          <span className="text-xs text-muted-foreground ml-1">
-            {n.z_ref && <span className="mr-2 text-sky-700 font-medium">{n.z_ref}</span>}
-            {n.cylinder_type && <span className="text-muted-foreground">{n.cylinder_type}</span>}
-            {n.finish && <span> · {n.finish}</span>}
-            <span className="ml-2 font-medium text-foreground">× {n.quantity ?? 1}</span>
-          </span>
-        )}
+        {n.type === "CYL" && (() => {
+          const differRef = n.differ != null ? `D${String(n.differ).padStart(3, "0")}` : null;
+          const item = differRef ? itemsByDifferRef?.get(differRef) : undefined;
+          const lockType = item?.cylinder_type ?? null;
+          const lockFunction = item?.cylinder_profile ?? null;
+          return (
+            <span className="text-xs text-muted-foreground ml-1">
+              {differRef && <span className="mr-2 text-amber-700 font-medium">{differRef}</span>}
+              <span>× {n.quantity ?? 1}</span>
+              {n.size && <span> · {n.size}</span>}
+              {n.finish && <span> · {n.finish}</span>}
+              {lockFunction && <span> · {lockFunction}</span>}
+              {lockType && <span> · {lockType}</span>}
+            </span>
+          );
+        })()}
+        {n.type === "CE" && (() => {
+          const item = n.z_ref ? itemsByDifferRef?.get(n.z_ref) : undefined;
+          const lockType = item?.cylinder_type ?? null;
+          const lockFunction = item?.cylinder_profile ?? null;
+          return (
+            <span className="text-xs text-muted-foreground ml-1">
+              {n.z_ref && <span className="mr-2 text-sky-700 font-medium">{n.z_ref}</span>}
+              <span>× {n.quantity ?? 1}</span>
+              {n.size && <span> · {n.size}</span>}
+              {n.finish && <span> · {n.finish}</span>}
+              {lockFunction && <span> · {lockFunction}</span>}
+              {lockType && <span> · {lockType}</span>}
+            </span>
+          );
+        })()}
       </div>
       {n.children.map(c => renderNode(c, depth + 1))}
     </div>
