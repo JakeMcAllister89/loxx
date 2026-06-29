@@ -346,7 +346,7 @@ export default function QuoteDetail() {
                     {masterKeys.map((k, i) => (
                       <tr key={`mk${i}`}>
                         <td className="py-2 text-muted-foreground">—</td>
-                        <td className="py-2 text-sm" colSpan={9}>{k.key_reference}</td>
+                        <td className="py-2 text-sm" colSpan={11}>{k.key_reference}</td>
                         <td className="py-2 text-right">{k.quantity}</td>
                         <td className="py-2 text-right">£{k.unit_price.toFixed(2)}</td>
                         <td className="py-2 text-right font-semibold">£{(k.unit_price * k.quantity).toFixed(2)}</td>
