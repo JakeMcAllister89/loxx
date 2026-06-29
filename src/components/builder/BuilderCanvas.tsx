@@ -192,7 +192,7 @@ function CanvasInner({
           id: `${n.id}->${c.id}`,
           source: n.id,
           target: c.id,
-          type: "straight",
+          type: "smoothstep",
           style: { stroke: "hsl(var(--border))", strokeWidth: 1.5 },
         });
         collectEdges(c);

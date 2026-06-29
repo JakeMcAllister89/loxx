@@ -262,7 +262,7 @@ Deno.serve(async (req) => {
           <td>${esc(i.finish ?? p.finish ?? "—")}</td>
           <td>${esc(p.size ?? "—")}</td>
           <td style="text-align:right">${i.quantity}</td>
-          <td style="text-align:right">2</td>
+          <td style="text-align:right">${isCERow ? "—" : "2"}</td>
           <td style="text-align:right">${extraKeys > 0 ? extraKeys : "—"}</td>
           <td style="text-align:right;font-family:ui-monospace,monospace">${fmt(unitCost)}</td>
           <td style="text-align:right;font-family:ui-monospace,monospace">${fmt(totalCost)}</td>
@@ -370,7 +370,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
     <div style="font-weight:${contactCompany ? "400" : "600"}">${esc(contactName)}</div>
     <div class="muted">${esc(contactPhone)}</div>
     <div class="muted" style="margin-top:4px">${esc(addrLine)}</div>
-    
+    ${(order as any).notes ? `<div style="margin-top:8px"><span class="label">Special instructions</span><div style="font-size:12px;color:#0f172a;white-space:pre-wrap;margin-top:2px">${esc((order as any).notes)}</div></div>` : ""}
   </div>
 </div>
 

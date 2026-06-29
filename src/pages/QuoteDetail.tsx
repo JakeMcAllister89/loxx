@@ -273,24 +273,24 @@ export default function QuoteDetail() {
               });
 
               return (
-                <table className="w-full table-fixed" style={{fontSize:"11px"}}>
+                <table className="w-full table-fixed" style={{fontSize:"9px"}}>
                   <thead className="border-b">
-                    <tr className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      <th className="text-left py-2 w-12">Differ</th>
-                      <th className="text-left py-2 w-24">Room / Door</th>
-                      <th className="text-left py-2 w-10">GMK</th>
-                      <th className="text-left py-2 w-16">MK</th>
-                      <th className="text-left py-2 w-16">SMK</th>
-                      <th className="text-left py-2 w-28">Product code</th>
-                      <th className="text-left py-2 w-32 whitespace-nowrap">Lock type</th>
-                      <th className="text-left py-2 w-20 whitespace-nowrap">Lock function</th>
-                      <th className="text-left py-2 w-20">Finish</th>
-                      <th className="text-left py-2 w-16">Size</th>
-                      <th className="text-right py-2 w-14">Keys inc.</th>
-                      <th className="text-right py-2 w-16">Extra keys</th>
-                      <th className="text-right py-2 w-8">Qty</th>
-                      <th className="text-right py-2 w-16">Unit</th>
-                      <th className="text-right py-2 w-16">Total</th>
+                    <tr className="text-[8px] uppercase tracking-wider text-muted-foreground">
+                      <th className="text-left py-1 w-10">Differ</th>
+                      <th className="text-left py-1 w-20">Room / Door</th>
+                      <th className="text-left py-1 w-8">GMK</th>
+                      <th className="text-left py-1 w-12">MK</th>
+                      <th className="text-left py-1 w-12">SMK</th>
+                      <th className="text-left py-1 w-24">Product code</th>
+                      <th className="text-left py-1 w-24 whitespace-nowrap">Lock type</th>
+                      <th className="text-left py-1 w-16 whitespace-nowrap">Lock function</th>
+                      <th className="text-left py-1 w-16">Finish</th>
+                      <th className="text-left py-1 w-12">Size</th>
+                      <th className="text-right py-1 w-10">Keys inc.</th>
+                      <th className="text-right py-1 w-12">Extra keys</th>
+                      <th className="text-right py-1 w-6">Qty</th>
+                      <th className="text-right py-1 w-14">Unit</th>
+                      <th className="text-right py-1 w-14">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
