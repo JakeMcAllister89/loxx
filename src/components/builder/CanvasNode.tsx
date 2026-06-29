@@ -161,6 +161,10 @@ function CanvasNodeImpl(props: NodeProps) {
     const total = (addOptions?.length ?? 0) + (extraAddActions?.length ?? 0);
     if (total === 1 && (addOptions?.length ?? 0) === 1) {
       onAddChildType?.(addOptions![0]);
+      return;
+    }
+    if (total === 1 && (extraAddActions?.length ?? 0) === 1) {
+      extraAddActions![0].onClick();
       setPopoverOpen(false);
     }
   };
