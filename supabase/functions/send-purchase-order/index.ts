@@ -341,22 +341,29 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px">
   <div>
-    <div class="label">Supplier</div>
+    <div class="label">From</div>
+    <div style="font-weight:600">${esc(S.company_name || "My LOXX")}</div>
+    ${S.company_address ? `<div class="muted">${esc(S.company_address)}</div>` : ""}
+    ${S.company_email ? `<div class="muted">${esc(S.company_email)}</div>` : ""}
+    ${S.company_phone ? `<div class="muted">${esc(S.company_phone)}</div>` : ""}
+    ${S.vat_number ? `<div class="muted">VAT: ${esc(S.vat_number)}</div>` : ""}
+    <div style="margin-top:8px"><div class="label">Supplier</div>
     <div style="font-weight:600">${esc(S.supplier_name || "—")}</div>
     ${S.supplier_email ? `<div class="muted">${esc(S.supplier_email)}</div>` : ""}
-    ${S.supplier_account ? `<div class="muted">Account: ${esc(S.supplier_account)}</div>` : ""}
+    ${S.supplier_account ? `<div class="muted">Account: ${esc(S.supplier_account)}</div>` : ""}</div>
   </div>
   <div>
     <div class="label">Order reference</div>
-    <div><strong>System:</strong> <span style="font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(systemRef)}</span>${systemName ? ` <span class="muted">${esc(systemName)}</span>` : ""}</div>
-    <div><strong>Customer PO:</strong> ${esc(order.customer_po_ref || "—")}</div>
-    ${(order as any).notes ? `<div style="margin-top:6px;font-size:11px;color:#b45309"><strong>Special instructions:</strong> ${esc((order as any).notes)}</div>` : ""}
+    <div style="margin-bottom:2px"><span class="muted" style="font-size:10px">System</span><br/><span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px">${esc(systemRef)}</span>${systemName ? ` <span class="muted">${esc(systemName)}</span>` : ""}</div>
+    <div style="margin-bottom:2px"><span class="muted" style="font-size:10px">Customer PO</span><br/>${esc(order.customer_po_ref || "—")}</div>
   </div>
   <div>
     <div class="label">Deliver to</div>
-    <div style="font-weight:600">${esc(contactName)}</div>
+    ${contactCompany ? `<div style="font-weight:600">${esc(contactCompany)}</div>` : ""}
+    <div style="font-weight:${contactCompany ? "400" : "600"}">${esc(contactName)}</div>
     <div class="muted">${esc(contactPhone)}</div>
     <div class="muted" style="margin-top:4px">${esc(addrLine)}</div>
+    ${(order as any).notes ? `<div style="margin-top:8px;font-size:11px;color:#b45309;border-top:1px solid #fcd34d;padding-top:6px"><span style="font-weight:600">Special instructions:</span> ${esc((order as any).notes)}</div>` : ""}
   </div>
 </div>
 
