@@ -185,7 +185,8 @@ export default function QuoteDetail() {
           <section className="grid grid-cols-2 gap-8 mt-6">
             <div>
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Prepared for</div>
-              <div className="font-semibold mt-1">{q.customer_name}{q.company ? `, ${q.company}` : ""}</div>
+              <div className="font-semibold mt-1">{q.customer_name}</div>
+              {q.company && <div className="font-semibold">{q.company}</div>}
               {q.customer_email && <div className="text-sm text-muted-foreground">{q.customer_email}</div>}
               {q.delivery_address && (
                 <div className="text-sm mt-2 whitespace-pre-line">
