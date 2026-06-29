@@ -384,11 +384,11 @@ export function validate(tree: TreeData): ValidationIssue[] {
         ? c.location.trim()
         : c.label.trim();
 
-    n.children.forEach((c) => {
+    n.children.filter((c) => !c.decommissioned_at).forEach((c) => {
       const key = effectiveName(c).toLowerCase();
       seen.set(key, (seen.get(key) ?? 0) + 1);
     });
-    n.children.forEach((c) => {
+    n.children.filter((c) => !c.decommissioned_at).forEach((c) => {
       if ((seen.get(effectiveName(c).toLowerCase()) ?? 0) > 1) {
         out.push({
           level: "error",
