@@ -318,6 +318,8 @@ export default function QuoteDetail() {
                                 <td className="py-2 text-xs text-foreground">{c.cylinder_profile ?? "—"}</td>
                                 <td className="py-2 text-xs text-foreground">{c.finish ?? "—"}</td>
                                 <td className="py-2 text-xs text-foreground">{c.size ?? "—"}</td>
+                                <td className="py-2 text-right">{isCE ? "—" : 2}</td>
+                                <td className="py-2 text-right">{isCE ? "—" : (extraKeysByDiffer.get(c.differ_ref ?? "") ?? 0) > 0 ? extraKeysByDiffer.get(c.differ_ref ?? "") : "—"}</td>
                                 <td className="py-2 text-right">{isCE ? "—" : c.quantity}</td>
                                 <td className="py-2 text-right">{isCE ? "—" : `£${c.unit_price.toFixed(2)}`}</td>
                                 <td className="py-2 text-right font-semibold">{isCE ? "—" : `£${(c.unit_price * c.quantity).toFixed(2)}`}</td>
