@@ -91,11 +91,7 @@ Deno.serve(async (req) => {
       body.delivery.county, body.delivery.postcode,
     ].filter(Boolean).join(", ") : null;
 
-    const combinedNotes = [
-      body.notes,
-      deliveryText ? `Delivery: ${deliveryText}` : null,
-      body.customerPoRef ? `Customer PO: ${body.customerPoRef}` : null,
-    ].filter(Boolean).join(" | ") || null;
+    const combinedNotes = body.notes || null;
 
     // Create pending order. VAT is finalised on verify-checkout from the real session amounts.
     const orderInsert: Record<string, unknown> = {
