@@ -180,15 +180,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Assign PO number if missing
+    // Assign PO number if missing — always save it so downloads reuse the same number
     let poNumber = order.po_number as string | null;
     if (!poNumber) {
       const { data: poRes, error: poErr } = await supabase.rpc("assign_po_number");
       if (poErr) return json({ error: `Could not assign PO number: ${poErr.message}` }, 500);
       poNumber = poRes as string;
-      if (!downloadOnly) {
-        await supabase.from("orders").update({ po_number: poNumber }).eq("id", order.id);
-      }
+      await supabase.from("orders").update({ po_number: poNumber }).eq("id", order.id);
     }
     const displayPo = poNumber ?? "PREVIEW";
 
