@@ -377,7 +377,7 @@ export default function AdminOrders() {
                       {canSelect ? (
                         <Checkbox checked={selected.has(o.id)} onCheckedChange={() => toggle(o.id)} />
                       ) : (
-                        <Tooltip><TooltipTrigger asChild><span><Checkbox disabled /></span></TooltipTrigger><TooltipContent>{o.po_number ? "PO already sent" : "Not eligible"}</TooltipContent></Tooltip>
+                        <Tooltip><TooltipTrigger asChild><span><Checkbox disabled /></span></TooltipTrigger><TooltipContent>{o.po_sent_at ? "PO already sent" : o.po_number ? "PO number assigned — not yet sent" : "Not eligible"}</TooltipContent></Tooltip>
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-amber-700">{refLabel(o)}</TableCell>
@@ -669,8 +669,10 @@ export default function AdminOrders() {
                 </Block>
 
                 <Block title="Purchase order">
-                  {open.po_number ? (
-                    <div className="text-xs">PO <span className="font-mono text-amber-700">{open.po_number}</span> sent {open.po_sent_at ? new Date(open.po_sent_at).toLocaleString("en-GB") : ""} {open.po_sent_to ? `to ${open.po_sent_to}` : ""}</div>
+                  {open.po_sent_at ? (
+                    <div className="text-xs">PO <span className="font-mono text-amber-700">{open.po_number}</span> sent {new Date(open.po_sent_at).toLocaleString("en-GB")} {open.po_sent_to ? `to ${open.po_sent_to}` : ""}</div>
+                  ) : open.po_number ? (
+                    <div className="text-xs text-muted-foreground">PO <span className="font-mono text-amber-700">{open.po_number}</span> assigned — not yet sent to supplier</div>
                   ) : (
                     <div className="text-xs text-muted-foreground">PO not yet sent</div>
                   )}

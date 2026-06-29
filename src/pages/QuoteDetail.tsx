@@ -276,19 +276,19 @@ export default function QuoteDetail() {
                 <table className="w-full table-fixed" style={{fontSize:"9px"}}>
                   <thead className="border-b">
                     <tr className="text-[8px] uppercase tracking-wider text-muted-foreground">
-                      <th className="text-left py-1 w-10">Differ</th>
+                      <th className="text-center py-1 w-10">Differ</th>
                       <th className="text-left py-1 w-20">Room / Door</th>
-                      <th className="text-left py-1 w-8">GMK</th>
-                      <th className="text-left py-1 w-12">MK</th>
-                      <th className="text-left py-1 w-12">SMK</th>
+                      <th className="text-center py-1 w-6">GMK</th>
+                      <th className="text-center py-1 w-8">MK</th>
+                      <th className="text-center py-1 w-8">SMK</th>
                       <th className="text-left py-1 w-24">Product code</th>
-                      <th className="text-left py-1 w-24 whitespace-nowrap">Lock type</th>
-                      <th className="text-left py-1 w-16 whitespace-nowrap">Lock function</th>
-                      <th className="text-left py-1 w-16">Finish</th>
-                      <th className="text-left py-1 w-12">Size</th>
-                      <th className="text-right py-1 w-10">Keys inc.</th>
-                      <th className="text-right py-1 w-12">Extra keys</th>
-                      <th className="text-right py-1 w-6">Qty</th>
+                      <th className="text-center py-1 w-24 whitespace-nowrap">Lock type</th>
+                      <th className="text-center py-1 w-16 whitespace-nowrap">Lock function</th>
+                      <th className="text-center py-1 w-16">Finish</th>
+                      <th className="text-center py-1 w-12">Size</th>
+                      <th className="text-center py-1 w-10">Keys inc.</th>
+                      <th className="text-center py-1 w-12">Extra keys</th>
+                      <th className="text-center py-1 w-6">Qty</th>
                       <th className="text-right py-1 w-14">Unit</th>
                       <th className="text-right py-1 w-14">Total</th>
                     </tr>
@@ -313,21 +313,21 @@ export default function QuoteDetail() {
                           return (
                             <React.Fragment key={`c${zi}-${i}`}>
                               <tr>
-                                <td className={`py-2 font-medium ${isCE ? "text-sky-700" : "text-amber-700"}`}>{c.differ_ref}</td>
-                                <td className="py-1 pr-3">{c.room_label}</td>
-                                <td className="py-1 text-xs text-muted-foreground">{h.gmk}</td>
-                                <td className="py-1 text-xs text-muted-foreground">{h.mk}</td>
-                                <td className="py-1 text-xs text-muted-foreground">{h.smk}</td>
-                                <td className="py-1 text-[11px] text-muted-foreground">{c.product_code ?? "—"}</td>
-                                <td className="py-1 pr-3 text-xs text-foreground">{(c as any).cylinder_type ?? "—"}</td>
-                                <td className="py-1 pr-3 text-xs text-foreground">{c.cylinder_profile ?? "—"}</td>
-                                <td className="py-1 text-xs text-foreground">{c.finish ?? "—"}</td>
-                                <td className="py-1 text-xs text-foreground">{c.size ?? "—"}</td>
-                                <td className="py-1 text-right">{isCE ? "—" : 2}</td>
-                                <td className="py-1 text-right">{isCE ? "—" : (extraKeysByDiffer.get(c.differ_ref ?? "") ?? 0) > 0 ? extraKeysByDiffer.get(c.differ_ref ?? "") : "—"}</td>
-                                <td className="py-1 text-right">{c.quantity}</td>
-                                <td className="py-1 text-right">£{c.unit_price.toFixed(2)}</td>
-                                <td className="py-1 text-right font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
+                                 <td className={`py-1 text-center font-medium ${isCE ? "text-sky-700" : "text-amber-700"}`}>{c.differ_ref}</td>
+                                 <td className="py-1 pr-3">{c.room_label}</td>
+                                 <td className="py-1 text-center text-xs text-muted-foreground">{h.gmk}</td>
+                                 <td className="py-1 text-center text-xs text-muted-foreground">{h.mk}</td>
+                                 <td className="py-1 text-center text-xs text-muted-foreground">{h.smk}</td>
+                                 <td className="py-1 text-[11px] text-muted-foreground">{c.product_code ?? "—"}</td>
+                                 <td className="py-1 text-center text-xs text-foreground">{(c as any).cylinder_type ?? "—"}</td>
+                                 <td className="py-1 text-center text-xs text-foreground">{c.cylinder_profile ?? "—"}</td>
+                                 <td className="py-1 text-center text-xs text-foreground">{c.finish ?? "—"}</td>
+                                 <td className="py-1 text-center text-xs text-foreground">{c.size ?? "—"}</td>
+                                 <td className="py-1 text-center">{isCE ? "—" : 2}</td>
+                                 <td className="py-1 text-center">{isCE ? "—" : (extraKeysByDiffer.get(c.differ_ref ?? "") ?? 0) > 0 ? extraKeysByDiffer.get(c.differ_ref ?? "") : "—"}</td>
+                                 <td className="py-1 text-center">{c.quantity}</td>
+                                 <td className="py-1 text-right">£{c.unit_price.toFixed(2)}</td>
+                                 <td className="py-1 text-right font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
                               </tr>
                               {isCE && ceDiffers.length > 0 && (
                                 <tr>
