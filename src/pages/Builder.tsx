@@ -453,7 +453,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       }
       return next;
     });
-  }, [systemId, tree.root]);
+  }, [systemId, tree.root, isFulfilled]);
 
   const handleCEModalConfirm = useCallback((
     parentId: string,
