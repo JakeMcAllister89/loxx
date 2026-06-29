@@ -478,15 +478,23 @@ function BuilderInner({ systemId }: { systemId: string }) {
         cylConfigRef.current = { nodeId: child.id, originalLabel: child.label };
         return { ...prev, root };
       } else {
-        // New building — add as sibling under GMK/MK (parentId)
-        const parent = findNode(prev.root, parentId);
-        if (!parent) return prev;
+        // New building — must attach to GMK/MK ancestor, not a CE node.
+        // Walk up from parentId until we find a non-CE node (GMK or MK).
+        let attachId = parentId;
+        let attachNode = findNode(prev.root, attachId);
+        while (attachNode && attachNode.type === "CE") {
+          const p = findParent(prev.root, attachId);
+          if (!p) break;
+          attachId = p.id;
+          attachNode = p;
+        }
+        if (!attachNode) return prev;
         const z_ref = nextTopLevelZRef(allZRefs);
         const child: TNode = { id: newId(), type: "CE", label: "Common Entrance", children: [], z_ref };
-        const root = addChild(prev.root, parentId, child);
+        const root = addChild(prev.root, attachId, child);
         dirtyRef.current = true;
         setSelectedId(child.id);
-        setCollapsed((c) => { const n = new Set(c); n.delete(parentId); return n; });
+        setCollapsed((c) => { const n = new Set(c); n.delete(attachId); return n; });
         logAction({ system_id: systemId, action: "node_added", node_type: "CE", node_label: child.label });
         cylConfigRef.current = { nodeId: child.id, originalLabel: child.label };
         return { ...prev, root };
