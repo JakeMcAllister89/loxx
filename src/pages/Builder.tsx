@@ -205,6 +205,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
+  const newNodeIdsRef = useRef<Set<string>>(new Set());
 
   // Undo history
   const undoStack = useRef<TreeData[]>([]);
@@ -439,7 +440,9 @@ function BuilderInner({ systemId }: { systemId: string }) {
       if (valid.length === 0) return prev;
       const desiredType: NodeType = childType && valid.includes(childType) ? childType : valid[0];
       const sameTypeCount = parent.children.filter((c) => c.type === desiredType).length;
-      const child = isFulfilled ? { ...makeChild(parent.type, sameTypeCount, desiredType, parent.label), is_new: true } : makeChild(parent.type, sameTypeCount, desiredType, parent.label);
+      const child = makeChild(parent.type, sameTypeCount, desiredType, parent.label);
+
+      if (isFulfilled) newNodeIdsRef.current.add(child.id);
       const root = addChild(prev.root, parentId, child);
       let next: TreeData = { ...prev, root };
       if (child.type === "CYL") next = assignNextDiffers(next);
@@ -896,7 +899,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           }
         });
       }
-      if (n.type === "CYL" && n.cylinder_type && (!isFulfilled || n.is_new)) {
+      if (n.type === "CYL" && n.cylinder_type && (!isFulfilled || newNodeIdsRef.current.has(n.id))) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
@@ -938,7 +941,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           total += differKeyPrice * extra;
         }
       }
-      if (n.type === "CE" && n.cylinder_type && (!isFulfilled || n.is_new)) {
+      if (n.type === "CE" && n.cylinder_type && (!isFulfilled || newNodeIdsRef.current.has(n.id))) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
@@ -977,14 +980,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       replaceBySystem(systemId, lines);
       // Only clear is_new flags if something was actually exported
       if (lines.length > 0) {
-        setTree((prev) => {
-          const clearNew = (n: TNode): TNode => ({
-            ...n,
-            is_new: undefined,
-            children: n.children.map(clearNew),
-          });
-          return { ...prev, root: prev.root ? clearNew(prev.root) : null };
-        });
+        newNodeIdsRef.current.clear();
       }
     } else {
       replaceBySystem(systemId, lines);
