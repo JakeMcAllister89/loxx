@@ -933,6 +933,7 @@ export type Database = {
           id: string
           items: Json | null
           notes: string | null
+          project_name: string | null
           quote_number: string | null
           sent_at: string | null
           sent_to: string | null
@@ -957,6 +958,7 @@ export type Database = {
           id?: string
           items?: Json | null
           notes?: string | null
+          project_name?: string | null
           quote_number?: string | null
           sent_at?: string | null
           sent_to?: string | null
@@ -981,6 +983,7 @@ export type Database = {
           id?: string
           items?: Json | null
           notes?: string | null
+          project_name?: string | null
           quote_number?: string | null
           sent_at?: string | null
           sent_to?: string | null
