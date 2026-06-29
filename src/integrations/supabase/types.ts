@@ -402,6 +402,7 @@ export type Database = {
           po_number: string | null
           po_sent_at: string | null
           po_sent_to: string | null
+          project_name: string | null
           purchase_order_ref: string | null
           status: string
           stripe_payment_intent: string | null
@@ -429,6 +430,7 @@ export type Database = {
           po_number?: string | null
           po_sent_at?: string | null
           po_sent_to?: string | null
+          project_name?: string | null
           purchase_order_ref?: string | null
           status?: string
           stripe_payment_intent?: string | null
@@ -456,6 +458,7 @@ export type Database = {
           po_number?: string | null
           po_sent_at?: string | null
           po_sent_to?: string | null
+          project_name?: string | null
           purchase_order_ref?: string | null
           status?: string
           stripe_payment_intent?: string | null
