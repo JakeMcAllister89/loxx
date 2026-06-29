@@ -172,12 +172,15 @@ Deno.serve(async (req) => {
 
     // Assign PO number if missing
     let poNumber = order.po_number as string | null;
-    if (!poNumber && !downloadOnly) {
+    if (!poNumber) {
       const { data: poRes, error: poErr } = await supabase.rpc("assign_po_number");
       if (poErr) return json({ error: `Could not assign PO number: ${poErr.message}` }, 500);
       poNumber = poRes as string;
+      if (!downloadOnly) {
+        await supabase.from("orders").update({ po_number: poNumber }).eq("id", order.id);
+      }
     }
-    const displayPo = poNumber ?? "(preview)";
+    const displayPo = poNumber ?? "PREVIEW";
 
     // Build hierarchy map from tree snapshot and extra keys map from line items
     const hierarchyMap = buildDifferHierarchyMap(systemTreeRoot);
