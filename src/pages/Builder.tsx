@@ -1380,18 +1380,32 @@ function BuilderInner({ systemId }: { systemId: string }) {
                             };
                             const isSubCE = c.z_ref?.includes(".");
                             if (isSubCE) {
-                              // Sub-CE (Z1.1): collect CYL siblings from parent CE's children
+                              // Sub-CE (Z1.1): collect CYL siblings from parent CE and its sub-CE children
                               const parentNode = findParentNode(tree.root, c.id);
                               if (parentNode) {
-                                parentNode.children.forEach(ch => {
-                                  if (ch.type === "CYL" && ch.differ != null) siblingDiffers.push(`D${String(ch.differ).padStart(3, "0")}`);
-                                });
+                                const collectCylsFromParent = (node: TNode) => {
+                                  node.children.forEach(ch => {
+                                    if (ch.type === "CYL" && ch.differ != null) {
+                                      siblingDiffers.push(`D${String(ch.differ).padStart(3, "0")}`);
+                                    } else if (ch.type === "CE" && ch.id !== c.id) {
+                                      collectCylsFromParent(ch);
+                                    }
+                                  });
+                                };
+                                collectCylsFromParent(parentNode);
                               }
                             } else {
-                              // Primary CE (Z1): collect CYL differs from own children
-                              c.children.forEach(ch => {
-                                if (ch.type === "CYL" && ch.differ != null) siblingDiffers.push(`D${String(ch.differ).padStart(3, "0")}`);
-                              });
+                              // Primary CE (Z1/Z2): collect CYL differs from own children AND sub-CE children recursively
+                              const collectCyls = (node: TNode) => {
+                                node.children.forEach(ch => {
+                                  if (ch.type === "CYL" && ch.differ != null) {
+                                    siblingDiffers.push(`D${String(ch.differ).padStart(3, "0")}`);
+                                  } else if (ch.type === "CE") {
+                                    collectCyls(ch);
+                                  }
+                                });
+                              };
+                              collectCyls(c);
                             }
                             if (siblingDiffers.length > 0) {
                               ceNote = (
