@@ -175,6 +175,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [legacyCKDetected, setLegacyCKDetected] = useState(false);
   const [isFulfilled, setIsFulfilled] = useState(false);
+  const isFulfilledRef = useRef(false);
   // Replace-cylinder modal state: target node id + current step + draft note
   const [replaceState, setReplaceState] = useState<
     | { open: false }
@@ -368,7 +369,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
       setName(data.name);
       savedNameRef.current = data.name;
       setReference(data.reference);
-      setIsFulfilled(!!(data as any).is_fulfilled);
+      isFulfilledRef.current = !!(data as any).is_fulfilled;
+      setIsFulfilled(!!(data as any).is_fulfilled;
       setPartnerId((data as any).partner_id ?? null);
       setCommissionPct((data as any).commission_pct ?? "");
       const raw = (data.tree_data as unknown as TreeData) ?? emptyTree();
@@ -438,7 +440,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       const sameTypeCount = parent.children.filter((c) => c.type === desiredType).length;
       const child = makeChild(parent.type, sameTypeCount, desiredType, parent.label);
 
-      if (isFulfilled) newNodeIdsRef.current.add(child.id);
+      if (isFulfilledRef.current) newNodeIdsRef.current.add(child.id);
       const root = addChild(prev.root, parentId, child);
       let next: TreeData = { ...prev, root };
       if (child.type === "CYL") next = assignNextDiffers(next);
