@@ -585,6 +585,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
       // lost_key: clone as new sibling, decommission original
       const newNodeId = newId();
+      if (isFulfilledRef.current) newNodeIdsRef.current.add(newNodeId);
       const replacement: TNode = {
         id: newNodeId,
         type: "CYL",
