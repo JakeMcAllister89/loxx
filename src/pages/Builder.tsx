@@ -1416,7 +1416,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                               };
                               collectCylsFromSubCE(c);
                             }
-                            } else {
+                            else {
                               // Primary CE (Z1/Z2): collect CYL differs from own children AND sub-CE children recursively
                               const collectCyls = (node: TNode) => {
                                 node.children.forEach(ch => {
