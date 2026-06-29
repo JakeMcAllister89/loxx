@@ -36,6 +36,7 @@ export default function QuoteNew() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [delivery, setDelivery] = useState<DeliveryAddress>({ line1: "", line2: "", city: "", county: "", postcode: "" });
   const [poRef, setPoRef] = useState("");
+  const [projectName, setProjectName] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -71,6 +72,7 @@ export default function QuoteNew() {
           setCustomerEmail(q.customer_email ?? "");
           setDelivery({ line1: "", line2: "", city: "", county: "", postcode: "", ...(q.delivery_address ?? {}) });
           setPoRef(q.customer_po_ref ?? "");
+          setProjectName((q as any).project_name ?? "");
           setNotes(q.notes ?? "");
           if (q.system_id) {
             const { data: sys } = await supabase.from("key_systems").select("name,reference").eq("id", q.system_id).maybeSingle();
@@ -117,6 +119,7 @@ export default function QuoteNew() {
         company: company || null,
         delivery_address: delivery,
         customer_po_ref: poRef || null,
+        project_name: projectName || null,
         notes: notes || null,
         items,
         subtotal: t.subtotal,
@@ -250,6 +253,10 @@ export default function QuoteNew() {
                 <Input value={poRef} onChange={(e) => setPoRef(e.target.value)} placeholder="e.g. PO-2024-001" />
               </div>
               <div>
+                <Label className="text-xs">Project name (optional)</Label>
+                <Input value={projectName} onChange={(e) => setProjectName(e.target.value)} placeholder="e.g. Sovereign Court Phase 2" />
+              </div>
+              <div>
                 <Label className="text-xs">Notes (optional)</Label>
                 <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4}
                   placeholder="e.g. Please review and approve this quote for our master key system. Valid for 30 days. Contact me with any questions." />
@@ -292,6 +299,7 @@ export default function QuoteNew() {
                         company: company || null,
                         delivery_address: delivery,
                         customer_po_ref: poRef || null,
+                        project_name: projectName || null,
                         notes: notes || null,
                         items,
                         subtotal: t.subtotal,

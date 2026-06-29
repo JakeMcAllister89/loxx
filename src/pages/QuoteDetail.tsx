@@ -194,6 +194,7 @@ export default function QuoteDetail() {
                 </div>
               )}
               {q.customer_po_ref && <div className="text-xs text-muted-foreground mt-2">Customer ref: <span className="font-medium">{q.customer_po_ref}</span></div>}
+              {(q as any).project_name && <div className="text-xs text-muted-foreground mt-1">Project: <span className="font-medium">{(q as any).project_name}</span></div>}
             </div>
             <div>
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground">From</div>
@@ -242,7 +243,7 @@ export default function QuoteDetail() {
 
               // Build CE differs map
               const ceDiffersMap: Record<string, string[]> = {};
-              const buildCEDiffers = (node: any) => {
+              const buildCEDiffers = (node: any, parentDiffers?: string[]) => {
                 if (node.type === "CE" && node.z_ref) {
                   const collectDiffers = (n: any): string[] => {
                     const d: string[] = [];
@@ -250,13 +251,17 @@ export default function QuoteDetail() {
                     for (const ch of n.children ?? []) d.push(...collectDiffers(ch));
                     return d;
                   };
-                  const differs = Array.from(new Set(collectDiffers(node))).sort();
-                  ceDiffersMap[node.z_ref] = differs;
-                  for (const child of node.children ?? []) {
-                    if (child.type === "CE" && child.z_ref) ceDiffersMap[child.z_ref] = differs;
+                  const isSubCE = node.z_ref.includes(".");
+                  if (isSubCE && parentDiffers) {
+                    ceDiffersMap[node.z_ref] = parentDiffers;
+                  } else {
+                    const differs = Array.from(new Set(collectDiffers(node))).sort();
+                    ceDiffersMap[node.z_ref] = differs;
+                    for (const child of node.children ?? []) buildCEDiffers(child, differs);
+                    return;
                   }
                 }
-                for (const child of node.children ?? []) buildCEDiffers(child);
+                for (const child of node.children ?? []) buildCEDiffers(child, parentDiffers);
               };
               if (treeRoot) buildCEDiffers(treeRoot);
 
@@ -314,15 +319,15 @@ export default function QuoteDetail() {
                                 <td className="py-2 text-xs text-muted-foreground">{h.mk}</td>
                                 <td className="py-2 text-xs text-muted-foreground">{h.smk}</td>
                                 <td className="py-2 text-[11px] text-muted-foreground">{c.product_code ?? "—"}</td>
-                                <td className="py-2 text-xs text-foreground">{(c as any).cylinder_type ?? "—"}</td>
-                                <td className="py-2 text-xs text-foreground">{c.cylinder_profile ?? "—"}</td>
+                                <td className="py-2 text-xs text-foreground whitespace-nowrap">{(c as any).cylinder_type ?? "—"}</td>
+                                <td className="py-2 text-xs text-foreground whitespace-nowrap">{c.cylinder_profile ?? "—"}</td>
                                 <td className="py-2 text-xs text-foreground">{c.finish ?? "—"}</td>
                                 <td className="py-2 text-xs text-foreground">{c.size ?? "—"}</td>
                                 <td className="py-2 text-right">{isCE ? "—" : 2}</td>
                                 <td className="py-2 text-right">{isCE ? "—" : (extraKeysByDiffer.get(c.differ_ref ?? "") ?? 0) > 0 ? extraKeysByDiffer.get(c.differ_ref ?? "") : "—"}</td>
-                                <td className="py-2 text-right">{isCE ? "—" : c.quantity}</td>
-                                <td className="py-2 text-right">{isCE ? "—" : `£${c.unit_price.toFixed(2)}`}</td>
-                                <td className="py-2 text-right font-semibold">{isCE ? "—" : `£${(c.unit_price * c.quantity).toFixed(2)}`}</td>
+                                <td className="py-2 text-right">{c.quantity}</td>
+                                <td className="py-2 text-right">£{c.unit_price.toFixed(2)}</td>
+                                <td className="py-2 text-right font-semibold">£{(c.unit_price * c.quantity).toFixed(2)}</td>
                               </tr>
                               {isCE && ceDiffers.length > 0 && (
                                 <tr>

@@ -1,4 +1,4 @@
-// Sends a supplier purchase order email for a confirmed LOXX order. v6
+// Sends a supplier purchase order email for a confirmed LOXX order. v9
 // POST { order_id: string, download_only?: boolean }
 // Returns { success: true, po_number, html? }
 
@@ -324,14 +324,19 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 .totals .grand{border-top:2px solid #0f172a;font-weight:700;font-size:14px}
 @media print { @page { margin: 16mm; } .noprint { display: none } }
 </style></head><body>
-<div style="text-align:center;padding:20px 0 12px;border-bottom:2px solid #0f172a;margin-bottom:4px">
-  <div style="font-size:32px;font-weight:800;letter-spacing:3px">🔑${esc(S.company_name || "MY LOXX")}</div>
-  <div style="font-size:11px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px">Master Key Systems</div>
-</div>
-
-<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:16px">
-  <div style="font-size:28px;font-weight:700;letter-spacing:1px">PURCHASE ORDER</div>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid #0f172a;margin-bottom:4px">
+  <div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:28px">🔑</span>
+      <span style="font-size:26px;font-weight:800;letter-spacing:2px">${esc(S.company_name || "My LOXX")}</span>
+    </div>
+    <div style="font-size:11px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px;margin-left:38px">Master Key Systems</div>
+    ${S.company_address ? `<div style="font-size:11px;color:#64748b;margin-top:6px;margin-left:38px;white-space:pre-line">${esc(S.company_address)}</div>` : ""}
+    ${S.company_email ? `<div style="font-size:11px;color:#64748b;margin-left:38px">${esc(S.company_email)}</div>` : ""}
+    ${S.company_phone ? `<div style="font-size:11px;color:#64748b;margin-left:38px">${esc(S.company_phone)}</div>` : ""}
+  </div>
   <div style="text-align:right">
+    <div style="font-size:28px;font-weight:700;letter-spacing:1px;margin-bottom:8px">PURCHASE ORDER</div>
     <div style="display:grid;grid-template-columns:auto auto;gap:2px 16px;font-size:12px">
       <div style="color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:10px">Purchase Order Number</div>
       <div style="font-family:ui-monospace,monospace;font-weight:600;color:#b45309">${esc(displayPo)}</div>
@@ -347,9 +352,6 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
   <div>
     <div class="label">From</div>
     <div style="font-weight:600">${esc(S.company_name || "My LOXX")}</div>
-    ${S.company_address ? `<div class="muted">${esc(S.company_address)}</div>` : ""}
-    ${S.company_email ? `<div class="muted">${esc(S.company_email)}</div>` : ""}
-    ${S.company_phone ? `<div class="muted">${esc(S.company_phone)}</div>` : ""}
     
     <div style="margin-top:8px"><div class="label">Supplier</div>
     <div style="font-weight:600">${esc(S.supplier_name || "—")}</div>
