@@ -566,7 +566,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
       if (!original || !parent || original.type !== "CYL") return prev;
 
       if (reason === "faulty") {
-        // In-place — no structural change. Log only.
+        // In-place — no structural change, but a replacement cylinder still needs to be ordered.
+        if (isFulfilledRef.current) newNodeIdsRef.current.add(targetId);
         dirtyRef.current = true;
         logAction({
           system_id: systemId,
