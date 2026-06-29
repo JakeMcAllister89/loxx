@@ -972,8 +972,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
     walk(tree.root, []);
 
     if (isFulfilled) {
-      // Fulfilled system — only add new nodes to cart, don't replace existing items
-      lines.forEach((l) => addToCart(l));
+      // Fulfilled system — only send new nodes to cart, replacing any stale items for this system
+      replaceBySystem(systemId, lines);
       // Clear is_new flag on all nodes now exported
       setTree((prev) => {
         const clearNew = (n: TNode): TNode => ({
@@ -1080,7 +1080,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         {hasAnyDecomm && (
           <Button
             variant={showAllDecomm ? "default" : "outline"}
-            onClick={() => setShowAllDecomm((v) => !v)}
+            onClick={() => { setShowAllDecomm((v) => { if (v) setRevealedDecomm(new Set()); return !v; }); }}
             title="Toggle visibility of decommissioned (replaced) cylinders across the whole tree"
           >
             <History className="h-4 w-4" /> {showAllDecomm ? "Hide replaced" : "Show replaced cylinders"}
