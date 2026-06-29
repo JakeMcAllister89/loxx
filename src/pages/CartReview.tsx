@@ -350,6 +350,7 @@ const TYPE_PILL: Record<string, string> = {
   SMK: "bg-emerald-100 text-emerald-800 border-emerald-200",
   CK:  "bg-sky-100 text-sky-800 border-sky-200",
   CYL: "bg-amber-100 text-amber-900 border-amber-200",
+  CE:  "bg-sky-100 text-sky-800 border-sky-200",
 };
 
 /** Visually flatten legacy CK nodes when summarising for the customer. */
