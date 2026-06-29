@@ -156,6 +156,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [saveStatus, setSaveStatus] = useState<"idle" | "pending" | "saving" | "saved" | "error">("idle");
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const [exportedAt, setExportedAt] = useState<number | null>(null);
+  const [printProjectName, setPrintProjectName] = React.useState<string>(() => {
+    const v = localStorage.getItem("loxx_print_project_name") ?? "";
+    if (v) localStorage.removeItem("loxx_print_project_name");
+    return v;
+  });
   const [name, setName] = useState("");
   const [reference, setReference] = useState<string | null>(null);
   const [partnerId, setPartnerId] = useState<string | null>(null);
