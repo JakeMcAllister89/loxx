@@ -1,4 +1,4 @@
-// Sends a supplier purchase order email for a confirmed LOXX order. v4
+// Sends a supplier purchase order email for a confirmed LOXX order. v6
 // POST { order_id: string, download_only?: boolean }
 // Returns { success: true, po_number, html? }
 
