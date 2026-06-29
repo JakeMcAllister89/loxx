@@ -974,15 +974,17 @@ function BuilderInner({ systemId }: { systemId: string }) {
     if (isFulfilled) {
       // Fulfilled system — only send new nodes to cart, replacing any stale items for this system
       replaceBySystem(systemId, lines);
-      // Clear is_new flag on all nodes now exported
-      setTree((prev) => {
-        const clearNew = (n: TNode): TNode => ({
-          ...n,
-          is_new: undefined,
-          children: n.children.map(clearNew),
+      // Only clear is_new flags if something was actually exported
+      if (lines.length > 0) {
+        setTree((prev) => {
+          const clearNew = (n: TNode): TNode => ({
+            ...n,
+            is_new: undefined,
+            children: n.children.map(clearNew),
+          });
+          return { ...prev, root: prev.root ? clearNew(prev.root) : null };
         });
-        return { ...prev, root: prev.root ? clearNew(prev.root) : null };
-      });
+      }
     } else {
       replaceBySystem(systemId, lines);
     }
