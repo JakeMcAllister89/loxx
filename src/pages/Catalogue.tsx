@@ -177,8 +177,8 @@ export default function Catalogue() {
       <Sheet open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <SheetContent className="w-full sm:max-w-md overflow-y-auto">
           {detail && (detail.type === "Key"
-            ? <KeysDetailDrawer fam={detail} systems={systems} onUseInBuilder={(sysId) => { setDetail(null); navigate(sysId ? `/builder/${sysId}` : "/builder/new"); }} />
-            : <DetailDrawer fam={detail} systems={systems} onUseInBuilder={(sysId) => { setDetail(null); navigate(sysId ? `/builder/${sysId}` : "/builder/new"); }} />
+            ? <KeysDetailDrawer fam={detail} />
+            : <DetailDrawer fam={detail} />
           )}
         </SheetContent>
       </Sheet>
