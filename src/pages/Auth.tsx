@@ -47,6 +47,7 @@ export default function Auth() {
               name: `${firstName} ${lastName}`.trim(),
               company,
               role: "facility_manager",
+              referred_by_partner_id: refPartnerId,
             },
           },
         });
