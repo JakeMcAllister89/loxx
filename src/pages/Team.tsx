@@ -46,6 +46,12 @@ const roleLabel: Record<string, string> = {
   view_only: "View Only",
 };
 
+const ROLE_DESCRIPTIONS: Record<string, string> = {
+  admin: "Full access to all systems, orders, and billing. Can manage team members and invite others.",
+  standard: "Can create and edit master key systems, place orders, and view order history. Cannot manage team members or billing.",
+  view_only: "Can view selected systems only, with no ability to edit, order, or manage anything. You'll be asked to choose which systems they can see.",
+};
+
 function RoleBadge({ role }: { role: string }) {
   const styles: Record<string, string> = {
     master_admin: "bg-[#17171a] text-white",
