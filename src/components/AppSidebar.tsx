@@ -147,6 +147,7 @@ export function AppSidebar() {
             {[
               { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
               { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
+              { to: "/admin/quotes", label: "Quotes", icon: FileText },
               { to: "/admin/users", label: "Users", icon: UserCheck },
               { to: "/admin/partners", label: "Partners", icon: Users },
               { to: "/admin/products", label: "Product catalogue", icon: Package },

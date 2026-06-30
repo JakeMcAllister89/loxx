@@ -25,6 +25,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminProducts from "./pages/AdminProducts";
 import AdminOrders from "./pages/AdminOrders";
 import AdminSettings from "./pages/AdminSettings";
+import AdminQuotes from "./pages/AdminQuotes";
 import Quotes from "./pages/Quotes";
 import QuoteNew from "./pages/QuoteNew";
 import QuoteDetail from "./pages/QuoteDetail";
@@ -81,6 +82,7 @@ const App = () => (
               <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+              <Route path="/admin/quotes" element={<AdminRoute><AdminQuotes /></AdminRoute>} />
               <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="/admin/partners" element={<AdminRoute><AdminPartners /></AdminRoute>} />
               <Route path="/admin/partners/report" element={<AdminRoute><AdminPartnersReport /></AdminRoute>} />
