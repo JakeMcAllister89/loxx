@@ -69,17 +69,14 @@ function buildFamilies(products: Product[]): Family[] {
 
 export default function Catalogue() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [systems, setSystems] = useState<KeySystem[]>([]);
   const [q, setQ] = useState("");
   const [type, setType] = useState<string>("all");
   const [finish, setFinish] = useState<string>("all");
   const [size, setSize] = useState<string>("all");
   const [detail, setDetail] = useState<Family | null>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     supabase.from("products").select("*").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
-    supabase.from("key_systems").select("id,name,reference").order("created_at", { ascending: false }).then(({ data }) => setSystems((data ?? []) as KeySystem[]));
   }, []);
 
   const families = useMemo(() => buildFamilies(products), [products]);
