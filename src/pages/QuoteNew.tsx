@@ -139,6 +139,7 @@ export default function QuoteNew() {
         if (error) throw error;
         id = data.id;
       }
+      clearQuoteDraft();
       toast.success(editingId ? "Quote updated" : "Quote created");
       navigate(`/quotes/${id}`);
     } catch (e: any) {
