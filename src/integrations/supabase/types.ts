@@ -631,16 +631,19 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_approved: boolean | null
           name: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_approved?: boolean | null
           name: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_approved?: boolean | null
           name?: string
         }
         Relationships: []
@@ -885,6 +888,7 @@ export type Database = {
           name: string | null
           org_id: string | null
           phone: string | null
+          referred_by_partner_id: string | null
           role: string
           updated_at: string
         }
@@ -901,6 +905,7 @@ export type Database = {
           name?: string | null
           org_id?: string | null
           phone?: string | null
+          referred_by_partner_id?: string | null
           role?: string
           updated_at?: string
         }
@@ -917,6 +922,7 @@ export type Database = {
           name?: string | null
           org_id?: string | null
           phone?: string | null
+          referred_by_partner_id?: string | null
           role?: string
           updated_at?: string
         }
@@ -926,6 +932,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_referred_by_partner_id_fkey"
+            columns: ["referred_by_partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
             referencedColumns: ["id"]
           },
         ]

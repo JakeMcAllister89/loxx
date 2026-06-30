@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth";
 export default function Auth() {
   const [params, setParams] = useSearchParams();
   const [mode, setMode] = useState<"login" | "signup">(params.get("mode") === "signup" ? "signup" : "login");
+  const refPartnerId = params.get("ref") || null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -46,6 +47,7 @@ export default function Auth() {
               name: `${firstName} ${lastName}`.trim(),
               company,
               role: "facility_manager",
+              referred_by_partner_id: refPartnerId,
             },
           },
         });

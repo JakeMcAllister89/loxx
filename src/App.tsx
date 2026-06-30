@@ -19,6 +19,7 @@ import Cart from "./pages/Cart";
 import CartReview from "./pages/CartReview";
 import Orders from "./pages/Orders";
 import Account from "./pages/Account";
+import PendingApproval from "./pages/PendingApproval";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import ImportPage from "./pages/Import";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -26,6 +27,7 @@ import AdminProducts from "./pages/AdminProducts";
 import AdminOrders from "./pages/AdminOrders";
 import AdminSettings from "./pages/AdminSettings";
 import AdminQuotes from "./pages/AdminQuotes";
+import AdminApprovals from "./pages/AdminApprovals";
 import Quotes from "./pages/Quotes";
 import QuoteNew from "./pages/QuoteNew";
 import QuoteDetail from "./pages/QuoteDetail";
@@ -79,10 +81,12 @@ const App = () => (
               <Route path="/orders" element={<RoleRoute allow={["master_admin","admin","standard"]}><Orders /></RoleRoute>} />
               <Route path="/orders/bacs-confirmed" element={<ProtectedRoute><BacsConfirmed /></ProtectedRoute>} />
               <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+              <Route path="/pending-approval" element={<ProtectedRoute><PendingApproval /></ProtectedRoute>} />
               <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
               <Route path="/admin/quotes" element={<AdminRoute><AdminQuotes /></AdminRoute>} />
+              <Route path="/admin/approvals" element={<AdminRoute><AdminApprovals /></AdminRoute>} />
               <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="/admin/partners" element={<AdminRoute><AdminPartners /></AdminRoute>} />
               <Route path="/admin/partners/report" element={<AdminRoute><AdminPartnersReport /></AdminRoute>} />
