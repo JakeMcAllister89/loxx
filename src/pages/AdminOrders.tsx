@@ -208,7 +208,16 @@ export default function AdminOrders() {
     if (error) return toast.error(error.message);
     const order = orders.find(o => o.id === id);
     if (order?.system_id && ["shipped", "delivered", "processing"].includes(s)) {
-      await supabase.from("key_systems").update({ is_fulfilled: true }).eq("id", order.system_id);
+      const { data: sys } = await supabase.from("key_systems").select("tree_data").eq("id", order.system_id).single();
+      let updatedTree = (sys as any)?.tree_data ?? null;
+      if (updatedTree?.root) {
+        const clearIsNew = (n: any): any => ({ ...n, is_new: undefined, children: (n.children ?? []).map(clearIsNew) });
+        updatedTree = { ...updatedTree, root: clearIsNew(updatedTree.root) };
+      }
+      await supabase.from("key_systems").update({
+        is_fulfilled: true,
+        ...(updatedTree ? { tree_data: updatedTree } : {}),
+      }).eq("id", order.system_id);
     }
     toast.success(`Marked as ${s}`);
     reload();

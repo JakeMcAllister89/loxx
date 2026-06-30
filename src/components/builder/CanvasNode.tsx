@@ -249,6 +249,15 @@ function CanvasNodeImpl(props: NodeProps) {
                 Replaced
               </span>
             )}
+            {!isDecommissioned && node.is_new && (
+              <span
+                className="font-sans uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-600 text-white"
+                style={{ fontSize: 8, letterSpacing: "0.08em" }}
+                title="Not yet ordered"
+              >
+                New
+              </span>
+            )}
             {!isDecommissioned && (node.extra_keys ?? 0) > 0 && (
               <span
                 className="inline-flex items-center gap-0.5 font-sans font-semibold px-1.5 py-0.5 rounded bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))]"
