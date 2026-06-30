@@ -56,6 +56,12 @@ export default function AdminQuotes() {
     })();
   }, []);
 
+  const isStuck = (r: QuoteRow) => {
+    if (r.status !== "sent" && r.status !== "draft") return false;
+    const days = (Date.now() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    return days >= 14;
+  };
+
   const filtered = useMemo(() => {
     let out = filter === "all" ? rows : filter === "stuck" ? rows.filter(isStuck) : rows.filter((r) => r.status === filter);
     const s = search.trim().toLowerCase();
@@ -71,6 +77,11 @@ export default function AdminQuotes() {
     return out;
   }, [rows, filter, search, systems]);
 
+  const quoteCost = (r: QuoteRow) =>
+    (r.items ?? []).reduce((s, it) => s + Number(it.quantity ?? 0) * (costMap[it.product_code ?? ""] ?? 0), 0);
+
+  const quoteProfit = (r: QuoteRow) => Number(r.total ?? 0) - quoteCost(r);
+
   const outstanding = useMemo(
     () => rows.filter((r) => r.status === "sent" || r.status === "draft"),
     [rows]
@@ -79,6 +90,16 @@ export default function AdminQuotes() {
     () => outstanding.reduce((s, r) => s + Number(r.total ?? 0), 0),
     [outstanding]
   );
+  const outstandingProfit = useMemo(
+    () => outstanding.reduce((s, r) => s + quoteProfit(r), 0),
+    [outstanding, costMap]
+  );
+  const converted = useMemo(() => rows.filter((r) => r.status === "converted"), [rows]);
+  const convertedValue = useMemo(
+    () => converted.reduce((s, r) => s + Number(r.total ?? 0), 0),
+    [converted]
+  );
+  const stuck = useMemo(() => rows.filter(isStuck), [rows]);
 
   return (
     <DashboardLayout>
