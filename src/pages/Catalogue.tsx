@@ -375,8 +375,6 @@ function DetailDrawer({ fam }: {
         <p className="text-[11px] text-muted-foreground leading-relaxed">
           Cylinders are ordered through your system builder. Assign this product to a door in your system and it will be included in your order automatically.
         </p>
-
-        <UseInBuilderButton systems={systems} onPick={onUseInBuilder} fullWidth />
       </div>
     </>
   );
