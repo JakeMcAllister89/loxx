@@ -32,8 +32,12 @@ export default function AdminQuotes() {
 
   useEffect(() => {
     (async () => {
+      const { data: prods } = await supabase.from("products").select("code,cost_price").eq("is_active", true);
+      const cMap: Record<string, number> = {};
+      (prods ?? []).forEach((p: any) => { if (p.code) cMap[p.code] = Number(p.cost_price ?? 0); });
+      setCostMap(cMap);
       const { data } = await (supabase.from("quotes" as any) as any)
-        .select("id,quote_number,status,valid_until,total,created_at,customer_name,company,system_id")
+        .select("id,quote_number,status,valid_until,total,created_at,customer_name,company,system_id,items")
         .order("created_at", { ascending: false });
       const list = (data ?? []) as QuoteRow[];
       const today = new Date().toISOString().slice(0, 10);
