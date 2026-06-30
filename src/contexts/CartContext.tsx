@@ -106,6 +106,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
   }, []);
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase.from("profiles").select("default_address").eq("id", user.id).single().then(({ data }) => {
+        const default_address = (data as any)?.default_address as DeliveryAddress | undefined;
+        if (default_address && !meta.delivery.line1) {
+          setMeta({ delivery: default_address });
+        }
+      });
+    });
+  }, []);
+
   useEffect(() => { localStorage.setItem(KEY, JSON.stringify(items)); }, [items]);
   useEffect(() => { localStorage.setItem(META_KEY, JSON.stringify(meta)); }, [meta]);
 
