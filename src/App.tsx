@@ -19,6 +19,7 @@ import Cart from "./pages/Cart";
 import CartReview from "./pages/CartReview";
 import Orders from "./pages/Orders";
 import Account from "./pages/Account";
+import PendingApproval from "./pages/PendingApproval";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import ImportPage from "./pages/Import";
 import AdminDashboard from "./pages/AdminDashboard";
