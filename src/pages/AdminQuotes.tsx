@@ -28,6 +28,7 @@ export default function AdminQuotes() {
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [costMap, setCostMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
     (async () => {
