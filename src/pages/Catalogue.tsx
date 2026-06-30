@@ -505,7 +505,6 @@ function KeysDetailDrawer({ fam }: {
         <p className="text-[11px] text-muted-foreground leading-relaxed">
           Keys are cut to your specific master key system. 2 standard keys are included with every cylinder ordered.
         </p>
-        <UseInBuilderButton systems={systems} onPick={onUseInBuilder} fullWidth />
       </div>
     </>
   );
