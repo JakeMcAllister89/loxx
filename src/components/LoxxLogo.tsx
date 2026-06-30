@@ -8,7 +8,7 @@ export function LoxxLogo({ className = "", size = "md" }: { className?: string; 
       <span className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground" style={{ padding: size === "lg" ? 6 : 4 }}>
         <KeyRound className={icon} strokeWidth={2.5} />
       </span>
-      <span>LOXX</span>
+      <span>MyLOXX</span>
     </div>
   );
 }
