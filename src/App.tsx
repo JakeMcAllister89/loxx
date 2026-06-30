@@ -81,6 +81,7 @@ const App = () => (
               <Route path="/orders" element={<RoleRoute allow={["master_admin","admin","standard"]}><Orders /></RoleRoute>} />
               <Route path="/orders/bacs-confirmed" element={<ProtectedRoute><BacsConfirmed /></ProtectedRoute>} />
               <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+              <Route path="/pending-approval" element={<ProtectedRoute><PendingApproval /></ProtectedRoute>} />
               <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
