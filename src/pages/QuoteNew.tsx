@@ -89,7 +89,8 @@ export default function QuoteNew() {
         setSystemName(draft.system_name);
         setSystemRef(draft.system_reference);
         setTreeSnapshot(draft.tree_snapshot);
-        clearQuoteDraft();
+        // Don't clear here — keep the draft in localStorage so a page refresh doesn't lose it.
+        // It's cleared once the quote is actually saved (see the save handler).
       }
     })();
   }, [user, editingId]);
