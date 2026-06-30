@@ -176,10 +176,10 @@ function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: 
       <div className="rounded-[10px] border bg-card p-6 shadow-card flex flex-col">
         <div className="flex items-center gap-2">
           <FileSpreadsheet className="h-5 w-5 text-primary" />
-          <h2 className="font-semibold">Upload DOM-XL file</h2>
+          <h2 className="font-semibold">Upload your system file</h2>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          Upload the .xlsm file you received from your DOM locksmith or dealer.
+          Upload the .xlsm file you received from your locksmith or system designer.
         </p>
 
         <div
@@ -217,13 +217,13 @@ function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: 
           className="mt-3 text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground"
         >
           {showHelp ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-          What is a DOM-XL file?
+          What file do I need?
         </button>
         {showHelp && (
           <div className="text-xs text-muted-foreground mt-2 leading-relaxed bg-muted/40 rounded-md p-3">
-            DOM-XL is the planning file DOM send you when your master key system is designed.
-            It's the Excel file with a name like <code className="font-mono text-[11px]">YOURSITE.xlsm</code>.
-            If you don't have it, contact your DOM dealer and ask for your DOM-XL file.
+            This is the planning file your locksmith or system designer sends you when your master key system is designed.
+            It's an Excel file with a name like <code className="font-mono text-[11px]">YOURSITE.xlsm</code>.
+            If you don't have it, contact your locksmith or system designer and ask for the system planning file.
           </div>
         )}
 
