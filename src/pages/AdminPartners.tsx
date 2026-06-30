@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Pencil, Key, FileText, BarChart3, Search } from "lucide-react";
+import { Plus, Pencil, Key, FileText, BarChart3, Search, Link as LinkIcon } from "lucide-react";
 
 interface Partner {
   id: string;
