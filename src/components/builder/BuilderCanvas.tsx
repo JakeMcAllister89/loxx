@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   ReactFlow, ReactFlowProvider, Background, Controls, MiniMap,
-  useReactFlow, Node, Edge, useNodesState, useEdgesState,
+  useReactFlow, Node, Edge, EdgeProps, useNodesState, useEdgesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -42,6 +42,19 @@ interface Props {
 }
 
 const nodeTypes = { keynode: CanvasNode };
+
+function TreeEdge({ sourceX, sourceY, targetX, targetY, style }: EdgeProps) {
+  const isAligned = Math.abs(sourceX - targetX) < 1;
+  const path = isAligned
+    ? `M${sourceX},${sourceY} L${targetX},${targetY}`
+    : (() => {
+        const midY = sourceY + (targetY - sourceY) / 2;
+        return `M${sourceX},${sourceY} L${sourceX},${midY} L${targetX},${midY} L${targetX},${targetY}`;
+      })();
+  return <path d={path} fill="none" style={style} />;
+}
+
+const edgeTypes = { tree: TreeEdge };
 
 const HGAP = 20;
 const VGAP = 60;
@@ -192,7 +205,7 @@ function CanvasInner({
           id: `${n.id}->${c.id}`,
           source: n.id,
           target: c.id,
-          type: "smoothstep",
+          type: "tree",
           style: { stroke: "hsl(var(--border))", strokeWidth: 1.5 },
         });
         collectEdges(c);
@@ -216,7 +229,7 @@ function CanvasInner({
               id: `cross-${subCE.id}->${cyl.id}`,
               source: subCE.id,
               target: cyl.id,
-              type: "smoothstep",
+              type: "tree",
               style: {
                 stroke: "hsl(var(--node-ce))",
                 strokeWidth: 1.5,
@@ -275,6 +288,7 @@ function CanvasInner({
       onNodeClick={handleNodeClick}
       onPaneClick={onPaneClick}
       nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       nodesDraggable={false}
       nodesConnectable={false}
       panOnScroll

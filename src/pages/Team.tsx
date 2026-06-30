@@ -46,6 +46,12 @@ const roleLabel: Record<string, string> = {
   view_only: "View Only",
 };
 
+const ROLE_DESCRIPTIONS: Record<string, string> = {
+  admin: "Full access to all systems, orders, and billing. Can manage team members and invite others.",
+  standard: "Can create and edit master key systems, place orders, and view order history. Cannot manage team members or billing.",
+  view_only: "Can view selected systems only, with no ability to edit, order, or manage anything. You'll be asked to choose which systems they can see.",
+};
+
 function RoleBadge({ role }: { role: string }) {
   const styles: Record<string, string> = {
     master_admin: "bg-[#17171a] text-white",
@@ -328,11 +334,20 @@ export default function Team() {
                 <Select value={inv.org_role} onValueChange={(v: any) => setInv({ ...inv, org_role: v, system_ids: [] })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="standard">Standard User</SelectItem>
-                    <SelectItem value="view_only">View Only</SelectItem>
+                    <SelectItem value="admin">
+                      <div><div className="font-medium">Admin</div><div className="text-xs text-muted-foreground">Full access, can manage team</div></div>
+                    </SelectItem>
+                    <SelectItem value="standard">
+                      <div><div className="font-medium">Standard User</div><div className="text-xs text-muted-foreground">Build systems and place orders</div></div>
+                    </SelectItem>
+                    <SelectItem value="view_only">
+                      <div><div className="font-medium">View Only</div><div className="text-xs text-muted-foreground">Read-only access to selected systems</div></div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground mt-2 bg-muted rounded-md px-3 py-2">
+                  {ROLE_DESCRIPTIONS[inv.org_role]}
+                </p>
               </div>
               {(inv.org_role === "view_only" || inv.org_role === "standard") && (
                 <div>
