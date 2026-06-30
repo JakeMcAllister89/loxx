@@ -27,6 +27,12 @@ export default function Account() {
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
+  const [addrCompany, setAddrCompany] = useState("");
+  const [addrLine1, setAddrLine1] = useState("");
+  const [addrLine2, setAddrLine2] = useState("");
+  const [addrCity, setAddrCity] = useState("");
+  const [addrCounty, setAddrCounty] = useState("");
+  const [addrPostcode, setAddrPostcode] = useState("");
 
   // Audit log state
   const [rows, setRows] = useState<AuditRow[]>([]);

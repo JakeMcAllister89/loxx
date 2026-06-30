@@ -875,6 +875,7 @@ export type Database = {
         Row: {
           company: string | null
           created_at: string
+          default_address: Json | null
           email: string | null
           first_name: string | null
           id: string
@@ -889,6 +890,7 @@ export type Database = {
         Insert: {
           company?: string | null
           created_at?: string
+          default_address?: Json | null
           email?: string | null
           first_name?: string | null
           id: string
@@ -903,6 +905,7 @@ export type Database = {
         Update: {
           company?: string | null
           created_at?: string
+          default_address?: Json | null
           email?: string | null
           first_name?: string | null
           id?: string
