@@ -150,6 +150,12 @@ export default function AdminQuotes() {
                 {s === "all" ? "All" : STATUS_LABEL[s] ?? s}
               </button>
             ))}
+            {stuck.length > 0 && (
+              <button onClick={() => setFilter("stuck")}
+                className={`px-3 py-1 text-xs rounded-full border ${filter === "stuck" ? "bg-destructive text-destructive-foreground border-destructive" : "bg-destructive/10 text-destructive border-destructive/30 hover:border-destructive/60"}`}>
+                Stuck ({stuck.length})
+              </button>
+            )}
           </div>
           <Input
             placeholder="Search quote #, customer, system…"
