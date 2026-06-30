@@ -10,11 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Lock, Info, X, ArrowRight, KeyRound } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Lock, Info, X, KeyRound } from "lucide-react";
 
 interface Product {
   id: string; name: string; code: string; cylinder_type: string;
@@ -73,17 +69,14 @@ function buildFamilies(products: Product[]): Family[] {
 
 export default function Catalogue() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [systems, setSystems] = useState<KeySystem[]>([]);
   const [q, setQ] = useState("");
   const [type, setType] = useState<string>("all");
   const [finish, setFinish] = useState<string>("all");
   const [size, setSize] = useState<string>("all");
   const [detail, setDetail] = useState<Family | null>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     supabase.from("products").select("*").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
-    supabase.from("key_systems").select("id,name,reference").order("created_at", { ascending: false }).then(({ data }) => setSystems((data ?? []) as KeySystem[]));
   }, []);
 
   const families = useMemo(() => buildFamilies(products), [products]);
@@ -167,9 +160,9 @@ export default function Catalogue() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mt-3">
           {filtered.map((fam) => (
             fam.type === "Key" ? (
-              <KeysFamilyCard key={fam.type} fam={fam} systems={systems} onDetails={() => setDetail(fam)} onUseInBuilder={(sysId) => navigate(sysId ? `/builder/${sysId}` : "/builder/new")} />
+              <KeysFamilyCard key={fam.type} fam={fam} onDetails={() => setDetail(fam)} />
             ) : (
-              <FamilyCard key={fam.type} fam={fam} systems={systems} onDetails={() => setDetail(fam)} onUseInBuilder={(sysId) => navigate(sysId ? `/builder/${sysId}` : "/builder/new")} />
+              <FamilyCard key={fam.type} fam={fam} onDetails={() => setDetail(fam)} />
             )
           ))}
         </div>
@@ -184,8 +177,8 @@ export default function Catalogue() {
       <Sheet open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <SheetContent className="w-full sm:max-w-md overflow-y-auto">
           {detail && (detail.type === "Key"
-            ? <KeysDetailDrawer fam={detail} systems={systems} onUseInBuilder={(sysId) => { setDetail(null); navigate(sysId ? `/builder/${sysId}` : "/builder/new"); }} />
-            : <DetailDrawer fam={detail} systems={systems} onUseInBuilder={(sysId) => { setDetail(null); navigate(sysId ? `/builder/${sysId}` : "/builder/new"); }} />
+            ? <KeysDetailDrawer fam={detail} />
+            : <DetailDrawer fam={detail} />
           )}
         </SheetContent>
       </Sheet>
@@ -194,8 +187,8 @@ export default function Catalogue() {
   );
 }
 
-function FamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
-  fam: Family; systems: KeySystem[]; onDetails: () => void; onUseInBuilder: (sysId: string | null) => void;
+function FamilyCard({ fam, onDetails }: {
+  fam: Family; onDetails: () => void;
 }) {
   const [selFinish, setSelFinish] = useState<string | null>(fam.finishes[0] ?? null);
   const [selSize, setSelSize] = useState<string | null>(fam.sizes[0] ?? null);
@@ -287,50 +280,17 @@ function FamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
         <div className="text-2xl font-semibold text-amber-600 mt-auto">{priceDisplay}</div>
 
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="flex-1" onClick={onDetails}><Info className="h-3.5 w-3.5" /> Details</Button>
-          <UseInBuilderButton systems={systems} onPick={onUseInBuilder} />
+          <Button size="sm" variant="outline" className="w-full" onClick={onDetails}><Info className="h-3.5 w-3.5" /> Details</Button>
         </div>
       </div>
     </div>
   );
 }
 
-function UseInBuilderButton({ systems, onPick, fullWidth = false }: {
-  systems: KeySystem[]; onPick: (sysId: string | null) => void; fullWidth?: boolean;
-}) {
-  if (systems.length === 0) {
-    return (
-      <Button size="sm" className={`bg-amber-500 hover:bg-amber-600 text-white ${fullWidth ? "w-full" : "flex-1"}`} onClick={() => onPick(null)}>
-        Use in builder <ArrowRight className="h-3.5 w-3.5" />
-      </Button>
-    );
-  }
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button size="sm" className={`bg-amber-500 hover:bg-amber-600 text-white ${fullWidth ? "w-full" : "flex-1"}`}>
-          Use in builder <ArrowRight className="h-3.5 w-3.5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="max-h-72 overflow-auto">
-        {systems.map(s => (
-          <DropdownMenuItem key={s.id} onClick={() => onPick(s.id)}>
-            <div>
-              <div className="text-sm">{s.name}</div>
-              {s.reference && <div className="text-[10px] text-muted-foreground">{s.reference}</div>}
-            </div>
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuItem onClick={() => onPick(null)} className="border-t mt-1 pt-2">
-          <span className="text-sm text-primary">+ New system…</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
-function DetailDrawer({ fam, systems, onUseInBuilder }: {
-  fam: Family; systems: KeySystem[]; onUseInBuilder: (sysId: string | null) => void;
+
+function DetailDrawer({ fam }: {
+  fam: Family;
 }) {
   const [selFinish, setSelFinish] = useState<string | null>(fam.finishes[0] ?? null);
   const [selSize, setSelSize] = useState<string | null>(fam.sizes[0] ?? null);
@@ -415,8 +375,6 @@ function DetailDrawer({ fam, systems, onUseInBuilder }: {
         <p className="text-[11px] text-muted-foreground leading-relaxed">
           Cylinders are ordered through your system builder. Assign this product to a door in your system and it will be included in your order automatically.
         </p>
-
-        <UseInBuilderButton systems={systems} onPick={onUseInBuilder} fullWidth />
       </div>
     </>
   );
@@ -424,8 +382,8 @@ function DetailDrawer({ fam, systems, onUseInBuilder }: {
 
 /* -------------------- KEYS family card -------------------- */
 
-function KeysFamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
-  fam: Family; systems: KeySystem[]; onDetails: () => void; onUseInBuilder: (sysId: string | null) => void;
+function KeysFamilyCard({ fam, onDetails }: {
+  fam: Family; onDetails: () => void;
 }) {
   const keyVariants = [...fam.variants].sort((a, b) => Number(a.price_gbp) - Number(b.price_gbp));
   const [selCode, setSelCode] = useState<string>(keyVariants[0]?.code ?? "");
@@ -440,7 +398,7 @@ function KeysFamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
       </button>
       <div className="p-5 flex-1 flex flex-col gap-3">
         <div>
-          <h3 className="font-semibold leading-tight text-lg">{fam.type}</h3>
+          <h3 className="font-semibold leading-tight text-lg">{selected.product_description ?? selected.name ?? fam.type}</h3>
           {fam.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{fam.description}</p>}
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -473,18 +431,17 @@ function KeysFamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
           £{Number(selected.price_gbp).toFixed(2)}
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="flex-1" onClick={onDetails}>
+          <Button size="sm" variant="outline" className="w-full" onClick={onDetails}>
             <Info className="h-3.5 w-3.5" /> Details
           </Button>
-          <UseInBuilderButton systems={systems} onPick={onUseInBuilder} />
         </div>
       </div>
     </div>
   );
 }
 
-function KeysDetailDrawer({ fam, systems, onUseInBuilder }: {
-  fam: Family; systems: KeySystem[]; onUseInBuilder: (sysId: string | null) => void;
+function KeysDetailDrawer({ fam }: {
+  fam: Family;
 }) {
   const keyVariants = [...fam.variants].sort((a, b) => Number(a.price_gbp) - Number(b.price_gbp));
   const [selCode, setSelCode] = useState<string>(keyVariants[0]?.code ?? "");
@@ -494,7 +451,7 @@ function KeysDetailDrawer({ fam, systems, onUseInBuilder }: {
     <>
       <SheetHeader>
         <div className="flex items-center gap-2">
-          <SheetTitle>{fam.type}</SheetTitle>
+          <SheetTitle>{selected.product_description ?? selected.name ?? fam.type}</SheetTitle>
         </div>
         <SheetDescription>{fam.variants.length} variant{fam.variants.length !== 1 ? "s" : ""} available</SheetDescription>
       </SheetHeader>
@@ -548,7 +505,6 @@ function KeysDetailDrawer({ fam, systems, onUseInBuilder }: {
         <p className="text-[11px] text-muted-foreground leading-relaxed">
           Keys are cut to your specific master key system. 2 standard keys are included with every cylinder ordered.
         </p>
-        <UseInBuilderButton systems={systems} onPick={onUseInBuilder} fullWidth />
       </div>
     </>
   );

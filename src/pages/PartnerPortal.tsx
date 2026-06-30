@@ -134,6 +134,31 @@ export default function PartnerPortal() {
           <Card label="Pending commission" value={gbp(data.summary.pendingCommission)} />
         </div>
 
+        <div className="rounded-[10px] border bg-white shadow-card p-4">
+          <h2 className="text-sm font-semibold">Your signup link</h2>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+            Share this with your clients — anyone who signs up through it is automatically credited to you, with instant access (no approval wait).
+          </p>
+          <div className="flex items-center gap-2">
+            <Input
+              readOnly
+              value={`${window.location.origin}/auth?mode=signup&ref=${data.partner.id}`}
+              className="font-mono text-xs bg-muted/40"
+              onClick={(e) => (e.target as HTMLInputElement).select()}
+            />
+            <Button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/auth?mode=signup&ref=${data.partner.id}`);
+                toast.success("Link copied");
+              }}
+              className="bg-[#d4820a] hover:bg-[#b86d08] text-white shrink-0"
+            >
+              Copy
+            </Button>
+          </div>
+        </div>
+
         <section>
           <h2 className="text-lg font-semibold mb-2">Quarterly breakdown</h2>
           <div className="rounded-[10px] border bg-white shadow-card overflow-hidden">
