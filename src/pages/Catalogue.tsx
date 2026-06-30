@@ -440,8 +440,8 @@ function KeysFamilyCard({ fam, onDetails }: {
   );
 }
 
-function KeysDetailDrawer({ fam, systems, onUseInBuilder }: {
-  fam: Family; systems: KeySystem[]; onUseInBuilder: (sysId: string | null) => void;
+function KeysDetailDrawer({ fam }: {
+  fam: Family;
 }) {
   const keyVariants = [...fam.variants].sort((a, b) => Number(a.price_gbp) - Number(b.price_gbp));
   const [selCode, setSelCode] = useState<string>(keyVariants[0]?.code ?? "");
