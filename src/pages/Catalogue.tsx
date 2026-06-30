@@ -10,11 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Lock, Info, X, ArrowRight, KeyRound } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Lock, Info, X, KeyRound } from "lucide-react";
 
 interface Product {
   id: string; name: string; code: string; cylinder_type: string;
