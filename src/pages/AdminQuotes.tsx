@@ -17,6 +17,7 @@ interface QuoteRow {
   customer_name: string | null;
   company: string | null;
   system_id: string | null;
+  items: { product_code?: string; quantity: number; unit_price: number }[] | null;
 }
 
 const gbp = (n: number | null) => `£${(n ?? 0).toFixed(2)}`;
@@ -27,11 +28,16 @@ export default function AdminQuotes() {
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [costMap, setCostMap] = useState<Record<string, number>>({});
 
   useEffect(() => {
     (async () => {
+      const { data: prods } = await supabase.from("products").select("code,cost_price").eq("is_active", true);
+      const cMap: Record<string, number> = {};
+      (prods ?? []).forEach((p: any) => { if (p.code) cMap[p.code] = Number(p.cost_price ?? 0); });
+      setCostMap(cMap);
       const { data } = await (supabase.from("quotes" as any) as any)
-        .select("id,quote_number,status,valid_until,total,created_at,customer_name,company,system_id")
+        .select("id,quote_number,status,valid_until,total,created_at,customer_name,company,system_id,items")
         .order("created_at", { ascending: false });
       const list = (data ?? []) as QuoteRow[];
       const today = new Date().toISOString().slice(0, 10);
@@ -50,8 +56,14 @@ export default function AdminQuotes() {
     })();
   }, []);
 
+  const isStuck = (r: QuoteRow) => {
+    if (r.status !== "sent" && r.status !== "draft") return false;
+    const days = (Date.now() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    return days >= 14;
+  };
+
   const filtered = useMemo(() => {
-    let out = filter === "all" ? rows : rows.filter((r) => r.status === filter);
+    let out = filter === "all" ? rows : filter === "stuck" ? rows.filter(isStuck) : rows.filter((r) => r.status === filter);
     const s = search.trim().toLowerCase();
     if (s) {
       out = out.filter((r) =>
@@ -65,6 +77,11 @@ export default function AdminQuotes() {
     return out;
   }, [rows, filter, search, systems]);
 
+  const quoteCost = (r: QuoteRow) =>
+    (r.items ?? []).reduce((s, it) => s + Number(it.quantity ?? 0) * (costMap[it.product_code ?? ""] ?? 0), 0);
+
+  const quoteProfit = (r: QuoteRow) => Number(r.total ?? 0) - quoteCost(r);
+
   const outstanding = useMemo(
     () => rows.filter((r) => r.status === "sent" || r.status === "draft"),
     [rows]
@@ -73,6 +90,16 @@ export default function AdminQuotes() {
     () => outstanding.reduce((s, r) => s + Number(r.total ?? 0), 0),
     [outstanding]
   );
+  const outstandingProfit = useMemo(
+    () => outstanding.reduce((s, r) => s + quoteProfit(r), 0),
+    [outstanding, costMap]
+  );
+  const converted = useMemo(() => rows.filter((r) => r.status === "converted"), [rows]);
+  const convertedValue = useMemo(
+    () => converted.reduce((s, r) => s + Number(r.total ?? 0), 0),
+    [converted]
+  );
+  const stuck = useMemo(() => rows.filter(isStuck), [rows]);
 
   return (
     <DashboardLayout>
@@ -84,14 +111,27 @@ export default function AdminQuotes() {
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
+        <div className="mt-5 grid grid-cols-2 md:grid-cols-5 gap-4 max-w-4xl">
           <div className="rounded-[10px] border bg-card p-4 shadow-card">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Outstanding quotes</div>
             <div className="text-2xl font-semibold mt-1">{outstanding.length}</div>
           </div>
           <div className="rounded-[10px] border bg-card p-4 shadow-card">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Outstanding value</div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Outstanding revenue</div>
             <div className="text-2xl font-semibold mt-1">{gbp(outstandingValue)}</div>
+          </div>
+          <div className="rounded-[10px] border bg-card p-4 shadow-card">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Outstanding profit</div>
+            <div className="text-2xl font-semibold mt-1 text-emerald-700">{gbp(outstandingProfit)}</div>
+          </div>
+          <div className="rounded-[10px] border bg-card p-4 shadow-card">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Converted to order</div>
+            <div className="text-2xl font-semibold mt-1">{gbp(convertedValue)}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{converted.length} quote{converted.length !== 1 ? "s" : ""}</div>
+          </div>
+          <div className="rounded-[10px] border bg-card p-4 shadow-card">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Stuck (14+ days)</div>
+            <div className={`text-2xl font-semibold mt-1 ${stuck.length > 0 ? "text-destructive" : ""}`}>{stuck.length}</div>
           </div>
         </div>
 
@@ -110,6 +150,12 @@ export default function AdminQuotes() {
                 {s === "all" ? "All" : STATUS_LABEL[s] ?? s}
               </button>
             ))}
+            {stuck.length > 0 && (
+              <button onClick={() => setFilter("stuck")}
+                className={`px-3 py-1 text-xs rounded-full border ${filter === "stuck" ? "bg-destructive text-destructive-foreground border-destructive" : "bg-destructive/10 text-destructive border-destructive/30 hover:border-destructive/60"}`}>
+                Stuck ({stuck.length})
+              </button>
+            )}
           </div>
           <Input
             placeholder="Search quote #, customer, system…"
@@ -158,10 +204,15 @@ export default function AdminQuotes() {
                         ) : "—"}
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString("en-GB")}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline" className={`text-[10px] ${STATUS_BADGE[r.status] ?? ""}`}>
-                          {STATUS_LABEL[r.status] ?? r.status}
-                        </Badge>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className={`text-[10px] ${STATUS_BADGE[r.status] ?? ""}`}>
+                            {STATUS_LABEL[r.status] ?? r.status}
+                          </Badge>
+                          {isStuck(r) && (
+                            <span className="text-[10px] font-medium uppercase tracking-wide text-destructive">Stuck</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right font-medium">{gbp(r.total)}</td>
                       <td className="px-4 py-3 text-right">
