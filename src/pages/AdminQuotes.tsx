@@ -57,7 +57,7 @@ export default function AdminQuotes() {
   }, []);
 
   const filtered = useMemo(() => {
-    let out = filter === "all" ? rows : rows.filter((r) => r.status === filter);
+    let out = filter === "all" ? rows : filter === "stuck" ? rows.filter(isStuck) : rows.filter((r) => r.status === filter);
     const s = search.trim().toLowerCase();
     if (s) {
       out = out.filter((r) =>
