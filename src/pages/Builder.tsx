@@ -978,9 +978,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
     walk(tree.root, []);
 
     if (isFulfilled) {
-      // Fulfilled system — only send new nodes to cart, replacing any stale items for this system
-      replaceBySystem(systemId, lines);
-      // Only clear is_new flags if something was actually exported
+      // Fulfilled system — add new lines individually, preserving previously added new items
+      lines.forEach((l) => addToCart(l));
       if (lines.length > 0) {
         newNodeIdsRef.current.clear();
       }
