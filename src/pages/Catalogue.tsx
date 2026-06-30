@@ -431,10 +431,9 @@ function KeysFamilyCard({ fam, onDetails }: {
           £{Number(selected.price_gbp).toFixed(2)}
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="flex-1" onClick={onDetails}>
+          <Button size="sm" variant="outline" className="w-full" onClick={onDetails}>
             <Info className="h-3.5 w-3.5" /> Details
           </Button>
-          <UseInBuilderButton systems={systems} onPick={onUseInBuilder} />
         </div>
       </div>
     </div>
