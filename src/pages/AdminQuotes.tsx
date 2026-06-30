@@ -204,10 +204,15 @@ export default function AdminQuotes() {
                         ) : "—"}
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString("en-GB")}</td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline" className={`text-[10px] ${STATUS_BADGE[r.status] ?? ""}`}>
-                          {STATUS_LABEL[r.status] ?? r.status}
-                        </Badge>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className={`text-[10px] ${STATUS_BADGE[r.status] ?? ""}`}>
+                            {STATUS_LABEL[r.status] ?? r.status}
+                          </Badge>
+                          {isStuck(r) && (
+                            <span className="text-[10px] font-medium uppercase tracking-wide text-destructive">Stuck</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right font-medium">{gbp(r.total)}</td>
                       <td className="px-4 py-3 text-right">
