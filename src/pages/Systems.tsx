@@ -165,7 +165,7 @@ export default function Systems() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => { setRenameOf(s); setRenameValue(s.name); }}>Rename</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toast.info("Archive coming soon")}>Archive</DropdownMenuItem>
+                      
                       {canDelete && !s.has_orders && <DropdownMenuItem className="text-destructive" onClick={() => setDeleteOf(s)}>Delete</DropdownMenuItem>}
                     </DropdownMenuContent>
                   </DropdownMenu>
