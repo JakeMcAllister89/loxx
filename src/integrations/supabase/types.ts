@@ -876,6 +876,7 @@ export type Database = {
           company: string | null
           created_at: string
           default_address: Json | null
+          default_invoice_address: Json | null
           email: string | null
           first_name: string | null
           id: string
@@ -891,6 +892,7 @@ export type Database = {
           company?: string | null
           created_at?: string
           default_address?: Json | null
+          default_invoice_address?: Json | null
           email?: string | null
           first_name?: string | null
           id: string
@@ -906,6 +908,7 @@ export type Database = {
           company?: string | null
           created_at?: string
           default_address?: Json | null
+          default_invoice_address?: Json | null
           email?: string | null
           first_name?: string | null
           id?: string
