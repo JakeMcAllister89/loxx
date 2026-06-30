@@ -229,7 +229,7 @@ function CanvasInner({
               id: `cross-${subCE.id}->${cyl.id}`,
               source: subCE.id,
               target: cyl.id,
-              type: "smoothstep",
+              type: "tree",
               style: {
                 stroke: "hsl(var(--node-ce))",
                 strokeWidth: 1.5,
