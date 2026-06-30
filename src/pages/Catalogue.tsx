@@ -160,9 +160,9 @@ export default function Catalogue() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mt-3">
           {filtered.map((fam) => (
             fam.type === "Key" ? (
-              <KeysFamilyCard key={fam.type} fam={fam} systems={systems} onDetails={() => setDetail(fam)} onUseInBuilder={(sysId) => navigate(sysId ? `/builder/${sysId}` : "/builder/new")} />
+              <KeysFamilyCard key={fam.type} fam={fam} onDetails={() => setDetail(fam)} />
             ) : (
-              <FamilyCard key={fam.type} fam={fam} systems={systems} onDetails={() => setDetail(fam)} onUseInBuilder={(sysId) => navigate(sysId ? `/builder/${sysId}` : "/builder/new")} />
+              <FamilyCard key={fam.type} fam={fam} onDetails={() => setDetail(fam)} />
             )
           ))}
         </div>
