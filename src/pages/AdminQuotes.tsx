@@ -17,6 +17,7 @@ interface QuoteRow {
   customer_name: string | null;
   company: string | null;
   system_id: string | null;
+  items: { product_code?: string; quantity: number; unit_price: number }[] | null;
 }
 
 const gbp = (n: number | null) => `£${(n ?? 0).toFixed(2)}`;
