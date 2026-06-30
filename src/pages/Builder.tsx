@@ -440,8 +440,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
       const sameTypeCount = parent.children.filter((c) => c.type === desiredType).length;
       const child = makeChild(parent.type, sameTypeCount, desiredType, parent.label);
 
-      if (isFulfilledRef.current) newNodeIdsRef.current.add(child.id);
-      const root = addChild(prev.root, parentId, child);
+      const newChild = isFulfilledRef.current ? { ...child, is_new: true } : child;
+      const root = addChild(prev.root, parentId, newChild);
       let next: TreeData = { ...prev, root };
       if (child.type === "CYL") next = assignNextDiffers(next);
       if (child.type === "CE") next = { ...next, root: assignNextZRefs(next.root) };
@@ -540,8 +540,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
         
         children: [],
       };
-      if (isFulfilledRef.current) newNodeIdsRef.current.add(newNode.id);
-      const newRoot = addChild(prev.root, parent.id, newNode);
+      const finalNewNode = isFulfilledRef.current ? { ...newNode, is_new: true } : newNode;
+      const newRoot = addChild(prev.root, parent.id, finalNewNode);
       dirtyRef.current = true;
       return assignNextDiffers({ ...prev, root: newRoot });
     });
@@ -567,7 +567,6 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
       if (reason === "faulty") {
         // In-place — no structural change, but a replacement cylinder still needs to be ordered.
-        if (isFulfilledRef.current) newNodeIdsRef.current.add(targetId);
         dirtyRef.current = true;
         logAction({
           system_id: systemId,
@@ -581,12 +580,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
             note: note || undefined,
           },
         });
+        if (isFulfilledRef.current) {
+          const markedRoot = updateNode(prev.root, targetId, { is_new: true });
+          return { ...prev, root: markedRoot };
+        }
         return prev;
       }
 
       // lost_key: clone as new sibling, decommission original
       const newNodeId = newId();
-      if (isFulfilledRef.current) newNodeIdsRef.current.add(newNodeId);
       const replacement: TNode = {
         id: newNodeId,
         type: "CYL",
@@ -596,7 +598,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         size: original.size,
         quantity: original.quantity ?? 1,
         extra_keys: 0,
-        
+        ...(isFulfilledRef.current ? { is_new: true } : {}),
         children: [],
       };
       const decommissionedRoot = updateNode(prev.root, targetId, {
@@ -980,9 +982,6 @@ function BuilderInner({ systemId }: { systemId: string }) {
     if (isFulfilled) {
       // Fulfilled system — add new lines individually, preserving previously added new items
       lines.forEach((l) => addToCart(l));
-      if (lines.length > 0) {
-        newNodeIdsRef.current.clear();
-      }
     } else {
       replaceBySystem(systemId, lines);
     }
