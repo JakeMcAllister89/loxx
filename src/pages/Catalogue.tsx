@@ -280,47 +280,14 @@ function FamilyCard({ fam, onDetails }: {
         <div className="text-2xl font-semibold text-amber-600 mt-auto">{priceDisplay}</div>
 
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="flex-1" onClick={onDetails}><Info className="h-3.5 w-3.5" /> Details</Button>
-          <UseInBuilderButton systems={systems} onPick={onUseInBuilder} />
+          <Button size="sm" variant="outline" className="w-full" onClick={onDetails}><Info className="h-3.5 w-3.5" /> Details</Button>
         </div>
       </div>
     </div>
   );
 }
 
-function UseInBuilderButton({ systems, onPick, fullWidth = false }: {
-  systems: KeySystem[]; onPick: (sysId: string | null) => void; fullWidth?: boolean;
-}) {
-  if (systems.length === 0) {
-    return (
-      <Button size="sm" className={`bg-amber-500 hover:bg-amber-600 text-white ${fullWidth ? "w-full" : "flex-1"}`} onClick={() => onPick(null)}>
-        Use in builder <ArrowRight className="h-3.5 w-3.5" />
-      </Button>
-    );
-  }
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button size="sm" className={`bg-amber-500 hover:bg-amber-600 text-white ${fullWidth ? "w-full" : "flex-1"}`}>
-          Use in builder <ArrowRight className="h-3.5 w-3.5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="max-h-72 overflow-auto">
-        {systems.map(s => (
-          <DropdownMenuItem key={s.id} onClick={() => onPick(s.id)}>
-            <div>
-              <div className="text-sm">{s.name}</div>
-              {s.reference && <div className="text-[10px] text-muted-foreground">{s.reference}</div>}
-            </div>
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuItem onClick={() => onPick(null)} className="border-t mt-1 pt-2">
-          <span className="text-sm text-primary">+ New system…</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
+
 
 function DetailDrawer({ fam, systems, onUseInBuilder }: {
   fam: Family; systems: KeySystem[]; onUseInBuilder: (sysId: string | null) => void;
