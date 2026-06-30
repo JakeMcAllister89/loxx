@@ -203,6 +203,35 @@ export default function Account() {
                   <div><Label htmlFor="addrPostcode">Postcode</Label><Input id="addrPostcode" value={addrPostcode} onChange={(e) => setAddrPostcode(e.target.value)} /></div>
                 </div>
               </div>
+              <div className="pt-2 border-t">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm font-medium">Invoice address</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">Where invoices should be addressed, if different from delivery.</p>
+                  </div>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={invoiceSameAsDelivery}
+                      onChange={(e) => setInvoiceSameAsDelivery(e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    Same as delivery
+                  </label>
+                </div>
+                {!invoiceSameAsDelivery && (
+                  <div className="space-y-3 mt-3">
+                    <div><Label htmlFor="invCompany">Company name</Label><Input id="invCompany" value={invCompany} onChange={(e) => setInvCompany(e.target.value)} /></div>
+                    <div><Label htmlFor="invLine1">Address line 1</Label><Input id="invLine1" value={invLine1} onChange={(e) => setInvLine1(e.target.value)} /></div>
+                    <div><Label htmlFor="invLine2">Address line 2</Label><Input id="invLine2" value={invLine2} onChange={(e) => setInvLine2(e.target.value)} /></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><Label htmlFor="invCity">Town / City</Label><Input id="invCity" value={invCity} onChange={(e) => setInvCity(e.target.value)} /></div>
+                      <div><Label htmlFor="invCounty">County</Label><Input id="invCounty" value={invCounty} onChange={(e) => setInvCounty(e.target.value)} /></div>
+                    </div>
+                    <div><Label htmlFor="invPostcode">Postcode</Label><Input id="invPostcode" value={invPostcode} onChange={(e) => setInvPostcode(e.target.value)} /></div>
+                  </div>
+                )}
+              </div>
               <Button onClick={save} disabled={busy} className="bg-primary hover:bg-primary/90">Save</Button>
             </div>
           </TabsContent>
