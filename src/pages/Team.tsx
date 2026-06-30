@@ -345,6 +345,9 @@ export default function Team() {
                     </SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground mt-2 bg-muted rounded-md px-3 py-2">
+                  {ROLE_DESCRIPTIONS[inv.org_role]}
+                </p>
               </div>
               {(inv.org_role === "view_only" || inv.org_role === "standard") && (
                 <div>
