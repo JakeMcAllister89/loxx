@@ -87,7 +87,7 @@ export default function ImportPage() {
       <div className="p-8 max-w-5xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight">Import existing system</h1>
-          <p className="text-muted-foreground text-sm mt-1">Upload your DOM-XL file and we'll build the digital record for you.</p>
+          <p className="text-muted-foreground text-sm mt-1">Upload your master key system planning file (.xlsm) and we'll build the digital record for you.</p>
         </div>
 
         <Stepper step={step} warningCount={step === "review" ? warnings.length : 0} />
