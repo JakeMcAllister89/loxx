@@ -27,6 +27,7 @@ import AdminProducts from "./pages/AdminProducts";
 import AdminOrders from "./pages/AdminOrders";
 import AdminSettings from "./pages/AdminSettings";
 import AdminQuotes from "./pages/AdminQuotes";
+import AdminApprovals from "./pages/AdminApprovals";
 import Quotes from "./pages/Quotes";
 import QuoteNew from "./pages/QuoteNew";
 import QuoteDetail from "./pages/QuoteDetail";
