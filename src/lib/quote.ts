@@ -17,6 +17,7 @@ export function treeToQuoteItems(
   tree: TreeData,
   products: ProductFull[],
   sys: { system_id: string; system_name: string; system_reference: string | null },
+  isFulfilled: boolean = false,
 ): CartLine[] {
   const productByCode = new Map(products.map((p) => [p.code, p]));
   const allKeyProducts = products.filter(p =>
@@ -42,7 +43,7 @@ export function treeToQuoteItems(
   };
   const out: CartLine[] = [];
   const walk = (n: TNode, trail: TNode[]) => {
-    if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
+    if (!isFulfilled && (n.type === "GMK" || n.type === "MK" || n.type === "SMK")) {
       normaliseKeys(n).forEach((k) => {
         if (k.qty > 0) {
           const keyProd = keyProductForNode(n.type);
@@ -60,7 +61,7 @@ export function treeToQuoteItems(
         }
       });
     }
-    if (n.type === "CYL" && n.cylinder_type) {
+    if (n.type === "CYL" && n.cylinder_type && (!isFulfilled || n.is_new)) {
       const p = productByCode.get(n.cylinder_type);
       const unit = Number(p?.price_gbp ?? 0);
       const qty = n.quantity ?? 1;
