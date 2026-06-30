@@ -1096,7 +1096,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         {!readOnly && (
           <Button variant="outline" size="sm" onClick={() => {
             if (!tree.root) { toast.error("Nothing to quote"); return; }
-            const items = treeToQuoteItems(tree, products as any, { system_id: systemId, system_name: name, system_reference: reference });
+            const items = treeToQuoteItems(tree, products as any, { system_id: systemId, system_name: name, system_reference: reference }, isFulfilled);
             if (items.length === 0) { toast.error("Add at least one configured cylinder before requesting a quote."); return; }
             stashQuoteDraft({ system_id: systemId, system_name: name, system_reference: reference, tree_snapshot: tree, items });
             navigate("/quotes/new");
