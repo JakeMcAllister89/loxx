@@ -181,6 +181,7 @@ export default function AdminDashboard() {
             ) : null}
           />
           <StatCard label="Profit" value={gbp(stats.profit)} sub={`Cost ${gbp(stats.cost)}`} />
+          <StatCard label="Avg margin" value={stats.revenue > 0 ? `${((stats.profit / stats.revenue) * 100).toFixed(1)}%` : "—"} />
           <StatCard label="Avg order value" value={gbp(stats.aov)} />
           <StatCard label="Cylinders supplied" value={stats.cylQty} />
           <StatCard label="Keys supplied" value={stats.keyQty} />
