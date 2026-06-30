@@ -451,7 +451,7 @@ function KeysDetailDrawer({ fam }: {
     <>
       <SheetHeader>
         <div className="flex items-center gap-2">
-          <SheetTitle>{fam.type}</SheetTitle>
+          <SheetTitle>{selected.product_description ?? selected.name ?? fam.type}</SheetTitle>
         </div>
         <SheetDescription>{fam.variants.length} variant{fam.variants.length !== 1 ? "s" : ""} available</SheetDescription>
       </SheetHeader>
