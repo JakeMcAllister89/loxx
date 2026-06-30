@@ -902,7 +902,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           }
         });
       }
-      if (n.type === "CYL" && n.cylinder_type && (!isFulfilled || newNodeIdsRef.current.has(n.id))) {
+      if (n.type === "CYL" && n.cylinder_type) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
@@ -944,7 +944,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           total += differKeyPrice * extra;
         }
       }
-      if (n.type === "CE" && n.cylinder_type && (!isFulfilled || newNodeIdsRef.current.has(n.id))) {
+      if (n.type === "CE" && n.cylinder_type) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
