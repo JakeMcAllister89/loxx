@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   ReactFlow, ReactFlowProvider, Background, Controls, MiniMap,
-  useReactFlow, Node, Edge, useNodesState, useEdgesState,
+  useReactFlow, Node, Edge, EdgeProps, useNodesState, useEdgesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
