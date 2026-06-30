@@ -678,6 +678,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
       unit_price: 12,
       ...sys,
     });
+    if (n.type === "CYL") {
+      // Persist on the node so it reflects in basket re-exports
+      setTree((prev) => ({ ...prev, root: updateNode(prev.root, targetId, { extra_keys: (n.extra_keys ?? 0) + quantity }) }));
+    } else {
+      // GMK/MK/SMK: persist as a pending additional-keys count so the quote can pick it up too
+      setTree((prev) => ({ ...prev, root: updateNode(prev.root, targetId, { pending_additional_keys: (n.pending_additional_keys ?? 0) + quantity }) }));
+    }
+    dirtyRef.current = true;
     logAction({
       system_id: systemId,
       action: "additional_keys_ordered",

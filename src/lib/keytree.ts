@@ -25,6 +25,7 @@ export interface TNode {
   replaced_by_differ?: number;           // differ of the replacement cylinder
   replaced_by_node_id?: string;          // id of the replacement node
   is_new?: boolean;             // CYL/CE only — set when node is added to a fulfilled system; cleared after cart export
+  pending_additional_keys?: number;  // GMK/MK/SMK only — extra keys ordered post-fulfilment, not yet supplied
   /** GMK/MK/SMK — copies of the key(s) at this level.
    *  Legacy: a single number meant "n copies of one key labelled by node.label".
    *  Current: an array of KeyEntry — multiple key refs each with their own qty. */
