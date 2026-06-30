@@ -382,8 +382,8 @@ function DetailDrawer({ fam }: {
 
 /* -------------------- KEYS family card -------------------- */
 
-function KeysFamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
-  fam: Family; systems: KeySystem[]; onDetails: () => void; onUseInBuilder: (sysId: string | null) => void;
+function KeysFamilyCard({ fam, onDetails }: {
+  fam: Family; onDetails: () => void;
 }) {
   const keyVariants = [...fam.variants].sort((a, b) => Number(a.price_gbp) - Number(b.price_gbp));
   const [selCode, setSelCode] = useState<string>(keyVariants[0]?.code ?? "");
