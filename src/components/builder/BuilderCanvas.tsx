@@ -288,6 +288,7 @@ function CanvasInner({
       onNodeClick={handleNodeClick}
       onPaneClick={onPaneClick}
       nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       nodesDraggable={false}
       nodesConnectable={false}
       panOnScroll
