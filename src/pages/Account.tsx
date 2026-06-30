@@ -33,6 +33,13 @@ export default function Account() {
   const [addrCity, setAddrCity] = useState("");
   const [addrCounty, setAddrCounty] = useState("");
   const [addrPostcode, setAddrPostcode] = useState("");
+  const [invoiceSameAsDelivery, setInvoiceSameAsDelivery] = useState(true);
+  const [invCompany, setInvCompany] = useState("");
+  const [invLine1, setInvLine1] = useState("");
+  const [invLine2, setInvLine2] = useState("");
+  const [invCity, setInvCity] = useState("");
+  const [invCounty, setInvCounty] = useState("");
+  const [invPostcode, setInvPostcode] = useState("");
 
   // Audit log state
   const [rows, setRows] = useState<AuditRow[]>([]);
@@ -59,6 +66,18 @@ export default function Account() {
         setAddrCity(addr.city ?? "");
         setAddrCounty(addr.county ?? "");
         setAddrPostcode(addr.postcode ?? "");
+        const invAddr = (data as any).default_invoice_address ?? null;
+        if (invAddr) {
+          setInvoiceSameAsDelivery(false);
+          setInvCompany(invAddr.company_name ?? "");
+          setInvLine1(invAddr.line1 ?? "");
+          setInvLine2(invAddr.line2 ?? "");
+          setInvCity(invAddr.city ?? "");
+          setInvCounty(invAddr.county ?? "");
+          setInvPostcode(invAddr.postcode ?? "");
+        } else {
+          setInvoiceSameAsDelivery(true);
+        }
       }
     });
     supabase.from("key_systems").select("id,name").order("name").then(({ data }) => setSystems(data ?? []));
@@ -107,7 +126,15 @@ export default function Account() {
       county: addrCounty,
       postcode: addrPostcode,
     };
-    const { error } = await supabase.from("profiles").update({ name, company, phone, default_address }).eq("id", user.id);
+    const default_invoice_address = invoiceSameAsDelivery ? null : {
+      company_name: invCompany,
+      line1: invLine1,
+      line2: invLine2,
+      city: invCity,
+      county: invCounty,
+      postcode: invPostcode,
+    };
+    const { error } = await supabase.from("profiles").update({ name, company, phone, default_address, default_invoice_address }).eq("id", user.id);
     setBusy(false);
     if (error) toast.error(error.message); else toast.success("Saved");
   };

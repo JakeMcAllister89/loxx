@@ -108,7 +108,7 @@ export default function AdminUsers() {
   const loadAll = async () => {
     setLoading(true);
     const [p, m, o, i] = await Promise.all([
-      supabase.from("profiles").select("id,first_name,last_name,name,email,created_at,org_id").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id,first_name,last_name,name,email,phone,default_address,default_invoice_address,created_at,org_id").order("created_at", { ascending: false }),
       supabase.from("org_members").select("user_id,org_id,org_role,status"),
       supabase.from("organisations").select("id,name"),
       supabase.from("platform_invites").select("*").order("created_at", { ascending: false }),
@@ -293,6 +293,8 @@ export default function AdminUsers() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Address</TableHead>
                     <TableHead>Organisation</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Registered</TableHead>
@@ -303,10 +305,10 @@ export default function AdminUsers() {
                 </TableHeader>
                 <TableBody>
                   {loading && (
-                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
                   )}
                   {!loading && filtered.length === 0 && (
-                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No users found.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No users found.</TableCell></TableRow>
                   )}
                   {filtered.map(u => {
                     const isSelf = u.id === me?.id;
@@ -316,6 +318,14 @@ export default function AdminUsers() {
                       <TableRow key={u.id}>
                         <TableCell className="font-medium">{fullName}{isSelf && <span className="ml-2 text-[11px] text-muted-foreground">(you)</span>}</TableCell>
                         <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                        <TableCell className="text-muted-foreground">{(u as any).phone || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground text-xs max-w-[200px]">
+                          {(() => {
+                            const addr = (u as any).default_address;
+                            if (!addr || !addr.line1) return "—";
+                            return [addr.line1, addr.city, addr.postcode].filter(Boolean).join(", ");
+                          })()}
+                        </TableCell>
                         <TableCell>{u.org_name}</TableCell>
                         <TableCell>{u.org_role !== "—" ? <RoleBadge role={u.org_role} /> : <span className="text-muted-foreground">—</span>}</TableCell>
                         <TableCell className="font-mono text-xs">{fmtDate(u.created_at)}</TableCell>
