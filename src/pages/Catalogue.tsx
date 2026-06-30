@@ -289,8 +289,8 @@ function FamilyCard({ fam, onDetails }: {
 
 
 
-function DetailDrawer({ fam, systems, onUseInBuilder }: {
-  fam: Family; systems: KeySystem[]; onUseInBuilder: (sysId: string | null) => void;
+function DetailDrawer({ fam }: {
+  fam: Family;
 }) {
   const [selFinish, setSelFinish] = useState<string | null>(fam.finishes[0] ?? null);
   const [selSize, setSelSize] = useState<string | null>(fam.sizes[0] ?? null);
