@@ -43,23 +43,38 @@ export function treeToQuoteItems(
   };
   const out: CartLine[] = [];
   const walk = (n: TNode, trail: TNode[]) => {
-    if (!isFulfilled && (n.type === "GMK" || n.type === "MK" || n.type === "SMK")) {
-      normaliseKeys(n).forEach((k) => {
-        if (k.qty > 0) {
-          const keyProd = keyProductForNode(n.type);
-          out.push({
-            kind: "key",
-            key_reference: k.ref,
-            product_code: keyProd?.code ?? undefined,
-            image_url: keyProd?.image_url ?? undefined,
-            room_label: n.location || n.label,
-            quantity: k.qty,
-            unit_price: keyProd ? Number(keyProd.price_gbp) : 12,
-            location: n.type,
-            ...sys,
-          });
-        }
-      });
+    if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
+      if (!isFulfilled) {
+        normaliseKeys(n).forEach((k) => {
+          if (k.qty > 0) {
+            const keyProd = keyProductForNode(n.type);
+            out.push({
+              kind: "key",
+              key_reference: k.ref,
+              product_code: keyProd?.code ?? undefined,
+              image_url: keyProd?.image_url ?? undefined,
+              room_label: n.location || n.label,
+              quantity: k.qty,
+              unit_price: keyProd ? Number(keyProd.price_gbp) : 12,
+              location: n.type,
+              ...sys,
+            });
+          }
+        });
+      } else if ((n.pending_additional_keys ?? 0) > 0) {
+        const keyProd = keyProductForNode(n.type);
+        out.push({
+          kind: "key",
+          key_reference: `Additional keys — ${n.label}`,
+          product_code: keyProd?.code ?? undefined,
+          image_url: keyProd?.image_url ?? undefined,
+          room_label: n.location || n.label,
+          quantity: n.pending_additional_keys,
+          unit_price: keyProd ? Number(keyProd.price_gbp) : 12,
+          location: n.type,
+          ...sys,
+        });
+      }
     }
     if (n.type === "CYL" && n.cylinder_type) {
       const p = productByCode.get(n.cylinder_type);
