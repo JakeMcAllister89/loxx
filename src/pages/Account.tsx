@@ -48,7 +48,18 @@ export default function Account() {
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("*").eq("id", user.id).single().then(({ data }) => {
-      if (data) { setName(data.name ?? ""); setCompany(data.company ?? ""); setPhone(data.phone ?? ""); }
+      if (data) {
+        setName(data.name ?? "");
+        setCompany(data.company ?? "");
+        setPhone(data.phone ?? "");
+        const addr = (data as any).default_address ?? {};
+        setAddrCompany(addr.company_name ?? "");
+        setAddrLine1(addr.line1 ?? "");
+        setAddrLine2(addr.line2 ?? "");
+        setAddrCity(addr.city ?? "");
+        setAddrCounty(addr.county ?? "");
+        setAddrPostcode(addr.postcode ?? "");
+      }
     });
     supabase.from("key_systems").select("id,name").order("name").then(({ data }) => setSystems(data ?? []));
     (supabase.from("audit_log" as any) as any)
