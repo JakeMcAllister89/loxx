@@ -334,9 +334,15 @@ export default function Team() {
                 <Select value={inv.org_role} onValueChange={(v: any) => setInv({ ...inv, org_role: v, system_ids: [] })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="standard">Standard User</SelectItem>
-                    <SelectItem value="view_only">View Only</SelectItem>
+                    <SelectItem value="admin">
+                      <div><div className="font-medium">Admin</div><div className="text-xs text-muted-foreground">Full access, can manage team</div></div>
+                    </SelectItem>
+                    <SelectItem value="standard">
+                      <div><div className="font-medium">Standard User</div><div className="text-xs text-muted-foreground">Build systems and place orders</div></div>
+                    </SelectItem>
+                    <SelectItem value="view_only">
+                      <div><div className="font-medium">View Only</div><div className="text-xs text-muted-foreground">Read-only access to selected systems</div></div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
