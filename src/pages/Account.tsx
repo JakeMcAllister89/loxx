@@ -27,6 +27,12 @@ export default function Account() {
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
+  const [addrCompany, setAddrCompany] = useState("");
+  const [addrLine1, setAddrLine1] = useState("");
+  const [addrLine2, setAddrLine2] = useState("");
+  const [addrCity, setAddrCity] = useState("");
+  const [addrCounty, setAddrCounty] = useState("");
+  const [addrPostcode, setAddrPostcode] = useState("");
 
   // Audit log state
   const [rows, setRows] = useState<AuditRow[]>([]);
@@ -42,7 +48,18 @@ export default function Account() {
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("*").eq("id", user.id).single().then(({ data }) => {
-      if (data) { setName(data.name ?? ""); setCompany(data.company ?? ""); setPhone(data.phone ?? ""); }
+      if (data) {
+        setName(data.name ?? "");
+        setCompany(data.company ?? "");
+        setPhone(data.phone ?? "");
+        const addr = (data as any).default_address ?? {};
+        setAddrCompany(addr.company_name ?? "");
+        setAddrLine1(addr.line1 ?? "");
+        setAddrLine2(addr.line2 ?? "");
+        setAddrCity(addr.city ?? "");
+        setAddrCounty(addr.county ?? "");
+        setAddrPostcode(addr.postcode ?? "");
+      }
     });
     supabase.from("key_systems").select("id,name").order("name").then(({ data }) => setSystems(data ?? []));
     (supabase.from("audit_log" as any) as any)
@@ -80,7 +97,17 @@ export default function Account() {
   const save = async () => {
     if (!user) return;
     setBusy(true);
-    const { error } = await supabase.from("profiles").update({ name, company, phone }).eq("id", user.id);
+    const default_address = {
+      company_name: addrCompany,
+      contact_name: name,
+      contact_phone: phone,
+      line1: addrLine1,
+      line2: addrLine2,
+      city: addrCity,
+      county: addrCounty,
+      postcode: addrPostcode,
+    };
+    const { error } = await supabase.from("profiles").update({ name, company, phone, default_address }).eq("id", user.id);
     setBusy(false);
     if (error) toast.error(error.message); else toast.success("Saved");
   };
@@ -135,6 +162,20 @@ export default function Account() {
               <div><Label htmlFor="name">Name</Label><Input id="name" value={name} onChange={(e) => setName(e.target.value)} /></div>
               <div><Label htmlFor="company">Company</Label><Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} /></div>
               <div><Label htmlFor="phone">Phone</Label><Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+              <div className="pt-2 border-t">
+                <Label className="text-sm font-medium">Default delivery / invoice address</Label>
+                <p className="text-xs text-muted-foreground mt-0.5 mb-3">Used to pre-fill checkout. You can still change it per order.</p>
+                <div className="space-y-3">
+                  <div><Label htmlFor="addrCompany">Company name</Label><Input id="addrCompany" value={addrCompany} onChange={(e) => setAddrCompany(e.target.value)} /></div>
+                  <div><Label htmlFor="addrLine1">Address line 1</Label><Input id="addrLine1" value={addrLine1} onChange={(e) => setAddrLine1(e.target.value)} /></div>
+                  <div><Label htmlFor="addrLine2">Address line 2</Label><Input id="addrLine2" value={addrLine2} onChange={(e) => setAddrLine2(e.target.value)} /></div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><Label htmlFor="addrCity">Town / City</Label><Input id="addrCity" value={addrCity} onChange={(e) => setAddrCity(e.target.value)} /></div>
+                    <div><Label htmlFor="addrCounty">County</Label><Input id="addrCounty" value={addrCounty} onChange={(e) => setAddrCounty(e.target.value)} /></div>
+                  </div>
+                  <div><Label htmlFor="addrPostcode">Postcode</Label><Input id="addrPostcode" value={addrPostcode} onChange={(e) => setAddrPostcode(e.target.value)} /></div>
+                </div>
+              </div>
               <Button onClick={save} disabled={busy} className="bg-primary hover:bg-primary/90">Save</Button>
             </div>
           </TabsContent>
