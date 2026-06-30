@@ -486,9 +486,6 @@ function KeysDetailDrawer({ fam }: {
           <dt className="text-muted-foreground">Product code</dt>
           <dd className="font-mono">{selected.code}</dd>
         </dl>
-        {fam.description && (
-          <p className="text-sm text-muted-foreground leading-relaxed">{fam.description}</p>
-        )}
         {(selected as any).product_features && (
           <div className="rounded-md border bg-muted/30 p-3">
             <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Product features</div>

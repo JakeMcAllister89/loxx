@@ -308,7 +308,7 @@ function CanvasNodeImpl(props: NodeProps) {
                     <TooltipPortal>
                       <TooltipContent side="right" className="p-0 overflow-hidden rounded-lg shadow-elevated z-[9999] w-56" sideOffset={8}>
                         {product.image_url && (
-                          <div className="bg-muted flex items-center justify-center p-3">
+                          <div className="bg-white flex items-center justify-center p-3">
                             <img src={product.image_url} alt={product.name} className="h-14 w-auto object-contain" />
                           </div>
                         )}
@@ -365,7 +365,7 @@ function CanvasNodeImpl(props: NodeProps) {
                 <TooltipPortal>
                   <TooltipContent side="right" className="p-0 overflow-hidden rounded-lg shadow-elevated z-[9999] w-56" sideOffset={8}>
                     {product.image_url && (
-                      <div className="bg-muted flex items-center justify-center p-3">
+                      <div className="bg-white flex items-center justify-center p-3">
                         <img src={product.image_url} alt={product.name} className="h-14 w-auto object-contain" />
                       </div>
                     )}
