@@ -97,7 +97,17 @@ export default function Account() {
   const save = async () => {
     if (!user) return;
     setBusy(true);
-    const { error } = await supabase.from("profiles").update({ name, company, phone }).eq("id", user.id);
+    const default_address = {
+      company_name: addrCompany,
+      contact_name: name,
+      contact_phone: phone,
+      line1: addrLine1,
+      line2: addrLine2,
+      city: addrCity,
+      county: addrCounty,
+      postcode: addrPostcode,
+    };
+    const { error } = await supabase.from("profiles").update({ name, company, phone, default_address }).eq("id", user.id);
     setBusy(false);
     if (error) toast.error(error.message); else toast.success("Saved");
   };
