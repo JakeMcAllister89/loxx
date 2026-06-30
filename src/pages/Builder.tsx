@@ -902,7 +902,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           }
         });
       }
-      if (n.type === "CYL" && n.cylinder_type) {
+      if (n.type === "CYL" && n.cylinder_type && (!isFulfilled || n.is_new)) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
@@ -944,7 +944,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           total += differKeyPrice * extra;
         }
       }
-      if (n.type === "CE" && n.cylinder_type) {
+      if (n.type === "CE" && n.cylinder_type && (!isFulfilled || n.is_new)) {
         const p = productByCode.get(n.cylinder_type);
         const unit = Number(p?.price_gbp ?? 0);
         const qty = n.quantity ?? 1;
@@ -975,8 +975,6 @@ function BuilderInner({ systemId }: { systemId: string }) {
       }
       n.children.forEach((c) => walk(c, [...ancestors, n]));
     };
-    console.log("[LOXX export] isFulfilled:", isFulfilled, "tree nodes with is_new:", JSON.stringify(tree.root, null, 2).match(/"is_new":true/g)?.length ?? 0);
-    console.log("[LOXX export] newNodeIds:", Array.from(newNodeIdsRef.current));
     walk(tree.root, []);
 
     if (isFulfilled) {
