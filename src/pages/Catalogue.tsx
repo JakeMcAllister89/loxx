@@ -187,8 +187,8 @@ export default function Catalogue() {
   );
 }
 
-function FamilyCard({ fam, systems, onDetails, onUseInBuilder }: {
-  fam: Family; systems: KeySystem[]; onDetails: () => void; onUseInBuilder: (sysId: string | null) => void;
+function FamilyCard({ fam, onDetails }: {
+  fam: Family; onDetails: () => void;
 }) {
   const [selFinish, setSelFinish] = useState<string | null>(fam.finishes[0] ?? null);
   const [selSize, setSelSize] = useState<string | null>(fam.sizes[0] ?? null);
