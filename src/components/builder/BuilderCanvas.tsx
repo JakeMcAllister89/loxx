@@ -43,6 +43,19 @@ interface Props {
 
 const nodeTypes = { keynode: CanvasNode };
 
+function TreeEdge({ sourceX, sourceY, targetX, targetY, style }: EdgeProps) {
+  const isAligned = Math.abs(sourceX - targetX) < 1;
+  const path = isAligned
+    ? `M${sourceX},${sourceY} L${targetX},${targetY}`
+    : (() => {
+        const midY = sourceY + (targetY - sourceY) / 2;
+        return `M${sourceX},${sourceY} L${sourceX},${midY} L${targetX},${midY} L${targetX},${targetY}`;
+      })();
+  return <path d={path} fill="none" style={style} />;
+}
+
+const edgeTypes = { tree: TreeEdge };
+
 const HGAP = 20;
 const VGAP = 60;
 
