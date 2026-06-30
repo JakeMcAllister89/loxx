@@ -111,14 +111,27 @@ export default function AdminQuotes() {
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
+        <div className="mt-5 grid grid-cols-2 md:grid-cols-5 gap-4 max-w-4xl">
           <div className="rounded-[10px] border bg-card p-4 shadow-card">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Outstanding quotes</div>
             <div className="text-2xl font-semibold mt-1">{outstanding.length}</div>
           </div>
           <div className="rounded-[10px] border bg-card p-4 shadow-card">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">Outstanding value</div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Outstanding revenue</div>
             <div className="text-2xl font-semibold mt-1">{gbp(outstandingValue)}</div>
+          </div>
+          <div className="rounded-[10px] border bg-card p-4 shadow-card">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Outstanding profit</div>
+            <div className="text-2xl font-semibold mt-1 text-emerald-700">{gbp(outstandingProfit)}</div>
+          </div>
+          <div className="rounded-[10px] border bg-card p-4 shadow-card">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Converted to order</div>
+            <div className="text-2xl font-semibold mt-1">{gbp(convertedValue)}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{converted.length} quote{converted.length !== 1 ? "s" : ""}</div>
+          </div>
+          <div className="rounded-[10px] border bg-card p-4 shadow-card">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Stuck (14+ days)</div>
+            <div className={`text-2xl font-semibold mt-1 ${stuck.length > 0 ? "text-destructive" : ""}`}>{stuck.length}</div>
           </div>
         </div>
 
