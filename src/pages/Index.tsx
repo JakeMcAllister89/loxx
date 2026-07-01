@@ -112,7 +112,7 @@ export default function Index() {
               </div>
 
               <p className="mt-5 text-lg text-foreground/65 max-w-xl">
-                My LOXX gives facilities managers one place to see every key, every door, and every person who holds access — reorder a lost key or add new doors to your system in minutes, and keep an online record that doesn't depend on whoever set it up still working here.
+                My LOXX gives facilities managers one place to see every key, every door, and who can order, change, or view your system — reorder a lost key or add new doors in minutes, and keep an online record that doesn't disappear when whoever built it moves on.
               </p>
               <p className="mt-4 text-sm text-foreground/50 max-w-xl">
                 For the people who manage schools, care homes, NHS sites, councils, universities, and offices — buildings that run on a master key system.
