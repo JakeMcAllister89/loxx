@@ -46,9 +46,9 @@ const NODES: DemoNodeSpec[] = [
   { id: "demo-smk-1", type: "SMK", label: "History",          x: 80,  y: 280, revealAt: 3, childCylCount: 2 },
   { id: "demo-smk-2", type: "SMK", label: "English",          x: 440, y: 280, revealAt: 3, childCylCount: 2 },
   { id: "demo-cyl-1", type: "CYL", label: "History Room 01",  x: 20,  y: 420, revealAt: 4, product: CYL_PRODUCT },
-  { id: "demo-cyl-2", type: "CYL", label: "History Room 02",  x: 160, y: 420, revealAt: 4, product: CYL_PRODUCT },
-  { id: "demo-cyl-3", type: "CYL", label: "English Room 01",  x: 360, y: 420, revealAt: 4, product: CYL_PRODUCT },
-  { id: "demo-cyl-4", type: "CYL", label: "English Room 02",  x: 500, y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-cyl-2", type: "CYL", label: "History Room 02",  x: 224, y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-cyl-3", type: "CYL", label: "English Room 01",  x: 444, y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-cyl-4", type: "CYL", label: "English Room 02",  x: 648, y: 420, revealAt: 4, product: CYL_PRODUCT },
 ];
 
 const EDGES: Array<{ id: string; source: string; target: string; revealAt: number }> = [
