@@ -466,30 +466,35 @@ export default function Index() {
       </section>
 
       {/* SECTION 4 — PRODUCT SHOWCASE */}
-      <section className="border-t border-border">
+      <section className="border-t border-border bg-gradient-to-b from-background via-muted/30 to-background">
         <div className="container py-20 md:py-28">
           <div className="max-w-2xl">
             <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Inside My LOXX</span>
             <h2 className="mt-4 text-3xl md:text-4xl font-semibold tracking-tight">A real product, built for real systems.</h2>
           </div>
 
-          <div className="mt-14 space-y-16 md:space-y-24">
-            {features.map((f, i) => (
-              <div key={f.label} className={`grid md:grid-cols-2 gap-10 lg:gap-16 items-center ${i % 2 === 1 ? "md:[&>div:first-child]:order-2" : ""}`}>
-                <div>
-                  <span className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
-                    <span className="h-1 w-1 rounded-full bg-primary" />
-                    {f.label}
-                  </span>
-                  <h3 className="mt-4 text-2xl md:text-3xl font-semibold tracking-tight leading-tight">{f.headline}</h3>
-                  <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed max-w-md">{f.copy}</p>
+          <div className="mt-16 space-y-20 md:space-y-28">
+            {features.map((f, i) => {
+              const reverse = i % 2 === 1;
+              return (
+                <div
+                  key={f.label}
+                  className={`grid md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-10 lg:gap-16 items-center`}
+                >
+                  <div className={reverse ? "md:order-2" : ""}>
+                    <span className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
+                      <span className="h-1 w-1 rounded-full bg-primary" />
+                      Feature 0{i + 1} · {f.label}
+                    </span>
+                    <h3 className="mt-4 text-2xl md:text-3xl font-semibold tracking-tight leading-tight">{f.headline}</h3>
+                    <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed max-w-md">{f.copy}</p>
+                  </div>
+                  <div className={reverse ? "md:order-1" : ""}>
+                    <ProductFrame variant={f.label} />
+                  </div>
                 </div>
-                <div className="relative aspect-[4/3] rounded-2xl border border-border bg-card overflow-hidden">
-                  <div aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.06),transparent_60%)]" />
-                  <FeatureVisual variant={f.label} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
