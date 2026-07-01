@@ -4,7 +4,7 @@ import { LoxxLogo } from "@/components/LoxxLogo";
 import {
   ShieldCheck, Lock, BadgeCheck, ArrowRight, Users,
   LayoutGrid, Receipt, GraduationCap, HeartPulse, Home, Landmark,
-  BookOpen, Briefcase, ShieldAlert, Check, X, Key,
+  BookOpen, Briefcase, ShieldAlert, Check, Key, FileText, PoundSterling,
 } from "lucide-react";
 import { HeroCanvasDemo } from "@/components/marketing/HeroCanvasDemo";
 
@@ -32,18 +32,19 @@ const painBlocks = [
     a: "Build it visually in My LOXX — every floor, every door, every key, laid out as you go. Replacing an ageing system that's lost its security integrity over the years, or specifying a new one from scratch — either way, nothing gets lost in someone's inbox.",
   },
   {
-    icon: Receipt,
+    icon: PoundSterling,
     q: "Reordering means a phone call, an email, and waiting for a quote.",
     a: "Real pricing, instantly. See the price as you build. Order online by card, or raise a pro-forma for your finance team. My LOXX generates your quote, schedule, and invoice straight from your system — no waiting on a supplier to send a price back.",
   },
 ];
 
-const comparisonRows = [
-  { row: "Who has system access", paper: "Whoever last edited the spreadsheet, untracked", loxx: "Role-based access, scoped per system" },
-  { row: "Lost key response", paper: "Manual check, hope the records are current", loxx: "Instantly see exactly what that key opened" },
-  { row: "Reordering a cylinder", paper: "Phone call, then a wait", loxx: "Real pricing, ordered online in minutes" },
-  { row: "Audit trail", paper: "None, unless someone remembers to log it", loxx: "Every order, change and login, timestamped" },
-  { row: "Quotes & invoices", paper: "Built by hand", loxx: "Generated automatically from your system" },
+const capabilities = [
+  { icon: Users, label: "Access & roles", detail: "Role-based access, scoped per system" },
+  { icon: ShieldAlert, label: "Lost key response", detail: "Instantly see exactly what that key opened" },
+  { icon: Receipt, label: "Ordering", detail: "Real pricing, ordered online in minutes" },
+  { icon: Lock, label: "Audit trail", detail: "Every order, change and login, timestamped" },
+  { icon: FileText, label: "Paperwork", detail: "Quotes, schedules and invoices generated automatically" },
+  { icon: LayoutGrid, label: "Multi-system", detail: "Manage every building from one account" },
 ];
 
 const sectors = [
@@ -179,39 +180,28 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Comparison — two-column card layout, no "generic software" column */}
+      {/* Capabilities showcase — My LOXX only, chip-icon language matching trust strip / pain blocks */}
       <section className="bg-card border-y border-border">
         <div className="container py-16">
-          <h2 className="text-3xl font-semibold tracking-tight">Not a spreadsheet.</h2>
-          <div className="grid md:grid-cols-2 gap-px mt-8 rounded-[10px] overflow-hidden border border-border">
-            <div className="bg-background p-6 md:p-8">
-              <div className="text-sm font-medium text-muted-foreground mb-6">Paper / spreadsheet</div>
-              <div className="space-y-5">
-                {comparisonRows.map((r) => (
-                  <div key={r.row} className="flex gap-3">
-                    <X className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                    <div>
-                      <div className="text-xs text-muted-foreground">{r.row}</div>
-                      <div className="text-sm text-foreground/80 mt-0.5">{r.paper}</div>
-                    </div>
+          <h2 className="text-3xl font-semibold tracking-tight">Everything, in one place</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
+            {capabilities.map((c) => (
+              <div
+                key={c.label}
+                className="rounded-[10px] border border-border bg-background p-5 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center justify-center h-9 w-9 rounded-lg bg-primary/10 shrink-0">
+                    <c.icon className="h-4 w-4 text-primary" strokeWidth={2.25} />
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="text-xs font-medium text-muted-foreground">{c.label}</span>
                   </div>
-                ))}
+                </div>
+                <div className="text-sm font-semibold text-foreground mt-3">{c.detail}</div>
               </div>
-            </div>
-            <div className="bg-primary/5 p-6 md:p-8">
-              <div className="text-sm font-semibold text-primary mb-6">My LOXX</div>
-              <div className="space-y-5">
-                {comparisonRows.map((r) => (
-                  <div key={r.row} className="flex gap-3">
-                    <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                    <div>
-                      <div className="text-xs text-muted-foreground">{r.row}</div>
-                      <div className="text-sm text-foreground font-medium mt-0.5">{r.loxx}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
