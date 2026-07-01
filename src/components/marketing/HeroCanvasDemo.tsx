@@ -39,16 +39,24 @@ const CYL_PRODUCT: DemoProduct = {
   price_gbp: null,
 };
 
+const H_GAP = 24;
+const PAIR_GAP = 48;
+const CYL_PAIR_WIDTH = NODE_WIDTH * 2 + H_GAP;
+const SMK_CENTER_GAP = CYL_PAIR_WIDTH + PAIR_GAP;
+const smk1CenterX = 0;
+const smk2CenterX = smk1CenterX + SMK_CENTER_GAP;
+const gmkCenterX = (smk1CenterX + smk2CenterX) / 2;
+
 const NODES: DemoNodeSpec[] = [
-  { id: "demo-gmk",   type: "GMK", label: "Grand Master Key", x: 260, y: 0,   revealAt: 1, childMkCount: 2, childCylCount: 4 },
-  { id: "demo-mk-1",  type: "MK",  label: "West Wing",        x: 80,  y: 140, revealAt: 2, childSmkCount: 1, childCylCount: 2 },
-  { id: "demo-mk-2",  type: "MK",  label: "East Wing",        x: 440, y: 140, revealAt: 2, childSmkCount: 1, childCylCount: 2 },
-  { id: "demo-smk-1", type: "SMK", label: "History",          x: 80,  y: 280, revealAt: 3, childCylCount: 2 },
-  { id: "demo-smk-2", type: "SMK", label: "English",          x: 440, y: 280, revealAt: 3, childCylCount: 2 },
-  { id: "demo-cyl-1", type: "CYL", label: "History Room 01",  x: 20,  y: 420, revealAt: 4, product: CYL_PRODUCT },
-  { id: "demo-cyl-2", type: "CYL", label: "History Room 02",  x: 224, y: 420, revealAt: 4, product: CYL_PRODUCT },
-  { id: "demo-cyl-3", type: "CYL", label: "English Room 01",  x: 444, y: 420, revealAt: 4, product: CYL_PRODUCT },
-  { id: "demo-cyl-4", type: "CYL", label: "English Room 02",  x: 648, y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-gmk",   type: "GMK", label: "Grand Master Key", x: gmkCenterX - NODE_WIDTH / 2,          y: 0,   revealAt: 1, childMkCount: 2, childCylCount: 4 },
+  { id: "demo-mk-1",  type: "MK",  label: "West Wing",        x: smk1CenterX - NODE_WIDTH / 2,         y: 140, revealAt: 2, childSmkCount: 1, childCylCount: 2 },
+  { id: "demo-mk-2",  type: "MK",  label: "East Wing",        x: smk2CenterX - NODE_WIDTH / 2,         y: 140, revealAt: 2, childSmkCount: 1, childCylCount: 2 },
+  { id: "demo-smk-1", type: "SMK", label: "History",          x: smk1CenterX - NODE_WIDTH / 2,         y: 280, revealAt: 3, childCylCount: 2 },
+  { id: "demo-smk-2", type: "SMK", label: "English",          x: smk2CenterX - NODE_WIDTH / 2,         y: 280, revealAt: 3, childCylCount: 2 },
+  { id: "demo-cyl-1", type: "CYL", label: "History Room 01",  x: smk1CenterX - NODE_WIDTH - H_GAP / 2, y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-cyl-2", type: "CYL", label: "History Room 02",  x: smk1CenterX + H_GAP / 2,              y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-cyl-3", type: "CYL", label: "English Room 01",  x: smk2CenterX - NODE_WIDTH - H_GAP / 2, y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-cyl-4", type: "CYL", label: "English Room 02",  x: smk2CenterX + H_GAP / 2,              y: 420, revealAt: 4, product: CYL_PRODUCT },
 ];
 
 const EDGES: Array<{ id: string; source: string; target: string; revealAt: number }> = [
