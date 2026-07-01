@@ -9,7 +9,7 @@ import {
   FileSpreadsheet, FileText, Mail, StickyNote, Brain,
   KeyRound, Boxes, Receipt,
 } from "lucide-react";
-import { HeroCanvasDemo } from "@/components/marketing/HeroCanvasDemo";
+
 import { HeroShowcase } from "@/components/marketing/HeroShowcase";
 
 const workflow = [
@@ -191,8 +191,8 @@ export default function Index() {
         <div className="container flex items-center justify-between py-4">
           <LoxxLogo />
           <nav className="flex items-center gap-2">
-            <Link to="/auth" className="text-sm px-3 py-2 text-foreground/70 hover:text-foreground">Sign in</Link>
-            <Button asChild className="bg-primary hover:bg-primary/90"><Link to="/auth?mode=signup">Get started</Link></Button>
+            <Link to="/auth" className="text-sm px-3 py-2 text-foreground/70 hover:text-foreground">Sign In</Link>
+            <Button asChild className="bg-primary hover:bg-primary/90"><Link to="/auth?mode=signup">Get Started</Link></Button>
           </nav>
         </div>
       </header>
@@ -219,7 +219,7 @@ export default function Index() {
                 <Link to="/auth?mode=signup">Get Started <ArrowRight className="h-4 w-4" /></Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-border bg-transparent text-foreground hover:bg-black/[0.03]">
-                <a href="#book-a-demo">Book a Demo</a>
+                <a href="mailto:hello@my-loxx.app">Book a Demo</a>
               </Button>
             </div>
           </div>
