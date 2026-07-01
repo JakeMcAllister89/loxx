@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { MoreHorizontal, Search, Mail, UserX, ChevronDown, ChevronRight, RefreshCw, X, ArrowLeftRight, Ban } from "lucide-react";
+import { MoreHorizontal, Search, Mail, UserX, ChevronDown, ChevronRight, RefreshCw, X, ArrowLeftRight, Ban, UserCog } from "lucide-react";
 
 interface ProfileRow {
   id: string;
@@ -22,6 +22,7 @@ interface ProfileRow {
   email: string | null;
   created_at: string;
   org_id: string | null;
+  is_admin?: boolean | null;
 }
 interface MemberRow {
   user_id: string;
@@ -108,7 +109,7 @@ export default function AdminUsers() {
   const loadAll = async () => {
     setLoading(true);
     const [p, m, o, i] = await Promise.all([
-      supabase.from("profiles").select("id,first_name,last_name,name,email,phone,default_address,default_invoice_address,created_at,org_id").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id,first_name,last_name,name,email,phone,default_address,default_invoice_address,created_at,org_id,is_admin").order("created_at", { ascending: false }),
       supabase.from("org_members").select("user_id,org_id,org_role,status"),
       supabase.from("organisations").select("id,name"),
       supabase.from("platform_invites").select("*").order("created_at", { ascending: false }),
@@ -167,6 +168,32 @@ export default function AdminUsers() {
     const { data, error } = await supabase.functions.invoke("admin-user-action", { body: { action: "reset_password", email } });
     if (error || !(data as any)?.ok) { toast.error((data as any)?.error ?? "Failed to send"); return; }
     toast.success("Password reset email sent");
+  };
+
+  const impersonate = async (targetId: string, targetName: string) => {
+    const { data: { session: adminSession } } = await supabase.auth.getSession();
+    if (!adminSession) return;
+    const { data, error } = await supabase.functions.invoke("admin-user-action", {
+      body: { action: "impersonate", user_id: targetId },
+    });
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error || error?.message || "Could not start impersonation");
+      return;
+    }
+    const { token_hash, email, log_id } = data as any;
+    sessionStorage.setItem("loxx_admin_session", JSON.stringify({
+      access_token: adminSession.access_token,
+      refresh_token: adminSession.refresh_token,
+    }));
+    sessionStorage.setItem("loxx_impersonation", JSON.stringify({ name: targetName, log_id }));
+    const { error: otpError } = await supabase.auth.verifyOtp({ email, token_hash, type: "magiclink" });
+    if (otpError) {
+      toast.error("Could not switch session: " + otpError.message);
+      sessionStorage.removeItem("loxx_admin_session");
+      sessionStorage.removeItem("loxx_impersonation");
+      return;
+    }
+    window.location.href = "/dashboard";
   };
 
   const doRemove = async () => {
@@ -340,6 +367,11 @@ export default function AdminUsers() {
                               <DropdownMenuItem onClick={() => u.email && sendReset(u.email)}>
                                 <Mail className="h-4 w-4 mr-2" /> Send password reset
                               </DropdownMenuItem>
+                              {!isSelf && !(u as any).is_admin && (
+                                <DropdownMenuItem onClick={() => impersonate(u.id, fullName)}>
+                                  <UserCog className="h-4 w-4 mr-2" /> Impersonate
+                                </DropdownMenuItem>
+                              )}
                               {!isSelf && u.org_role === "master_admin" && (
                                 <DropdownMenuItem
                                   onClick={() => setTransferState({
