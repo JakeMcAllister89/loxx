@@ -4,7 +4,7 @@ import { LoxxLogo } from "@/components/LoxxLogo";
 import {
   ShieldCheck, Lock, BadgeCheck, ArrowRight, Users,
   LayoutGrid, Receipt, GraduationCap, HeartPulse, Home, Landmark,
-  BookOpen, Briefcase, ShieldAlert, Check, X,
+  BookOpen, Briefcase, ShieldAlert, Check, X, Key,
 } from "lucide-react";
 import { HeroCanvasDemo } from "@/components/marketing/HeroCanvasDemo";
 
@@ -137,15 +137,43 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Pain -> feature blocks, orange left-edge accent */}
+      {/* Pain -> feature blocks: featured lost-key card + compact supporting row */}
       <section className="container py-20">
-        <h2 className="text-3xl font-semibold tracking-tight max-w-3xl">The problems you're actually dealing with</h2>
-        <div className="grid md:grid-cols-2 gap-6 mt-10">
-          {painBlocks.map((b) => (
-            <div key={b.q} className="rounded-[10px] border border-border border-l-2 border-l-primary bg-card p-6 shadow-card">
-              <b.icon className="h-6 w-6 text-primary" />
-              <h3 className="mt-4 text-lg font-semibold leading-snug">{b.q}</h3>
-              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{b.a}</p>
+        <h2 className="text-3xl font-semibold tracking-tight max-w-3xl">Where spreadsheets fall short</h2>
+        {/* Featured card — first item in painBlocks (lost key scenario) */}
+        <div className="mt-10 rounded-xl border border-border border-l-[3px] border-l-primary bg-card p-8 shadow-lg grid md:grid-cols-[1.3fr_1fr] gap-8 items-center">
+          <div>
+            <span className="flex items-center justify-center h-11 w-11 rounded-lg bg-primary/10">
+              {(() => { const Icon = painBlocks[0].icon; return <Icon className="h-5 w-5 text-primary" strokeWidth={2.25} />; })()}
+            </span>
+            <h3 className="mt-4 text-2xl font-extrabold leading-snug tracking-tight">{painBlocks[0].q}</h3>
+            <p className="text-sm text-muted-foreground mt-3 leading-relaxed max-w-lg">{painBlocks[0].a}</p>
+          </div>
+          <div className="flex items-center justify-center gap-4 bg-background rounded-lg p-6">
+            <div className="text-center">
+              <div className="h-[52px] w-[52px] rounded-lg bg-primary/15 flex items-center justify-center opacity-50">
+                <Key className="h-6 w-6 text-primary line-through" strokeWidth={1.5} />
+              </div>
+              <div className="text-[10px] text-muted-foreground mt-2 leading-tight">Differ 0042<br />retired</div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+            <div className="text-center">
+              <div className="h-[52px] w-[52px] rounded-lg bg-primary/20 flex items-center justify-center">
+                <Key className="h-6 w-6 text-primary" strokeWidth={2} />
+              </div>
+              <div className="text-[10px] text-primary font-semibold mt-2 leading-tight">Differ 0118<br />issued</div>
+            </div>
+          </div>
+        </div>
+        {/* Supporting row — remaining three pain blocks, compact */}
+        <div className="grid md:grid-cols-3 gap-4 mt-4">
+          {painBlocks.slice(1).map((b) => (
+            <div key={b.q} className="rounded-[10px] border border-border border-l-2 border-l-primary bg-card p-5 shadow-card transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+              <span className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10">
+                <b.icon className="h-4 w-4 text-primary" strokeWidth={2.25} />
+              </span>
+              <h3 className="mt-3 text-sm font-bold leading-snug tracking-tight">{b.q}</h3>
+              <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{b.a}</p>
             </div>
           ))}
         </div>
