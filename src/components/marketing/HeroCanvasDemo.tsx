@@ -157,9 +157,9 @@ function HeroCanvasDemoInner() {
         zoomOnPinch={false}
         zoomOnDoubleClick={false}
         preventScrolling={false}
-        defaultViewport={{ x: 0, y: 10, zoom: 0.72 }}
-        minZoom={0.72}
-        maxZoom={0.72}
+        defaultViewport={{ x: 130, y: 10, zoom: 0.6 }}
+        minZoom={0.6}
+        maxZoom={0.6}
       >
       </ReactFlow>
     </div>
