@@ -1,4 +1,4 @@
-// Sends a supplier purchase order email for a confirmed LOXX order. v10
+// Sends a supplier purchase order email for a confirmed LOXX order. v11
 // POST { order_id: string, download_only?: boolean }
 // Returns { success: true, po_number, html? }
 
@@ -486,7 +486,7 @@ ${S.company_name || "LOXX"}
 ${S.company_email || ""}
 ${S.company_phone || ""}`.trim();
 
-    const fromAddr = `${S.company_name || "LOXX"} <orders@resend.dev>`;
+    const fromAddr = `${S.company_name || "My LOXX"} <orders@myloxx.co.uk>`;
     const attachmentB64 = btoa(unescape(encodeURIComponent(html)));
 
     const r = await fetch("https://api.resend.com/emails", {

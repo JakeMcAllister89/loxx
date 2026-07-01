@@ -1,3 +1,4 @@
+// v2
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -56,7 +57,7 @@ Deno.serve(async (req) => {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_KEY}` },
-        body: JSON.stringify({ from: "LOXX <onboarding@resend.dev>", to: [email], subject, html }),
+        body: JSON.stringify({ from: "My LOXX <noreply@myloxx.co.uk>", to: [email], subject, html }),
       });
       if (!res.ok) {
         const txt = await res.text();
