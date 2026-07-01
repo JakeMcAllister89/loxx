@@ -108,8 +108,7 @@ function HeroCanvasDemoInner() {
             width: NODE_WIDTH,
             height: NODE_HEIGHT,
             opacity: visible ? 1 : 0,
-            transform: visible ? "scale(1)" : "scale(0.85)",
-            transition: "opacity 400ms ease-out, transform 400ms ease-out",
+            transition: "opacity 400ms ease-out",
             pointerEvents: "none" as const,
           },
         };
