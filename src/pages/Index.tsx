@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LoxxLogo } from "@/components/LoxxLogo";
@@ -58,13 +57,6 @@ const sectors = [
 ];
 
 export default function Index() {
-  const [activeNode, setActiveNode] = useState<"gmk" | "mk" | "smk" | "cyl" | null>(null);
-  const nodeColors: Record<string, string> = {
-    gmk: "hsl(245,60%,67%)",
-    mk: "hsl(178,60%,45%)",
-    smk: "hsl(154,71%,45%)",
-    cyl: "hsl(33,91%,44%)",
-  };
   const heroBadges: Array<{ key: "gmk" | "mk" | "smk" | "cyl"; label: string; bg: string; color: string }> = [
     { key: "gmk", label: "GMK", bg: "hsl(245,60%,67%,0.14)", color: "hsl(245,45%,42%)" },
     { key: "mk", label: "MK", bg: "hsl(178,60%,45%,0.14)", color: "hsl(178,55%,28%)" },
@@ -96,8 +88,6 @@ export default function Index() {
                 {heroBadges.map((b, i) => (
                   <span key={b.key} className="inline-flex items-center gap-1.5">
                     <span
-                      onMouseEnter={() => setActiveNode(b.key)}
-                      onMouseLeave={() => setActiveNode(null)}
                       className="px-2.5 py-1 rounded-full transition-shadow cursor-default"
                       style={{ backgroundColor: b.bg, color: b.color }}
                     >
