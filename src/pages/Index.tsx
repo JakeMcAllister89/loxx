@@ -229,23 +229,17 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Final CTA — pricing line merged in, orange glow, single CTA */}
-      <section id="book-a-walkthrough" className="relative overflow-hidden bg-[hsl(var(--sidebar-background))] text-sidebar-foreground">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(circle at 50% 40%, hsl(33,91%,44%,0.12), transparent 60%)",
-          }}
-        />
-        <div className="container relative py-20 max-w-3xl text-center">
-          <p className="text-sm text-sidebar-foreground/60 mb-4">
+      {/* Final CTA — solid saturated orange block, light-mode bookend */}
+      <section id="book-a-walkthrough" className="bg-primary">
+        <div className="container py-16 md:py-20 max-w-3xl text-center">
+          <p className="text-sm text-primary-foreground/75 mb-4">
             No subscription. No software fee. You pay only when you order hardware.
           </p>
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-primary-foreground">
             Get your master key system out of the spreadsheet.
           </h2>
           <div className="mt-8 flex justify-center">
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+            <Button asChild size="lg" className="bg-foreground text-background hover:bg-foreground/90">
               <Link to="/auth?mode=signup">Get started <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
