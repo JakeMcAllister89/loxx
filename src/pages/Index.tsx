@@ -71,9 +71,6 @@ export default function Index() {
     { key: "smk", label: "SMK", bg: "hsl(154,71%,45%,0.14)", color: "hsl(154,55%,26%)" },
     { key: "cyl", label: "CYL", bg: "hsl(33,91%,44%,0.16)", color: "hsl(33,85%,32%)" },
   ];
-  const cardBoxShadow = activeNode
-    ? `0 0 0 3px ${nodeColors[activeNode]}, 0 20px 50px rgba(20,20,22,0.08)`
-    : "0 20px 50px rgba(20,20,22,0.08), 0 2px 8px rgba(0,0,0,0.04)";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -130,13 +127,7 @@ export default function Index() {
             </div>
 
             <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
-              <div
-                id="hero-canvas-card"
-                className="bg-white rounded-xl p-2.5 border border-border transition-shadow"
-                style={{ boxShadow: cardBoxShadow }}
-              >
-                <HeroCanvasDemo />
-              </div>
+              <HeroCanvasDemo />
             </div>
           </div>
         </section>
