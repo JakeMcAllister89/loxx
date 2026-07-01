@@ -149,7 +149,7 @@ function HeroCanvasDemoInner() {
         zoomOnPinch={false}
         zoomOnDoubleClick={false}
         preventScrolling={false}
-        defaultViewport={{ x: 40, y: 10, zoom: 0.8 }}
+        defaultViewport={{ x: 20, y: 10, zoom: 0.8 }}
         minZoom={0.8}
         maxZoom={0.8}
       >
