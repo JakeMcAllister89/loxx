@@ -64,12 +64,42 @@ const features = [
 ];
 
 const sectors = [
-  { icon: GraduationCap, t: "Education", s: "Schools, colleges and universities managing keyed access across many buildings and departments." },
-  { icon: HeartPulse, t: "Healthcare", s: "Hospitals and care sites where controlled access matters every day." },
-  { icon: Building2, t: "Commercial buildings", s: "Offices and mixed-use sites with tenants, contractors and shared spaces." },
-  { icon: Landmark, t: "Local government", s: "Council estates and civic buildings that need clear records and audit history." },
-  { icon: Home, t: "Property management", s: "Managing agents keeping keys, cylinders and access consistent across a portfolio." },
-  { icon: Factory, t: "Industrial sites", s: "Warehouses and plants where zoned access needs to be reliable and enforceable." },
+  {
+    icon: GraduationCap,
+    t: "Education",
+    s: "Manage access across classrooms, staff areas, sports facilities, plant rooms and multiple buildings.",
+    zones: ["Public", "Staff", "Restricted", "Plant"],
+  },
+  {
+    icon: HeartPulse,
+    t: "Healthcare",
+    s: "Keep controlled areas, staff-only spaces, medicine rooms and service areas clearly organised.",
+    zones: ["Public", "Staff", "Restricted", "Plant"],
+  },
+  {
+    icon: Building2,
+    t: "Commercial buildings",
+    s: "Manage offices, tenants, shared entrances, restricted rooms and contractor access from one record.",
+    zones: ["Public", "Staff", "Restricted", "Plant"],
+  },
+  {
+    icon: Landmark,
+    t: "Local government",
+    s: "Maintain clear records across civic buildings, depots, libraries, schools and public facilities.",
+    zones: ["Public", "Staff", "Restricted", "Plant"],
+  },
+  {
+    icon: Home,
+    t: "Property management",
+    s: "Keep keys, cylinders and access records organised across blocks, sites and managed portfolios.",
+    zones: ["Public", "Staff", "Restricted", "Plant"],
+  },
+  {
+    icon: Factory,
+    t: "Industrial sites",
+    s: "Control access across warehouses, yards, offices, plant rooms and operational areas.",
+    zones: ["Staff", "Restricted", "Plant", "Stores"],
+  },
 ];
 
 const trustPoints = [
@@ -512,12 +542,26 @@ export default function Index() {
 
           <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {sectors.map((s) => (
-              <div key={s.t} className="rounded-xl border border-border bg-background p-6 transition-all duration-200 hover:border-primary/40 hover:shadow-sm">
-                <span className="flex items-center justify-center h-10 w-10 rounded-lg bg-primary/10">
-                  <s.icon className="h-5 w-5 text-primary" strokeWidth={1.75} />
-                </span>
-                <h3 className="mt-4 text-base font-semibold tracking-tight">{s.t}</h3>
+              <div key={s.t} className="group rounded-xl border border-border bg-background p-6 transition-all duration-200 hover:border-primary/40 hover:shadow-sm">
+                <div className="flex items-center gap-3">
+                  <s.icon className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} />
+                  <h3 className="text-base font-semibold tracking-tight">{s.t}</h3>
+                </div>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{s.s}</p>
+                {/* Access map mini-visual */}
+                <div className="mt-4 flex flex-wrap items-center gap-y-2">
+                  {s.zones.map((z, zi) => (
+                    <div key={z} className="flex items-center">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2 py-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        <span className="text-[10px] font-medium text-foreground">{z}</span>
+                      </span>
+                      {zi < s.zones.length - 1 && (
+                        <span className="mx-1.5 h-px w-4 bg-border" />
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
