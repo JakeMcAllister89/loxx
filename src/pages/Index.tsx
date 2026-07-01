@@ -204,32 +204,71 @@ export default function Index() {
             <div className="mt-6 space-y-4 text-[15px] text-muted-foreground leading-relaxed max-w-md">
               <p>Buildings change. Departments move. Keys are issued. Doors are added. People leave.</p>
               <p>Yet many organisations still rely on spreadsheets, PDFs, emails and individual knowledge to manage systems that may exist for decades.</p>
-              <p className="text-foreground font-medium">My LOXX brings everything together into one permanent digital record.</p>
+              <p className="text-foreground font-medium">My LOXX brings everything together into one permanent digital record your team can trust.</p>
             </div>
           </div>
 
-          <div className="grid gap-5">
-            <div className="rounded-xl border border-border bg-card p-6">
-              <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Today, without My LOXX</div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {oldWay.map((o) => (
-                  <span key={o.t} className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground">
-                    <o.icon className="h-3.5 w-3.5" strokeWidth={1.75} />
-                    {o.t}
-                  </span>
-                ))}
+          <div className="relative">
+            {/* BEFORE — scattered records */}
+            <div>
+              <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                Before My LOXX
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground/80">Information is scattered.</p>
+
+              <div className="relative mt-5 h-[220px]">
+                {oldWay.map((o, i) => {
+                  const pos = [
+                    "left-0 top-2 -rotate-3",
+                    "left-[30%] top-0 rotate-2",
+                    "right-2 top-6 -rotate-2",
+                    "left-[12%] bottom-2 rotate-1",
+                    "right-[18%] bottom-0 -rotate-1",
+                  ][i];
+                  return (
+                    <span
+                      key={o.t}
+                      style={{ animationDelay: `${i * 0.35}s` }}
+                      className={`scatter-item absolute ${pos} inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm`}
+                    >
+                      <o.icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      {o.t}
+                    </span>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="flex justify-center">
-              <ArrowRight className="h-5 w-5 text-primary rotate-90" />
+            {/* Transition — hierarchy line + dot into container */}
+            <div aria-hidden className="relative mx-auto my-4 h-10 w-px">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/60 to-primary" />
+              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]" />
             </div>
 
-            <div className="rounded-xl border border-border border-l-[3px] border-l-primary bg-card p-6 shadow-sm">
-              <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">With My LOXX</div>
-              <div className="mt-4 flex flex-wrap gap-2">
+            {/* AFTER — single organised system container */}
+            <div className="relative rounded-2xl border border-border border-l-[3px] border-l-primary bg-card p-6 shadow-sm overflow-hidden after-highlight">
+              <div aria-hidden className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
+                    With My LOXX
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Everything has a permanent digital home.
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-[10px] font-medium text-foreground/70">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  System record
+                </span>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {newWay.map((n) => (
-                  <span key={n.t} className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-medium text-foreground">
+                  <span
+                    key={n.t}
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-medium text-foreground"
+                  >
                     <n.icon className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
                     {n.t}
                   </span>
@@ -237,6 +276,23 @@ export default function Index() {
               </div>
             </div>
           </div>
+
+          <style>{`
+            @keyframes scatterSettle {
+              0%   { transform: translate(var(--sx,0), var(--sy,-6px)) rotate(var(--sr,0deg)); opacity: 0.55; }
+              60%  { opacity: 1; }
+              100% { transform: translate(0,0) rotate(var(--r,0deg)); opacity: 1; }
+            }
+            .scatter-item { animation: scatterSettle 1.4s ease-out both; }
+            @keyframes afterGlow {
+              0%,100% { box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+              50%     { box-shadow: 0 10px 40px -20px hsl(var(--primary) / 0.35); }
+            }
+            .after-highlight { animation: afterGlow 6s ease-in-out infinite; }
+            @media (prefers-reduced-motion: reduce) {
+              .scatter-item, .after-highlight { animation: none; }
+            }
+          `}</style>
         </div>
       </section>
 
