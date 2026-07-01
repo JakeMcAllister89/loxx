@@ -136,7 +136,7 @@ function HeroCanvasDemoInner() {
   );
 
   return (
-    <div className="w-full h-[340px] rounded-lg overflow-hidden">
+    <div className="w-full h-[440px] rounded-lg overflow-hidden" style={{ backgroundColor: "#fafafa" }}>
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}
@@ -149,11 +149,10 @@ function HeroCanvasDemoInner() {
         zoomOnPinch={false}
         zoomOnDoubleClick={false}
         preventScrolling={false}
-        defaultViewport={{ x: 50, y: 10, zoom: 0.65 }}
-        minZoom={0.65}
-        maxZoom={0.65}
+        defaultViewport={{ x: 40, y: 10, zoom: 0.8 }}
+        minZoom={0.8}
+        maxZoom={0.8}
       >
-        <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
       </ReactFlow>
     </div>
   );
