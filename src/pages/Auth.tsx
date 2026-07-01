@@ -79,11 +79,16 @@ export default function Auth() {
         <div className="flex justify-center mb-6"><LoxxLogo size="lg" /></div>
         <div className="bg-card rounded-[10px] border shadow-card p-8">
           <h1 className="text-2xl font-semibold tracking-tight text-center">
-            {mode === "login" ? "Sign in to LOXX" : "Create your account"}
+            {mode === "login" ? "Sign in to My LOXX" : "Create your My LOXX account"}
           </h1>
           <p className="text-sm text-muted-foreground text-center mt-1">
-            {mode === "login" ? "Welcome back." : "Free to start. No card required."}
+            {mode === "login" ? "Welcome back." : "Set up your organisation and start managing your master key system."}
           </p>
+          {mode === "signup" && (
+            <p className="text-sm text-muted-foreground text-center mt-1">
+              Free to start. No card required. No software subscription — you only pay when you order hardware.
+            </p>
+          )}
 
           <Button type="button" variant="outline" className="w-full mt-6" onClick={google} disabled={busy}>
             <svg className="h-4 w-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M23 12.27c0-.86-.08-1.69-.22-2.5H12v4.73h6.18c-.27 1.4-1.07 2.59-2.28 3.39v2.82h3.69C21.74 18.81 23 15.83 23 12.27z"/><path fill="#34A853" d="M12 23c3.08 0 5.66-1.02 7.55-2.76l-3.69-2.82c-1.02.68-2.32 1.09-3.86 1.09-2.97 0-5.49-2-6.39-4.69H1.79v2.95C3.66 20.43 7.55 23 12 23z"/><path fill="#FBBC05" d="M5.61 13.82A6.91 6.91 0 0 1 5.24 12c0-.63.11-1.25.31-1.82V7.23H1.79A11 11 0 0 0 1 12c0 1.77.42 3.45 1.17 4.95l3.44-2.13z"/><path fill="#EA4335" d="M12 5.27c1.68 0 3.18.58 4.36 1.7l3.27-3.27C17.66 1.86 15.08 1 12 1 7.55 1 3.66 3.57 1.79 7.23l3.82 2.95C6.51 7.27 9.03 5.27 12 5.27z"/></svg>
@@ -108,7 +113,7 @@ export default function Auth() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="company">Company</Label>
+                  <Label htmlFor="company">Organisation name</Label>
                   <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} required />
                 </div>
               </>
@@ -119,12 +124,24 @@ export default function Auth() {
             </div>
             <div>
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
+              {mode === "signup" && (
+                <p className="text-xs text-muted-foreground mt-1">Use at least 8 characters.</p>
+              )}
             </div>
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={busy}>
               {mode === "login" ? "Sign in" : "Create account"}
             </Button>
           </form>
+
+          {mode === "signup" && (
+            <p className="text-xs text-center text-muted-foreground mt-4">
+              By creating an account, you agree to the{" "}
+              <Link to="/terms" className="text-primary hover:underline">Terms</Link>
+              {" "}and{" "}
+              <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+            </p>
+          )}
 
           <div className="text-sm text-center mt-5 text-muted-foreground">
             {mode === "login" ? (
