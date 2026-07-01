@@ -38,30 +38,35 @@ const workflow = [
 
 const features = [
   {
+    id: "system-builder",
     icon: GitBranch,
     label: "System Builder",
     headline: "Build your system visually.",
     copy: "Create clear master key hierarchies so everyone understands how buildings, keys and cylinders connect.",
   },
   {
+    id: "dashboard",
     icon: LayoutDashboard,
     label: "Dashboard",
     headline: "See the whole system at a glance.",
     copy: "Track buildings, doors, cylinders, keys, orders and recent activity from one organised workspace.",
   },
   {
+    id: "ordering",
     icon: ShoppingCart,
     label: "Ordering",
     headline: "Order without the back-and-forth.",
     copy: "Create orders for keys, cylinders and expansions directly from your system record.",
   },
   {
+    id: "audit-permissions",
     icon: ShieldCheck,
     label: "Audit & Permissions",
     headline: "Control who can see and change your system.",
     copy: "Give the right people the right access and keep a clear history of important changes.",
   },
 ];
+
 
 const sectors = [
   {
