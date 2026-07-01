@@ -142,9 +142,9 @@ function HeroCanvasDemoInner() {
         zoomOnPinch={false}
         zoomOnDoubleClick={false}
         preventScrolling={false}
-        defaultViewport={{ x: 100, y: 60, zoom: 0.7 }}
-        minZoom={0.7}
-        maxZoom={0.7}
+        defaultViewport={{ x: 50, y: 10, zoom: 0.65 }}
+        minZoom={0.65}
+        maxZoom={0.65}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
       </ReactFlow>
