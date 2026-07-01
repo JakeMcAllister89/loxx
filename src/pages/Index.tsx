@@ -642,7 +642,7 @@ export default function Index() {
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Questions facilities teams usually ask.</h2>
           <div className="mt-12 border-t border-border">
             {faqs.map((f) => <FaqItem key={f.q} q={f.q} a={f.a} />)}
-          <-- div>
+          </div>
         </div>
       </section>
 
