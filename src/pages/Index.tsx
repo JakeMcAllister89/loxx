@@ -466,30 +466,35 @@ export default function Index() {
       </section>
 
       {/* SECTION 4 — PRODUCT SHOWCASE */}
-      <section className="border-t border-border">
+      <section className="border-t border-border bg-gradient-to-b from-background via-muted/30 to-background">
         <div className="container py-20 md:py-28">
           <div className="max-w-2xl">
             <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Inside My LOXX</span>
             <h2 className="mt-4 text-3xl md:text-4xl font-semibold tracking-tight">A real product, built for real systems.</h2>
           </div>
 
-          <div className="mt-14 space-y-16 md:space-y-24">
-            {features.map((f, i) => (
-              <div key={f.label} className={`grid md:grid-cols-2 gap-10 lg:gap-16 items-center ${i % 2 === 1 ? "md:[&>div:first-child]:order-2" : ""}`}>
-                <div>
-                  <span className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
-                    <span className="h-1 w-1 rounded-full bg-primary" />
-                    {f.label}
-                  </span>
-                  <h3 className="mt-4 text-2xl md:text-3xl font-semibold tracking-tight leading-tight">{f.headline}</h3>
-                  <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed max-w-md">{f.copy}</p>
+          <div className="mt-16 space-y-20 md:space-y-28">
+            {features.map((f, i) => {
+              const reverse = i % 2 === 1;
+              return (
+                <div
+                  key={f.label}
+                  className={`grid md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-10 lg:gap-16 items-center`}
+                >
+                  <div className={reverse ? "md:order-2" : ""}>
+                    <span className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
+                      <span className="h-1 w-1 rounded-full bg-primary" />
+                      Feature 0{i + 1} · {f.label}
+                    </span>
+                    <h3 className="mt-4 text-2xl md:text-3xl font-semibold tracking-tight leading-tight">{f.headline}</h3>
+                    <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed max-w-md">{f.copy}</p>
+                  </div>
+                  <div className={reverse ? "md:order-1" : ""}>
+                    <ProductFrame variant={f.label} />
+                  </div>
                 </div>
-                <div className="relative aspect-[4/3] rounded-2xl border border-border bg-card overflow-hidden">
-                  <div aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.06),transparent_60%)]" />
-                  <FeatureVisual variant={f.label} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -595,73 +600,249 @@ export default function Index() {
 /* Product-led feature visuals — abstracted from the real app.   */
 /* ------------------------------------------------------------ */
 
-function FeatureVisual({ variant }: { variant: string }) {
+function ProductFrame({ variant }: { variant: string }) {
+  // Titles that appear in the frame's tab / URL bar
+  const meta: Record<string, { path: string; title: string }> = {
+    "System Builder": { path: "my-loxx.app/builder", title: "System Builder" },
+    "Dashboard": { path: "my-loxx.app/dashboard", title: "Dashboard" },
+    "Ordering": { path: "my-loxx.app/orders/new", title: "New Order" },
+    "Audit & Permissions": { path: "my-loxx.app/team", title: "Team & Audit" },
+  };
+  const m = meta[variant] ?? { path: "my-loxx.app", title: variant };
+
+  return (
+    <div className="relative">
+      {/* Ambient shadow / glow */}
+      <div aria-hidden className="absolute -inset-6 rounded-[28px] bg-gradient-to-br from-primary/10 via-transparent to-transparent blur-2xl" />
+      <div className="relative rounded-2xl border border-border bg-white shadow-[0_30px_60px_-30px_rgba(15,23,42,0.35),0_10px_20px_-10px_rgba(15,23,42,0.15)] overflow-hidden">
+        {/* Browser chrome */}
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+          <div className="flex gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
+            <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
+            <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
+          </div>
+          <div className="flex-1 flex justify-center">
+            <div className="text-[10px] text-slate-500 bg-white border border-slate-200 rounded-md px-3 py-1 font-mono truncate max-w-[70%]">
+              {m.path}
+            </div>
+          </div>
+          <span className="text-[10px] text-slate-400 font-medium">{m.title}</span>
+        </div>
+
+        {/* App body */}
+        <div className="flex bg-white h-[380px] md:h-[440px]">
+          {/* Left nav */}
+          <div className="hidden sm:flex w-14 md:w-16 border-r border-slate-100 bg-slate-50/60 flex-col items-center py-4 gap-1">
+            <div className="h-7 w-7 rounded-md bg-primary text-white flex items-center justify-center text-[10px] font-bold">L</div>
+            <div className="h-px w-6 bg-slate-200 my-2" />
+            {[
+              { icon: LayoutDashboard, active: variant === "Dashboard" },
+              { icon: GitBranch, active: variant === "System Builder" },
+              { icon: ShoppingCart, active: variant === "Ordering" },
+              { icon: Users, active: variant === "Audit & Permissions" },
+              { icon: FileText, active: false },
+            ].map((n, idx) => (
+              <div
+                key={idx}
+                className={`h-8 w-8 rounded-lg flex items-center justify-center ${
+                  n.active ? "bg-primary/10 text-primary" : "text-slate-400"
+                }`}
+              >
+                <n.icon className="h-4 w-4" strokeWidth={1.75} />
+              </div>
+            ))}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <FeatureContent variant={variant} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeatureContent({ variant }: { variant: string }) {
   if (variant === "System Builder") {
     return (
-      <div className="absolute inset-0 p-6 flex items-center justify-center">
-        <svg viewBox="0 0 320 220" className="w-full h-full max-w-md">
-          <line x1="160" y1="46" x2="80" y2="100" stroke="hsl(var(--border))" strokeWidth="1.5" />
-          <line x1="160" y1="46" x2="240" y2="100" stroke="hsl(var(--border))" strokeWidth="1.5" />
-          <line x1="80" y1="132" x2="50" y2="180" stroke="hsl(var(--border))" strokeWidth="1.5" />
-          <line x1="80" y1="132" x2="110" y2="180" stroke="hsl(var(--border))" strokeWidth="1.5" />
-          <line x1="240" y1="132" x2="210" y2="180" stroke="hsl(var(--primary))" strokeWidth="2" />
-          <line x1="240" y1="132" x2="270" y2="180" stroke="hsl(var(--border))" strokeWidth="1.5" />
+      <div className="flex h-full">
+        {/* Dotted canvas */}
+        <div
+          className="flex-1 relative overflow-hidden"
+          style={{
+            backgroundImage: "radial-gradient(circle, rgb(203 213 225) 1px, transparent 1px)",
+            backgroundSize: "14px 14px",
+            backgroundColor: "#fafafa",
+          }}
+        >
+          <div className="absolute inset-0 p-5">
+            {/* Toolbar */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-[11px] font-semibold text-slate-700">West Wing · Grand Master A</div>
+              <button className="text-[10px] font-medium bg-primary text-white px-2.5 py-1 rounded-md shadow-sm">
+                + Add key
+              </button>
+            </div>
 
-          <g>
-            <rect x="120" y="20" width="80" height="26" rx="6" fill="hsl(var(--primary)/0.12)" stroke="hsl(var(--primary))" strokeWidth="1.5" />
-            <text x="160" y="37" textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(var(--primary))">Grand Master</text>
-          </g>
-          <g>
-            <rect x="42" y="100" width="76" height="26" rx="6" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="1.5" />
-            <text x="80" y="117" textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(var(--foreground))">Master · N</text>
-          </g>
-          <g>
-            <rect x="202" y="100" width="76" height="26" rx="6" fill="hsl(var(--card))" stroke="hsl(var(--primary))" strokeWidth="1.5" />
-            <text x="240" y="117" textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(var(--foreground))">Master · S</text>
-          </g>
-          {[{ x: 20, hl: false }, { x: 80, hl: false }, { x: 180, hl: true }, { x: 240, hl: false }].map((c, i) => (
-            <g key={i}>
-              <rect x={c.x} y="180" width="60" height="22" rx="5"
-                fill={c.hl ? "hsl(var(--primary)/0.12)" : "hsl(var(--card))"}
-                stroke={c.hl ? "hsl(var(--primary))" : "hsl(var(--border))"} strokeWidth="1.5" />
-              <text x={c.x + 30} y="195" textAnchor="middle" fontSize="9" fontWeight="500" fill="hsl(var(--foreground))">CYL {i + 1}</text>
-            </g>
-          ))}
-        </svg>
+            {/* Hierarchy */}
+            <svg viewBox="0 0 360 260" className="w-full h-[calc(100%-2rem)]">
+              <line x1="180" y1="42" x2="90" y2="100" stroke="#cbd5e1" strokeWidth="1.5" />
+              <line x1="180" y1="42" x2="180" y2="100" stroke="#cbd5e1" strokeWidth="1.5" />
+              <line x1="180" y1="42" x2="270" y2="100" stroke="#cbd5e1" strokeWidth="1.5" />
+              <line x1="90" y1="140" x2="60" y2="200" stroke="#cbd5e1" strokeWidth="1.5" />
+              <line x1="90" y1="140" x2="120" y2="200" stroke="#cbd5e1" strokeWidth="1.5" />
+              <line x1="270" y1="140" x2="240" y2="200" stroke="hsl(var(--primary))" strokeWidth="2" />
+              <line x1="270" y1="140" x2="300" y2="200" stroke="#cbd5e1" strokeWidth="1.5" />
+
+              {/* GMK */}
+              <g>
+                <rect x="130" y="14" width="100" height="30" rx="8" fill="hsl(var(--primary))" />
+                <text x="180" y="28" textAnchor="middle" fontSize="9" fontWeight="700" fill="white" letterSpacing="0.5">GRAND MASTER</text>
+                <text x="180" y="39" textAnchor="middle" fontSize="9" fontWeight="600" fill="white" opacity="0.9">GMK · A</text>
+              </g>
+              {/* Master rows */}
+              {[
+                { x: 40, label: "MK · N", primary: false },
+                { x: 130, label: "MK · C", primary: false },
+                { x: 220, label: "MK · S", primary: true },
+              ].map((k) => (
+                <g key={k.label}>
+                  <rect x={k.x} y="100" width="100" height="40" rx="8" fill="white" stroke={k.primary ? "hsl(var(--primary))" : "#e2e8f0"} strokeWidth="1.5" />
+                  <rect x={k.x} y="100" width="4" height="40" rx="2" fill={k.primary ? "hsl(var(--primary))" : "#94a3b8"} />
+                  <text x={k.x + 52} y="118" textAnchor="middle" fontSize="9" fontWeight="700" fill="#0f172a">MASTER KEY</text>
+                  <text x={k.x + 52} y="132" textAnchor="middle" fontSize="9" fontWeight="500" fill="#64748b">{k.label}</text>
+                </g>
+              ))}
+              {/* Cylinders */}
+              {[
+                { x: 30, label: "CYL 1" },
+                { x: 90, label: "CYL 2" },
+                { x: 210, label: "CYL 3", hl: true },
+                { x: 270, label: "CYL 4" },
+              ].map((c) => (
+                <g key={c.label}>
+                  <rect x={c.x} y="200" width="60" height="30" rx="6"
+                    fill={c.hl ? "hsl(var(--primary)/0.08)" : "white"}
+                    stroke={c.hl ? "hsl(var(--primary))" : "#e2e8f0"} strokeWidth="1.5" />
+                  <text x={c.x + 30} y="212" textAnchor="middle" fontSize="8" fontWeight="600" fill="#94a3b8" letterSpacing="0.4">CYLINDER</text>
+                  <text x={c.x + 30} y="223" textAnchor="middle" fontSize="9" fontWeight="600" fill="#0f172a">{c.label}</text>
+                </g>
+              ))}
+            </svg>
+          </div>
+        </div>
+
+        {/* Side inspector */}
+        <div className="hidden lg:flex w-48 border-l border-slate-100 flex-col p-4 bg-white">
+          <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Selected</div>
+          <div className="mt-2 text-[12px] font-semibold text-slate-900">Cylinder 3</div>
+          <div className="text-[10px] text-slate-500">Master · S · Room 214</div>
+
+          <div className="mt-4 space-y-2">
+            {[
+              { l: "Differ", v: "0118" },
+              { l: "Size", v: "35 × 35" },
+              { l: "Keys issued", v: "4" },
+            ].map((r) => (
+              <div key={r.l} className="flex items-center justify-between text-[10px]">
+                <span className="text-slate-500">{r.l}</span>
+                <span className="font-medium text-slate-900 font-mono">{r.v}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-slate-100">
+            <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold mb-2">Activity</div>
+            <div className="space-y-1.5">
+              <div className="text-[10px] text-slate-600">Added by Sarah · 2h</div>
+              <div className="text-[10px] text-slate-600">Key issued · 1d</div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (variant === "Dashboard") {
     return (
-      <div className="absolute inset-0 p-6 flex flex-col gap-3">
-        <div className="grid grid-cols-3 gap-3">
+      <div className="p-5 h-full flex flex-col gap-4 bg-slate-50/40">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Overview</div>
+            <div className="text-[14px] font-semibold text-slate-900">Estates workspace</div>
+          </div>
+          <button className="text-[10px] font-medium bg-primary text-white px-2.5 py-1.5 rounded-md shadow-sm">
+            + New system
+          </button>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2.5">
           {[
-            { l: "Buildings", v: "12" },
-            { l: "Cylinders", v: "1,284" },
-            { l: "Active keys", v: "3,412" },
+            { l: "Total doors", v: "1,284", d: "+12" },
+            { l: "Active systems", v: "8", d: "+1" },
+            { l: "Orders placed", v: "36", d: "+4" },
+            { l: "Total spend", v: "£24.8k", d: "+£1.2k" },
           ].map((s) => (
-            <div key={s.l} className="rounded-lg bg-background border border-border p-3">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.l}</div>
-              <div className="text-lg font-semibold tracking-tight mt-1">{s.v}</div>
+            <div key={s.l} className="rounded-lg bg-white border border-slate-200 p-3">
+              <div className="text-[9px] uppercase tracking-wider text-slate-400 font-medium">{s.l}</div>
+              <div className="text-[15px] font-semibold text-slate-900 mt-1">{s.v}</div>
+              <div className="text-[9px] text-primary font-medium mt-0.5">{s.d} this month</div>
             </div>
           ))}
         </div>
-        <div className="flex-1 rounded-lg bg-background border border-border p-3 flex flex-col justify-end gap-1.5">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Recent activity</div>
-          {[
-            { w: "72%", l: "West Wing" },
-            { w: "58%", l: "Science Block" },
-            { w: "44%", l: "Admin" },
-            { w: "30%", l: "Gym" },
-          ].map((b) => (
-            <div key={b.l} className="flex items-center gap-2 text-[10px]">
-              <span className="w-20 text-muted-foreground">{b.l}</span>
-              <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-primary/70 rounded-full" style={{ width: b.w }} />
-              </div>
+
+        <div className="grid grid-cols-5 gap-3 flex-1 min-h-0">
+          <div className="col-span-3 rounded-lg bg-white border border-slate-200 p-3 flex flex-col">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[10px] font-semibold text-slate-700">Your systems</div>
+              <div className="text-[9px] text-slate-400">4 of 8</div>
             </div>
-          ))}
+            <div className="space-y-1.5 flex-1">
+              {[
+                { n: "West Wing · GMK A", d: "412 doors", s: "Active" },
+                { n: "Science Block · GMK B", d: "268 doors", s: "Active" },
+                { n: "Admin · GMK C", d: "184 doors", s: "Active" },
+                { n: "Sports Centre · GMK D", d: "96 doors", s: "Draft" },
+              ].map((r) => (
+                <div key={r.n} className="flex items-center justify-between text-[10px] py-1.5 border-b border-slate-100 last:border-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                      <Building2 className="h-3 w-3 text-primary" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-slate-900 font-medium truncate">{r.n}</div>
+                      <div className="text-slate-500 text-[9px]">{r.d}</div>
+                    </div>
+                  </div>
+                  <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${r.s === "Active" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                    {r.s}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="col-span-2 rounded-lg bg-white border border-slate-200 p-3 flex flex-col">
+            <div className="text-[10px] font-semibold text-slate-700 mb-2">Recent activity</div>
+            <div className="space-y-2 flex-1">
+              {[
+                { l: "Order #1284 placed", t: "2h" },
+                { l: "3 keys issued · West Wing", t: "5h" },
+                { l: "Cylinder added · MK · S", t: "1d" },
+                { l: "Sarah joined team", t: "2d" },
+              ].map((a) => (
+                <div key={a.l} className="flex items-start gap-2 text-[10px]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-slate-800">{a.l}</div>
+                    <div className="text-slate-400 text-[9px]">{a.t} ago</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -669,27 +850,47 @@ function FeatureVisual({ variant }: { variant: string }) {
 
   if (variant === "Ordering") {
     return (
-      <div className="absolute inset-0 p-6 flex items-center justify-center">
-        <div className="w-full max-w-sm rounded-xl bg-background border border-border p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-semibold">Order · West Wing</div>
-            <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">Draft</span>
+      <div className="p-5 h-full flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Order · draft</div>
+            <div className="text-[14px] font-semibold text-slate-900">West Wing · GMK A</div>
           </div>
-          <div className="mt-4 space-y-2.5">
-            {[
-              { n: "Euro Cylinder 35×35", q: "×4" },
-              { n: "Replacement key · Differ 0118", q: "×2" },
-              { n: "Sub Master key", q: "×1" },
-            ].map((it) => (
-              <div key={it.n} className="flex items-center justify-between text-[11px] py-2 border-b border-border last:border-0">
-                <span className="text-foreground">{it.n}</span>
-                <span className="font-mono text-muted-foreground">{it.q}</span>
+          <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-1 rounded-md">Ready to order</span>
+        </div>
+
+        <div className="rounded-lg border border-slate-200 overflow-hidden bg-white flex-1 flex flex-col">
+          <div className="grid grid-cols-[1fr_60px_80px_80px] gap-2 px-3 py-2 bg-slate-50 border-b border-slate-200 text-[9px] uppercase tracking-wider text-slate-500 font-medium">
+            <span>Item</span>
+            <span className="text-right">Qty</span>
+            <span className="text-right">Unit</span>
+            <span className="text-right">Total</span>
+          </div>
+          {[
+            { n: "Replacement key", d: "Differ 0118 · MK · S", q: 6, u: "£8.50", t: "£51.00" },
+            { n: "Euro cylinder", d: "35 × 35 · anti-snap", q: 4, u: "£38.00", t: "£152.00" },
+            { n: "Sub master key", d: "Differ 0402", q: 2, u: "£14.00", t: "£28.00" },
+            { n: "Cylinder core", d: "Retrofit set", q: 1, u: "£16.00", t: "£16.00" },
+          ].map((r) => (
+            <div key={r.n} className="grid grid-cols-[1fr_60px_80px_80px] gap-2 px-3 py-2.5 border-b border-slate-100 last:border-0 items-center text-[10.5px]">
+              <div className="min-w-0">
+                <div className="text-slate-900 font-medium truncate">{r.n}</div>
+                <div className="text-slate-500 text-[9px] truncate">{r.d}</div>
               </div>
-            ))}
-          </div>
-          <div className="mt-3 flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">7 items</span>
-            <span className="font-semibold">Ready to order</span>
+              <span className="text-right font-mono text-slate-700">×{r.q}</span>
+              <span className="text-right font-mono text-slate-500">{r.u}</span>
+              <span className="text-right font-mono font-semibold text-slate-900">{r.t}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg bg-slate-50 border border-slate-200 px-4 py-3">
+          <div className="text-[10px] text-slate-500">Quote total · 13 items</div>
+          <div className="flex items-center gap-3">
+            <div className="text-[15px] font-semibold text-slate-900">£247.00</div>
+            <button className="text-[11px] font-semibold bg-primary text-white px-3.5 py-2 rounded-md shadow-sm inline-flex items-center gap-1.5">
+              Add to basket <ArrowRight className="h-3 w-3" />
+            </button>
           </div>
         </div>
       </div>
@@ -698,31 +899,71 @@ function FeatureVisual({ variant }: { variant: string }) {
 
   // Audit & Permissions
   return (
-    <div className="absolute inset-0 p-6 flex items-center justify-center">
-      <div className="w-full max-w-sm rounded-xl bg-background border border-border p-4">
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-3">Access · Estates Team</div>
-        <div className="space-y-2.5">
-          {[
-            { n: "Sarah Wells", r: "Admin", ok: true },
-            { n: "James Okafor", r: "Order only", ok: true },
-            { n: "M. Chen", r: "View only", ok: true },
-            { n: "R. Patel", r: "Revoked", ok: false },
-          ].map((p) => (
-            <div key={p.n} className="flex items-center justify-between text-[11px] py-2 border-b border-border last:border-0">
-              <div className="flex items-center gap-2">
-                <span className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-semibold text-primary">
-                  {p.n.split(" ").map((w) => w[0]).join("")}
-                </span>
-                <span>{p.n}</span>
+    <div className="p-5 h-full flex flex-col gap-3 bg-slate-50/40">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Team & Audit</div>
+          <div className="text-[14px] font-semibold text-slate-900">Estates workspace</div>
+        </div>
+        <button className="text-[10px] font-medium bg-primary text-white px-2.5 py-1.5 rounded-md shadow-sm">
+          + Invite
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 flex-1 min-h-0">
+        <div className="rounded-lg border border-slate-200 bg-white p-3 flex flex-col">
+          <div className="text-[10px] font-semibold text-slate-700 mb-2">Members · 4</div>
+          <div className="space-y-1.5 flex-1">
+            {[
+              { n: "Sarah Wells", e: "sarah@estates.co.uk", r: "Admin", tone: "primary" },
+              { n: "James Okafor", e: "james@estates.co.uk", r: "Order only", tone: "slate" },
+              { n: "M. Chen", e: "mchen@estates.co.uk", r: "View only", tone: "slate" },
+              { n: "R. Patel", e: "rpatel@estates.co.uk", r: "Revoked", tone: "revoked" },
+            ].map((p) => (
+              <div key={p.n} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`h-7 w-7 rounded-full flex items-center justify-center text-[9px] font-semibold shrink-0 ${
+                    p.tone === "revoked" ? "bg-slate-100 text-slate-400" : "bg-primary/10 text-primary"
+                  }`}>
+                    {p.n.split(" ").map((w) => w[0]).join("")}
+                  </span>
+                  <div className="min-w-0">
+                    <div className={`text-[10.5px] font-medium truncate ${p.tone === "revoked" ? "text-slate-400 line-through" : "text-slate-900"}`}>{p.n}</div>
+                    <div className="text-[9px] text-slate-500 truncate">{p.e}</div>
+                  </div>
+                </div>
+                <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded whitespace-nowrap ${
+                  p.tone === "primary" ? "bg-primary/10 text-primary" :
+                  p.tone === "revoked" ? "bg-slate-100 text-slate-400" :
+                  "bg-slate-100 text-slate-600"
+                }`}>{p.r}</span>
               </div>
-              <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${p.ok ? "text-foreground" : "text-muted-foreground line-through"}`}>
-                {p.ok && <Check className="h-3 w-3 text-primary" />}
-                {p.r}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-slate-200 bg-white p-3 flex flex-col">
+          <div className="text-[10px] font-semibold text-slate-700 mb-2">Audit log</div>
+          <div className="space-y-2 flex-1">
+            {[
+              { u: "Sarah Wells", a: "Issued 3 keys · West Wing", t: "10:42" },
+              { u: "James Okafor", a: "Placed order #1284", t: "09:18" },
+              { u: "Sarah Wells", a: "Added cylinder · MK · S", t: "Yesterday" },
+              { u: "M. Chen", a: "Viewed system record", t: "Yesterday" },
+              { u: "Admin", a: "Revoked access · R. Patel", t: "2 days ago" },
+            ].map((l, idx) => (
+              <div key={idx} className="flex items-start gap-2 text-[10px] pb-1.5 border-b border-slate-100 last:border-0">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-slate-800 truncate">{l.a}</div>
+                  <div className="text-slate-500 text-[9px]">by {l.u} · {l.t}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
