@@ -186,7 +186,7 @@ export default function AdminUsers() {
       refresh_token: adminSession.refresh_token,
     }));
     sessionStorage.setItem("loxx_impersonation", JSON.stringify({ name: targetName, log_id }));
-    const { error: otpError } = await supabase.auth.verifyOtp({ email, token_hash, type: "magiclink" });
+    const { error: otpError } = await supabase.auth.verifyOtp({ token_hash, type: "magiclink" });
     if (otpError) {
       toast.error("Could not switch session: " + otpError.message);
       sessionStorage.removeItem("loxx_admin_session");

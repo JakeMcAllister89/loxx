@@ -39,6 +39,15 @@ Deno.serve(async (req) => {
       });
       if (cErr || !created.user) return json({ error: cErr?.message ?? "Could not create user" }, 400);
 
+      // Platform-invited customers were vetted by an admin before the
+      // invite was sent — auto-approve their organisation rather than
+      // dropping them into the manual approval queue meant for organic signups.
+      const { data: newProfile } = await admin.from("profiles").select("org_id").eq("id", created.user.id).maybeSingle();
+
+      if ((newProfile as any)?.org_id) {
+        await admin.from("organisations").update({ is_approved: true }).eq("id", (newProfile as any).org_id);
+      }
+
       await admin.from("platform_invites").update({ accepted_at: new Date().toISOString() }).eq("id", (invite as any).id);
       return json({ ok: true });
     }
