@@ -858,6 +858,39 @@ function ProductFrame({ variant }: { variant: string }) {
 
 function FeatureContent({ variant }: { variant: string }) {
   if (variant === "System Builder") {
+    const GMK = "hsl(245 60% 67%)";
+    const MK = "hsl(178 60% 38%)";
+    const SMK = "hsl(154 71% 36%)";
+    const CYL = "hsl(33 91% 44%)";
+    const LINE = "#e2e8f0";
+    const ORANGE = "hsl(var(--primary))";
+
+    const Card = ({
+      x, y, w, h, accent, type, label, sub, highlight,
+    }: { x: number; y: number; w: number; h: number; accent: string; type: string; label: string; sub?: string; highlight?: boolean }) => (
+      <g>
+        <rect
+          x={x} y={y} width={w} height={h} rx="7"
+          fill="white"
+          stroke={highlight ? ORANGE : "#e5e7eb"}
+          strokeWidth={highlight ? 1.5 : 1}
+          style={{ filter: "drop-shadow(0 1px 1px rgba(15,23,42,0.05))" }}
+        />
+        <rect x={x} y={y} width="3" height={h} rx="1.5" fill={accent} />
+        <text x={x + w / 2} y={y + 13} textAnchor="middle" fontSize="6.5" fontWeight="700" fill={accent} letterSpacing="0.6">{type}</text>
+        <text x={x + w / 2} y={y + 25} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#0f172a">{label}</text>
+        {sub && <text x={x + w / 2} y={y + 35} textAnchor="middle" fontSize="7" fill="#94a3b8">{sub}</text>}
+      </g>
+    );
+
+    const AddBtn = ({ cx, cy }: { cx: number; cy: number }) => (
+      <g>
+        <circle cx={cx} cy={cy} r="5" fill={ORANGE} />
+        <line x1={cx - 2.4} y1={cy} x2={cx + 2.4} y2={cy} stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+        <line x1={cx} y1={cy - 2.4} x2={cx} y2={cy + 2.4} stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+      </g>
+    );
+
     return (
       <div className="flex h-full">
         {/* Dotted canvas */}
@@ -869,73 +902,88 @@ function FeatureContent({ variant }: { variant: string }) {
             backgroundColor: "#fafafa",
           }}
         >
-          <div className="absolute inset-0 p-5">
+          <div className="absolute inset-0 p-4 flex flex-col">
             {/* Toolbar */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-[11px] font-semibold text-slate-700">West Wing · Grand Master A</div>
-              <button className="text-[10px] font-medium bg-primary text-white px-2.5 py-1 rounded-md shadow-sm">
-                + Add key
-              </button>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="text-[11px] font-semibold text-slate-700">West Wing · Estate A</div>
+                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">3 buildings · 12 doors</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button className="text-[9px] font-medium text-slate-600 px-2 py-1 rounded border border-slate-200 bg-white">Fit view</button>
+                <button className="text-[9px] font-medium bg-primary text-white px-2 py-1 rounded shadow-sm">+ Add</button>
+              </div>
             </div>
 
             {/* Hierarchy */}
-            <svg viewBox="0 0 360 260" className="w-full h-[calc(100%-2rem)]">
-              <line x1="180" y1="42" x2="90" y2="100" stroke="#cbd5e1" strokeWidth="1.5" />
-              <line x1="180" y1="42" x2="180" y2="100" stroke="#cbd5e1" strokeWidth="1.5" />
-              <line x1="180" y1="42" x2="270" y2="100" stroke="#cbd5e1" strokeWidth="1.5" />
-              <line x1="90" y1="140" x2="60" y2="200" stroke="#cbd5e1" strokeWidth="1.5" />
-              <line x1="90" y1="140" x2="120" y2="200" stroke="#cbd5e1" strokeWidth="1.5" />
-              <line x1="270" y1="140" x2="240" y2="200" stroke="hsl(var(--primary))" strokeWidth="2" />
-              <line x1="270" y1="140" x2="300" y2="200" stroke="#cbd5e1" strokeWidth="1.5" />
+            <svg viewBox="0 0 400 300" className="w-full flex-1" preserveAspectRatio="xMidYMid meet">
+              {/* Connectors */}
+              <g stroke={LINE} strokeWidth="1.2" fill="none">
+                {/* GMK -> MKs */}
+                <path d="M200 60 V74 H95 V88" />
+                <path d="M200 60 V74 H305 V88" />
+                {/* MK-N -> SMK 1,2 */}
+                <path d="M95 138 V152 H65 V168" />
+                <path d="M95 138 V152 H185 V168" />
+                {/* MK-S -> SMK 3 */}
+                <path d="M305 138 V152 H335 V168" />
+                {/* SMK-1 -> CYL-1 */}
+                <path d="M65 218 V248" />
+                {/* SMK-2 -> CYL-2, CYL-3 */}
+                <path d="M185 218 V232 H125 V248" />
+              </g>
+              {/* Highlighted connector to selected cylinder */}
+              <path d="M185 218 V232 H205 V248" stroke={ORANGE} strokeWidth="1.6" fill="none" />
+              <g stroke={LINE} strokeWidth="1.2" fill="none">
+                <path d="M335 218 V248" />
+              </g>
 
               {/* GMK */}
-              <g>
-                <rect x="130" y="14" width="100" height="30" rx="8" fill="hsl(var(--primary))" />
-                <text x="180" y="28" textAnchor="middle" fontSize="9" fontWeight="700" fill="white" letterSpacing="0.5">GRAND MASTER</text>
-                <text x="180" y="39" textAnchor="middle" fontSize="9" fontWeight="600" fill="white" opacity="0.9">GMK · A</text>
-              </g>
-              {/* Master rows */}
-              {[
-                { x: 40, label: "MK · N", primary: false },
-                { x: 130, label: "MK · C", primary: false },
-                { x: 220, label: "MK · S", primary: true },
-              ].map((k) => (
-                <g key={k.label}>
-                  <rect x={k.x} y="100" width="100" height="40" rx="8" fill="white" stroke={k.primary ? "hsl(var(--primary))" : "#e2e8f0"} strokeWidth="1.5" />
-                  <rect x={k.x} y="100" width="4" height="40" rx="2" fill={k.primary ? "hsl(var(--primary))" : "#94a3b8"} />
-                  <text x={k.x + 52} y="118" textAnchor="middle" fontSize="9" fontWeight="700" fill="#0f172a">MASTER KEY</text>
-                  <text x={k.x + 52} y="132" textAnchor="middle" fontSize="9" fontWeight="500" fill="#64748b">{k.label}</text>
-                </g>
-              ))}
+              <Card x={150} y={20} w={100} h={40} accent={GMK} type="GRAND MASTER KEY" label="GMK · A" sub="Estate-wide" />
+              <AddBtn cx={200} cy={68} />
+
+              {/* Master Keys */}
+              <Card x={40} y={88} w={110} h={50} accent={MK} type="MASTER KEY" label="MK · North" sub="Building N" />
+              <Card x={250} y={88} w={110} h={50} accent={MK} type="MASTER KEY" label="MK · South" sub="Building S" />
+              <AddBtn cx={95} cy={146} />
+              <AddBtn cx={305} cy={146} />
+
+              {/* Sub Master Keys */}
+              <Card x={20} y={168} w={90} h={50} accent={SMK} type="SUB MASTER KEY" label="SMK · N1" sub="Floor 1" />
+              <Card x={140} y={168} w={90} h={50} accent={SMK} type="SUB MASTER KEY" label="SMK · N2" sub="Floor 2" />
+              <Card x={290} y={168} w={90} h={50} accent={SMK} type="SUB MASTER KEY" label="SMK · S1" sub="Floor 1" />
+              <AddBtn cx={65} cy={226} />
+              <AddBtn cx={185} cy={226} />
+              <AddBtn cx={335} cy={226} />
+
               {/* Cylinders */}
-              {[
-                { x: 30, label: "CYL 1" },
-                { x: 90, label: "CYL 2" },
-                { x: 210, label: "CYL 3", hl: true },
-                { x: 270, label: "CYL 4" },
-              ].map((c) => (
-                <g key={c.label}>
-                  <rect x={c.x} y="200" width="60" height="30" rx="6"
-                    fill={c.hl ? "hsl(var(--primary)/0.08)" : "white"}
-                    stroke={c.hl ? "hsl(var(--primary))" : "#e2e8f0"} strokeWidth="1.5" />
-                  <text x={c.x + 30} y="212" textAnchor="middle" fontSize="8" fontWeight="600" fill="#94a3b8" letterSpacing="0.4">CYLINDER</text>
-                  <text x={c.x + 30} y="223" textAnchor="middle" fontSize="9" fontWeight="600" fill="#0f172a">{c.label}</text>
-                </g>
-              ))}
+              <Card x={20} y={248} w={90} h={42} accent={CYL} type="CYLINDER" label="D001" sub="Office 101" />
+              <Card x={80} y={248} w={90} h={42} accent={CYL} type="CYLINDER" label="D014" sub="Office 214" />
+              <Card x={160} y={248} w={90} h={42} accent={CYL} type="CYLINDER" label="D015" sub="Room 214" highlight />
+              <Card x={290} y={248} w={90} h={42} accent={CYL} type="CYLINDER" label="D032" sub="Plant room" />
             </svg>
           </div>
         </div>
 
         {/* Side inspector */}
-        <div className="hidden lg:flex w-48 border-l border-slate-100 flex-col p-4 bg-white">
-          <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Selected</div>
-          <div className="mt-2 text-[12px] font-semibold text-slate-900">Cylinder 3</div>
-          <div className="text-[10px] text-slate-500">Master · S · Room 214</div>
+        <div className="hidden lg:flex w-52 border-l border-slate-100 flex-col bg-white">
+          <div className="px-4 pt-4 pb-3 border-b border-slate-100">
+            <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Selected</div>
+            <div className="mt-1 flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full" style={{ background: CYL }} />
+              <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: CYL }}>Cylinder</span>
+            </div>
+            <div className="mt-1 text-[12px] font-semibold text-slate-900">D015 · Room 214</div>
+            <div className="text-[10px] text-slate-500">MK · South › SMK · N2</div>
+          </div>
 
-          <div className="mt-4 space-y-2">
+          <div className="px-4 py-3 space-y-1.5">
+            <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold mb-1">Details</div>
             {[
-              { l: "Differ", v: "0118" },
+              { l: "Differ", v: "D015" },
+              { l: "Product", v: "DOM ix Twin" },
               { l: "Size", v: "35 × 35" },
+              { l: "Finish", v: "Nickel" },
               { l: "Keys issued", v: "4" },
             ].map((r) => (
               <div key={r.l} className="flex items-center justify-between text-[10px]">
@@ -945,17 +993,30 @@ function FeatureContent({ variant }: { variant: string }) {
             ))}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-100">
+          <div className="px-4 py-3 border-t border-slate-100">
             <div className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold mb-2">Activity</div>
-            <div className="space-y-1.5">
-              <div className="text-[10px] text-slate-600">Added by Sarah · 2h</div>
-              <div className="text-[10px] text-slate-600">Key issued · 1d</div>
+            <div className="space-y-2">
+              <div className="flex items-start gap-2">
+                <span className="mt-1 h-1.5 w-1.5 rounded-full shrink-0" style={{ background: SMK }} />
+                <div>
+                  <div className="text-[10px] text-slate-700 font-medium">Cylinder added</div>
+                  <div className="text-[9px] text-slate-400">Sarah · 2h ago</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="mt-1 h-1.5 w-1.5 rounded-full shrink-0" style={{ background: CYL }} />
+                <div>
+                  <div className="text-[10px] text-slate-700 font-medium">Key issued · Q4</div>
+                  <div className="text-[9px] text-slate-400">James · 1d ago</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     );
   }
+
 
   if (variant === "Dashboard") {
     return (
