@@ -1,4 +1,4 @@
-// v2
+// v3
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
 
     if (action === "reset_password") {
       if (!email) return json({ error: "Missing email" }, 400);
-      const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, "") || "";
+      const origin = "https://myloxx.co.uk";
       const { data: linkData, error } = await (admin.auth.admin as any).generateLink({
         type: "recovery",
         email,
@@ -46,13 +46,22 @@ Deno.serve(async (req) => {
         console.log(`[admin-user-action] No RESEND_API_KEY — recovery link for ${email}: ${link}`);
         return json({ ok: true, sent: false, link });
       }
-      const subject = "Reset your LOXX password";
+      const subject = "Reset your My LOXX password";
       const html = `
         <div style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:auto;padding:24px;background:#f5f4f1;color:#17171a">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px">
+            <tr>
+              <td style="background:#d4820a;border-radius:6px;width:32px;height:32px;text-align:center;vertical-align:middle;padding:4px">
+                <span style="font-size:16px;line-height:24px;color:#ffffff">🔑</span>
+              </td>
+              <td style="padding-left:10px;font-size:20px;font-weight:700;color:#17171a;font-family:Inter,system-ui,sans-serif;vertical-align:middle">My LOXX</td>
+            </tr>
+          </table>
           <h2 style="margin:0 0 12px">Reset your password</h2>
-          <p>A LOXX administrator has initiated a password reset for your account.</p>
+          <p>A My LOXX administrator has requested a password reset for your account. Click below to choose a new password.</p>
           <p style="margin:24px 0"><a href="${link}" style="background:#d4820a;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600">Reset password</a></p>
-          <p style="font-size:12px;color:#666">If you didn't expect this email, you can safely ignore it.</p>
+          <p style="font-size:14px;color:#444">This link will expire shortly.</p>
+          <p style="font-size:12px;color:#666">If you weren't expecting this email, you can safely ignore it. Your password will not be changed unless you use the link above.</p>
         </div>`;
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
