@@ -5,8 +5,9 @@ import {
   ShieldCheck, Lock, BadgeCheck, ArrowRight, Users,
   LayoutGrid, Receipt, GraduationCap, HeartPulse, Home, Landmark,
   BookOpen, Briefcase, ShieldAlert, Check, Key, FileText, PoundSterling,
+  Cloud, Building2, History, Wallet,
 } from "lucide-react";
-import { HeroCanvasDemo } from "@/components/marketing/HeroCanvasDemo";
+import { HeroAppMock } from "@/components/marketing/HeroAppMock";
 
 const trust = [
   { icon: ShieldCheck, label: "German-engineered cylinders" },
@@ -57,11 +58,11 @@ const sectors = [
 ];
 
 export default function Index() {
-  const heroBadges: Array<{ key: "gmk" | "mk" | "smk" | "cyl"; label: string; bg: string; color: string }> = [
-    { key: "gmk", label: "GMK", bg: "hsl(245,60%,67%,0.14)", color: "hsl(245,45%,42%)" },
-    { key: "mk", label: "MK", bg: "hsl(178,60%,45%,0.14)", color: "hsl(178,55%,28%)" },
-    { key: "smk", label: "SMK", bg: "hsl(154,71%,45%,0.14)", color: "hsl(154,55%,26%)" },
-    { key: "cyl", label: "CYL", bg: "hsl(33,91%,44%,0.16)", color: "hsl(33,85%,32%)" },
+  const heroTrust = [
+    { icon: Cloud, label: "Secure cloud platform" },
+    { icon: Building2, label: "Built for commercial buildings" },
+    { icon: History, label: "Complete audit history" },
+    { icon: Wallet, label: "No software subscription" },
   ];
 
   return (
@@ -76,52 +77,51 @@ export default function Index() {
           </nav>
         </div>
 
-        {/* Hero — light, orange-forward, with hierarchy badge strip and staged entrance animation */}
+        {/* Hero — premium SaaS product-forward layout */}
         <section className="relative overflow-hidden">
-          <div className="container relative py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
+          <div className="container relative py-16 md:py-24 grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <h1 className="font-extrabold text-4xl md:text-6xl leading-[1.05] tracking-tight text-foreground">
-                Your master key system,<br />out of the spreadsheet.
+              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background/80 backdrop-blur px-3 py-1 text-[11px] font-medium text-foreground/70">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                Built for facilities managers, estates teams and security professionals
+              </span>
+
+              <h1 className="mt-5 font-extrabold text-4xl md:text-6xl leading-[1.05] tracking-tight text-foreground">
+                Your master key system. <span className="text-foreground/70">Finally organised.</span>
               </h1>
 
-              <div className="mt-5 flex flex-wrap items-center gap-1.5 text-xs font-bold">
-                {heroBadges.map((b, i) => (
-                  <span key={b.key} className="inline-flex items-center gap-1.5">
-                    <span
-                      className="px-2.5 py-1 rounded-full transition-shadow cursor-default"
-                      style={{ backgroundColor: b.bg, color: b.color }}
-                    >
-                      {b.label}
-                    </span>
-                    {i < heroBadges.length - 1 && <ArrowRight className="h-3 w-3 text-foreground/25" />}
-                  </span>
-                ))}
-                <span className="ml-1 text-foreground/40 font-normal">Grand master → master → sub master → cylinder</span>
+              <p className="mt-6 text-lg text-foreground/65 max-w-xl leading-relaxed">
+                My LOXX gives you one secure place to manage every building, every door, every cylinder and every key. Replace spreadsheets with a permanent digital record your whole team can trust.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25">
+                  <Link to="/auth?mode=signup">Get Started <ArrowRight className="h-4 w-4" /></Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-border bg-transparent text-foreground hover:bg-black/[0.03]">
+                  <a href="#book-a-walkthrough">Book a Demo</a>
+                </Button>
               </div>
 
-              <p className="mt-5 text-lg text-foreground/65 max-w-xl">
-                My LOXX gives facilities managers one place to see every key, every door, and who can order, change, or view your system — reorder a lost key or add new doors in minutes, and keep an online record that doesn't disappear when whoever built it moves on.
-              </p>
-              <p className="mt-4 text-sm text-foreground/50 max-w-xl">
-                For the people who manage schools, care homes, NHS sites, councils, universities, and offices — buildings that run on a master key system.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30">
-                  <Link to="/auth?mode=signup">Get started <ArrowRight className="h-4 w-4" /></Link>
-                </Button>
-                {/* TODO: Jake to provide real destination before launch */}
-                <Button asChild size="lg" variant="outline" className="border-border bg-transparent text-foreground hover:bg-black/[0.03]">
-                  <a href="#book-a-walkthrough">Book a walkthrough</a>
-                </Button>
-              </div>
+              <ul className="mt-8 grid grid-cols-2 gap-x-6 gap-y-3 max-w-lg">
+                {heroTrust.map((t) => (
+                  <li key={t.label} className="flex items-center gap-2.5 text-[13px] text-foreground/75">
+                    <span className="flex items-center justify-center h-6 w-6 rounded-md bg-primary/10 shrink-0">
+                      <t.icon className="h-3.5 w-3.5 text-primary" strokeWidth={2.25} />
+                    </span>
+                    {t.label}
+                  </li>
+                ))}
+              </ul>
             </div>
 
             <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
-              <HeroCanvasDemo />
+              <HeroAppMock />
             </div>
           </div>
         </section>
       </header>
+
 
 
       {/* Trust strip */}
