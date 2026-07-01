@@ -12,7 +12,7 @@ const trust = [
   { icon: ShieldCheck, label: "German-engineered cylinders" },
   { icon: BadgeCheck, label: "DIN EN1303 rated" },
   { icon: Lock, label: "Full audit trail" },
-  { icon: LayoutGrid, label: "Manage multiple systems online" },
+  { icon: LayoutGrid, label: "Multiple systems, one login" },
 ];
 
 const painBlocks = [
@@ -127,9 +127,11 @@ export default function Index() {
       <section className="border-y border-border bg-card">
         <div className="container py-6 grid grid-cols-2 md:grid-cols-4 gap-4">
           {trust.map((t) => (
-            <div key={t.label} className="flex items-center gap-3 text-sm">
-              <t.icon className="h-5 w-5 text-primary shrink-0" />
-              <span className="text-foreground">{t.label}</span>
+            <div key={t.label} className="flex items-center gap-3">
+              <span className="flex items-center justify-center h-9 w-9 rounded-lg bg-primary/10 shrink-0">
+                <t.icon className="h-5 w-5 text-primary" strokeWidth={2.25} />
+              </span>
+              <span className="text-sm font-medium text-foreground">{t.label}</span>
             </div>
           ))}
         </div>
