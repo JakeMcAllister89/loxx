@@ -1,3 +1,4 @@
+// v2
 // Sends an invite email via Resend if RESEND_API_KEY is set.
 // Falls back to logging the invite URL if no key configured.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -66,7 +67,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_KEY}` },
       body: JSON.stringify({
-        from: "LOXX <onboarding@resend.dev>",
+        from: "My LOXX <noreply@myloxx.co.uk>",
         to: [invite.email],
         subject,
         html,

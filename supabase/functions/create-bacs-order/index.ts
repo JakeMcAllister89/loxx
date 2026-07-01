@@ -1,3 +1,4 @@
+// v2
 // Creates a BACS pro-forma order — mirrors create-checkout order/item/commission
 // creation but skips Stripe. Sends pro-forma invoice email via Resend.
 
@@ -298,7 +299,7 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "LOXX Orders <orders@resend.dev>",
+            from: "My LOXX Orders <orders@myloxx.co.uk>",
             to: [user.email],
             subject: `Pro-Forma Invoice — Order ${orderRef} — Payment Required`,
             html,
@@ -325,7 +326,7 @@ The customer has been sent a pro-forma invoice with bank details.`;
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "LOXX Orders <orders@resend.dev>",
+              from: "My LOXX Orders <orders@myloxx.co.uk>",
               to: [s.company_email],
               subject: `New BACS Order — ${orderRef} — Awaiting Payment`,
               text: notifyText,

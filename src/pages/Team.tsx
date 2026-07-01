@@ -350,32 +350,31 @@ export default function Team() {
                 </p>
               </div>
               <div
-                className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
-                  inv.org_role === "view_only" || inv.org_role === "standard" ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                className={`pt-1 transition-opacity duration-150 ${
+                  inv.org_role === "view_only" || inv.org_role === "standard"
+                    ? "opacity-100"
+                    : "opacity-0 pointer-events-none select-none"
                 }`}
+                aria-hidden={!(inv.org_role === "view_only" || inv.org_role === "standard")}
               >
-                <div className="overflow-hidden">
-                  <div className="pt-1">
-                    <Label>
-                      {inv.org_role === "view_only" ? "Select systems this user can access" : "Restrict to specific systems (optional)"}
-                    </Label>
-                    <div className="border rounded-md max-h-48 overflow-auto p-2 space-y-1.5 mt-1">
-                      {systems.length === 0 && <div className="text-xs text-muted-foreground p-2">No systems exist yet</div>}
-                      {systems.map(s => (
-                        <label key={s.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                          <Checkbox
-                            checked={inv.system_ids.includes(s.id)}
-                            onCheckedChange={(c) => {
-                              const set = new Set(inv.system_ids);
-                              if (c) set.add(s.id); else set.delete(s.id);
-                              setInv({ ...inv, system_ids: [...set] });
-                            }}
-                          />
-                          <span>{s.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                <Label>
+                  {inv.org_role === "view_only" ? "Select systems this user can access" : "Restrict to specific systems (optional)"}
+                </Label>
+                <div className="border rounded-md h-48 overflow-auto p-2 space-y-1.5 mt-1">
+                  {systems.length === 0 && <div className="text-xs text-muted-foreground p-2">No systems exist yet</div>}
+                  {systems.map(s => (
+                    <label key={s.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Checkbox
+                        checked={inv.system_ids.includes(s.id)}
+                        onCheckedChange={(c) => {
+                          const set = new Set(inv.system_ids);
+                          if (c) set.add(s.id); else set.delete(s.id);
+                          setInv({ ...inv, system_ids: [...set] });
+                        }}
+                      />
+                      <span>{s.name}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>

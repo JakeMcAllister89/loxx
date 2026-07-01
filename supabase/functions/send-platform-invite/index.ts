@@ -1,3 +1,4 @@
+// v2
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -49,7 +50,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_KEY}` },
       body: JSON.stringify({
-        from: "LOXX <onboarding@resend.dev>",
+        from: "My LOXX <noreply@myloxx.co.uk>",
         to: [(invite as any).email],
         subject,
         html,
