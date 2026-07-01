@@ -6,7 +6,6 @@ import {
   LayoutGrid, Receipt, GraduationCap, HeartPulse, Home, Landmark,
   BookOpen, Briefcase, ShieldAlert, Check, X,
 } from "lucide-react";
-import builderCanvasExample from "@/assets/builder-canvas-example.png";
 import { HeroCanvasDemo } from "@/components/marketing/HeroCanvasDemo";
 
 const trust = [
