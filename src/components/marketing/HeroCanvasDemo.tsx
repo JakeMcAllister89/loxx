@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { ReactFlow, ReactFlowProvider, Background, BackgroundVariant } from "@xyflow/react";
+import { ReactFlow, ReactFlowProvider } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { CanvasNode, NODE_WIDTH, NODE_HEIGHT } from "@/components/builder/CanvasNode";
 import { TNode, NodeType } from "@/lib/keytree";
@@ -40,15 +40,15 @@ const CYL_PRODUCT: DemoProduct = {
 };
 
 const NODES: DemoNodeSpec[] = [
-  { id: "demo-gmk",   type: "GMK", label: "Grand Master Key", x: 280, y: 0,   revealAt: 1, childMkCount: 2, childCylCount: 4 },
-  { id: "demo-mk-1",  type: "MK",  label: "West Wing",        x: 60,  y: 140, revealAt: 2, childSmkCount: 1, childCylCount: 2 },
-  { id: "demo-mk-2",  type: "MK",  label: "East Wing",        x: 500, y: 140, revealAt: 2, childSmkCount: 1, childCylCount: 2 },
-  { id: "demo-smk-1", type: "SMK", label: "History",          x: 60,  y: 280, revealAt: 3, childCylCount: 2 },
-  { id: "demo-smk-2", type: "SMK", label: "English",          x: 500, y: 280, revealAt: 3, childCylCount: 2 },
-  { id: "demo-cyl-1", type: "CYL", label: "History Room 01",  x: -40, y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-gmk",   type: "GMK", label: "Grand Master Key", x: 260, y: 0,   revealAt: 1, childMkCount: 2, childCylCount: 4 },
+  { id: "demo-mk-1",  type: "MK",  label: "West Wing",        x: 80,  y: 140, revealAt: 2, childSmkCount: 1, childCylCount: 2 },
+  { id: "demo-mk-2",  type: "MK",  label: "East Wing",        x: 440, y: 140, revealAt: 2, childSmkCount: 1, childCylCount: 2 },
+  { id: "demo-smk-1", type: "SMK", label: "History",          x: 80,  y: 280, revealAt: 3, childCylCount: 2 },
+  { id: "demo-smk-2", type: "SMK", label: "English",          x: 440, y: 280, revealAt: 3, childCylCount: 2 },
+  { id: "demo-cyl-1", type: "CYL", label: "History Room 01",  x: 20,  y: 420, revealAt: 4, product: CYL_PRODUCT },
   { id: "demo-cyl-2", type: "CYL", label: "History Room 02",  x: 160, y: 420, revealAt: 4, product: CYL_PRODUCT },
-  { id: "demo-cyl-3", type: "CYL", label: "English Room 01",  x: 400, y: 420, revealAt: 4, product: CYL_PRODUCT },
-  { id: "demo-cyl-4", type: "CYL", label: "English Room 02",  x: 600, y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-cyl-3", type: "CYL", label: "English Room 01",  x: 360, y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-cyl-4", type: "CYL", label: "English Room 02",  x: 500, y: 420, revealAt: 4, product: CYL_PRODUCT },
 ];
 
 const EDGES: Array<{ id: string; source: string; target: string; revealAt: number }> = [
@@ -96,7 +96,14 @@ function HeroCanvasDemoInner() {
             node: buildTNode(n),
             selected: false,
             hasError: false,
-            addOptions: [],
+            addOptions:
+              n.type === "GMK"
+                ? ["MK"]
+                : n.type === "MK"
+                ? ["SMK"]
+                : n.type === "SMK"
+                ? ["CYL"]
+                : [],
             onAddChildType: () => {},
             highlight: false,
             childMkCount: n.childMkCount,
@@ -129,7 +136,7 @@ function HeroCanvasDemoInner() {
   );
 
   return (
-    <div className="w-full h-[340px] rounded-lg overflow-hidden">
+    <div className="w-full h-[440px] rounded-lg overflow-hidden" style={{ backgroundColor: "#fafafa" }}>
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}
@@ -142,11 +149,10 @@ function HeroCanvasDemoInner() {
         zoomOnPinch={false}
         zoomOnDoubleClick={false}
         preventScrolling={false}
-        defaultViewport={{ x: 50, y: 10, zoom: 0.65 }}
-        minZoom={0.65}
-        maxZoom={0.65}
+        defaultViewport={{ x: 20, y: 10, zoom: 0.8 }}
+        minZoom={0.8}
+        maxZoom={0.8}
       >
-        <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
       </ReactFlow>
     </div>
   );
