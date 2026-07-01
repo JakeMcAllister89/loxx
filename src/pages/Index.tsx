@@ -8,6 +8,7 @@ import {
   BookOpen, Briefcase, ShieldAlert, Check, X,
 } from "lucide-react";
 import builderCanvasExample from "@/assets/builder-canvas-example.png";
+import { HeroCanvasDemo } from "@/components/marketing/HeroCanvasDemo";
 
 const trust = [
   { icon: ShieldCheck, label: "German-engineered cylinders" },
@@ -134,13 +135,7 @@ export default function Index() {
                 className="bg-white rounded-xl p-2.5 border border-border transition-shadow"
                 style={{ boxShadow: cardBoxShadow }}
               >
-                <img
-                  src={builderCanvasExample}
-                  alt="My LOXX builder canvas showing a master key hierarchy with grand master, sub masters, and individual cylinders"
-                  width={1600}
-                  height={1024}
-                  className="w-full h-auto rounded-lg block"
-                />
+                <HeroCanvasDemo />
               </div>
             </div>
           </div>
