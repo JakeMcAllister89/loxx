@@ -114,27 +114,35 @@ const trustPoints = [
 const faqs = [
   {
     q: "Can I manage an existing master key system in My LOXX?",
-    a: "Yes. You can bring an existing system into My LOXX and keep managing it from there, alongside any new systems you design.",
+    a: "Yes. Existing systems can be brought into My LOXX so your team has one organised digital record to work from. You can also use My LOXX to design new systems from scratch.",
   },
   {
     q: "Can multiple users access the same organisation?",
-    a: "Yes. Invite your team and give each person the right level of access — from full control to view-only.",
+    a: "Yes. Invite team members into your organisation and control what each person can see or change. This helps keep ordering, records and permissions under proper control.",
   },
   {
     q: "Can I manage more than one building?",
-    a: "Yes. Manage a single site or an entire estate from one account, with each building organised separately.",
+    a: "Yes. My LOXX is designed for single buildings, multiple buildings and larger estates. Each system can be kept organised while still being managed from one account.",
   },
   {
     q: "Can I order replacement keys and cylinders?",
-    a: "Yes. Order replacement keys, additional cylinders and system expansions directly from your system record.",
+    a: "Yes. Replacement keys, additional cylinders and system expansions can be ordered directly from the system record, helping reduce emails, manual quotes and mistakes.",
   },
   {
     q: "Does My LOXX replace my locksmith?",
-    a: "No. My LOXX is the digital home for your master key system — the record, the workflow and the ordering channel behind it.",
+    a: "No. My LOXX does not replace professional locksmiths or installers. It gives your organisation a permanent digital record and ordering workflow for the master key system.",
   },
   {
     q: "Is there a software subscription?",
-    a: "No. There is no software subscription. You pay only when you order hardware.",
+    a: "No. There is no software subscription. You pay when you order hardware.",
+  },
+  {
+    q: "Who is My LOXX for?",
+    a: "My LOXX is built for facilities managers, estates teams, property managers, security managers and organisations responsible for managing master key systems across real buildings.",
+  },
+  {
+    q: "What makes My LOXX different from a spreadsheet?",
+    a: "A spreadsheet is only a document. My LOXX is a structured system record with buildings, keys, cylinders, orders, users and audit history connected in one place.",
   },
 ];
 
@@ -629,13 +637,12 @@ export default function Index() {
       </section>
 
       {/* SECTION 7 — FAQ */}
-      <section className="border-t border-border bg-card">
+      <section className="border-t border-border bg-background">
         <div className="container py-20 md:py-28 max-w-3xl">
-          <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">FAQ</span>
-          <h2 className="mt-4 text-3xl md:text-4xl font-semibold tracking-tight">Common questions.</h2>
-          <div className="mt-10 border-t border-border">
+          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Questions facilities teams usually ask.</h2>
+          <div className="mt-12 border-t border-border">
             {faqs.map((f) => <FaqItem key={f.q} q={f.q} a={f.a} />)}
-          </div>
+          <-- div>
         </div>
       </section>
 
