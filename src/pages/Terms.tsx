@@ -72,6 +72,7 @@ export default function Terms() {
 
         <div className="flex gap-4 pt-6 text-sm">
           <Link to="/returns" className="text-amber-600 hover:underline">Returns Policy</Link>
+          <Link to="/privacy" className="text-amber-600 hover:underline">Privacy Policy</Link>
           <Link to="/dashboard" className="text-amber-600 hover:underline">Back to dashboard</Link>
         </div>
       </div>
