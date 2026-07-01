@@ -187,37 +187,9 @@ export default function Index() {
           </div>
 
           <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
-            <div aria-hidden className="absolute -inset-6 rounded-[28px] bg-gradient-to-tr from-primary/10 via-transparent to-primary/5 blur-2xl" />
-            <div aria-hidden className="absolute -top-8 -right-8 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
-
-            <div className="relative rounded-2xl border border-border bg-card shadow-2xl shadow-black/[0.08] overflow-hidden">
-              <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-[#fafafa]">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-black/10" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-black/10" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-black/10" />
-                </div>
-                <div className="flex-1 flex justify-center">
-                  <span className="inline-flex items-center gap-2 text-[11px] font-medium text-foreground/60 tracking-tight">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    my-loxx.app <span className="text-foreground/30">/</span> System Builder
-                  </span>
-                </div>
-                <span className="text-[10px] font-medium text-foreground/40 uppercase tracking-wider">Live</span>
-              </div>
-              <div className="relative">
-                <HeroCanvasDemo />
-                <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
-              </div>
-              <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-[#fafafa] text-[11px] text-foreground/55">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  Auto-saved
-                </span>
-                <span className="font-medium">1 Grand Master · 2 Masters · 4 Cylinders</span>
-              </div>
-            </div>
+            <HeroShowcase />
           </div>
+
         </div>
       </section>
 
