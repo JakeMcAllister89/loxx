@@ -349,29 +349,35 @@ export default function Team() {
                   {ROLE_DESCRIPTIONS[inv.org_role]}
                 </p>
               </div>
-              {(inv.org_role === "view_only" || inv.org_role === "standard") && (
-                <div>
-                  <Label>
-                    {inv.org_role === "view_only" ? "Select systems this user can access" : "Restrict to specific systems (optional)"}
-                  </Label>
-                  <div className="border rounded-md max-h-48 overflow-auto p-2 space-y-1.5 mt-1">
-                    {systems.length === 0 && <div className="text-xs text-muted-foreground p-2">No systems exist yet</div>}
-                    {systems.map(s => (
-                      <label key={s.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                        <Checkbox
-                          checked={inv.system_ids.includes(s.id)}
-                          onCheckedChange={(c) => {
-                            const set = new Set(inv.system_ids);
-                            if (c) set.add(s.id); else set.delete(s.id);
-                            setInv({ ...inv, system_ids: [...set] });
-                          }}
-                        />
-                        <span>{s.name}</span>
-                      </label>
-                    ))}
+              <div
+                className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                  inv.org_role === "view_only" || inv.org_role === "standard" ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                }`}
+              >
+                <div className="overflow-hidden">
+                  <div className="pt-1">
+                    <Label>
+                      {inv.org_role === "view_only" ? "Select systems this user can access" : "Restrict to specific systems (optional)"}
+                    </Label>
+                    <div className="border rounded-md max-h-48 overflow-auto p-2 space-y-1.5 mt-1">
+                      {systems.length === 0 && <div className="text-xs text-muted-foreground p-2">No systems exist yet</div>}
+                      {systems.map(s => (
+                        <label key={s.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox
+                            checked={inv.system_ids.includes(s.id)}
+                            onCheckedChange={(c) => {
+                              const set = new Set(inv.system_ids);
+                              if (c) set.add(s.id); else set.delete(s.id);
+                              setInv({ ...inv, system_ids: [...set] });
+                            }}
+                          />
+                          <span>{s.name}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
             <DrawerFooter>
               <Button onClick={sendInvite} disabled={sending} className="bg-[#d4820a] hover:bg-[#b86d08] text-white">

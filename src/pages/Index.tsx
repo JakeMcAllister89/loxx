@@ -751,13 +751,13 @@ export default function Index() {
               </ul>
             </div>
 
-            {/* Company */}
+            {/* Get Started */}
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Company</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Get Started</div>
               <ul className="space-y-2.5">
-                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">About</a></li>
-                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Contact</a></li>
+                <li><Link to="/auth?mode=signup" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Get Started</Link></li>
                 <li><a href="mailto:hello@my-loxx.app" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Book a Demo</a></li>
+                <li><Link to="/auth" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Sign In</Link></li>
               </ul>
             </div>
 
