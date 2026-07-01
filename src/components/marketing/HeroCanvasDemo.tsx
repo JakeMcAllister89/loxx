@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { ReactFlow, ReactFlowProvider, Background, BackgroundVariant } from "@xyflow/react";
+import { ReactFlow, ReactFlowProvider } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { CanvasNode, NODE_WIDTH, NODE_HEIGHT } from "@/components/builder/CanvasNode";
 import { TNode, NodeType } from "@/lib/keytree";
