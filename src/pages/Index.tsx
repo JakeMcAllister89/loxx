@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LoxxLogo } from "@/components/LoxxLogo";
@@ -56,70 +57,83 @@ const sectors = [
 ];
 
 export default function Index() {
+  const [activeNode, setActiveNode] = useState<"gmk" | "mk" | "smk" | "cyl" | null>(null);
+  const nodeColors: Record<string, string> = {
+    gmk: "hsl(245,60%,67%)",
+    mk: "hsl(178,60%,45%)",
+    smk: "hsl(154,71%,45%)",
+    cyl: "hsl(33,91%,44%)",
+  };
+  const heroBadges: Array<{ key: "gmk" | "mk" | "smk" | "cyl"; label: string; bg: string; color: string }> = [
+    { key: "gmk", label: "GMK", bg: "hsl(245,60%,67%,0.14)", color: "hsl(245,45%,42%)" },
+    { key: "mk", label: "MK", bg: "hsl(178,60%,45%,0.14)", color: "hsl(178,55%,28%)" },
+    { key: "smk", label: "SMK", bg: "hsl(154,71%,45%,0.14)", color: "hsl(154,55%,26%)" },
+    { key: "cyl", label: "CYL", bg: "hsl(33,91%,44%,0.16)", color: "hsl(33,85%,32%)" },
+  ];
+  const cardBoxShadow = activeNode
+    ? `0 0 0 3px ${nodeColors[activeNode]}, 0 20px 50px rgba(20,20,22,0.08)`
+    : "0 20px 50px rgba(20,20,22,0.08), 0 2px 8px rgba(0,0,0,0.04)";
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Top bar */}
-      <header className="bg-[hsl(var(--sidebar-background))] text-sidebar-foreground">
+      <header className="bg-[#fafafa] text-foreground">
         <div className="container flex items-center justify-between py-4">
           <LoxxLogo />
           <nav className="flex items-center gap-2">
-            <Link to="/auth" className="text-sm px-3 py-2 text-sidebar-foreground/80 hover:text-sidebar-foreground">Sign in</Link>
+            <Link to="/auth" className="text-sm px-3 py-2 text-foreground/70 hover:text-foreground">Sign in</Link>
             <Button asChild className="bg-primary hover:bg-primary/90"><Link to="/auth?mode=signup">Get started</Link></Button>
           </nav>
         </div>
 
-        {/* Hero — split layout with background hierarchy motif */}
+        {/* Hero — light, orange-forward, with hierarchy badge strip and staged entrance animation */}
         <section className="relative overflow-hidden">
-          <svg
-            className="absolute inset-0 w-full h-full opacity-[0.13] pointer-events-none"
-            viewBox="0 0 1000 560"
-            preserveAspectRatio="xMidYMid slice"
-          >
-            <line x1="500" y1="60" x2="280" y2="160" stroke="hsl(245,60%,67%)" strokeWidth="1.5" />
-            <line x1="500" y1="60" x2="500" y2="160" stroke="hsl(245,60%,67%)" strokeWidth="1.5" />
-            <line x1="500" y1="60" x2="720" y2="160" stroke="hsl(245,60%,67%)" strokeWidth="1.5" />
-            <line x1="280" y1="200" x2="180" y2="300" stroke="hsl(178,60%,45%)" strokeWidth="1.5" />
-            <line x1="280" y1="200" x2="320" y2="300" stroke="hsl(178,60%,45%)" strokeWidth="1.5" />
-            <line x1="500" y1="200" x2="450" y2="300" stroke="hsl(178,60%,45%)" strokeWidth="1.5" />
-            <line x1="500" y1="200" x2="560" y2="300" stroke="hsl(178,60%,45%)" strokeWidth="1.5" />
-            <line x1="720" y1="200" x2="680" y2="300" stroke="hsl(178,60%,45%)" strokeWidth="1.5" />
-            <line x1="720" y1="200" x2="820" y2="300" stroke="hsl(178,60%,45%)" strokeWidth="1.5" />
-            <circle cx="500" cy="50" r="6" fill="hsl(245,60%,67%)" />
-            <circle cx="280" cy="180" r="5" fill="hsl(178,60%,55%)" />
-            <circle cx="500" cy="180" r="5" fill="hsl(178,60%,55%)" />
-            <circle cx="720" cy="180" r="5" fill="hsl(178,60%,55%)" />
-            <circle cx="180" cy="320" r="4" fill="hsl(154,71%,50%)" />
-            <circle cx="320" cy="320" r="4" fill="hsl(154,71%,50%)" />
-            <circle cx="450" cy="320" r="4" fill="hsl(154,71%,50%)" />
-            <circle cx="560" cy="320" r="4" fill="hsl(154,71%,50%)" />
-            <circle cx="680" cy="320" r="4" fill="hsl(154,71%,50%)" />
-            <circle cx="820" cy="320" r="4" fill="hsl(154,71%,50%)" />
-          </svg>
-
           <div className="container relative py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="font-semibold text-4xl md:text-6xl leading-[1.05] tracking-tight">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <h1 className="font-extrabold text-4xl md:text-6xl leading-[1.05] tracking-tight text-foreground">
                 Your master key system,<br />out of the spreadsheet.
               </h1>
-              <p className="mt-6 text-lg text-sidebar-foreground/70 max-w-xl">
+
+              <div className="mt-5 flex flex-wrap items-center gap-1.5 text-xs font-bold">
+                {heroBadges.map((b, i) => (
+                  <span key={b.key} className="inline-flex items-center gap-1.5">
+                    <span
+                      onMouseEnter={() => setActiveNode(b.key)}
+                      onMouseLeave={() => setActiveNode(null)}
+                      className="px-2.5 py-1 rounded-full transition-shadow cursor-default"
+                      style={{ backgroundColor: b.bg, color: b.color }}
+                    >
+                      {b.label}
+                    </span>
+                    {i < heroBadges.length - 1 && <ArrowRight className="h-3 w-3 text-foreground/25" />}
+                  </span>
+                ))}
+                <span className="ml-1 text-foreground/40 font-normal">Grand master → master → sub master → cylinder</span>
+              </div>
+
+              <p className="mt-5 text-lg text-foreground/65 max-w-xl">
                 My LOXX gives facilities managers one place to see every key, every door, and every person who holds access — reorder a lost key or add new doors to your system in minutes, and keep an online record that doesn't depend on whoever set it up still working here.
               </p>
-              <p className="mt-4 text-sm text-sidebar-foreground/60 max-w-xl">
+              <p className="mt-4 text-sm text-foreground/50 max-w-xl">
                 For the people who manage schools, care homes, NHS sites, councils, universities, and offices — buildings that run on a master key system.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30">
                   <Link to="/auth?mode=signup">Get started <ArrowRight className="h-4 w-4" /></Link>
                 </Button>
                 {/* TODO: Jake to provide real destination before launch */}
-                <Button asChild size="lg" variant="outline" className="border-white/20 bg-transparent text-sidebar-foreground hover:bg-white/5 hover:text-sidebar-foreground">
+                <Button asChild size="lg" variant="outline" className="border-border bg-transparent text-foreground hover:bg-black/[0.03]">
                   <a href="#book-a-walkthrough">Book a walkthrough</a>
                 </Button>
               </div>
             </div>
 
-            <div className="relative">
-              <div className="bg-white rounded-xl p-2.5 shadow-2xl rotate-1">
+            <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
+              <div
+                id="hero-canvas-card"
+                className="bg-white rounded-xl p-2.5 border border-border transition-shadow"
+                style={{ boxShadow: cardBoxShadow }}
+              >
                 <img
                   src={builderCanvasExample}
                   alt="My LOXX builder canvas showing a master key hierarchy with grand master, sub masters, and individual cylinders"
@@ -132,6 +146,7 @@ export default function Index() {
           </div>
         </section>
       </header>
+
 
       {/* Trust strip */}
       <section className="border-y border-border bg-card">
@@ -214,23 +229,17 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Final CTA — pricing line merged in, orange glow, single CTA */}
-      <section id="book-a-walkthrough" className="relative overflow-hidden bg-[hsl(var(--sidebar-background))] text-sidebar-foreground">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(circle at 50% 40%, hsl(33,91%,44%,0.12), transparent 60%)",
-          }}
-        />
-        <div className="container relative py-20 max-w-3xl text-center">
-          <p className="text-sm text-sidebar-foreground/60 mb-4">
+      {/* Final CTA — solid saturated orange block, light-mode bookend */}
+      <section id="book-a-walkthrough" className="bg-primary">
+        <div className="container py-16 md:py-20 max-w-3xl text-center">
+          <p className="text-sm text-primary-foreground/75 mb-4">
             No subscription. No software fee. You pay only when you order hardware.
           </p>
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-primary-foreground">
             Get your master key system out of the spreadsheet.
           </h2>
           <div className="mt-8 flex justify-center">
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+            <Button asChild size="lg" className="bg-foreground text-background hover:bg-foreground/90">
               <Link to="/auth?mode=signup">Get started <ArrowRight className="h-4 w-4" /></Link>
             </Button>
           </div>
