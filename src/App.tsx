@@ -40,6 +40,7 @@ import AcceptInvite from "./pages/AcceptInvite";
 import AcceptPlatformInvite from "./pages/AcceptPlatformInvite";
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import Returns from "./pages/Returns";
 import BacsConfirmed from "./pages/BacsConfirmed";
 
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/accept-invite" element={<AcceptInvite />} />
               <Route path="/accept-platform-invite" element={<AcceptPlatformInvite />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/returns" element={<Returns />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
