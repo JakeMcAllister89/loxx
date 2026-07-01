@@ -570,24 +570,61 @@ export default function Index() {
 
       {/* SECTION 6 — TRUST */}
       <section className="border-t border-border">
-        <div className="container py-20 md:py-28 grid md:grid-cols-[1fr_1.2fr] gap-14 items-start">
-          <div>
+        <div className="container py-20 md:py-28">
+          <div className="max-w-2xl">
             <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Trust</span>
-            <h2 className="mt-4 text-3xl md:text-4xl font-semibold tracking-tight leading-tight">Built by people who understand master key systems.</h2>
-            <p className="mt-6 text-[15px] text-muted-foreground leading-relaxed max-w-md">
-              My LOXX is designed around real-world master key workflows, from system design and key control to ordering and long-term record keeping.
+            <h2 className="mt-4 text-3xl md:text-4xl font-semibold tracking-tight leading-tight">
+              Built by people who understand master key systems.
+            </h2>
+            <p className="mt-6 text-[15px] text-muted-foreground leading-relaxed max-w-lg">
+              My LOXX is built around real master key workflows — from system design and key control to ordering, audit history and long-term record keeping.
             </p>
           </div>
-          <ul className="grid sm:grid-cols-2 gap-3">
+
+          {/* Three trust pillars */}
+          <div className="mt-14 grid md:grid-cols-3 gap-5">
+            <div className="rounded-xl border border-border bg-card p-7 relative overflow-hidden">
+              <div className="absolute left-0 top-6 bottom-6 w-[3px] rounded-r-full bg-primary/70" />
+              <div className="pl-5">
+                <h3 className="text-lg font-semibold tracking-tight text-foreground">Real-world expertise</h3>
+                <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed">
+                  Designed around how master key systems are actually specified, managed and expanded.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-7 relative overflow-hidden">
+              <div className="absolute left-0 top-6 bottom-6 w-[3px] rounded-r-full bg-primary/70" />
+              <div className="pl-5">
+                <h3 className="text-lg font-semibold tracking-tight text-foreground">Secure organisation control</h3>
+                <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed">
+                  Invite the right people, control access levels and keep system records inside your organisation.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-7 relative overflow-hidden">
+              <div className="absolute left-0 top-6 bottom-6 w-[3px] rounded-r-full bg-primary/70" />
+              <div className="pl-5">
+                <h3 className="text-lg font-semibold tracking-tight text-foreground">Permanent system history</h3>
+                <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed">
+                  Keep a clear record of orders, changes, users and activity so knowledge does not disappear when people leave.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Supporting proof points */}
+          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {trustPoints.map((t) => (
-              <li key={t.t} className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3.5">
+              <div key={t.t} className="flex items-start gap-3 rounded-lg border border-border bg-card px-4 py-3.5">
                 <span className="flex items-center justify-center h-8 w-8 rounded-md bg-primary/10 shrink-0">
                   <t.icon className="h-4 w-4 text-primary" strokeWidth={2} />
                 </span>
                 <span className="text-sm font-medium text-foreground pt-1">{t.t}</span>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       </section>
 
