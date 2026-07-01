@@ -307,28 +307,178 @@ export default function Index() {
             </p>
           </div>
 
-          <div className="mt-14 relative grid md:grid-cols-3 gap-6 md:gap-0">
-            <div aria-hidden className="hidden md:block absolute top-14 left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-primary/40 via-primary/60 to-primary/40" />
-            {workflow.map((w, i) => (
-              <div key={w.step} className="relative md:px-6">
-                <div className="relative z-10 flex flex-col items-start">
-                  <span className="flex items-center justify-center h-14 w-14 rounded-xl bg-background border border-border shadow-sm">
-                    <w.icon className="h-6 w-6 text-primary" strokeWidth={1.75} />
+          <div className="mt-16 relative">
+            {/* Desktop connector line */}
+            <div className="hidden md:block absolute top-[84px] left-[14%] right-[14%] h-px">
+              <div className="absolute inset-0 bg-primary/15" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/50 to-transparent animate-connector-draw" style={{ transformOrigin: "left center" }} />
+            </div>
+
+            {/* Mobile connector line */}
+            <div className="md:hidden absolute left-[24px] top-[80px] bottom-[80px] w-px">
+              <div className="absolute inset-0 bg-primary/15" />
+              <div className="absolute inset-x-0 top-0 h-full bg-gradient-to-b from-transparent via-primary/50 to-transparent animate-connector-draw-v" style={{ transformOrigin: "top center" }} />
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-10 md:gap-6">
+              {/* DESIGN */}
+              <div className="relative animate-stage" style={{ animationDelay: "0.2s" }}>
+                <div className="hidden md:block absolute top-[84px] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 border border-primary/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-node-pop" style={{ animationDelay: "0.8s" }} />
                   </span>
-                  <div className="mt-5 flex items-center gap-3">
-                    <span className="text-[11px] font-mono font-medium text-primary tracking-wider">{w.step}</span>
-                    <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">{w.title}</span>
-                  </div>
-                  <h3 className="mt-3 text-xl font-semibold tracking-tight leading-snug">{w.headline}</h3>
-                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-xs">{w.copy}</p>
                 </div>
-                {i < workflow.length - 1 && (
-                  <ArrowRight aria-hidden className="hidden md:block absolute top-[46px] -right-2.5 h-4 w-4 text-primary" />
-                )}
+                <div className="bg-background rounded-xl border border-border p-6 shadow-sm relative overflow-hidden">
+                  <div className="flex flex-col items-center">
+                    {/* Mini hierarchy visual */}
+                    <div className="w-full max-w-[150px] flex flex-col items-center gap-1">
+                      <div className="w-full rounded-md border border-border bg-card shadow-sm overflow-hidden animate-node-pop" style={{ animationDelay: "0.5s" }}>
+                        <div className="h-[3px] w-full bg-[hsl(var(--node-gmk))]" />
+                        <div className="px-2 py-1.5 text-center">
+                          <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Grand Master</span>
+                        </div>
+                      </div>
+                      <div className="h-2.5 w-px bg-border" />
+                      <div className="w-[85%] rounded-md border border-border bg-card shadow-sm overflow-hidden animate-node-pop" style={{ animationDelay: "0.7s" }}>
+                        <div className="h-[3px] w-full bg-[hsl(var(--node-mk))]" />
+                        <div className="px-2 py-1.5 text-center">
+                          <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Master</span>
+                        </div>
+                      </div>
+                      <div className="h-2.5 w-px bg-border" />
+                      <div className="w-[70%] rounded-md border border-border bg-card shadow-sm overflow-hidden animate-node-pop" style={{ animationDelay: "0.9s" }}>
+                        <div className="h-[3px] w-full bg-[hsl(var(--primary))]" />
+                        <div className="px-2 py-1.5 text-center">
+                          <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Cylinder</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-5 text-center">
+                    <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Design</span>
+                    <h3 className="mt-2 text-lg font-semibold tracking-tight">Build the structure</h3>
+                    <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+                      Create your master key hierarchy visually.
+                    </p>
+                  </div>
+                </div>
               </div>
-            ))}
+
+              {/* MANAGE */}
+              <div className="relative animate-stage" style={{ animationDelay: "0.8s" }}>
+                <div className="hidden md:block absolute top-[84px] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 border border-primary/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-node-pop" style={{ animationDelay: "1.4s" }} />
+                  </span>
+                </div>
+                <div className="bg-background rounded-xl border border-border p-6 shadow-sm relative overflow-hidden">
+                  <div className="flex flex-col items-center">
+                    {/* Mini record visual */}
+                    <div className="w-full max-w-[170px] rounded-lg border border-border bg-card p-3 shadow-sm space-y-2">
+                      {[
+                        { icon: Building2, label: "Building A", color: "text-primary" },
+                        { icon: KeyRound, label: "Key 12", color: "text-[hsl(var(--node-mk))]" },
+                        { icon: Boxes, label: "Cylinder 5", color: "text-[hsl(var(--primary))]" },
+                        { icon: History, label: "Audit log", color: "text-muted-foreground" },
+                      ].map((item, idx) => (
+                        <div key={item.label} className="flex items-center gap-2 text-[11px] text-muted-foreground animate-node-pop" style={{ animationDelay: `${1.0 + idx * 0.12}s` }}>
+                          <item.icon className={`h-3 w-3 ${item.color}`} strokeWidth={2} />
+                          <span>{item.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-5 text-center">
+                    <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Manage</span>
+                    <h3 className="mt-2 text-lg font-semibold tracking-tight">Keep it current</h3>
+                    <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+                      Keep every building, key, cylinder and user organised.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ORDER */}
+              <div className="relative animate-stage" style={{ animationDelay: "1.4s" }}>
+                <div className="hidden md:block absolute top-[84px] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 border border-primary/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-node-pop" style={{ animationDelay: "2.0s" }} />
+                  </span>
+                </div>
+                <div className="bg-background rounded-xl border border-border p-6 shadow-sm relative overflow-hidden">
+                  <div className="flex flex-col items-center">
+                    {/* Mini basket visual */}
+                    <div className="w-full max-w-[170px] rounded-lg border border-border bg-card p-3 shadow-sm space-y-2">
+                      <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border pb-1.5">
+                        <span>Item</span>
+                        <span>Qty</span>
+                      </div>
+                      {[
+                        { name: "Differ key", qty: "3" },
+                        { name: "Euro cylinder", qty: "2" },
+                        { name: "Master key", qty: "1" },
+                      ].map((item, idx) => (
+                        <div key={item.name} className="flex items-center justify-between text-[11px] animate-node-pop" style={{ animationDelay: `${1.6 + idx * 0.12}s` }}>
+                          <span className="text-muted-foreground">{item.name}</span>
+                          <span className="font-medium text-foreground tabular-nums">{item.qty}</span>
+                        </div>
+                      ))}
+                      <div className="pt-1.5 border-t border-border flex items-center justify-between text-[11px]">
+                        <span className="text-muted-foreground">Total</span>
+                        <span className="font-semibold text-foreground">£247.00</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-5 text-center">
+                    <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Order</span>
+                    <h3 className="mt-2 text-lg font-semibold tracking-tight">Order from the record</h3>
+                    <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+                      Order replacement keys, additional cylinders and expansions.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+        <style>{`
+          @keyframes connectorDraw {
+            from { transform: scaleX(0); }
+            to { transform: scaleX(1); }
+          }
+          @keyframes connectorDrawV {
+            from { transform: scaleY(0); }
+            to { transform: scaleY(1); }
+          }
+          @keyframes stageIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes nodePop {
+            0% { opacity: 0; transform: scale(0.9); }
+            70% { transform: scale(1.02); }
+            100% { opacity: 1; transform: scale(1); }
+          }
+          .animate-connector-draw {
+            animation: connectorDraw 1.4s ease-out forwards;
+          }
+          .animate-connector-draw-v {
+            animation: connectorDrawV 1.4s ease-out forwards;
+          }
+          .animate-stage {
+            animation: stageIn 0.7s ease-out both;
+          }
+          .animate-node-pop {
+            animation: nodePop 0.45s ease-out both;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .animate-connector-draw, .animate-connector-draw-v, .animate-stage, .animate-node-pop {
+              animation: none !important;
+              opacity: 1 !important;
+              transform: none !important;
+            }
+          }
+        `}</style>
       </section>
 
       {/* SECTION 4 — PRODUCT SHOWCASE */}
