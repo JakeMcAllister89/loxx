@@ -638,10 +638,46 @@ export default function Index() {
 
       {/* SECTION 7 — FAQ */}
       <section className="border-t border-border bg-background">
-        <div className="container py-20 md:py-28 max-w-3xl">
+        <div className="container py-20 md:py-28 max-w-5xl">
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Questions facilities teams usually ask.</h2>
-          <div className="mt-12 border-t border-border">
-            {faqs.map((f) => <FaqItem key={f.q} q={f.q} a={f.a} />)}
+          <div className="mt-12 grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-12 lg:gap-16">
+            {/* LEFT — FAQ accordion */}
+            <div className="border-t border-border">
+              {faqs.map((f) => <FaqItem key={f.q} q={f.q} a={f.a} />)}
+            </div>
+
+            {/* RIGHT — Support panel */}
+            <div className="lg:pt-4">
+              <div className="rounded-xl border border-border bg-card p-7 relative">
+                <div className="absolute left-0 top-6 bottom-6 w-[3px] rounded-r-full bg-primary/70" />
+                <div className="pl-5">
+                  <h3 className="text-lg font-semibold tracking-tight text-foreground">Still have questions?</h3>
+                  <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed">
+                    Talk through your current master key system and see whether My LOXX is the right fit for your buildings.
+                  </p>
+                  <div className="mt-6 flex flex-col gap-3">
+                    <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25">
+                      <a href="mailto:hello@my-loxx.app">Book a Demo</a>
+                    </Button>
+                    <Link to="/auth?mode=signup" className="text-sm text-muted-foreground hover:text-foreground text-center">
+                      Or create an account
+                    </Link>
+                  </div>
+                  <div className="mt-6 pt-6 border-t border-border space-y-2.5">
+                    {[
+                      "Existing systems can be added",
+                      "Multiple buildings supported",
+                      "No software subscription",
+                    ].map((pt) => (
+                      <div key={pt} className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                        <Check className="h-4 w-4 text-primary shrink-0" strokeWidth={2} />
+                        <span>{pt}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
