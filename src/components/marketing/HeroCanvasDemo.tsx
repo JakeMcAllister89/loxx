@@ -1,10 +1,20 @@
 import { useEffect, useState, useMemo } from "react";
-import { ReactFlow, ReactFlowProvider, Background, BackgroundVariant } from "@xyflow/react";
+import { ReactFlow, ReactFlowProvider, Background, BackgroundVariant, useReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { CanvasNode, NODE_WIDTH, NODE_HEIGHT } from "@/components/builder/CanvasNode";
 import { TNode, NodeType } from "@/lib/keytree";
 
 const nodeTypes = { keynode: CanvasNode };
+
+interface DemoProduct {
+  name: string;
+  code: string;
+  finish: string;
+  finish_colour: string;
+  size: string;
+  image_url: string | null;
+  price_gbp: number | null;
+}
 
 interface DemoNodeSpec {
   id: string;
@@ -13,18 +23,32 @@ interface DemoNodeSpec {
   x: number;
   y: number;
   revealAt: number;
+  childMkCount?: number;
+  childSmkCount?: number;
+  childCylCount?: number;
+  product?: DemoProduct;
 }
 
+const CYL_PRODUCT: DemoProduct = {
+  name: "Euro Cylinder",
+  code: "333K130235",
+  finish: "Satin Nickel",
+  finish_colour: "#C7C7C7",
+  size: "35x35mm",
+  image_url: null,
+  price_gbp: null,
+};
+
 const NODES: DemoNodeSpec[] = [
-  { id: "demo-gmk",   type: "GMK", label: "Grand Master Key", x: 280, y: 0,   revealAt: 1 },
-  { id: "demo-mk-1",  type: "MK",  label: "West Wing",        x: 60,  y: 140, revealAt: 2 },
-  { id: "demo-mk-2",  type: "MK",  label: "East Wing",        x: 500, y: 140, revealAt: 2 },
-  { id: "demo-smk-1", type: "SMK", label: "History",          x: 60,  y: 280, revealAt: 3 },
-  { id: "demo-smk-2", type: "SMK", label: "English",          x: 500, y: 280, revealAt: 3 },
-  { id: "demo-cyl-1", type: "CYL", label: "History Room 01",  x: -40, y: 420, revealAt: 4 },
-  { id: "demo-cyl-2", type: "CYL", label: "History Room 02",  x: 160, y: 420, revealAt: 4 },
-  { id: "demo-cyl-3", type: "CYL", label: "English Room 01",  x: 400, y: 420, revealAt: 4 },
-  { id: "demo-cyl-4", type: "CYL", label: "English Room 02",  x: 600, y: 420, revealAt: 4 },
+  { id: "demo-gmk",   type: "GMK", label: "Grand Master Key", x: 280, y: 0,   revealAt: 1, childMkCount: 2, childCylCount: 4 },
+  { id: "demo-mk-1",  type: "MK",  label: "West Wing",        x: 60,  y: 140, revealAt: 2, childSmkCount: 1, childCylCount: 2 },
+  { id: "demo-mk-2",  type: "MK",  label: "East Wing",        x: 500, y: 140, revealAt: 2, childSmkCount: 1, childCylCount: 2 },
+  { id: "demo-smk-1", type: "SMK", label: "History",          x: 60,  y: 280, revealAt: 3, childCylCount: 2 },
+  { id: "demo-smk-2", type: "SMK", label: "English",          x: 500, y: 280, revealAt: 3, childCylCount: 2 },
+  { id: "demo-cyl-1", type: "CYL", label: "History Room 01",  x: -40, y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-cyl-2", type: "CYL", label: "History Room 02",  x: 160, y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-cyl-3", type: "CYL", label: "English Room 01",  x: 400, y: 420, revealAt: 4, product: CYL_PRODUCT },
+  { id: "demo-cyl-4", type: "CYL", label: "English Room 02",  x: 600, y: 420, revealAt: 4, product: CYL_PRODUCT },
 ];
 
 const EDGES: Array<{ id: string; source: string; target: string; revealAt: number }> = [
@@ -44,6 +68,7 @@ function buildTNode(spec: DemoNodeSpec): TNode {
 
 function HeroCanvasDemoInner() {
   const [stage, setStage] = useState(0);
+  const { fitView } = useReactFlow();
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
@@ -75,6 +100,10 @@ function HeroCanvasDemoInner() {
             addOptions: [],
             onAddChildType: () => {},
             highlight: false,
+            childMkCount: n.childMkCount,
+            childSmkCount: n.childSmkCount,
+            childCylCount: n.childCylCount,
+            product: n.product ?? null,
           },
           style: {
             width: NODE_WIDTH,
@@ -115,8 +144,7 @@ function HeroCanvasDemoInner() {
         zoomOnPinch={false}
         zoomOnDoubleClick={false}
         preventScrolling={false}
-        fitView
-        fitViewOptions={{ padding: 0.15 }}
+        onInit={(instance) => instance.fitView({ padding: 0.05, duration: 0 })}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
       </ReactFlow>
