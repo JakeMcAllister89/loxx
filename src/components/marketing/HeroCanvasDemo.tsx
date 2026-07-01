@@ -96,7 +96,14 @@ function HeroCanvasDemoInner() {
             node: buildTNode(n),
             selected: false,
             hasError: false,
-            addOptions: [],
+            addOptions:
+              n.type === "GMK"
+                ? ["MK"]
+                : n.type === "MK"
+                ? ["SMK"]
+                : n.type === "SMK"
+                ? ["CYL"]
+                : [],
             onAddChildType: () => {},
             highlight: false,
             childMkCount: n.childMkCount,
