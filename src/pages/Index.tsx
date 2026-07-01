@@ -683,19 +683,46 @@ export default function Index() {
       </section>
 
       {/* SECTION 8 — FINAL CTA */}
-      <section id="book-a-demo" className="bg-primary">
-        <div className="container py-20 md:py-24 max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-primary-foreground leading-tight">
+      <section id="book-a-demo" className="relative overflow-hidden bg-primary">
+        {/* Subtle hierarchy motif */}
+        <div className="pointer-events-none absolute inset-0 opacity-[0.08]">
+          <svg className="h-full w-full" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="ctaGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="white" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="white" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {/* Nodes */}
+            <circle cx="180" cy="420" r="6" fill="white" />
+            <circle cx="180" cy="180" r="10" fill="white" />
+            <circle cx="420" cy="300" r="8" fill="white" />
+            <circle cx="780" cy="240" r="10" fill="white" />
+            <circle cx="780" cy="420" r="6" fill="white" />
+            <circle cx="1020" cy="180" r="8" fill="white" />
+            <circle cx="1020" cy="360" r="6" fill="white" />
+            {/* Connections */}
+            <line x1="180" y1="180" x2="420" y2="300" stroke="white" strokeWidth="1.5" />
+            <line x1="180" y1="420" x2="420" y2="300" stroke="white" strokeWidth="1.5" />
+            <line x1="420" y1="300" x2="780" y2="240" stroke="white" strokeWidth="1.5" />
+            <line x1="420" y1="300" x2="780" y2="420" stroke="white" strokeWidth="1.5" />
+            <line x1="780" y1="240" x2="1020" y2="180" stroke="white" strokeWidth="1.5" />
+            <line x1="780" y1="420" x2="1020" y2="360" stroke="white" strokeWidth="1.5" />
+          </svg>
+        </div>
+
+        <div className="container relative z-10 py-20 md:py-28 text-center">
+          <h2 className="text-3xl md:text-[2.75rem] font-bold tracking-tight text-primary-foreground leading-[1.15]">
             Give your master key system a permanent home.
           </h2>
-          <p className="mt-5 text-[15px] text-primary-foreground/80 leading-relaxed max-w-xl mx-auto">
-            Start building a secure, organised record your team can rely on for years to come.
+          <p className="mt-5 text-[15px] md:text-base text-primary-foreground/85 leading-relaxed max-w-xl mx-auto">
+            Create one secure record for every building, key, cylinder, order and change.
           </p>
-          <div className="mt-9 flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg" className="bg-foreground text-background hover:bg-foreground/90">
+          <div className="mt-10 flex flex-wrap justify-center gap-3">
+            <Button asChild size="lg" className="bg-foreground text-background hover:bg-foreground/90 shadow-lg">
               <Link to="/auth?mode=signup">Get Started <ArrowRight className="h-4 w-4" /></Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
+            <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground/35 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground hover:border-primary-foreground/50">
               <a href="mailto:hello@my-loxx.app">Book a Demo</a>
             </Button>
           </div>
@@ -703,17 +730,50 @@ export default function Index() {
       </section>
 
       <footer className="border-t border-border bg-card">
-        <div className="container py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div>
-            <LoxxLogo />
-            <div className="text-sm text-muted-foreground mt-2">My LOXX — the digital home for your master key system</div>
+        <div className="container py-12 md:py-16">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-10 md:gap-8">
+            {/* Brand */}
+            <div className="col-span-2 md:col-span-2">
+              <LoxxLogo />
+              <p className="mt-3 text-sm text-muted-foreground max-w-xs leading-relaxed">
+                The digital home for your master key system.
+              </p>
+            </div>
+
+            {/* Product */}
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Product</div>
+              <ul className="space-y-2.5">
+                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">System Builder</a></li>
+                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Dashboard</a></li>
+                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Ordering</a></li>
+                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Audit &amp; Permissions</a></li>
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Company</div>
+              <ul className="space-y-2.5">
+                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">About</a></li>
+                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Contact</a></li>
+                <li><a href="mailto:hello@my-loxx.app" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Book a Demo</a></li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Legal</div>
+              <ul className="space-y-2.5">
+                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Privacy</a></li>
+                <li><Link to="/terms" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Terms</Link></li>
+              </ul>
+            </div>
           </div>
-          <div className="flex gap-6 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground">Privacy</a>
-            <Link to="/terms" className="hover:text-foreground">Terms</Link>
-            <a href="#" className="hover:text-foreground">Contact</a>
+
+          <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-muted-foreground">© 2026 My LOXX</p>
           </div>
-          <div className="text-xs text-muted-foreground">© 2026 My LOXX</div>
         </div>
       </footer>
     </div>
