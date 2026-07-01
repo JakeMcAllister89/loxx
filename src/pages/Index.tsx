@@ -751,7 +751,7 @@ export default function Index() {
               </ul>
             </div>
 
-            image.png            {/* Get Started */}
+            {/* Get Started */}
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Get Started</div>
               <ul className="space-y-2.5">
@@ -763,7 +763,7 @@ export default function Index() {
 
             {/* Legal */}
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Legal</pplication</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Legal</div>
               <ul className="space-y-2.5">
                 <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Privacy</a></li>
                 <li><Link to="/terms" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Terms</Link></li>
