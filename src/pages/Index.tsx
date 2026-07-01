@@ -308,46 +308,51 @@ export default function Index() {
           </div>
 
           <div className="mt-16 relative">
-            {/* Desktop connector line */}
-            <div className="hidden md:block absolute top-[84px] left-[14%] right-[14%] h-px">
-              <div className="absolute inset-0 bg-primary/15" />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/50 to-transparent animate-connector-draw" style={{ transformOrigin: "left center" }} />
-            </div>
+            {/* Desktop journey path */}
+            <div className="hidden md:block absolute top-[56px] left-[12%] right-[12%] h-[2px] bg-border" aria-hidden="true" />
 
-            {/* Mobile connector line */}
-            <div className="md:hidden absolute left-[24px] top-[80px] bottom-[80px] w-px">
-              <div className="absolute inset-0 bg-primary/15" />
-              <div className="absolute inset-x-0 top-0 h-full bg-gradient-to-b from-transparent via-primary/50 to-transparent animate-connector-draw-v" style={{ transformOrigin: "top center" }} />
-            </div>
+            {/* Mobile journey path */}
+            <div className="md:hidden absolute left-[27px] top-[52px] bottom-[52px] w-[2px] bg-border" aria-hidden="true" />
 
-            <div className="grid md:grid-cols-3 gap-10 md:gap-6">
-              {/* DESIGN */}
-              <div className="relative animate-stage" style={{ animationDelay: "0.2s" }}>
-                <div className="hidden md:block absolute top-[84px] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 border border-primary/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-node-pop" style={{ animationDelay: "0.8s" }} />
+            <div className="grid md:grid-cols-3 gap-12 md:gap-6">
+              {/* DESIGN — starting point */}
+              <div className="relative">
+                {/* Numbered stop */}
+                <div className="hidden md:flex absolute top-[48px] left-1/2 -translate-x-1/2 z-10">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-background border-2 shadow-sm" style={{ borderColor: 'hsl(var(--node-gmk))' }}>
+                    <span className="text-[9px] font-bold" style={{ color: 'hsl(var(--node-gmk))' }}>01</span>
                   </span>
                 </div>
-                <div className="bg-background rounded-xl border border-border p-6 shadow-sm relative overflow-hidden">
+                <div className="md:hidden absolute left-[17px] top-[44px] z-10">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-background border-2 shadow-sm" style={{ borderColor: 'hsl(var(--node-gmk))' }}>
+                    <span className="text-[9px] font-bold" style={{ color: 'hsl(var(--node-gmk))' }}>01</span>
+                  </span>
+                </div>
+
+                <div className="bg-background rounded-xl border border-border p-6 shadow-sm relative overflow-hidden" style={{ borderTopWidth: 3, borderTopColor: 'hsl(var(--node-gmk))' }}>
                   <div className="flex flex-col items-center">
-                    {/* Mini hierarchy visual */}
-                    <div className="w-full max-w-[150px] flex flex-col items-center gap-1">
-                      <div className="w-full rounded-md border border-border bg-card shadow-sm overflow-hidden animate-node-pop" style={{ animationDelay: "0.5s" }}>
-                        <div className="h-[3px] w-full bg-[hsl(var(--node-gmk))]" />
+                    {/* Real builder-style hierarchy */}
+                    <div className="w-full max-w-[160px] flex flex-col items-center gap-1">
+                      <div className="w-full rounded-md border border-border bg-card shadow-sm overflow-hidden">
+                        <div className="h-[3px] w-full" style={{ backgroundColor: 'hsl(var(--node-gmk))' }} />
                         <div className="px-2 py-1.5 text-center">
-                          <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Grand Master</span>
+                          <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Grand Master Key</span>
                         </div>
                       </div>
-                      <div className="h-2.5 w-px bg-border" />
-                      <div className="w-[85%] rounded-md border border-border bg-card shadow-sm overflow-hidden animate-node-pop" style={{ animationDelay: "0.7s" }}>
-                        <div className="h-[3px] w-full bg-[hsl(var(--node-mk))]" />
+                      <div className="h-2.5 w-px bg-border relative">
+                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full" style={{ backgroundColor: 'hsl(var(--node-gmk))', opacity: 0.5 }} />
+                      </div>
+                      <div className="w-[90%] rounded-md border border-border bg-card shadow-sm overflow-hidden">
+                        <div className="h-[3px] w-full" style={{ backgroundColor: 'hsl(var(--node-mk))' }} />
                         <div className="px-2 py-1.5 text-center">
-                          <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Master</span>
+                          <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Master Key</span>
                         </div>
                       </div>
-                      <div className="h-2.5 w-px bg-border" />
-                      <div className="w-[70%] rounded-md border border-border bg-card shadow-sm overflow-hidden animate-node-pop" style={{ animationDelay: "0.9s" }}>
-                        <div className="h-[3px] w-full bg-[hsl(var(--primary))]" />
+                      <div className="h-2.5 w-px bg-border relative">
+                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full" style={{ backgroundColor: 'hsl(var(--node-mk))', opacity: 0.5 }} />
+                      </div>
+                      <div className="w-[75%] rounded-md border border-border bg-card shadow-sm overflow-hidden">
+                        <div className="h-[3px] w-full" style={{ backgroundColor: 'hsl(var(--node-cyl))' }} />
                         <div className="px-2 py-1.5 text-center">
                           <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Cylinder</span>
                         </div>
@@ -355,7 +360,7 @@ export default function Index() {
                     </div>
                   </div>
                   <div className="mt-5 text-center">
-                    <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Design</span>
+                    <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">01 Design</span>
                     <h3 className="mt-2 text-lg font-semibold tracking-tight">Build the structure</h3>
                     <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
                       Create your master key hierarchy visually.
@@ -364,32 +369,41 @@ export default function Index() {
                 </div>
               </div>
 
-              {/* MANAGE */}
-              <div className="relative animate-stage" style={{ animationDelay: "0.8s" }}>
-                <div className="hidden md:block absolute top-[84px] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 border border-primary/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-node-pop" style={{ animationDelay: "1.4s" }} />
+              {/* MANAGE — ongoing record */}
+              <div className="relative">
+                <div className="hidden md:flex absolute top-[48px] left-1/2 -translate-x-1/2 z-10">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-background border-2 shadow-sm" style={{ borderColor: 'hsl(var(--node-mk))' }}>
+                    <span className="text-[9px] font-bold" style={{ color: 'hsl(var(--node-mk))' }}>02</span>
                   </span>
                 </div>
-                <div className="bg-background rounded-xl border border-border p-6 shadow-sm relative overflow-hidden">
+                <div className="md:hidden absolute left-[17px] top-[44px] z-10">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-background border-2 shadow-sm" style={{ borderColor: 'hsl(var(--node-mk))' }}>
+                    <span className="text-[9px] font-bold" style={{ color: 'hsl(var(--node-mk))' }}>02</span>
+                  </span>
+                </div>
+
+                <div className="bg-background rounded-xl border border-border p-6 shadow-sm relative overflow-hidden" style={{ borderTopWidth: 3, borderTopColor: 'hsl(var(--node-mk))' }}>
                   <div className="flex flex-col items-center">
-                    {/* Mini record visual */}
-                    <div className="w-full max-w-[170px] rounded-lg border border-border bg-card p-3 shadow-sm space-y-2">
-                      {[
-                        { icon: Building2, label: "Building A", color: "text-primary" },
-                        { icon: KeyRound, label: "Key 12", color: "text-[hsl(var(--node-mk))]" },
-                        { icon: Boxes, label: "Cylinder 5", color: "text-[hsl(var(--primary))]" },
-                        { icon: History, label: "Audit log", color: "text-muted-foreground" },
-                      ].map((item, idx) => (
-                        <div key={item.label} className="flex items-center gap-2 text-[11px] text-muted-foreground animate-node-pop" style={{ animationDelay: `${1.0 + idx * 0.12}s` }}>
-                          <item.icon className={`h-3 w-3 ${item.color}`} strokeWidth={2} />
-                          <span>{item.label}</span>
-                        </div>
-                      ))}
+                    {/* Organised record view */}
+                    <div className="w-full max-w-[180px] rounded-lg border border-border bg-card p-3 shadow-sm">
+                      <div className="space-y-1.5">
+                        {[
+                          { label: "Building", value: "Building A", accent: "text-primary" },
+                          { label: "Key holder", value: "Sarah Wells", accent: "text-foreground" },
+                          { label: "Cylinder", value: "Cylinder 5", accent: "text-foreground" },
+                          { label: "Door", value: "Main entrance", accent: "text-foreground" },
+                          { label: "Audit", value: "Key issued · 2d ago", accent: "text-muted-foreground" },
+                        ].map((row) => (
+                          <div key={row.label} className="flex items-center justify-between text-[10px]">
+                            <span className="text-muted-foreground/70">{row.label}</span>
+                            <span className={`font-medium ${row.accent}`}>{row.value}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   <div className="mt-5 text-center">
-                    <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Manage</span>
+                    <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">02 Manage</span>
                     <h3 className="mt-2 text-lg font-semibold tracking-tight">Keep it current</h3>
                     <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
                       Keep every building, key, cylinder and user organised.
@@ -398,39 +412,47 @@ export default function Index() {
                 </div>
               </div>
 
-              {/* ORDER */}
-              <div className="relative animate-stage" style={{ animationDelay: "1.4s" }}>
-                <div className="hidden md:block absolute top-[84px] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 border border-primary/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-node-pop" style={{ animationDelay: "2.0s" }} />
+              {/* ORDER — outcome */}
+              <div className="relative">
+                <div className="hidden md:flex absolute top-[48px] left-1/2 -translate-x-1/2 z-10">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-background border-2 shadow-sm" style={{ borderColor: 'hsl(var(--primary))' }}>
+                    <span className="text-[9px] font-bold" style={{ color: 'hsl(var(--primary))' }}>03</span>
                   </span>
                 </div>
-                <div className="bg-background rounded-xl border border-border p-6 shadow-sm relative overflow-hidden">
+                <div className="md:hidden absolute left-[17px] top-[44px] z-10">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-background border-2 shadow-sm" style={{ borderColor: 'hsl(var(--primary))' }}>
+                    <span className="text-[9px] font-bold" style={{ color: 'hsl(var(--primary))' }}>03</span>
+                  </span>
+                </div>
+
+                <div className="bg-background rounded-xl border border-border p-6 shadow-sm relative overflow-hidden" style={{ borderTopWidth: 3, borderTopColor: 'hsl(var(--primary))' }}>
                   <div className="flex flex-col items-center">
-                    {/* Mini basket visual */}
-                    <div className="w-full max-w-[170px] rounded-lg border border-border bg-card p-3 shadow-sm space-y-2">
-                      <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border pb-1.5">
-                        <span>Item</span>
-                        <span>Qty</span>
+                    {/* My LOXX quote/order */}
+                    <div className="w-full max-w-[180px] rounded-lg border border-border bg-card p-3 shadow-sm">
+                      <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border pb-1.5 mb-1.5">
+                        <span>Quote</span>
+                        <span className="font-medium text-primary">Ready</span>
                       </div>
-                      {[
-                        { name: "Differ key", qty: "3" },
-                        { name: "Euro cylinder", qty: "2" },
-                        { name: "Master key", qty: "1" },
-                      ].map((item, idx) => (
-                        <div key={item.name} className="flex items-center justify-between text-[11px] animate-node-pop" style={{ animationDelay: `${1.6 + idx * 0.12}s` }}>
-                          <span className="text-muted-foreground">{item.name}</span>
-                          <span className="font-medium text-foreground tabular-nums">{item.qty}</span>
-                        </div>
-                      ))}
-                      <div className="pt-1.5 border-t border-border flex items-center justify-between text-[11px]">
-                        <span className="text-muted-foreground">Total</span>
-                        <span className="font-semibold text-foreground">£247.00</span>
+                      <div className="space-y-1.5">
+                        {[
+                          { name: "Replacement key", qty: "3" },
+                          { name: "Euro cylinder", qty: "2" },
+                          { name: "Master key", qty: "1" },
+                        ].map((item) => (
+                          <div key={item.name} className="flex items-center justify-between text-[11px]">
+                            <span className="text-muted-foreground">{item.name}</span>
+                            <span className="font-medium text-foreground tabular-nums">×{item.qty}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-2 pt-1.5 border-t border-border flex items-center justify-between">
+                        <span className="text-[10px] text-muted-foreground">Total</span>
+                        <span className="text-sm font-semibold text-foreground">£247.00</span>
                       </div>
                     </div>
                   </div>
                   <div className="mt-5 text-center">
-                    <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Order</span>
+                    <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">03 Order</span>
                     <h3 className="mt-2 text-lg font-semibold tracking-tight">Order from the record</h3>
                     <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
                       Order replacement keys, additional cylinders and expansions.
@@ -441,44 +463,6 @@ export default function Index() {
             </div>
           </div>
         </div>
-        <style>{`
-          @keyframes connectorDraw {
-            from { transform: scaleX(0); }
-            to { transform: scaleX(1); }
-          }
-          @keyframes connectorDrawV {
-            from { transform: scaleY(0); }
-            to { transform: scaleY(1); }
-          }
-          @keyframes stageIn {
-            from { opacity: 0; transform: translateY(14px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes nodePop {
-            0% { opacity: 0; transform: scale(0.9); }
-            70% { transform: scale(1.02); }
-            100% { opacity: 1; transform: scale(1); }
-          }
-          .animate-connector-draw {
-            animation: connectorDraw 1.4s ease-out forwards;
-          }
-          .animate-connector-draw-v {
-            animation: connectorDrawV 1.4s ease-out forwards;
-          }
-          .animate-stage {
-            animation: stageIn 0.7s ease-out both;
-          }
-          .animate-node-pop {
-            animation: nodePop 0.45s ease-out both;
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .animate-connector-draw, .animate-connector-draw-v, .animate-stage, .animate-node-pop {
-              animation: none !important;
-              opacity: 1 !important;
-              transform: none !important;
-            }
-          }
-        `}</style>
       </section>
 
       {/* SECTION 4 — PRODUCT SHOWCASE */}
