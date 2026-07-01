@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ReactFlow, ReactFlowProvider, Background, BackgroundVariant } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { CanvasNode, NODE_WIDTH, NODE_HEIGHT } from "@/components/builder/CanvasNode";
@@ -68,19 +68,6 @@ function buildTNode(spec: DemoNodeSpec): TNode {
 
 function HeroCanvasDemoInner() {
   const [stage, setStage] = useState(0);
-  const hasFitted = useRef(false);
-
-  const handleInit = (instance: any) => {
-    if (hasFitted.current) return;
-
-    hasFitted.current = true;
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        instance.fitView({ padding: 0.05, duration: 0 });
-      });
-    });
-  };
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
@@ -121,8 +108,7 @@ function HeroCanvasDemoInner() {
             width: NODE_WIDTH,
             height: NODE_HEIGHT,
             opacity: visible ? 1 : 0,
-            transform: visible ? "scale(1)" : "scale(0.85)",
-            transition: "opacity 400ms ease-out, transform 400ms ease-out",
+            transition: "opacity 400ms ease-out",
             pointerEvents: "none" as const,
           },
         };
@@ -156,7 +142,9 @@ function HeroCanvasDemoInner() {
         zoomOnPinch={false}
         zoomOnDoubleClick={false}
         preventScrolling={false}
-        onInit={handleInit}
+        defaultViewport={{ x: 50, y: 10, zoom: 0.65 }}
+        minZoom={0.65}
+        maxZoom={0.65}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
       </ReactFlow>
