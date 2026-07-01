@@ -10,6 +10,7 @@ import {
   KeyRound, Boxes, Receipt,
 } from "lucide-react";
 import { HeroCanvasDemo } from "@/components/marketing/HeroCanvasDemo";
+import { HeroShowcase } from "@/components/marketing/HeroShowcase";
 
 const workflow = [
   {
