@@ -751,10 +751,11 @@ export default function Index() {
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Product</div>
               <ul className="space-y-2.5">
-                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">System Builder</a></li>
-                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Dashboard</a></li>
-                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Ordering</a></li>
-                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Audit &amp; Permissions</a></li>
+                <li><a href="#system-builder" className="text-sm text-foreground/80 hover:text-foreground transition-colors">System Builder</a></li>
+                <li><a href="#dashboard" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Dashboard</a></li>
+                <li><a href="#ordering" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Ordering</a></li>
+                <li><a href="#audit-permissions" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Audit &amp; Permissions</a></li>
+
               </ul>
             </div>
 
