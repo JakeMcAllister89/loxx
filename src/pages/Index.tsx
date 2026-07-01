@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LoxxLogo } from "@/components/LoxxLogo";
@@ -7,7 +6,6 @@ import {
   LayoutGrid, Receipt, GraduationCap, HeartPulse, Home, Landmark,
   BookOpen, Briefcase, ShieldAlert, Check, X,
 } from "lucide-react";
-import builderCanvasExample from "@/assets/builder-canvas-example.png";
 import { HeroCanvasDemo } from "@/components/marketing/HeroCanvasDemo";
 
 const trust = [
@@ -58,22 +56,12 @@ const sectors = [
 ];
 
 export default function Index() {
-  const [activeNode, setActiveNode] = useState<"gmk" | "mk" | "smk" | "cyl" | null>(null);
-  const nodeColors: Record<string, string> = {
-    gmk: "hsl(245,60%,67%)",
-    mk: "hsl(178,60%,45%)",
-    smk: "hsl(154,71%,45%)",
-    cyl: "hsl(33,91%,44%)",
-  };
   const heroBadges: Array<{ key: "gmk" | "mk" | "smk" | "cyl"; label: string; bg: string; color: string }> = [
     { key: "gmk", label: "GMK", bg: "hsl(245,60%,67%,0.14)", color: "hsl(245,45%,42%)" },
     { key: "mk", label: "MK", bg: "hsl(178,60%,45%,0.14)", color: "hsl(178,55%,28%)" },
     { key: "smk", label: "SMK", bg: "hsl(154,71%,45%,0.14)", color: "hsl(154,55%,26%)" },
     { key: "cyl", label: "CYL", bg: "hsl(33,91%,44%,0.16)", color: "hsl(33,85%,32%)" },
   ];
-  const cardBoxShadow = activeNode
-    ? `0 0 0 3px ${nodeColors[activeNode]}, 0 20px 50px rgba(20,20,22,0.08)`
-    : "0 20px 50px rgba(20,20,22,0.08), 0 2px 8px rgba(0,0,0,0.04)";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -99,8 +87,6 @@ export default function Index() {
                 {heroBadges.map((b, i) => (
                   <span key={b.key} className="inline-flex items-center gap-1.5">
                     <span
-                      onMouseEnter={() => setActiveNode(b.key)}
-                      onMouseLeave={() => setActiveNode(null)}
                       className="px-2.5 py-1 rounded-full transition-shadow cursor-default"
                       style={{ backgroundColor: b.bg, color: b.color }}
                     >
@@ -130,13 +116,7 @@ export default function Index() {
             </div>
 
             <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
-              <div
-                id="hero-canvas-card"
-                className="bg-white rounded-xl p-2.5 border border-border transition-shadow"
-                style={{ boxShadow: cardBoxShadow }}
-              >
-                <HeroCanvasDemo />
-              </div>
+              <HeroCanvasDemo />
             </div>
           </div>
         </section>

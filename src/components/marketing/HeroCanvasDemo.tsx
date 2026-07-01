@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
-import { ReactFlow, ReactFlowProvider, Background, BackgroundVariant, useReactFlow } from "@xyflow/react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { ReactFlow, ReactFlowProvider, Background, BackgroundVariant } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { CanvasNode, NODE_WIDTH, NODE_HEIGHT } from "@/components/builder/CanvasNode";
 import { TNode, NodeType } from "@/lib/keytree";
@@ -68,7 +68,19 @@ function buildTNode(spec: DemoNodeSpec): TNode {
 
 function HeroCanvasDemoInner() {
   const [stage, setStage] = useState(0);
-  const { fitView } = useReactFlow();
+  const hasFitted = useRef(false);
+
+  const handleInit = (instance: any) => {
+    if (hasFitted.current) return;
+
+    hasFitted.current = true;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        instance.fitView({ padding: 0.05, duration: 0 });
+      });
+    });
+  };
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
@@ -144,7 +156,7 @@ function HeroCanvasDemoInner() {
         zoomOnPinch={false}
         zoomOnDoubleClick={false}
         preventScrolling={false}
-        onInit={(instance) => instance.fitView({ padding: 0.05, duration: 0 })}
+        onInit={handleInit}
       >
         <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
       </ReactFlow>
