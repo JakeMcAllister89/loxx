@@ -4,7 +4,7 @@ import { LoxxLogo } from "@/components/LoxxLogo";
 import {
   ShieldCheck, Lock, BadgeCheck, ArrowRight, Users,
   LayoutGrid, Receipt, GraduationCap, HeartPulse, Home, Landmark,
-  BookOpen, Briefcase, ShieldAlert, Check, X,
+  BookOpen, Briefcase, ShieldAlert, Check, X, Key,
 } from "lucide-react";
 import { HeroCanvasDemo } from "@/components/marketing/HeroCanvasDemo";
 
