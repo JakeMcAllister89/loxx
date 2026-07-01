@@ -3,7 +3,9 @@ import builderShot from "@/assets/builder-screenshot.png.asset.json";
 /**
  * HeroShowcase
  * Premium marketing framing of the real My LOXX System Builder screenshot.
- * No fake UI — the screenshot itself is the visual.
+ * - Contain-fit so the full GMK→MK→SMK→CYL hierarchy is visible
+ * - Slow ken-burns pan on the image (respects reduced-motion)
+ * - Subtle overlays: soft branch glow, gentle pulse on one add button
  */
 export function HeroShowcase() {
   return (
@@ -41,38 +43,37 @@ export function HeroShowcase() {
           </span>
         </div>
 
-        {/* Screenshot stage */}
-        <div className="relative bg-[#fafafa] aspect-[16/11] overflow-hidden">
-          {/* Slow, subtle pan/zoom on the real screenshot */}
-          <img
-            src={builderShot.url}
-            alt="My LOXX System Builder — Grand Master, Master, Sub Master and Cylinder hierarchy"
-            className="absolute inset-0 h-full w-full object-cover object-center hero-kenburns select-none"
-            draggable={false}
+        {/* Screenshot stage — taller frame, contain-fit, subtle float */}
+        <div className="relative bg-[#fafafa] aspect-[7/6] sm:aspect-[16/13] overflow-hidden">
+          <div className="absolute inset-0 hero-float">
+            <img
+              src={builderShot.url}
+              alt="My LOXX System Builder — Grand Master, Master, Sub Master and Cylinder hierarchy"
+              className="absolute inset-0 h-full w-full object-contain object-center p-4 sm:p-6 select-none"
+              draggable={false}
+            />
+          </div>
+
+          {/* Soft highlight around the central/left branch */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-[28%] top-[52%] -translate-x-1/2 -translate-y-1/2 h-[55%] w-[32%] rounded-[45%] bg-primary/15 blur-3xl hero-glow"
           />
 
-          {/* Soft highlight on the central branch */}
-          <div
+          {/* Subtle pulse over one orange add button (approx GMK→MK connector) */}
+          <span
             aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[70%] w-[38%] rounded-[40%] bg-primary/10 blur-3xl hero-glow"
+            className="pointer-events-none absolute left-1/2 top-[19%] -translate-x-1/2 h-6 w-6 rounded-full bg-primary/40 blur-md hero-pulse"
           />
 
-          {/* Gentle edge fades so the crop sits naturally in the frame */}
+          {/* Very gentle edge fades — subtle so nothing important gets hidden */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#fafafa] to-transparent"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#fafafa] to-transparent"
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#fafafa] to-transparent"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#fafafa] to-transparent"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-[#fafafa]/70 to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-[#fafafa]/60 to-transparent"
           />
         </div>
 
@@ -90,24 +91,24 @@ export function HeroShowcase() {
       </div>
 
       <style>{`
-        @keyframes heroKenburns {
-          0%   { transform: scale(1.06) translate(0%, 0%); }
-          50%  { transform: scale(1.10) translate(-1.2%, -0.8%); }
-          100% { transform: scale(1.06) translate(0%, 0%); }
+        @keyframes heroFloat {
+          0%   { transform: scale(1.00) translate(0%, 0%); }
+          50%  { transform: scale(1.02) translate(-0.6%, -0.4%); }
+          100% { transform: scale(1.00) translate(0%, 0%); }
         }
         @keyframes heroGlow {
-          0%,100% { opacity: 0.55; }
-          50%     { opacity: 0.85; }
+          0%,100% { opacity: 0.45; }
+          50%     { opacity: 0.8; }
         }
-        .hero-kenburns {
-          transform-origin: 50% 45%;
-          animation: heroKenburns 18s ease-in-out infinite;
+        @keyframes heroPulse {
+          0%,100% { opacity: 0.25; transform: translateX(-50%) scale(0.9); }
+          50%     { opacity: 0.7;  transform: translateX(-50%) scale(1.25); }
         }
-        .hero-glow {
-          animation: heroGlow 6s ease-in-out infinite;
-        }
+        .hero-float  { animation: heroFloat 20s ease-in-out infinite; transform-origin: 50% 45%; }
+        .hero-glow   { animation: heroGlow 7s ease-in-out infinite; }
+        .hero-pulse  { animation: heroPulse 3.6s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
-          .hero-kenburns, .hero-glow { animation: none; }
+          .hero-float, .hero-glow, .hero-pulse { animation: none; }
         }
       `}</style>
     </div>
