@@ -93,7 +93,7 @@ export function AppSidebar() {
   };
 
   return (
-    <aside className="w-[220px] shrink-0 bg-sidebar text-sidebar-foreground flex flex-col min-h-screen">
+    <aside className="w-[220px] shrink-0 bg-sidebar text-sidebar-foreground flex flex-col h-screen overflow-y-auto sticky top-0">
       <div className="px-5 py-5 border-b border-sidebar-border">
         <NavLink to="/dashboard"><LoxxLogo /></NavLink>
       </div>
