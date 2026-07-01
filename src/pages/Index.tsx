@@ -522,8 +522,10 @@ export default function Index() {
               return (
                 <div
                   key={f.label}
-                  className={`grid md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-10 lg:gap-16 items-center`}
+                  id={f.id}
+                  className={`scroll-mt-24 grid md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-10 lg:gap-16 items-center`}
                 >
+
                   <div className={reverse ? "md:order-2" : ""}>
                     <span className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
                       <span className="h-1 w-1 rounded-full bg-primary" />
