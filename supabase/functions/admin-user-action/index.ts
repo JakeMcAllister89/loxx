@@ -99,6 +99,39 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    if (action === "impersonate") {
+      if (!user_id) return json({ error: "Missing user_id" }, 400);
+      if (user_id === user.id) return json({ error: "Cannot impersonate yourself" }, 400);
+      const { data: targetProf } = await admin.from("profiles").select("is_admin,email").eq("id", user_id).maybeSingle();
+      if ((targetProf as any)?.is_admin) return json({ error: "Cannot impersonate another platform admin" }, 400);
+      const targetEmail = (targetProf as any)?.email;
+      if (!targetEmail) return json({ error: "Target user has no email on file" }, 400);
+
+      const { data: linkData, error } = await (admin.auth.admin as any).generateLink({
+        type: "magiclink",
+        email: targetEmail,
+      });
+      if (error) return json({ error: error.message }, 500);
+      const hashedToken = (linkData as any)?.properties?.hashed_token;
+      if (!hashedToken) return json({ error: "Could not generate impersonation token" }, 500);
+
+      const { data: logRow, error: logError } = await admin
+        .from("impersonation_log")
+        .insert({ admin_id: user.id, target_user_id: user_id, target_email: targetEmail })
+        .select("id")
+        .single();
+      if (logError) return json({ error: logError.message }, 500);
+
+      return json({ ok: true, token_hash: hashedToken, email: targetEmail, log_id: (logRow as any).id });
+    }
+
+    if (action === "end_impersonation") {
+      if (log_id) {
+        await admin.from("impersonation_log").update({ ended_at: new Date().toISOString() }).eq("id", log_id).eq("admin_id", user.id);
+      }
+      return json({ ok: true });
+    }
+
     return json({ error: "Unknown action" }, 400);
   } catch (e: any) {
     return json({ error: e.message ?? "Server error" }, 500);
