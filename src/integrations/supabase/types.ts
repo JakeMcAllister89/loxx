@@ -173,6 +173,33 @@ export type Database = {
           },
         ]
       }
+      impersonation_log: {
+        Row: {
+          admin_id: string
+          ended_at: string | null
+          id: string
+          started_at: string
+          target_email: string | null
+          target_user_id: string
+        }
+        Insert: {
+          admin_id: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          target_email?: string | null
+          target_user_id: string
+        }
+        Update: {
+          admin_id?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          target_email?: string | null
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       key_systems: {
         Row: {
           commission_pct: number | null
