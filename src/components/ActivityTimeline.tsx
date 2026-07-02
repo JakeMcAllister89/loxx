@@ -61,7 +61,7 @@ export function ActivityTimeline({
   return (
     <div>
       {rows.length === 0 ? (
-        <div className="text-xs text-muted-foreground">No activity yet</div>
+        <div className="text-xs text-muted-foreground">{emptyText}</div>
       ) : (
         <ol className="relative border-l border-border ml-2 space-y-3 mt-2">
           {rows.map((r) => {
