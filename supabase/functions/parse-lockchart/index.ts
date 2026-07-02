@@ -1,3 +1,4 @@
+// v2
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
