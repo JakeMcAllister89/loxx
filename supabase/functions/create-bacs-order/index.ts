@@ -1,4 +1,4 @@
-// v3
+// v4
 // Creates a BACS pro-forma order — mirrors create-checkout order/item/commission
 // creation but skips Stripe. Sends pro-forma invoice email via Resend.
 
@@ -370,6 +370,6 @@ The customer has been sent a pro-forma invoice with bank details.`;
     );
   } catch (e) {
     console.error("create-bacs-order error", e);
-    return jsonError((e as Error).message ?? "Server error", 500);
+    return jsonError("Server error", 500);
   }
 });

@@ -1,4 +1,4 @@
-// v5
+// v6
 // UK seller, physical goods → tax calculation only (no managed_payments).
 // Creates a pending order + order_items rows before payment so verify-checkout can finalise.
 
@@ -255,6 +255,6 @@ Deno.serve(async (req) => {
     );
   } catch (e) {
     console.error("create-checkout error", e);
-    return jsonError((e as Error).message ?? "Server error", 500);
+    return jsonError("Server error", 500);
   }
 });
