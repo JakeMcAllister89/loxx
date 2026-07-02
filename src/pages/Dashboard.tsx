@@ -136,7 +136,7 @@ export default function Dashboard() {
           </div>
           <div className={`rounded-[10px] border bg-card p-4 shadow-card ${lostTotal > 0 ? "border-destructive/30 bg-destructive/[0.02]" : ""}`}>
             <div className="flex items-center justify-between">
-              <div className="text-xs text-muted-foreground uppercase tracking-wide">Lost / unresolved</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">Unresolved lost keys</div>
               {lostTotal > 0 ? (
                 <AlertTriangle className="h-4 w-4 text-destructive" />
               ) : (
@@ -179,7 +179,7 @@ export default function Dashboard() {
             {attentionEmpty ? (
               <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
                 <CheckCircle2 className="h-4 w-4 text-success" />
-                All clear — no unresolved lost keys or overdue returns.
+                All clear — no unresolved key issues need attention.
               </div>
             ) : (
               <ul className="divide-y divide-border">
@@ -235,11 +235,6 @@ export default function Dashboard() {
                   );
                 })}
               </div>
-              {systems.length > 4 && (
-                <div className="mt-2">
-                  <Link to="/systems" className="text-sm text-primary hover:underline">View all systems →</Link>
-                </div>
-              )}
             </>
           )}
         </div>
@@ -250,7 +245,7 @@ export default function Dashboard() {
             <h2 className="text-lg font-semibold">Recent key activity</h2>
             <Link to="/key-log" className="text-sm text-primary hover:underline">View Key Log →</Link>
           </div>
-          <div className="rounded-[10px] border bg-card shadow-card p-4">
+          <div className="rounded-[10px] border bg-card shadow-card p-3">
             <ActivityTimeline
               limit={4}
               actionTypes={["key_issued", "key_returned", "key_lost_reported", "key_resolved", "key_holder_created", "key_holder_archived"]}
@@ -260,7 +255,7 @@ export default function Dashboard() {
         </div>
 
         {/* Recent orders */}
-        <div>
+        <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-semibold">Recent orders</h2>
             <Link to="/orders" className="text-sm text-primary hover:underline">View all orders →</Link>
