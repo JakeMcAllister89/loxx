@@ -194,6 +194,8 @@ export default function IssuedKeys() {
   const [historyOpen, setHistoryOpen] = useState<Issue | null>(null);
   const [returnOf, setReturnOf] = useState<Issue | null>(null);
   const [lostOf, setLostOf] = useState<Issue | null>(null);
+  const [returnQty, setReturnQty] = useState<number>(1);
+  const [lostQty, setLostQty] = useState<number>(1);
   const [lostNotes, setLostNotes] = useState("");
   const [resolveOf, setResolveOf] = useState<Issue | null>(null);
   const [resolveType, setResolveType] = useState<ResolutionType>("replacement_ordered");
@@ -276,31 +278,76 @@ export default function IssuedKeys() {
   // Actions
   const doReturn = async (i: Issue) => {
     if (!user) return;
-    const { error } = await supabase.from("key_issues").update({
-      status: "returned", returned_at: new Date().toISOString(), returned_by: user.id,
-    } as any).eq("id", i.id);
-    if (error) { toast.error(error.message); return; }
+    const totalQty = i.quantity ?? 1;
+    const qty = Math.min(Math.max(1, returnQty), totalQty);
+    if (qty === totalQty) {
+      const { error } = await supabase.from("key_issues").update({
+        status: "returned", returned_at: new Date().toISOString(), returned_by: user.id,
+      } as any).eq("id", i.id);
+      if (error) { toast.error(error.message); return; }
+    } else {
+      const { error: e1 } = await supabase.from("key_issues").update({
+        quantity: qty,
+        status: "returned", returned_at: new Date().toISOString(), returned_by: user.id,
+      } as any).eq("id", i.id);
+      if (e1) { toast.error(e1.message); return; }
+      const { error: e2 } = await supabase.from("key_issues").insert({
+        system_id: i.system_id, node_id: i.node_id, holder_id: i.holder_id,
+        node_type: (i as any).node_type ?? null,
+        node_label: (i as any).node_label ?? null,
+        key_ref: (i as any).key_ref ?? null,
+        quantity: totalQty - qty,
+        status: "issued",
+        issued_at: i.issued_at, issued_by: i.issued_by,
+        expected_return_date: i.expected_return_date ?? null,
+        notes: i.notes ?? null,
+      } as any);
+      if (e2) { toast.error(e2.message); return; }
+    }
     const label = (i as any).node_label ?? nodeById.get(i.node_id)?.label;
     const keyRef = (i as any).key_ref;
     const holder = holderById.get(i.holder_id);
-    logAction({ system_id: i.system_id, action: "key_returned", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
-    toast.success("Key marked returned");
+    logAction({ system_id: i.system_id, action: "key_returned", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef, quantity: qty } });
+    toast.success(qty === totalQty ? "All keys marked returned" : `${qty} of ${totalQty} keys marked returned`);
     setReturnOf(null);
     loadAll();
   };
 
   const doLost = async () => {
     if (!user || !lostOf) return;
-    const { error } = await supabase.from("key_issues").update({
-      status: "lost", lost_reported_at: new Date().toISOString(), lost_reported_by: user.id,
-      notes: lostNotes || lostOf.notes,
-    } as any).eq("id", lostOf.id);
-    if (error) { toast.error(error.message); return; }
+    const totalQty = lostOf.quantity ?? 1;
+    const qty = Math.min(Math.max(1, lostQty), totalQty);
+    if (qty === totalQty) {
+      const { error } = await supabase.from("key_issues").update({
+        status: "lost", lost_reported_at: new Date().toISOString(), lost_reported_by: user.id,
+        notes: lostNotes || lostOf.notes,
+      } as any).eq("id", lostOf.id);
+      if (error) { toast.error(error.message); return; }
+    } else {
+      const { error: e1 } = await supabase.from("key_issues").update({
+        quantity: qty,
+        status: "lost", lost_reported_at: new Date().toISOString(), lost_reported_by: user.id,
+        notes: lostNotes || lostOf.notes,
+      } as any).eq("id", lostOf.id);
+      if (e1) { toast.error(e1.message); return; }
+      const { error: e2 } = await supabase.from("key_issues").insert({
+        system_id: lostOf.system_id, node_id: lostOf.node_id, holder_id: lostOf.holder_id,
+        node_type: (lostOf as any).node_type ?? null,
+        node_label: (lostOf as any).node_label ?? null,
+        key_ref: (lostOf as any).key_ref ?? null,
+        quantity: totalQty - qty,
+        status: "issued",
+        issued_at: lostOf.issued_at, issued_by: lostOf.issued_by,
+        expected_return_date: lostOf.expected_return_date ?? null,
+        notes: lostOf.notes ?? null,
+      } as any);
+      if (e2) { toast.error(e2.message); return; }
+    }
     const label = (lostOf as any).node_label ?? nodeById.get(lostOf.node_id)?.label;
     const keyRef = (lostOf as any).key_ref;
     const holder = holderById.get(lostOf.holder_id);
-    logAction({ system_id: lostOf.system_id, action: "key_lost_reported", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
-    toast.success("Reported as lost");
+    logAction({ system_id: lostOf.system_id, action: "key_lost_reported", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef, quantity: qty } });
+    toast.success(qty === totalQty ? "Reported as lost" : `${qty} of ${totalQty} keys reported lost`);
     setLostOf(null); setLostNotes("");
     loadAll();
   };
@@ -476,8 +523,8 @@ export default function IssuedKeys() {
                             <DropdownMenuContent align="end">
                               {!readOnly && i.status === "issued" && (
                                 <>
-                                  <DropdownMenuItem onClick={() => setReturnOf(i)}>Return</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-red-600" onClick={() => setLostOf(i)}>Report lost</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => { setReturnOf(i); setReturnQty(i.quantity ?? 1); }}>Return</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-red-600" onClick={() => { setLostOf(i); setLostQty(i.quantity ?? 1); }}>Report lost</DropdownMenuItem>
                                 </>
                               )}
                               {!readOnly && i.status === "lost" && (
@@ -538,6 +585,21 @@ export default function IssuedKeys() {
               This closes out the current issue. It stays in history.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {returnOf && (returnOf.quantity ?? 1) > 1 && (
+            <div className="space-y-1.5 py-2">
+              <Label>How many keys are being returned?</Label>
+              <Input
+                type="number"
+                min={1}
+                max={returnOf.quantity ?? 1}
+                value={returnQty}
+                onChange={(e) => setReturnQty(Math.min(Math.max(1, Number(e.target.value)), returnOf.quantity ?? 1))}
+              />
+              <p className="text-xs text-muted-foreground">
+                {(returnOf.quantity ?? 1)} issued in this batch. Any remainder stays as issued.
+              </p>
+            </div>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => returnOf && doReturn(returnOf)} className="bg-amber-500 hover:bg-amber-600 text-white">Confirm</AlertDialogAction>
@@ -552,9 +614,26 @@ export default function IssuedKeys() {
             <DialogTitle>Report key as lost</DialogTitle>
             <DialogDescription>The row will move to Lost / Unresolved until resolved.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label>Notes (optional)</Label>
-            <Textarea value={lostNotes} onChange={(e) => setLostNotes(e.target.value)} placeholder="e.g. Last seen at reception on Friday" />
+          <div className="space-y-3">
+            {lostOf && (lostOf.quantity ?? 1) > 1 && (
+              <div className="space-y-1.5">
+                <Label>How many keys are lost?</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={lostOf.quantity ?? 1}
+                  value={lostQty}
+                  onChange={(e) => setLostQty(Math.min(Math.max(1, Number(e.target.value)), lostOf.quantity ?? 1))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {(lostOf.quantity ?? 1)} issued in this batch. Any remainder stays as issued.
+                </p>
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <Label>Notes (optional)</Label>
+              <Textarea value={lostNotes} onChange={(e) => setLostNotes(e.target.value)} placeholder="e.g. Last seen at reception on Friday" />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLostOf(null)}>Cancel</Button>
