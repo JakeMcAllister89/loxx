@@ -62,8 +62,8 @@ const features = [
     id: "audit-permissions",
     icon: ShieldCheck,
     label: "Audit & Permissions",
-    headline: "Control who can see and change your system.",
-    copy: "Give the right people the right access and keep a clear history of important changes.",
+    headline: "Control access and keep a clear history.",
+    copy: "Invite the right people, manage roles and keep a clear audit trail of system changes, issued keys and key activity.",
   },
 ];
 
@@ -216,7 +216,7 @@ export default function Index() {
             </h1>
 
             <p className="mt-6 text-lg text-foreground/65 max-w-xl leading-relaxed">
-              My LOXX brings your entire master key system together in one secure platform. Design systems, manage changes, order replacements and keep a permanent digital record your team can trust.
+              My LOXX brings your entire master key system together in one secure platform. Design systems, manage issued keys, track changes, order replacements and keep a permanent digital record your team can trust.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -224,7 +224,7 @@ export default function Index() {
                 <Link to="/auth?mode=signup">Get Started <ArrowRight className="h-4 w-4" /></Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-border bg-transparent text-foreground hover:bg-black/[0.03]">
-                <a href="mailto:hello@my-loxx.app">Book a Demo</a>
+                <a href="mailto:hello@myloxx.co.uk">Book a Demo</a>
               </Button>
             </div>
           </div>
@@ -664,7 +664,7 @@ export default function Index() {
                   </p>
                   <div className="mt-6 flex flex-col gap-3">
                     <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25">
-                      <a href="mailto:hello@my-loxx.app">Book a Demo</a>
+                      <a href="mailto:hello@myloxx.co.uk">Book a Demo</a>
                     </Button>
                     <Link to="/auth?mode=signup" className="text-sm text-muted-foreground hover:text-foreground text-center">
                       Or create an account
@@ -730,7 +730,7 @@ export default function Index() {
               <Link to="/auth?mode=signup">Get Started <ArrowRight className="h-4 w-4" /></Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground/35 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground hover:border-primary-foreground/50">
-              <a href="mailto:hello@my-loxx.app">Book a Demo</a>
+              <a href="mailto:hello@myloxx.co.uk">Book a Demo</a>
             </Button>
           </div>
         </div>
@@ -764,7 +764,7 @@ export default function Index() {
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Get Started</div>
               <ul className="space-y-2.5">
                 <li><Link to="/auth?mode=signup" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Get Started</Link></li>
-                <li><a href="mailto:hello@my-loxx.app" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Book a Demo</a></li>
+                <li><a href="mailto:hello@myloxx.co.uk" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Book a Demo</a></li>
                 <li><Link to="/auth" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Sign In</Link></li>
               </ul>
             </div>
@@ -773,7 +773,7 @@ export default function Index() {
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Legal</div>
               <ul className="space-y-2.5">
-                <li><a href="#" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Privacy</a></li>
+                <li><Link to="/privacy" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Privacy</Link></li>
                 <li><Link to="/terms" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Terms</Link></li>
               </ul>
             </div>
@@ -1033,10 +1033,10 @@ function FeatureContent({ variant }: { variant: string }) {
 
         <div className="grid grid-cols-4 gap-2.5">
           {[
-            { l: "Total doors", v: "1,284", d: "+12" },
             { l: "Active systems", v: "8", d: "+1" },
-            { l: "Orders placed", v: "36", d: "+4" },
-            { l: "Total spend", v: "£24.8k", d: "+£1.2k" },
+            { l: "Total doors", v: "1,284", d: "+12" },
+            { l: "Issued keys", v: "64", d: "+4" },
+            { l: "Unresolved lost keys", v: "2", d: "-1" },
           ].map((s) => (
             <div key={s.l} className="rounded-lg bg-white border border-slate-200 p-3">
               <div className="text-[9px] uppercase tracking-wider text-slate-400 font-medium">{s.l}</div>

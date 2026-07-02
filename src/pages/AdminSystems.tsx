@@ -4,7 +4,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -33,6 +33,7 @@ export default function AdminSystems() {
   const [q, setQ] = useState("");
   const [assignTarget, setAssignTarget] = useState<SystemRow | null>(null);
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
+  const [orgSearch, setOrgSearch] = useState<string>("");
   const [assigning, setAssigning] = useState(false);
 
   const load = async () => {
@@ -163,7 +164,7 @@ export default function AdminSystems() {
         </div>
       </div>
 
-      <Dialog open={!!assignTarget} onOpenChange={(o) => { if (!o) { setAssignTarget(null); setSelectedOrgId(""); } }}>
+      <Dialog open={!!assignTarget} onOpenChange={(o) => { if (!o) { setAssignTarget(null); setSelectedOrgId(""); setOrgSearch(""); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Assign system to organisation</DialogTitle>
@@ -175,18 +176,41 @@ export default function AdminSystems() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label>Assign to</Label>
-              <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select an organisation" />
-                </SelectTrigger>
-                <SelectContent>
-                  {orgs.map(o => (
-                    <SelectItem key={o.id} value={o.id}>
-                      {o.name}{o.id === assignTarget?.org_id && " (current)"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="border rounded-md overflow-hidden">
+                <div className="flex items-center border-b px-3">
+                  <Search className="h-4 w-4 text-muted-foreground shrink-0 mr-2" />
+                  <input
+                    value={orgSearch}
+                    onChange={e => setOrgSearch(e.target.value)}
+                    placeholder="Search organisations…"
+                    className="flex-1 py-2 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
+                    autoFocus
+                  />
+                  {orgSearch && (
+                    <button onClick={() => setOrgSearch("")} className="text-muted-foreground hover:text-foreground ml-1">✕</button>
+                  )}
+                </div>
+                <div className="max-h-52 overflow-y-auto">
+                  {orgs
+                    .filter(o => o.name.toLowerCase().includes(orgSearch.toLowerCase()))
+                    .map(o => (
+                      <button
+                        key={o.id}
+                        onClick={() => setSelectedOrgId(o.id)}
+                        className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between hover:bg-muted/50 transition-colors ${
+                          selectedOrgId === o.id ? "bg-primary/10 text-primary font-medium" : ""
+                        }`}
+                      >
+                        <span>{o.name}{o.id === assignTarget?.org_id ? " (current)" : ""}</span>
+                        {selectedOrgId === o.id && <span className="text-primary text-xs">✓</span>}
+                      </button>
+                    ))
+                  }
+                  {orgs.filter(o => o.name.toLowerCase().includes(orgSearch.toLowerCase())).length === 0 && (
+                    <p className="px-3 py-4 text-sm text-muted-foreground text-center">No organisations match.</p>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => { setAssignTarget(null); setSelectedOrgId(""); }}>Cancel</Button>
