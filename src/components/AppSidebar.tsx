@@ -131,12 +131,17 @@ export function AppSidebar() {
           <div className="px-3 pb-2 text-[11px] uppercase tracking-wider text-sidebar-foreground/50">My systems</div>
           <div className="space-y-0.5">
             {systems.length === 0 && <div className="px-3 py-2 text-xs text-sidebar-foreground/40">No systems yet</div>}
-            {systems.map((s) => (
+            {systems.slice(0, 5).map((s) => (
               <NavLink key={s.id} to={`/builder/${s.id}`} className="block px-3 py-1.5 rounded-md text-xs hover:bg-sidebar-accent/60 hover:text-amber-500 truncate">
                 <span className="truncate">{s.name}</span>
                 <span className="text-sidebar-foreground/40 ml-2">{s.door_count}</span>
               </NavLink>
             ))}
+            {systems.length > 5 && (
+              <NavLink to="/systems" className="block px-3 py-1.5 text-xs text-sidebar-foreground/50 hover:text-amber-500">
+                View all systems →
+              </NavLink>
+            )}
           </div>
         </div>
       </nav>
