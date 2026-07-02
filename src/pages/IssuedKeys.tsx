@@ -414,7 +414,7 @@ export default function IssuedKeys() {
                 <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="text-left px-4 py-2.5 font-medium">Key / Node</th>
-                    {globalMode && <th className="text-left px-4 py-2.5 font-medium">System</th>}
+                    <th className="text-left px-4 py-2.5 font-medium">System</th>
                     {!readOnly && <th className="text-left px-4 py-2.5 font-medium">Holder</th>}
                     <th className="text-left px-4 py-2.5 font-medium">Qty</th>
                     <th className="text-left px-4 py-2.5 font-medium">Status</th>
