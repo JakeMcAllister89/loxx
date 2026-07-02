@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
 
     if (!RESEND_KEY) {
       console.log(`[send-platform-invite] No RESEND_API_KEY — invite link: ${link}`);
-      return json({ ok: true, sent: false, link });
+      return json({ ok: true, sent: false });
     }
 
     const res = await fetch("https://api.resend.com/emails", {
