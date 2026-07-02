@@ -8,15 +8,20 @@ export function ActivityTimeline({
   limit = 20,
   refreshMs = 30000,
   showClear = false,
+  actionTypes,
+  emptyText = "No activity yet",
 }: {
   systemId?: string;
   limit?: number;
   refreshMs?: number;
   showClear?: boolean;
+  actionTypes?: string[];
+  emptyText?: string;
 }) {
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [nonce, setNonce] = useState(0);
+  const actionKey = actionTypes ? actionTypes.join(",") : "";
 
   const load = useCallback(async () => {
     let q = (supabase.from("audit_log" as any) as any)
@@ -25,13 +30,15 @@ export function ActivityTimeline({
       .order("created_at", { ascending: false })
       .limit(limit);
     if (systemId) q = q.eq("system_id", systemId);
+    if (actionTypes && actionTypes.length) q = q.in("action", actionTypes);
     const { data } = await q;
     const filtered = ((data as AuditRow[]) ?? []).filter(
       (r) => !(r.action === "node_added" && r.node_type === "CYL"),
     );
     setRows(filtered);
     setLoading(false);
-  }, [systemId, limit]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [systemId, limit, actionKey]);
 
   useEffect(() => {
     let active = true;
