@@ -77,6 +77,24 @@ export function AppSidebar() {
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchApprovals = () => {
+      (supabase.from("organisations") as any)
+        .select("id", { count: "exact", head: true })
+        .eq("is_approved", false)
+        .then(({ count }: { count: number | null }) => setApprovalCount(count ?? 0));
+    };
+    fetchApprovals();
+    const channel = supabase
+      .channel("sidebar-approvals")
+      .on("postgres_changes", { event: "*", schema: "public", table: "organisations" }, () => {
+        if (document.visibilityState === "visible") fetchApprovals();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [isAdmin]);
+
   const newSystem = async () => {
     if (!user || creating || !canCreate) return;
     // If currently in the builder, confirm before navigating away
