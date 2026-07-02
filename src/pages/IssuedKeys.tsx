@@ -69,7 +69,7 @@ interface Issue {
   created_at: string;
 }
 
-interface NodeMeta { id: string; label: string; type: string; }
+interface NodeMeta { id: string; label: string; type: string; typeLabel: string; keyRef?: string; }
 
 const HOLDER_TYPES: { value: HolderType; label: string }[] = [
   { value: "employee", label: "Employee" },
@@ -87,11 +87,34 @@ const RESOLUTION_TYPES: { value: ResolutionType; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
+const NODE_TYPE_LABEL: Record<string, string> = { GMK: "GMK", MK: "MK", SMK: "SMK", CYL: "Key" };
+
+function nodeDisplayLabel(n: TNode): string {
+  if ((n.type === "MK" || n.type === "SMK") && n.location?.trim()) {
+    return `${n.location.trim()} (${n.label || "(unnamed)"})`;
+  }
+  return n.label || "(unnamed)";
+}
+
+function nodeKeyRef(n: TNode): string | undefined {
+  if (n.type === "CYL") return `D${String(n.differ ?? 0).padStart(3, "0")}`;
+  if (Array.isArray(n.keys) && n.keys.length) {
+    return n.keys.map(k => k.ref).filter(Boolean).join(", ");
+  }
+  return undefined;
+}
+
 function walkTree(root: TNode | null | undefined): NodeMeta[] {
   if (!root) return [];
   const out: NodeMeta[] = [];
   const w = (n: TNode) => {
-    out.push({ id: n.id, label: n.label || "(unnamed)", type: n.type });
+    out.push({
+      id: n.id,
+      label: nodeDisplayLabel(n),
+      type: n.type,
+      typeLabel: NODE_TYPE_LABEL[n.type] ?? n.type,
+      keyRef: nodeKeyRef(n),
+    });
     n.children.forEach(w);
   };
   w(root);
@@ -116,7 +139,8 @@ function typeBadge(t: string) {
     CYL: "bg-[hsl(36_94%_95%)] text-[hsl(var(--node-cyl))] border-[hsl(var(--node-cyl))]/30",
     CE:  "bg-[hsl(199_85%_94%)] text-[hsl(var(--node-ce))] border-[hsl(var(--node-ce))]/30",
   };
-  return <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${map[t] ?? "bg-muted"}`}>{t}</span>;
+  const NODE_TYPE_LABEL: Record<string, string> = { GMK: "GMK", MK: "MK", SMK: "SMK", CYL: "Key", CE: "CE" };
+  return <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${map[t] ?? "bg-muted"}`}>{NODE_TYPE_LABEL[t] ?? t}</span>;
 }
 
 function holderBadge(t: HolderType) {
@@ -126,6 +150,14 @@ function holderBadge(t: HolderType) {
 function fmtDate(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function fmtDateTime(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+  return `${date}, ${time}`;
 }
 
 export default function IssuedKeys() {
@@ -209,9 +241,10 @@ export default function IssuedKeys() {
       status: "returned", returned_at: new Date().toISOString(), returned_by: user.id,
     } as any).eq("id", i.id);
     if (error) { toast.error(error.message); return; }
-    const node = nodeById.get(i.node_id);
+    const label = (i as any).node_label ?? nodeById.get(i.node_id)?.label;
+    const keyRef = (i as any).key_ref;
     const holder = holderById.get(i.holder_id);
-    logAction({ system_id: systemId!, action: "key_returned", node_label: node?.label, metadata: { holder_name: holder?.name } });
+    logAction({ system_id: systemId!, action: "key_returned", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
     toast.success("Key marked returned");
     setReturnOf(null);
     loadAll();
@@ -224,9 +257,10 @@ export default function IssuedKeys() {
       notes: lostNotes || lostOf.notes,
     } as any).eq("id", lostOf.id);
     if (error) { toast.error(error.message); return; }
-    const node = nodeById.get(lostOf.node_id);
+    const label = (lostOf as any).node_label ?? nodeById.get(lostOf.node_id)?.label;
+    const keyRef = (lostOf as any).key_ref;
     const holder = holderById.get(lostOf.holder_id);
-    logAction({ system_id: systemId!, action: "key_lost_reported", node_label: node?.label, metadata: { holder_name: holder?.name } });
+    logAction({ system_id: systemId!, action: "key_lost_reported", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
     toast.success("Reported as lost");
     setLostOf(null); setLostNotes("");
     loadAll();
@@ -239,8 +273,9 @@ export default function IssuedKeys() {
       resolution_type: resolveType, resolution_notes: resolveNotes || null,
     } as any).eq("id", resolveOf.id);
     if (error) { toast.error(error.message); return; }
-    const node = nodeById.get(resolveOf.node_id);
-    logAction({ system_id: systemId!, action: "key_resolved", node_label: node?.label, metadata: { resolution_type: resolveType } });
+    const label = (resolveOf as any).node_label ?? nodeById.get(resolveOf.node_id)?.label;
+    const keyRef = (resolveOf as any).key_ref;
+    logAction({ system_id: systemId!, action: "key_resolved", node_label: label, metadata: { resolution_type: resolveType, key_ref: keyRef } });
     toast.success("Marked resolved");
     setResolveOf(null); setResolveNotes(""); setResolveType("replacement_ordered");
     loadAll();
@@ -341,12 +376,18 @@ export default function IssuedKeys() {
                   ) : filteredIssues.map(i => {
                     const node = nodeById.get(i.node_id);
                     const holder = holderById.get(i.holder_id);
+                    const displayType = (i as any).node_type ?? node?.type;
+                    const displayLabel = (i as any).node_label ?? node?.label ?? "—";
+                    const displayRef = (i as any).key_ref;
                     return (
                       <tr key={i.id} className="border-t hover:bg-muted/30">
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
-                            {node ? typeBadge(node.type) : null}
-                            <span className="font-medium">{node?.label ?? "—"}</span>
+                            {displayType ? typeBadge(displayType) : null}
+                            <div>
+                              <div className="font-medium">{displayLabel}</div>
+                              {displayRef && <div className="text-[11px] text-muted-foreground font-mono">{displayRef}</div>}
+                            </div>
                           </div>
                         </td>
                         {!readOnly && (
@@ -361,7 +402,7 @@ export default function IssuedKeys() {
                         )}
                         <td className="px-4 py-2.5">{i.quantity}</td>
                         <td className="px-4 py-2.5">{statusBadge(i.status)}</td>
-                        <td className="px-4 py-2.5">{fmtDate(i.issued_at)}</td>
+                        <td className="px-4 py-2.5">{fmtDateTime(i.issued_at)}</td>
                         <td className="px-4 py-2.5 text-muted-foreground">{fmtDate(i.expected_return_date)}</td>
                         <td className="px-4 py-2.5 text-right">
                           <DropdownMenu>
@@ -495,7 +536,10 @@ export default function IssuedKeys() {
             <div className="mt-4 space-y-3">
               <div className="text-sm">
                 <div className="text-muted-foreground">Key</div>
-                <div className="font-medium">{nodeById.get(historyOpen.node_id)?.label ?? "—"}</div>
+                <div className="font-medium">
+                  {(historyOpen as any).node_label ?? nodeById.get(historyOpen.node_id)?.label ?? "—"}
+                  {(historyOpen as any).key_ref && <span className="ml-1.5 text-xs font-mono text-muted-foreground">{(historyOpen as any).key_ref}</span>}
+                </div>
               </div>
               {!readOnly && (
                 <div className="text-sm">
@@ -508,12 +552,12 @@ export default function IssuedKeys() {
                   <div key={h.id} className="rounded border p-2.5 text-xs space-y-1">
                     <div className="flex items-center justify-between">
                       {statusBadge(h.status)}
-                      <span className="text-muted-foreground">{fmtDate(h.issued_at)}</span>
+                      <span className="text-muted-foreground">{fmtDateTime(h.issued_at)}</span>
                     </div>
                     <div>Qty {h.quantity}</div>
-                    {h.returned_at && <div className="text-muted-foreground">Returned {fmtDate(h.returned_at)}</div>}
-                    {h.lost_reported_at && <div className="text-red-600">Lost reported {fmtDate(h.lost_reported_at)}</div>}
-                    {h.resolved_at && <div className="text-blue-600">Resolved {fmtDate(h.resolved_at)} — {h.resolution_type}</div>}
+                    {h.returned_at && <div className="text-muted-foreground">Returned {fmtDateTime(h.returned_at)}</div>}
+                    {h.lost_reported_at && <div className="text-red-600">Lost reported {fmtDateTime(h.lost_reported_at)}</div>}
+                    {h.resolved_at && <div className="text-blue-600">Resolved {fmtDateTime(h.resolved_at)} — {h.resolution_type}</div>}
                     {h.notes && <div className="text-muted-foreground italic">"{h.notes}"</div>}
                   </div>
                 ))}
@@ -566,9 +610,12 @@ function IssueKeyDialog({
 
   const submit = async () => {
     if (!nodeId || !holderId || !userId) { toast.error("Pick a key and a holder"); return; }
+    const node = treeNodes.find(n => n.id === nodeId);
+    const holder = holders.find(h => h.id === holderId);
     setBusy(true);
     const { error } = await supabase.from("key_issues").insert({
       system_id: systemId, node_id: nodeId, holder_id: holderId,
+      node_type: node?.type ?? null, node_label: node?.label ?? null, key_ref: node?.keyRef ?? null,
       quantity: qty, status: "issued",
       issued_at: new Date().toISOString(), issued_by: userId,
       expected_return_date: expected || null,
@@ -576,9 +623,7 @@ function IssueKeyDialog({
     } as any);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
-    const node = treeNodes.find(n => n.id === nodeId);
-    const holder = holders.find(h => h.id === holderId);
-    logAction({ system_id: systemId, action: "key_issued", node_label: node?.label, metadata: { holder_name: holder?.name, quantity: qty } });
+    logAction({ system_id: systemId, action: "key_issued", node_label: node?.label, metadata: { holder_name: holder?.name, quantity: qty, key_ref: node?.keyRef, node_type: node?.type } });
     toast.success("Key issued");
     onOpenChange(false);
     onCreated();

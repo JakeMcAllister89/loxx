@@ -267,9 +267,12 @@ export type Database = {
           id: string
           issued_at: string
           issued_by: string | null
+          key_ref: string | null
           lost_reported_at: string | null
           lost_reported_by: string | null
           node_id: string
+          node_label: string | null
+          node_type: string | null
           notes: string | null
           quantity: number
           replacement_order_id: string | null
@@ -289,9 +292,12 @@ export type Database = {
           id?: string
           issued_at?: string
           issued_by?: string | null
+          key_ref?: string | null
           lost_reported_at?: string | null
           lost_reported_by?: string | null
           node_id: string
+          node_label?: string | null
+          node_type?: string | null
           notes?: string | null
           quantity?: number
           replacement_order_id?: string | null
@@ -311,9 +317,12 @@ export type Database = {
           id?: string
           issued_at?: string
           issued_by?: string | null
+          key_ref?: string | null
           lost_reported_at?: string | null
           lost_reported_by?: string | null
           node_id?: string
+          node_label?: string | null
+          node_type?: string | null
           notes?: string | null
           quantity?: number
           replacement_order_id?: string | null

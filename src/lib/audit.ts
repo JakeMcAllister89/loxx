@@ -134,12 +134,30 @@ export function describeAction(r: AuditRow): string {
       const who = actorDisplayName(r);
       return `Additional keys ordered: ${qty} × ${ref} · Authorised by ${who}`;
     }
+    case "key_issued": {
+      const ref = meta.key_ref ? `${meta.key_ref} · ` : "";
+      return `Key issued: ${ref}${r.node_label ?? ""} — ${meta.quantity ?? 1} × to ${meta.holder_name ?? "holder"}`;
+    }
+    case "key_returned": {
+      const ref = meta.key_ref ? `${meta.key_ref} · ` : "";
+      return `Key returned: ${ref}${r.node_label ?? ""} — from ${meta.holder_name ?? "holder"}`;
+    }
+    case "key_lost_reported": {
+      const ref = meta.key_ref ? `${meta.key_ref} · ` : "";
+      return `Key reported lost: ${ref}${r.node_label ?? ""} — held by ${meta.holder_name ?? "holder"}`;
+    }
+    case "key_resolved": {
+      const ref = meta.key_ref ? `${meta.key_ref} · ` : "";
+      return `Lost key resolved: ${ref}${r.node_label ?? ""} — ${meta.resolution_type ?? "resolved"}`;
+    }
+    case "key_holder_created":  return `Key holder added: ${meta.holder_name ?? ""}`;
+    case "key_holder_archived": return `Key holder archived: ${meta.holder_name ?? ""}${meta.reason ? ` — ${meta.reason}` : ""}`;
     default:                          return r.action;
   }
 }
 
 export function actionIcon(action: string): string {
-  if (action.startsWith("node_") || action === "cylinder_assigned" || action === "cylinder_finish_changed" || action === "keys_count_changed" || action === "cylinder_configured") return "🔑";
+  if (action.startsWith("node_") || action.startsWith("key_") || action === "cylinder_assigned" || action === "cylinder_finish_changed" || action === "keys_count_changed" || action === "cylinder_configured") return "🔑";
   if (action === "system_saved" || action === "system_created" || action === "system_renamed" || action === "system_imported") return "💾";
   if (action === "validation_run") return "✅";
   if (action === "exported_to_cart" || action === "order_placed") return "🛒";
@@ -153,5 +171,6 @@ export function actionColor(action: string): string {
   if (action === "system_saved" || action === "exported_to_cart" || action === "order_placed") return "hsl(var(--success))";
   if (action === "validation_run") return "hsl(var(--muted-foreground))";
   if (action.startsWith("member_")) return "#d4820a";
+  if (action.startsWith("key_")) return "#b45309";
   return "hsl(var(--node-gmk))";
 }
