@@ -282,7 +282,7 @@ export default function IssuedKeys() {
     const label = (i as any).node_label ?? nodeById.get(i.node_id)?.label;
     const keyRef = (i as any).key_ref;
     const holder = holderById.get(i.holder_id);
-    logAction({ system_id: systemId!, action: "key_returned", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
+    logAction({ system_id: i.system_id, action: "key_returned", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
     toast.success("Key marked returned");
     setReturnOf(null);
     loadAll();
@@ -298,7 +298,7 @@ export default function IssuedKeys() {
     const label = (lostOf as any).node_label ?? nodeById.get(lostOf.node_id)?.label;
     const keyRef = (lostOf as any).key_ref;
     const holder = holderById.get(lostOf.holder_id);
-    logAction({ system_id: systemId!, action: "key_lost_reported", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
+    logAction({ system_id: lostOf.system_id, action: "key_lost_reported", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
     toast.success("Reported as lost");
     setLostOf(null); setLostNotes("");
     loadAll();
@@ -313,7 +313,7 @@ export default function IssuedKeys() {
     if (error) { toast.error(error.message); return; }
     const label = (resolveOf as any).node_label ?? nodeById.get(resolveOf.node_id)?.label;
     const keyRef = (resolveOf as any).key_ref;
-    logAction({ system_id: systemId!, action: "key_resolved", node_label: label, metadata: { resolution_type: resolveType, key_ref: keyRef } });
+    logAction({ system_id: resolveOf.system_id, action: "key_resolved", node_label: label, metadata: { resolution_type: resolveType, key_ref: keyRef } });
     toast.success("Marked resolved");
     setResolveOf(null); setResolveNotes(""); setResolveType("replacement_ordered");
     loadAll();
