@@ -124,7 +124,13 @@ function walkTree(root: TNode | null | undefined): NodeMeta[] {
   return out;
 }
 
-function statusBadge(s: IssueStatus) {
+function statusBadge(s: IssueStatus, expectedReturnDate?: string | null) {
+  if (s === "issued" && expectedReturnDate) {
+    const today = new Date().toISOString().split("T")[0];
+    if (expectedReturnDate < today) {
+      return <span className="text-[11px] font-medium px-2 py-0.5 rounded-full border bg-red-50 text-red-700 border-red-200">Overdue</span>;
+    }
+  }
   const map: Record<IssueStatus, string> = {
     issued:   "bg-emerald-50 text-emerald-700 border-emerald-200",
     returned: "bg-slate-100 text-slate-700 border-slate-200",
@@ -200,6 +206,8 @@ export default function IssuedKeys() {
   const [resolveOf, setResolveOf] = useState<Issue | null>(null);
   const [resolveType, setResolveType] = useState<ResolutionType>("replacement_ordered");
   const [resolveNotes, setResolveNotes] = useState("");
+  const [editDateOf, setEditDateOf] = useState<Issue | null>(null);
+  const [editDate, setEditDate] = useState<string>("");
 
   const loadAll = async () => {
     setLoading(true);
