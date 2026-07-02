@@ -399,7 +399,11 @@ function KeysFamilyCard({ fam, onDetails }: {
       <div className="p-5 flex-1 flex flex-col gap-3">
         <div>
           <h3 className="font-semibold leading-tight text-lg">{selected.product_description ?? selected.name ?? fam.type}</h3>
-          {fam.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{fam.description}</p>}
+          {(selected.product_description ?? selected.name) && (
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+              {selected.product_description ?? selected.name ?? ""}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap gap-1.5">
           {keyVariants.map(k => {
