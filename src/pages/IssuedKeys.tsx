@@ -124,7 +124,13 @@ function walkTree(root: TNode | null | undefined): NodeMeta[] {
   return out;
 }
 
-function statusBadge(s: IssueStatus) {
+function statusBadge(s: IssueStatus, expectedReturnDate?: string | null) {
+  if (s === "issued" && expectedReturnDate) {
+    const today = new Date().toISOString().split("T")[0];
+    if (expectedReturnDate < today) {
+      return <span className="text-[11px] font-medium px-2 py-0.5 rounded-full border bg-red-50 text-red-700 border-red-200">Overdue</span>;
+    }
+  }
   const map: Record<IssueStatus, string> = {
     issued:   "bg-emerald-50 text-emerald-700 border-emerald-200",
     returned: "bg-slate-100 text-slate-700 border-slate-200",
@@ -200,6 +206,8 @@ export default function IssuedKeys() {
   const [resolveOf, setResolveOf] = useState<Issue | null>(null);
   const [resolveType, setResolveType] = useState<ResolutionType>("replacement_ordered");
   const [resolveNotes, setResolveNotes] = useState("");
+  const [editDateOf, setEditDateOf] = useState<Issue | null>(null);
+  const [editDate, setEditDate] = useState<string>("");
 
   const loadAll = async () => {
     setLoading(true);
@@ -367,6 +375,18 @@ export default function IssuedKeys() {
     loadAll();
   };
 
+  const doEditDate = async () => {
+    if (!editDateOf) return;
+    const { error } = await supabase.from("key_issues").update({
+      expected_return_date: editDate || null,
+    } as any).eq("id", editDateOf.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Return date updated");
+    setEditDateOf(null);
+    setEditDate("");
+    loadAll();
+  };
+
   const rowHistory = (i: Issue) =>
     issues.filter(r => r.node_id === i.node_id && r.holder_id === i.holder_id)
           .sort((a, b) => a.issued_at.localeCompare(b.issued_at));
@@ -512,7 +532,7 @@ export default function IssuedKeys() {
                           </td>
                         )}
                         <td className="px-4 py-2.5">{i.quantity}</td>
-                        <td className="px-4 py-2.5">{statusBadge(i.status)}</td>
+                        <td className="px-4 py-2.5">{statusBadge(i.status, i.expected_return_date)}</td>
                         <td className="px-4 py-2.5">{fmtDateTime(i.issued_at)}</td>
                         <td className="px-4 py-2.5 text-muted-foreground">{fmtDate(i.expected_return_date)}</td>
                         <td className="px-4 py-2.5 text-right">
@@ -525,6 +545,12 @@ export default function IssuedKeys() {
                                 <>
                                   <DropdownMenuItem onClick={() => { setReturnOf(i); setReturnQty(i.quantity ?? 1); }}>Return</DropdownMenuItem>
                                   <DropdownMenuItem className="text-red-600" onClick={() => { setLostOf(i); setLostQty(i.quantity ?? 1); }}>Report lost</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => {
+                                    setEditDateOf(i);
+                                    setEditDate(i.expected_return_date ?? "");
+                                  }}>
+                                    Edit return date
+                                  </DropdownMenuItem>
                                 </>
                               )}
                               {!readOnly && i.status === "lost" && (
@@ -711,6 +737,34 @@ export default function IssuedKeys() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Edit return date */}
+      <Dialog open={!!editDateOf} onOpenChange={o => { if (!o) { setEditDateOf(null); setEditDate(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit expected return date</DialogTitle>
+            <DialogDescription>
+              Update when this key is expected back. Leave blank to remove the return date.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label>Expected return date</Label>
+              <Input
+                type="date"
+                value={editDate}
+                onChange={e => setEditDate(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => { setEditDateOf(null); setEditDate(""); }}>Cancel</Button>
+              <Button onClick={doEditDate} className="bg-amber-500 hover:bg-amber-600 text-white">
+                Save
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
