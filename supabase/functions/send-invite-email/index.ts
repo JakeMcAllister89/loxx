@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       const txt = await res.text();
       console.error("Resend error:", txt);
-      return json({ ok: false, error: txt, link }, 502);
+      return json({ ok: false, error: txt }, 502);
     }
     return json({ ok: true, sent: true });
   } catch (e: any) {
