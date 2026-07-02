@@ -315,16 +315,39 @@ export default function IssuedKeys() {
 
   const doLost = async () => {
     if (!user || !lostOf) return;
-    const { error } = await supabase.from("key_issues").update({
-      status: "lost", lost_reported_at: new Date().toISOString(), lost_reported_by: user.id,
-      notes: lostNotes || lostOf.notes,
-    } as any).eq("id", lostOf.id);
-    if (error) { toast.error(error.message); return; }
+    const totalQty = lostOf.quantity ?? 1;
+    const qty = Math.min(Math.max(1, lostQty), totalQty);
+    if (qty === totalQty) {
+      const { error } = await supabase.from("key_issues").update({
+        status: "lost", lost_reported_at: new Date().toISOString(), lost_reported_by: user.id,
+        notes: lostNotes || lostOf.notes,
+      } as any).eq("id", lostOf.id);
+      if (error) { toast.error(error.message); return; }
+    } else {
+      const { error: e1 } = await supabase.from("key_issues").update({
+        quantity: qty,
+        status: "lost", lost_reported_at: new Date().toISOString(), lost_reported_by: user.id,
+        notes: lostNotes || lostOf.notes,
+      } as any).eq("id", lostOf.id);
+      if (e1) { toast.error(e1.message); return; }
+      const { error: e2 } = await supabase.from("key_issues").insert({
+        system_id: lostOf.system_id, node_id: lostOf.node_id, holder_id: lostOf.holder_id,
+        node_type: (lostOf as any).node_type ?? null,
+        node_label: (lostOf as any).node_label ?? null,
+        key_ref: (lostOf as any).key_ref ?? null,
+        quantity: totalQty - qty,
+        status: "issued",
+        issued_at: lostOf.issued_at, issued_by: lostOf.issued_by,
+        expected_return_date: lostOf.expected formatDate ?? null,
+        notes: lostOf.notes ?? null,
+      } as any);
+      if (e2) { toast.error(e2.message); return; }
+    }
     const label = (lostOf as any).node_label ?? nodeById.get(lostOf.node_id)?.label;
     const keyRef = (lostOf as any).key_ref;
     const holder = holderById.get(lostOf.holder_id);
-    logAction({ system_id: lostOf.system_id, action: "key_lost_reported", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
-    toast.success("Reported as lost");
+    logAction({ system_id: lostOf.system_id, action: "key_lost_reported", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef, quantity: qty } });
+    toast.success(qty === totalQty ? "Reported as lost" : `${qty} of ${totalQty} keys reported lost`);
     setLostOf(null); setLostNotes("");
     loadAll();
   };
