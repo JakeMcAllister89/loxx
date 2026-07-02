@@ -501,16 +501,17 @@ export default function IssuedKeys() {
 
 
       {/* Issue key dialog */}
-      {!readOnly && !globalMode && (
+      {!readOnly && (
         <IssueKeyDialog
           open={issueOpen}
           onOpenChange={setIssueOpen}
+          systems={Array.from(systemsMap.entries()).map(([id, name]) => ({ id, name }))}
+          defaultSystemId={globalMode ? null : (systemId ?? null)}
           treeNodes={treeNodes}
           holders={holders.filter(h => !h.archived_at)}
           orgId={orgId}
           userId={user?.id ?? null}
-          systemId={systemId!}
-          initialNodeId={fNode !== "all" ? fNode : null}
+          initialNodeId={!globalMode && fNode !== "all" ? fNode : null}
           onCreated={loadAll}
           onHolderCreated={loadAll}
         />
