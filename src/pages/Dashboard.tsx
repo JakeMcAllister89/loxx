@@ -89,24 +89,18 @@ export default function Dashboard() {
 
   const totalDoors = systems.reduce((sum, x) => sum + (x.door_count ?? 0), 0);
 
-  const stats = [
-    { label: "Active systems", hint: "Currently managed in My LOXX", value: systems.length, Icon: Layers },
-    { label: "Total doors", hint: "Across all active systems", value: totalDoors, Icon: DoorOpen },
-    { label: "Issued keys", hint: "Currently issued to holders", value: issuedTotal, Icon: KeyRound },
-    { label: "Lost / unresolved", hint: "Requires attention", value: lostTotal, Icon: AlertTriangle },
-  ];
-
   const attentionItems = [
-    { key: "lost", label: "Lost / unresolved keys", count: lostTotal, Icon: AlertTriangle, tone: "text-destructive" },
-    { key: "overdue", label: "Overdue returns", count: overdueCount, Icon: Clock, tone: "text-amber-600" },
-    { key: "quotes", label: "Quotes sent awaiting response", count: pendingQuotes, Icon: FileText, tone: "text-primary" },
+    { key: "lost", label: "Lost / unresolved keys", count: lostTotal, Icon: AlertTriangle, tone: "text-destructive" as const },
+    { key: "overdue", label: "Overdue returns", count: overdueCount, Icon: Clock, tone: "text-amber-600" as const },
+    { key: "quotes", label: "Quotes sent awaiting response", count: pendingQuotes, Icon: FileText, tone: "text-primary" as const },
   ];
   const attentionEmpty = lostTotal === 0 && overdueCount === 0 && pendingQuotes === 0;
 
   return (
     <DashboardLayout>
-      <div className="p-8 max-w-7xl">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-6 lg:p-8 max-w-7xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground text-sm">Monitor your systems, issued keys, orders and unresolved risks.</p>
@@ -115,22 +109,48 @@ export default function Dashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {stats.map((s) => (
-            <div key={s.label} className="rounded-[10px] border bg-card p-5 shadow-card">
-              <div className="flex items-center justify-between">
-                <div className="text-xs text-muted-foreground uppercase tracking-wide">{s.label}</div>
-                <s.Icon className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="text-2xl font-semibold mt-2">{s.value}</div>
-              <div className="text-[11px] text-muted-foreground mt-1">{s.hint}</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="rounded-[10px] border bg-card p-4 shadow-card">
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">Active systems</div>
+              <Layers className="h-4 w-4 text-muted-foreground" />
             </div>
-          ))}
+            <div className="text-2xl font-semibold mt-2">{systems.length}</div>
+            <div className="text-[11px] text-muted-foreground mt-1">Currently managed in My LOXX</div>
+          </div>
+          <div className="rounded-[10px] border bg-card p-4 shadow-card">
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">Total doors</div>
+              <DoorOpen className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="text-2xl font-semibold mt-2">{totalDoors}</div>
+            <div className="text-[11px] text-muted-foreground mt-1">Across all active systems</div>
+          </div>
+          <div className="rounded-[10px] border bg-card p-4 shadow-card">
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">Issued keys</div>
+              <KeyRound className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="text-2xl font-semibold mt-2">{issuedTotal}</div>
+            <div className="text-[11px] text-muted-foreground mt-1">Currently issued</div>
+          </div>
+          <div className={`rounded-[10px] border bg-card p-4 shadow-card ${lostTotal > 0 ? "border-destructive/30 bg-destructive/[0.02]" : ""}`}>
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">Lost / unresolved</div>
+              {lostTotal > 0 ? (
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4 text-success" />
+              )}
+            </div>
+            <div className="text-2xl font-semibold mt-2">{lostTotal}</div>
+            <div className="text-[11px] text-muted-foreground mt-1">{lostTotal > 0 ? "Requires attention" : "All clear"}</div>
+          </div>
         </div>
 
         {/* Action cards */}
-        <div className="grid md:grid-cols-2 gap-4 mb-8">
-          <button onClick={newSystem} className="text-left rounded-[10px] border bg-card p-5 shadow-card hover:border-primary hover:shadow-elevated transition-all group">
+        <div className="grid md:grid-cols-2 gap-3 mb-6">
+          <button onClick={newSystem} className="text-left rounded-[10px] border bg-card p-4 shadow-card hover:border-primary hover:shadow-elevated transition-all group">
             <div className="flex items-start justify-between">
               <div className="inline-flex h-9 w-9 rounded-full bg-accent-light items-center justify-center mb-3">
                 <Plus className="h-4 w-4 text-primary" />
@@ -140,7 +160,7 @@ export default function Dashboard() {
             <div className="font-semibold">Create a new system</div>
             <p className="text-xs text-muted-foreground mt-1">Build a master key system from scratch.</p>
           </button>
-          <Link to="/import" className="rounded-[10px] border bg-card p-5 shadow-card hover:border-primary hover:shadow-elevated transition-all block group">
+          <Link to="/import" className="rounded-[10px] border bg-card p-4 shadow-card hover:border-primary hover:shadow-elevated transition-all block group">
             <div className="flex items-start justify-between">
               <div className="inline-flex h-9 w-9 rounded-full bg-accent-light items-center justify-center mb-3">
                 <Upload className="h-4 w-4 text-primary" />
@@ -153,8 +173,8 @@ export default function Dashboard() {
         </div>
 
         {/* Needs attention */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-3">Needs attention</h2>
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-2">Needs attention</h2>
           <div className="rounded-[10px] border bg-card shadow-card p-2">
             {attentionEmpty ? (
               <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
@@ -162,7 +182,7 @@ export default function Dashboard() {
                 All clear — no unresolved lost keys or overdue returns.
               </div>
             ) : (
-              <ul className="divide-y">
+              <ul className="divide-y divide-border">
                 {attentionItems.filter(i => i.count > 0).map((i) => (
                   <li key={i.key} className="flex items-center justify-between px-3 py-2.5 text-sm">
                     <div className="flex items-center gap-2">
@@ -178,10 +198,11 @@ export default function Dashboard() {
         </div>
 
         {/* My systems */}
-        <div className="mb-8">
-          <Link to="/systems" className="inline-flex items-center gap-1 text-lg font-semibold mb-3 hover:text-primary">
-            My systems <ArrowRight className="h-4 w-4" />
-          </Link>
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold">My systems</h2>
+            <Link to="/systems" className="text-sm text-primary hover:underline">View all systems →</Link>
+          </div>
           {systems.length === 0 ? (
             <div className="rounded-[10px] border-dashed border-2 bg-card p-10 text-center">
               <p className="text-muted-foreground text-sm">You haven't built a system yet.</p>
@@ -189,15 +210,14 @@ export default function Dashboard() {
             </div>
           ) : (
             <>
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-3">
                 {systems.slice(0, 4).map((s) => {
                   const c = systemCounts.get(s.id) ?? { issued: 0, lost: 0 };
                   return (
-                    <div key={s.id} className="rounded-[10px] border bg-card p-5 shadow-card flex items-start justify-between gap-3">
+                    <div key={s.id} className="rounded-[10px] border bg-card p-4 shadow-card flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="font-semibold truncate">{s.name}</div>
-                        <div className="text-xs text-muted-foreground mt-1">{s.reference} · {s.door_count} doors</div>
-                        <div className="text-xs text-muted-foreground mt-1">Updated {new Date(s.updated_at).toLocaleDateString("en-GB")}</div>
+                        <div className="font-semibold text-base truncate">{s.name}</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">{s.reference} · {s.door_count} doors · Updated {new Date(s.updated_at).toLocaleDateString("en-GB")}</div>
                         <div className="flex items-center gap-3 mt-2 text-xs">
                           <span className="inline-flex items-center gap-1 text-muted-foreground">
                             <KeyRound className="h-3.5 w-3.5" /> {c.issued} issued
@@ -216,7 +236,7 @@ export default function Dashboard() {
                 })}
               </div>
               {systems.length > 4 && (
-                <div className="mt-3">
+                <div className="mt-2">
                   <Link to="/systems" className="text-sm text-primary hover:underline">View all systems →</Link>
                 </div>
               )}
@@ -225,11 +245,14 @@ export default function Dashboard() {
         </div>
 
         {/* Recent key activity */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-3">Recent key activity</h2>
-          <div className="rounded-[10px] border bg-card shadow-card p-5">
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold">Recent key activity</h2>
+            <Link to="/key-log" className="text-sm text-primary hover:underline">View Key Log →</Link>
+          </div>
+          <div className="rounded-[10px] border bg-card shadow-card p-4">
             <ActivityTimeline
-              limit={10}
+              limit={4}
               actionTypes={["key_issued", "key_returned", "key_lost_reported", "key_resolved", "key_holder_created", "key_holder_archived"]}
               emptyText="No key activity yet."
             />
@@ -238,10 +261,13 @@ export default function Dashboard() {
 
         {/* Recent orders */}
         <div>
-          <h2 className="text-lg font-semibold mb-3">Recent orders</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold">Recent orders</h2>
+            <Link to="/orders" className="text-sm text-primary hover:underline">View all orders →</Link>
+          </div>
           <div className="rounded-[10px] border bg-card shadow-card overflow-hidden">
             {orders.length === 0 ? (
-              <div className="p-6 text-sm text-muted-foreground">No orders yet.</div>
+              <div className="p-5 text-sm text-muted-foreground">No orders yet.</div>
             ) : (
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 text-left text-xs uppercase text-muted-foreground">
@@ -259,9 +285,6 @@ export default function Dashboard() {
                 </tbody>
               </table>
             )}
-          </div>
-          <div className="mt-3">
-            <Link to="/orders" className="text-sm text-primary hover:underline">View all orders →</Link>
           </div>
         </div>
       </div>
