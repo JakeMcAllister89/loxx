@@ -156,49 +156,81 @@ export default function Systems() {
             <KeyRound className="h-12 w-12 mx-auto text-amber-500" />
             <p className="mt-4 text-lg font-medium">No systems yet</p>
             <div className="flex gap-3 justify-center mt-5">
-              <Button onClick={onNew} disabled={creating} className="bg-amber-500 hover:bg-amber-600 text-white">Start from scratch</Button>
+              <Button onClick={onNew} disabled={creating} className="bg-amber-500 hover:bg-amber-600 text-white">Create a new system</Button>
               <Button asChild variant="outline"><Link to="/import">Import existing</Link></Button>
             </div>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-4">
-            {systems.map((s) => (
-              <div key={s.id} className="rounded-[10px] border bg-card p-5 shadow-card">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="font-semibold truncate">{s.name}</div>
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {s.reference && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">{s.reference}</span>}
-                      <span className="text-xs text-muted-foreground">{s.door_count} doors</span>
-                      <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-800">Active</span>
-                      {s.has_orders && (
-                        <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                          <Lock className="h-3 w-3" /> Ordered
-                        </span>
-                      )}
+          <>
+            <div className="flex items-center gap-2 mb-4">
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search systems…"
+                className="max-w-sm"
+              />
+              <Button
+                variant={needsAttention ? "default" : "outline"}
+                size="sm"
+                onClick={() => setNeedsAttention(v => !v)}
+                className={needsAttention ? "bg-amber-500 hover:bg-amber-600 text-white" : ""}
+              >
+                Needs attention
+              </Button>
+            </div>
+            {filtered.length === 0 ? (
+              <div className="rounded-[10px] border bg-card p-12 text-center text-sm text-muted-foreground">
+                {needsAttention ? "No systems need attention." : "No systems match your search."}
+              </div>
+            ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              {filtered.map((s) => {
+                const c = counts.get(s.id) ?? { issued: 0, lost: 0 };
+                return (
+                <div key={s.id} className="rounded-[10px] border bg-card p-5 shadow-card">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-semibold truncate">{s.name}</div>
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        {s.reference && <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">{s.reference}</span>}
+                        <span className="text-xs text-muted-foreground">{s.door_count} doors</span>
+                        <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-800">Active</span>
+                        {s.has_orders && (
+                          <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                            <Lock className="h-3 w-3" /> Hardware ordered
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs mt-1.5">
+                        <span className="text-muted-foreground">{c.issued} issued · </span>
+                        <span className={c.lost > 0 ? "text-amber-600 font-medium" : "text-muted-foreground"}>{c.lost} lost</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1.5">Updated {timeAgo(s.updated_at)}</div>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1.5">Created {timeAgo(s.created_at)}</div>
-                    <div className="text-xs text-muted-foreground">Updated {timeAgo(s.updated_at)}</div>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <Button size="sm" asChild className="bg-amber-500 hover:bg-amber-600 text-white"><Link to={`/builder/${s.id}`}>Open <ExternalLink className="h-3.5 w-3.5" /></Link></Button>
+                    <Button size="sm" variant="outline" asChild><Link to={`/builder/${s.id}/keys`}><KeyRound className="h-3.5 w-3.5" /> Key Log</Link></Button>
+                    <Button size="sm" variant="outline" onClick={() => duplicate(s)}><Copy className="h-3.5 w-3.5" /> Duplicate</Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => { setRenameOf(s); setRenameValue(s.name); }}>Rename</DropdownMenuItem>
+
+                        {canDelete && !s.has_orders && <DropdownMenuItem className="text-destructive" onClick={() => setDeleteOf(s)}>Delete</DropdownMenuItem>}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
-                <div className="flex gap-2 mt-4">
-                  <Button size="sm" asChild className="bg-amber-500 hover:bg-amber-600 text-white"><Link to={`/builder/${s.id}`}>Open <ExternalLink className="h-3.5 w-3.5" /></Link></Button>
-                  <Button size="sm" variant="outline" onClick={() => duplicate(s)}><Copy className="h-3.5 w-3.5" /> Duplicate</Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button size="sm" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => { setRenameOf(s); setRenameValue(s.name); }}>Rename</DropdownMenuItem>
-                      
-                      {canDelete && !s.has_orders && <DropdownMenuItem className="text-destructive" onClick={() => setDeleteOf(s)}>Delete</DropdownMenuItem>}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+            )}
+          </>
         )}
+
       </div>
 
       <Dialog open={!!renameOf} onOpenChange={(o) => !o && setRenameOf(null)}>
