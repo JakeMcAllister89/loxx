@@ -278,15 +278,37 @@ export default function IssuedKeys() {
   // Actions
   const doReturn = async (i: Issue) => {
     if (!user) return;
-    const { error } = await supabase.from("key_issues").update({
-      status: "returned", returned_at: new Date().toISOString(), returned_by: user.id,
-    } as any).eq("id", i.id);
-    if (error) { toast.error(error.message); return; }
+    const totalQty = i.quantity ?? 1;
+    const qty = Math.min(Math.max(1, returnQty), totalQty);
+    if (qty === totalQty) {
+      const { error } = await supabase.from("key_issues").update({
+        status: "returned", returned_at: new Date().toISOString(), returned_by: user.id,
+      } as any).eq("id", i.id);
+      if (error) { toast.error(error.message); return; }
+    } else {
+      const { error: e1 } = await supabase.from("key_issues").update({
+        quantity: qty,
+        status: "returned", returned_at: new Date().toISOString(), returned_by: user.id,
+      } as any).eq("id", i.id);
+      if (e1) { toast.error(e1.message); return; }
+      const { error: e2 } = await supabase.from("key_issues").insert({
+        system_id: i.system_id, node_id: i.node_id, holder_id: i.holder_id,
+        node_type: (i as any).node_type ?? null,
+        node_label: (i as any).node_label ?? null,
+        key_ref: (i as any).key_ref ?? null,
+        quantity: totalQty - qty,
+        status: "issued",
+        issued_at: i.issued_at, issued_by: i.issued_by,
+        expected_return_date: i.expected_return_date ?? null,
+        notes: i.notes ?? null,
+      } as any);
+      if (e2) { toast.error(e2.message); return; }
+    }
     const label = (i as any).node_label ?? nodeById.get(i.node_id)?.label;
     const keyRef = (i as any).key_ref;
     const holder = holderById.get(i.holder_id);
-    logAction({ system_id: i.system_id, action: "key_returned", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
-    toast.success("Key marked returned");
+    logAction({ system_id: i.system_id, action: "key_returned", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef, quantity: qty } });
+    toast.success(qty === totalQty ? "All keys marked returned" : `${qty} of ${totalQty} keys marked returned`);
     setReturnOf(null);
     loadAll();
   };
