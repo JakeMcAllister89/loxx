@@ -76,7 +76,7 @@ export default function Catalogue() {
   const [detail, setDetail] = useState<Family | null>(null);
 
   useEffect(() => {
-    supabase.from("products").select("*").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
+    supabase.from("products").select("id,name,code,cylinder_type,cylinder_profile,pin_count,finish,finish_colour,size,price_gbp,security_rating,bs_en_1303,description,product_description,product_features,image_url,is_active,created_at").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
   }, []);
 
   const families = useMemo(() => buildFamilies(products), [products]);
