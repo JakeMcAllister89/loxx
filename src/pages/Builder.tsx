@@ -2249,7 +2249,7 @@ function Legend({ type }: { type: NodeType }) {
 
 function DetailPanel({
   node, parent, trail, products, onPatch, addOptions, onAddChildType, onDelete, isRoot, onClose,
-  isFulfilled, onReplace, onCopySpec, onAddCE, readOnly = false,
+  isFulfilled, onReplace, onCopySpec, onAddCE, readOnly = false, issueCounts, systemId,
 }: {
   node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
@@ -2263,6 +2263,8 @@ function DetailPanel({
   onCopySpec?: () => void;
   onAddCE?: () => void;
   readOnly?: boolean;
+  issueCounts?: Map<string, { issued: number; lost: number }>;
+  systemId?: string;
 }) {
   const meta = TYPE_META[node.type];
   const isCyl = node.type === "CYL";
