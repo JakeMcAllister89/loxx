@@ -29,11 +29,14 @@ export default function Systems() {
   const canDelete = orgRole === "master_admin";
   const navigate = useNavigate();
   const [systems, setSystems] = useState<Sys[]>([]);
+  const [counts, setCounts] = useState<Map<string, { issued: number; lost: number }>>(new Map());
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [renameOf, setRenameOf] = useState<Sys | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [deleteOf, setDeleteOf] = useState<Sys | null>(null);
+  const [search, setSearch] = useState("");
+  const [needsAttention, setNeedsAttention] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -42,14 +45,36 @@ export default function Systems() {
     const list = (data ?? []) as Sys[];
     if (list.length) {
       const ids = list.map(s => s.id);
-      const { data: orderData } = await supabase.from("orders").select("system_id").in("system_id", ids);
+      const [{ data: orderData }, { data: issueData }] = await Promise.all([
+        supabase.from("orders").select("system_id").in("system_id", ids),
+        supabase.from("key_issues").select("system_id,status,quantity").in("system_id", ids).in("status", ["issued", "lost"]),
+      ]);
       const orderedIds = new Set((orderData ?? []).map((o: any) => o.system_id));
       list.forEach(s => { s.has_orders = orderedIds.has(s.id); });
+      const m = new Map<string, { issued: number; lost: number }>();
+      for (const row of (issueData ?? []) as any[]) {
+        const cur = m.get(row.system_id) ?? { issued: 0, lost: 0 };
+        const q = row.quantity ?? 1;
+        if (row.status === "issued") cur.issued += q;
+        else if (row.status === "lost") cur.lost += q;
+        m.set(row.system_id, cur);
+      }
+      setCounts(m);
+    } else {
+      setCounts(new Map());
     }
     setSystems(list);
     setLoading(false);
   };
   useEffect(() => { load(); }, [user]);
+
+  const filtered = systems.filter(s => {
+    const q = search.trim().toLowerCase();
+    if (q && !(s.name.toLowerCase().includes(q) || (s.reference ?? "").toLowerCase().includes(q))) return false;
+    if (needsAttention && (counts.get(s.id)?.lost ?? 0) <= 0) return false;
+    return true;
+  });
+
 
   const onNew = async () => {
     if (!user || creating) return;
