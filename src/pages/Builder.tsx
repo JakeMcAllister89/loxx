@@ -178,6 +178,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const isFulfilledRef = useRef(false);
   const [issueCounts, setIssueCounts] = useState<Map<string, { issued: number; lost: number }>>(new Map());
   const loadIssueCounts = useCallback(async () => {
+    if (readOnly) return;
     const { data } = await supabase
       .from("key_issues")
       .select("node_id,status")
