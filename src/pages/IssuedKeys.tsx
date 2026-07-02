@@ -222,6 +222,7 @@ export default function IssuedKeys() {
       ]);
       if (sys) {
         setSystemName((sys as any).name);
+        setSystemsMap(new Map([[systemId!, (sys as any).name]]));
         const tree = (sys as any).tree_data as TreeData | null;
         setTreeNodes(walkTree(tree?.root ?? null));
       }
@@ -345,9 +346,7 @@ export default function IssuedKeys() {
           {!readOnly && (
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setHoldersOpen(true)}><Users className="h-4 w-4" /> Manage Holders</Button>
-              {!globalMode && (
-                <Button onClick={() => setIssueOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white"><Plus className="h-4 w-4" /> Issue Key</Button>
-              )}
+              <Button onClick={() => setIssueOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white"><Plus className="h-4 w-4" /> Issue Key</Button>
             </div>
           )}
         </div>
@@ -415,7 +414,7 @@ export default function IssuedKeys() {
                 <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="text-left px-4 py-2.5 font-medium">Key / Node</th>
-                    {globalMode && <th className="text-left px-4 py-2.5 font-medium">System</th>}
+                    <th className="text-left px-4 py-2.5 font-medium">System</th>
                     {!readOnly && <th className="text-left px-4 py-2.5 font-medium">Holder</th>}
                     <th className="text-left px-4 py-2.5 font-medium">Qty</th>
                     <th className="text-left px-4 py-2.5 font-medium">Status</th>
@@ -446,13 +445,15 @@ export default function IssuedKeys() {
                             </div>
                           </div>
                         </td>
-                        {globalMode && (
-                          <td className="px-4 py-2.5">
+                        <td className="px-4 py-2.5">
+                          {globalMode ? (
                             <Link to={`/builder/${i.system_id}/keys`} className="text-sm hover:text-amber-600 hover:underline">
                               {systemsMap.get(i.system_id) ?? "—"}
                             </Link>
-                          </td>
-                        )}
+                          ) : (
+                            <span className="text-sm text-muted-foreground">{systemsMap.get(i.system_id) ?? systemName}</span>
+                          )}
+                        </td>
                         {!readOnly && (
                           <td className="px-4 py-2.5">
                             {holder ? (
@@ -500,16 +501,17 @@ export default function IssuedKeys() {
 
 
       {/* Issue key dialog */}
-      {!readOnly && !globalMode && (
+      {!readOnly && (
         <IssueKeyDialog
           open={issueOpen}
           onOpenChange={setIssueOpen}
+          systems={Array.from(systemsMap.entries()).map(([id, name]) => ({ id, name }))}
+          defaultSystemId={globalMode ? null : (systemId ?? null)}
           treeNodes={treeNodes}
           holders={holders.filter(h => !h.archived_at)}
           orgId={orgId}
           userId={user?.id ?? null}
-          systemId={systemId!}
-          initialNodeId={fNode !== "all" ? fNode : null}
+          initialNodeId={!globalMode && fNode !== "all" ? fNode : null}
           onCreated={loadAll}
           onHolderCreated={loadAll}
         />
@@ -637,19 +639,22 @@ export default function IssuedKeys() {
 /* ---------------- Issue Key dialog ---------------- */
 
 function IssueKeyDialog({
-  open, onOpenChange, treeNodes, holders, orgId, userId, systemId, initialNodeId, onCreated, onHolderCreated,
+  open, onOpenChange, systems, defaultSystemId, treeNodes, holders, orgId, userId, initialNodeId, onCreated, onHolderCreated,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  systems: { id: string; name: string }[];
+  defaultSystemId: string | null;
   treeNodes: NodeMeta[];
   holders: Holder[];
   orgId: string | null;
   userId: string | null;
-  systemId: string;
   initialNodeId: string | null;
   onCreated: () => void;
   onHolderCreated: () => void;
 }) {
+  const [selectedSystemId, setSelectedSystemId] = useState<string>("");
+  const [localTreeNodes, setLocalTreeNodes] = useState<NodeMeta[]>([]);
   const [nodeId, setNodeId] = useState<string>("");
   const [holderId, setHolderId] = useState<string>("");
   const [qty, setQty] = useState<number>(1);
@@ -661,10 +666,21 @@ function IssueKeyDialog({
 
   useEffect(() => {
     if (open) {
+      setSelectedSystemId(defaultSystemId ?? "");
       setNodeId(initialNodeId ?? "");
       setHolderId(""); setQty(1); setExpected(""); setNotes(""); setHolderSearch("");
     }
-  }, [open, initialNodeId]);
+  }, [open, initialNodeId, defaultSystemId]);
+
+  useEffect(() => {
+    if (!open || !selectedSystemId) { setLocalTreeNodes([]); return; }
+    if (selectedSystemId === defaultSystemId) { setLocalTreeNodes(treeNodes); return; }
+    (async () => {
+      const { data } = await supabase.from("key_systems").select("tree_data").eq("id", selectedSystemId).maybeSingle();
+      const tree = (data as any)?.tree_data as TreeData | null;
+      setLocalTreeNodes(walkTree(tree?.root ?? null));
+    })();
+  }, [selectedSystemId, open, defaultSystemId, treeNodes]);
 
   const filteredHolders = useMemo(() => {
     const q = holderSearch.trim().toLowerCase();
@@ -673,12 +689,12 @@ function IssueKeyDialog({
   }, [holders, holderSearch]);
 
   const submit = async () => {
-    if (!nodeId || !holderId || !userId) { toast.error("Pick a key and a holder"); return; }
-    const node = treeNodes.find(n => n.id === nodeId);
+    if (!selectedSystemId || !nodeId || !holderId || !userId) { toast.error("Pick a system, a key, and a holder"); return; }
+    const node = localTreeNodes.find(n => n.id === nodeId);
     const holder = holders.find(h => h.id === holderId);
     setBusy(true);
     const { error } = await supabase.from("key_issues").insert({
-      system_id: systemId, node_id: nodeId, holder_id: holderId,
+      system_id: selectedSystemId, node_id: nodeId, holder_id: holderId,
       node_type: node?.type ?? null, node_label: node?.label ?? null, key_ref: node?.keyRef ?? null,
       quantity: qty, status: "issued",
       issued_at: new Date().toISOString(), issued_by: userId,
@@ -687,7 +703,7 @@ function IssueKeyDialog({
     } as any);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
-    logAction({ system_id: systemId, action: "key_issued", node_label: node?.label, metadata: { holder_name: holder?.name, quantity: qty, key_ref: node?.keyRef, node_type: node?.type } });
+    logAction({ system_id: selectedSystemId, action: "key_issued", node_label: node?.label, metadata: { holder_name: holder?.name, quantity: qty, key_ref: node?.keyRef, node_type: node?.type } });
     toast.success("Key issued");
     onOpenChange(false);
     onCreated();
@@ -702,11 +718,24 @@ function IssueKeyDialog({
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label>Key / Node</Label>
-              <Select value={nodeId} onValueChange={setNodeId}>
-                <SelectTrigger><SelectValue placeholder="Select a key" /></SelectTrigger>
+              <Label>System</Label>
+              <Select
+                value={selectedSystemId}
+                onValueChange={(v) => { setSelectedSystemId(v); setNodeId(""); }}
+                disabled={!!defaultSystemId}
+              >
+                <SelectTrigger><SelectValue placeholder="Select a system" /></SelectTrigger>
                 <SelectContent>
-                  {treeNodes.map(n => <SelectItem key={n.id} value={n.id}>{n.type} · {n.label}</SelectItem>)}
+                  {systems.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Key / Node</Label>
+              <Select value={nodeId} onValueChange={setNodeId} disabled={!selectedSystemId}>
+                <SelectTrigger><SelectValue placeholder={selectedSystemId ? "Select a key" : "Pick a system first"} /></SelectTrigger>
+                <SelectContent>
+                  {localTreeNodes.map(n => <SelectItem key={n.id} value={n.id}>{n.typeLabel} · {n.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
