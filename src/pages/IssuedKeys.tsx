@@ -614,9 +614,26 @@ export default function IssuedKeys() {
             <DialogTitle>Report key as lost</DialogTitle>
             <DialogDescription>The row will move to Lost / Unresolved until resolved.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label>Notes (optional)</Label>
-            <Textarea value={lostNotes} onChange={(e) => setLostNotes(e.target.value)} placeholder="e.g. Last seen at reception on Friday" />
+          <div className="space-y-3">
+            {lostOf && (lostOf.quantity ?? 1) > 1 && (
+              <div className="space-y-1.5">
+                <Label>How many keys are lost?</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={lostOf.quantity ?? 1}
+                  value={lostQty}
+                  onChange={(e) => setLostQty(Math.min(Math.max(1, Number(e.target.value)), lostOf.quantity ?? 1))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {(lostOf.quantity ?? 1)} issued in this batch. Any remainder stays as issued.
+                </p>
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <Label>Notes (optional)</Label>
+              <Textarea value={lostNotes} onChange={(e) => setLostNotes(e.target.value)} placeholder="e.g. Last seen at reception on Friday" />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLostOf(null)}>Cancel</Button>
