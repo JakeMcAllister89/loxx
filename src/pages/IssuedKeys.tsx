@@ -445,13 +445,15 @@ export default function IssuedKeys() {
                             </div>
                           </div>
                         </td>
-                        {globalMode && (
-                          <td className="px-4 py-2.5">
+                        <td className="px-4 py-2.5">
+                          {globalMode ? (
                             <Link to={`/builder/${i.system_id}/keys`} className="text-sm hover:text-amber-600 hover:underline">
                               {systemsMap.get(i.system_id) ?? "—"}
                             </Link>
-                          </td>
-                        )}
+                          ) : (
+                            <span className="text-sm text-muted-foreground">{systemsMap.get(i.system_id) ?? systemName}</span>
+                          )}
+                        </td>
                         {!readOnly && (
                           <td className="px-4 py-2.5">
                             {holder ? (
