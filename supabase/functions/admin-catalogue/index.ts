@@ -1,3 +1,4 @@
+// v2
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -74,6 +75,6 @@ Deno.serve(async (req) => {
 
     return json({ error: "Unknown action" }, 400);
   } catch (e: any) {
-    return json({ error: e.message }, 500);
+    return json({ error: "Server error" }, 500);
   }
 });

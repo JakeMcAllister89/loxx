@@ -1,3 +1,4 @@
+// v2
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -54,7 +55,7 @@ Deno.serve(async (req) => {
 
     return json({ error: "Unknown action" }, 400);
   } catch (e: any) {
-    return json({ error: e.message ?? "Server error" }, 500);
+    return json({ error: "Server error" }, 500);
   }
 });
 
