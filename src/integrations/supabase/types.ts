@@ -1265,6 +1265,13 @@ export type Database = {
       current_user_org_approved: { Args: never; Returns: boolean }
       current_user_org_id: { Args: never; Returns: string }
       current_user_org_role: { Args: never; Returns: string }
+      get_delivery_rates: {
+        Args: never
+        Returns: {
+          key: string
+          value: string
+        }[]
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_org_master_admin: {
         Args: { _org_id: string; _user_id: string }
