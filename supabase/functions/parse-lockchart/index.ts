@@ -1,4 +1,4 @@
-// v2
+// v3
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
@@ -142,7 +142,7 @@ Return ONLY valid JSON, no markdown fences, no commentary.`;
     }
   } catch (e) {
     console.error(e);
-    return new Response(JSON.stringify({ error: (e as Error).message }), {
+    return new Response(JSON.stringify({ error: "Server error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

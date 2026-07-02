@@ -1,4 +1,4 @@
-// v3
+// v4
 // Sends an invite email via Resend if RESEND_API_KEY is set.
 // Falls back to logging the invite URL if no key configured.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
     }
     return json({ ok: true, sent: true });
   } catch (e: any) {
-    return json({ error: e.message ?? "Server error" }, 500);
+    return json({ error: "Server error" }, 500);
   }
 });
 

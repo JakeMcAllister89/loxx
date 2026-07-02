@@ -1,3 +1,4 @@
+// v2
 // Partner portal authentication & data endpoint.
 // Actions: login, me, data, set_password (admin only)
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -260,6 +261,6 @@ Deno.serve(async (req) => {
     return json({ error: "Unknown action" }, 400);
   } catch (e) {
     console.error("partner-auth error", e);
-    return json({ error: (e as Error).message ?? "Server error" }, 500);
+    return json({ error: "Server error" }, 500);
   }
 });
