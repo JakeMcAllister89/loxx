@@ -1,4 +1,4 @@
-// v1 — fires from a Supabase Database Webhook on organisations INSERT
+// v2 — fires from a Supabase Database Webhook on organisations INSERT
 // Sends an email notification to hello@myloxx.co.uk when a new org
 // is created with is_approved = false (organic signup, not platform invite).
 
@@ -16,10 +16,22 @@ const esc = (s: unknown) => String(s ?? "")
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
   .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
+const WEBHOOK_SECRET = Deno.env.get("NOTIFY_WEBHOOK_SECRET");
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    // Verify Supabase webhook secret header if configured
+    if (WEBHOOK_SECRET) {
+      const incomingSecret = req.headers.get("x-supabase-secret") ?? "";
+      if (incomingSecret !== WEBHOOK_SECRET) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const payload = await req.json();
     const record = payload.record ?? payload;
 

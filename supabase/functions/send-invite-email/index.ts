@@ -1,4 +1,4 @@
-// v4
+// v5
 // Sends an invite email via Resend if RESEND_API_KEY is set.
 // Falls back to logging the invite URL if no key configured.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -8,6 +8,9 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SR = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
+
+const esc = (s: string) =>
+  s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
 const roleLabel: Record<string, string> = {
   admin: "Admin",
@@ -41,12 +44,12 @@ Deno.serve(async (req) => {
       .select("first_name,name")
       .eq("id", invite.invited_by)
       .maybeSingle();
-    const inviterFirst = (inviterProfile as any)?.first_name || ((inviterProfile as any)?.name?.split(" ")[0]) || "A colleague";
+    const inviterFirst = esc((inviterProfile as any)?.first_name || ((inviterProfile as any)?.name?.split(" ")[0]) || "A colleague");
 
     const origin = "https://myloxx.co.uk";
     const link = `${origin}/accept-invite?token=${invite.token}`;
-    const orgName = (invite as any).organisations?.name ?? "their organisation";
-    const role = roleLabel[invite.org_role] ?? invite.org_role;
+    const orgName = esc((invite as any).organisations?.name ?? "their organisation");
+    const role = esc(roleLabel[invite.org_role] ?? invite.org_role);
 
     const subject = `You've been invited to join ${orgName} on My LOXX`;
     const html = `
@@ -70,7 +73,7 @@ Deno.serve(async (req) => {
 
     if (!RESEND_KEY) {
       console.log(`[send-invite-email] No RESEND_API_KEY — invite link: ${link}`);
-      return json({ ok: true, sent: false, link });
+      return json({ ok: true, sent: false });
     }
 
     const res = await fetch("https://api.resend.com/emails", {
@@ -86,7 +89,7 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       const txt = await res.text();
       console.error("Resend error:", txt);
-      return json({ ok: false, error: txt, link }, 502);
+      return json({ ok: false, error: txt }, 502);
     }
     return json({ ok: true, sent: true });
   } catch (e: any) {

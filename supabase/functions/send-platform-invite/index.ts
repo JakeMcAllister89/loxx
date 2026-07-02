@@ -1,4 +1,4 @@
-// v4
+// v5
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -6,6 +6,9 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SR = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
+
+const esc = (s: string) =>
+  s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -26,9 +29,9 @@ Deno.serve(async (req) => {
     const { data: invite } = await admin.from("platform_invites").select("*").eq("id", invite_id).maybeSingle();
     if (!invite) return json({ error: "Invite not found" }, 404);
 
-    const inviterFirst = (prof as any)?.first_name || ((prof as any)?.name?.split(" ")[0]) || "The My LOXX team";
+    const inviterFirst = esc((prof as any)?.first_name || ((prof as any)?.name?.split(" ")[0]) || "The My LOXX team");
 
-    const orgName = (invite as any).company ?? "your organisation";
+    const orgName = esc((invite as any).company ?? "your organisation");
 
     const origin = "https://myloxx.co.uk";
     const link = `${origin}/accept-platform-invite?token=${(invite as any).token}`;
@@ -54,7 +57,7 @@ Deno.serve(async (req) => {
 
     if (!RESEND_KEY) {
       console.log(`[send-platform-invite] No RESEND_API_KEY — invite link: ${link}`);
-      return json({ ok: true, sent: false, link });
+      return json({ ok: true, sent: false });
     }
 
     const res = await fetch("https://api.resend.com/emails", {
