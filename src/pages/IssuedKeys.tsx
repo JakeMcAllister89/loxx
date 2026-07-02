@@ -194,6 +194,8 @@ export default function IssuedKeys() {
   const [historyOpen, setHistoryOpen] = useState<Issue | null>(null);
   const [returnOf, setReturnOf] = useState<Issue | null>(null);
   const [lostOf, setLostOf] = useState<Issue | null>(null);
+  const [returnQty, setReturnQty] = useState<number>(1);
+  const [lostQty, setLostQty] = useState<number>(1);
   const [lostNotes, setLostNotes] = useState("");
   const [resolveOf, setResolveOf] = useState<Issue | null>(null);
   const [resolveType, setResolveType] = useState<ResolutionType>("replacement_ordered");
