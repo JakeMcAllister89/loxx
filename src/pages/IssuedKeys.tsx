@@ -242,6 +242,21 @@ export default function IssuedKeys() {
     return Array.from(s).sort();
   }, [holders]);
 
+  // In global mode, build node/key filter options from the issues themselves.
+  const nodeOptions = useMemo(() => {
+    if (!globalMode) return treeNodes.map(n => ({ id: n.id, label: `${n.typeLabel} · ${n.label}` }));
+    const seen = new Map<string, string>();
+    issues.forEach((r: any) => {
+      const key = r.node_id;
+      if (!key || seen.has(key)) return;
+      const typeLabel = NODE_TYPE_LABEL[r.node_type] ?? r.node_type ?? "";
+      const label = r.node_label ?? "(unnamed)";
+      const ref = r.key_ref ? ` — ${r.key_ref}` : "";
+      seen.set(key, `${typeLabel ? typeLabel + " · " : ""}${label}${ref}`);
+    });
+    return Array.from(seen.entries()).map(([id, label]) => ({ id, label })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [globalMode, treeNodes, issues]);
+
   const filteredIssues = useMemo(() => {
     let rows = issues;
     if (tab === "issued") rows = rows.filter(r => r.status === "issued");
@@ -250,10 +265,12 @@ export default function IssuedKeys() {
     if (fNode !== "all") rows = rows.filter(r => r.node_id === fNode);
     if (fStatus !== "all") rows = rows.filter(r => r.status === fStatus);
     if (fDept !== "all") rows = rows.filter(r => holderById.get(r.holder_id)?.department === fDept);
+    if (globalMode && fSystem !== "all") rows = rows.filter(r => r.system_id === fSystem);
     if (fFrom) rows = rows.filter(r => r.issued_at >= fFrom);
     if (fTo) rows = rows.filter(r => r.issued_at <= fTo + "T23:59:59");
     return rows;
-  }, [issues, tab, fHolder, fNode, fStatus, fDept, fFrom, fTo, holderById]);
+  }, [issues, tab, fHolder, fNode, fStatus, fDept, fSystem, fFrom, fTo, holderById, globalMode]);
+
 
   // Actions
   const doReturn = async (i: Issue) => {
