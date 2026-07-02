@@ -1119,9 +1119,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
           } catch {}
           setTimeout(() => window.print(), 50);
         }}><Printer className="h-4 w-4" /> Export PDF</Button>
-        <Button variant="outline" size="sm" asChild title="Key log for this system">
-          <Link to={`/builder/${systemId}/keys`}><KeyRound className="h-4 w-4" /> Key Log</Link>
-        </Button>
+        {!readOnly && (
+          <Button variant="outline" size="sm" asChild title="Key log for this system">
+            <Link to={`/builder/${systemId}/keys`}><KeyRound className="h-4 w-4" /> Key Log</Link>
+          </Button>
+        )}
         {!readOnly && (
           <Button variant="outline" size="sm" onClick={() => {
             if (!tree.root) { toast.error("Nothing to quote"); return; }
