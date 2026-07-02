@@ -1,4 +1,4 @@
-// v2
+// v3
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -25,7 +25,8 @@ Deno.serve(async (req) => {
     const { data: prof } = await admin.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
     if (!(prof as any)?.is_admin) return json({ error: "Forbidden" }, 403);
 
-    const { action, payload } = await req.json();
+    const body = await req.json();
+    const { action, payload } = body;
 
     if (action === "list") {
       const { data, error } = await admin
@@ -70,6 +71,29 @@ Deno.serve(async (req) => {
       const { id } = payload;
       const { error } = await admin.from("products").delete().eq("id", id);
       if (error) return json({ error: error.message }, 500);
+      return json({ ok: true });
+    }
+
+    if (action === "assign_system") {
+      const { system_id, target_org_id } = body;
+      if (!system_id || !target_org_id) return json({ error: "Missing system_id or target_org_id" }, 400);
+
+      const { data: member } = await admin
+        .from("org_members")
+        .select("user_id")
+        .eq("org_id", target_org_id)
+        .eq("org_role", "master_admin")
+        .eq("status", "active")
+        .maybeSingle();
+      const newUserId = (member as any)?.user_id ?? null;
+      if (!newUserId) return json({ error: "Target org has no active master admin" }, 400);
+
+      const { error } = await admin
+        .from("key_systems")
+        .update({ org_id: target_org_id, user_id: newUserId })
+        .eq("id", system_id);
+      if (error) return json({ error: error.message }, 500);
+
       return json({ ok: true });
     }
 

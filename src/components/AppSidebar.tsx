@@ -175,6 +175,7 @@ export function AppSidebar() {
               { to: "/admin/quotes", label: "Quotes", icon: FileText },
               { to: "/admin/approvals", label: "Approvals", icon: Check },
               { to: "/admin/users", label: "Users", icon: UserCheck },
+              { to: "/admin/systems", label: "Systems", icon: LayoutGrid },
               { to: "/admin/partners", label: "Partners", icon: Users },
               { to: "/admin/products", label: "Product catalogue", icon: Package },
               { to: "/admin/settings", label: "Settings", icon: Settings },

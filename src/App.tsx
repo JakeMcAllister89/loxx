@@ -34,6 +34,7 @@ import QuoteDetail from "./pages/QuoteDetail";
 import AdminPartners from "./pages/AdminPartners";
 import AdminPartnersReport from "./pages/AdminPartnersReport";
 import AdminUsers from "./pages/AdminUsers";
+import AdminSystems from "./pages/AdminSystems";
 import PartnerPortal from "./pages/PartnerPortal";
 import Team from "./pages/Team";
 import AcceptInvite from "./pages/AcceptInvite";
@@ -93,6 +94,7 @@ const App = () => (
               <Route path="/admin/quotes" element={<AdminRoute><AdminQuotes /></AdminRoute>} />
               <Route path="/admin/approvals" element={<AdminRoute><AdminApprovals /></AdminRoute>} />
               <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+              <Route path="/admin/systems" element={<AdminRoute><AdminSystems /></AdminRoute>} />
               <Route path="/admin/partners" element={<AdminRoute><AdminPartners /></AdminRoute>} />
               <Route path="/admin/partners/report" element={<AdminRoute><AdminPartnersReport /></AdminRoute>} />
               <Route path="/partner-portal" element={<PartnerPortal />} />
