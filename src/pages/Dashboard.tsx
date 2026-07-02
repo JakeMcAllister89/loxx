@@ -179,7 +179,7 @@ export default function Dashboard() {
             {attentionEmpty ? (
               <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
                 <CheckCircle2 className="h-4 w-4 text-success" />
-                All clear — no unresolved lost keys or overdue returns.
+                All clear — no unresolved key issues need attention.
               </div>
             ) : (
               <ul className="divide-y divide-border">
