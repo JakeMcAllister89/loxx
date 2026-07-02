@@ -718,11 +718,24 @@ function IssueKeyDialog({
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label>Key / Node</Label>
-              <Select value={nodeId} onValueChange={setNodeId}>
-                <SelectTrigger><SelectValue placeholder="Select a key" /></SelectTrigger>
+              <Label>System</Label>
+              <Select
+                value={selectedSystemId}
+                onValueChange={(v) => { setSelectedSystemId(v); setNodeId(""); }}
+                disabled={!!defaultSystemId}
+              >
+                <SelectTrigger><SelectValue placeholder="Select a system" /></SelectTrigger>
                 <SelectContent>
-                  {treeNodes.map(n => <SelectItem key={n.id} value={n.id}>{n.type} · {n.label}</SelectItem>)}
+                  {systems.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Key / Node</Label>
+              <Select value={nodeId} onValueChange={setNodeId} disabled={!selectedSystemId}>
+                <SelectTrigger><SelectValue placeholder={selectedSystemId ? "Select a key" : "Pick a system first"} /></SelectTrigger>
+                <SelectContent>
+                  {localTreeNodes.map(n => <SelectItem key={n.id} value={n.id}>{n.typeLabel} · {n.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
