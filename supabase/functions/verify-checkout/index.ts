@@ -1,3 +1,4 @@
+// v2
 // Verifies a completed checkout session and finalises the order with totals & address.
 // Idempotent — safe to call multiple times from the return page.
 
@@ -109,6 +110,6 @@ Deno.serve(async (req) => {
     );
   } catch (e) {
     console.error("verify-checkout error", e);
-    return bad((e as Error).message ?? "Server error", 500);
+    return bad("Server error", 500);
   }
 });

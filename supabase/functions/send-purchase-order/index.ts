@@ -1,4 +1,4 @@
-// Sends a supplier purchase order email for a confirmed LOXX order. v11
+// Sends a supplier purchase order email for a confirmed LOXX order. v12
 // POST { order_id: string, download_only?: boolean }
 // Returns { success: true, po_number, html? }
 
@@ -516,6 +516,6 @@ ${S.company_phone || ""}`.trim();
     return json({ success: true, po_number: poNumber });
   } catch (e) {
     console.error("send-purchase-order error", e);
-    return json({ error: (e as Error).message ?? "Server error" }, 500);
+    return json({ error: "Server error" }, 500);
   }
 });

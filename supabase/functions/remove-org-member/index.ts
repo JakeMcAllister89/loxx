@@ -1,3 +1,4 @@
+// v2
 // Master admins remove an org member. Sets status=removed, removed_by, removed_at.
 // Also signs the target out of all sessions via Auth admin API.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -58,7 +59,7 @@ Deno.serve(async (req) => {
 
     return json({ ok: true });
   } catch (e: any) {
-    return json({ error: e.message ?? "Server error" }, 500);
+    return json({ error: "Server error" }, 500);
   }
 });
 
