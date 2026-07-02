@@ -142,7 +142,7 @@ export default function IssuedKeys() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [tab, setTab] = useState<"issued" | "lost" | "history">("issued");
+  const [tab, setTab] = useState<"issued" | "lost" | "history">((searchParams.get("tab") as any) || "issued");
   const [fHolder, setFHolder] = useState<string>("all");
   const [fNode, setFNode] = useState<string>(searchParams.get("nodeId") ?? "all");
   const [fStatus, setFStatus] = useState<string>("all");
