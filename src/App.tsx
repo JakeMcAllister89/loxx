@@ -34,6 +34,7 @@ import QuoteDetail from "./pages/QuoteDetail";
 import AdminPartners from "./pages/AdminPartners";
 import AdminPartnersReport from "./pages/AdminPartnersReport";
 import AdminUsers from "./pages/AdminUsers";
+import AdminSystems from "./pages/AdminSystems";
 import PartnerPortal from "./pages/PartnerPortal";
 import Team from "./pages/Team";
 import AcceptInvite from "./pages/AcceptInvite";
