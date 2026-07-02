@@ -500,7 +500,7 @@ export default function IssuedKeys() {
 
 
       {/* Issue key dialog */}
-      {!readOnly && (
+      {!readOnly && !globalMode && (
         <IssueKeyDialog
           open={issueOpen}
           onOpenChange={setIssueOpen}
