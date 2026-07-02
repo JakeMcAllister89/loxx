@@ -77,8 +77,9 @@ export default function AdminProducts() {
   const [search, setSearch] = useState("");
 
   const load = async () => {
-    const { data } = await supabase.from("products").select("*").order("cylinder_type").order("price_gbp");
-    setProducts((data ?? []) as any);
+    const { data, error } = await supabase.functions.invoke("admin-catalogue", { body: { action: "list" } });
+    if (error || (data as any)?.error) { setProducts([]); return; }
+    setProducts(((data as any)?.products ?? []) as any);
   };
   const loadTypes = async () => {
     const { data } = await supabase.from("cylinder_types").select("*").eq("is_active", true).order("sort_order");
