@@ -326,20 +326,28 @@ export default function IssuedKeys() {
   return (
     <DashboardLayout>
       <div className="p-8 max-w-7xl">
-        <div className="mb-2">
-          <Link to={`/builder/${systemId}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to system
-          </Link>
-        </div>
+        {!globalMode && (
+          <div className="mb-2">
+            <Link to={`/builder/${systemId}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-3.5 w-3.5" /> Back to system
+            </Link>
+          </div>
+        )}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Key Log</h1>
-            <p className="text-muted-foreground text-sm mt-1">{systemName || "System"} — track who holds which keys.</p>
+            <p className="text-muted-foreground text-sm mt-1">
+              {globalMode
+                ? "All systems — track who holds which keys across your organisation."
+                : `${systemName || "System"} — track who holds which keys.`}
+            </p>
           </div>
           {!readOnly && (
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setHoldersOpen(true)}><Users className="h-4 w-4" /> Manage Holders</Button>
-              <Button onClick={() => setIssueOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white"><Plus className="h-4 w-4" /> Issue Key</Button>
+              {!globalMode && (
+                <Button onClick={() => setIssueOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white"><Plus className="h-4 w-4" /> Issue Key</Button>
+              )}
             </div>
           )}
         </div>
@@ -352,7 +360,7 @@ export default function IssuedKeys() {
           </TabsList>
 
           {/* Filters */}
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-6 gap-2">
+          <div className={`mt-4 grid grid-cols-2 gap-2 ${globalMode ? "md:grid-cols-7" : "md:grid-cols-6"}`}>
             <Select value={fHolder} onValueChange={setFHolder}>
               <SelectTrigger><SelectValue placeholder="Holder" /></SelectTrigger>
               <SelectContent>
@@ -360,6 +368,15 @@ export default function IssuedKeys() {
                 {holders.filter(h => !h.archived_at).map(h => <SelectItem key={h.id} value={h.id}>{h.name}</SelectItem>)}
               </SelectContent>
             </Select>
+            {globalMode && (
+              <Select value={fSystem} onValueChange={setFSystem}>
+                <SelectTrigger><SelectValue placeholder="System" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All systems</SelectItem>
+                  {Array.from(systemsMap.entries()).map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
             <Select value={fNode} onValueChange={(v) => {
               setFNode(v);
               if (v === "all") { searchParams.delete("nodeId"); } else { searchParams.set("nodeId", v); }
@@ -368,7 +385,7 @@ export default function IssuedKeys() {
               <SelectTrigger><SelectValue placeholder="Key / Node" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All keys</SelectItem>
-                {treeNodes.map(n => <SelectItem key={n.id} value={n.id}>{n.type} · {n.label}</SelectItem>)}
+                {nodeOptions.map(n => <SelectItem key={n.id} value={n.id}>{n.label}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={fStatus} onValueChange={setFStatus}>
@@ -398,6 +415,7 @@ export default function IssuedKeys() {
                 <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="text-left px-4 py-2.5 font-medium">Key / Node</th>
+                    {globalMode && <th className="text-left px-4 py-2.5 font-medium">System</th>}
                     {!readOnly && <th className="text-left px-4 py-2.5 font-medium">Holder</th>}
                     <th className="text-left px-4 py-2.5 font-medium">Qty</th>
                     <th className="text-left px-4 py-2.5 font-medium">Status</th>
@@ -408,9 +426,9 @@ export default function IssuedKeys() {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={7} className="text-center p-8 text-muted-foreground">Loading…</td></tr>
+                    <tr><td colSpan={8} className="text-center p-8 text-muted-foreground">Loading…</td></tr>
                   ) : filteredIssues.length === 0 ? (
-                    <tr><td colSpan={7} className="text-center p-8 text-muted-foreground">No records</td></tr>
+                    <tr><td colSpan={8} className="text-center p-8 text-muted-foreground">No records</td></tr>
                   ) : filteredIssues.map(i => {
                     const node = nodeById.get(i.node_id);
                     const holder = holderById.get(i.holder_id);
@@ -428,6 +446,13 @@ export default function IssuedKeys() {
                             </div>
                           </div>
                         </td>
+                        {globalMode && (
+                          <td className="px-4 py-2.5">
+                            <Link to={`/builder/${i.system_id}/keys`} className="text-sm hover:text-amber-600 hover:underline">
+                              {systemsMap.get(i.system_id) ?? "—"}
+                            </Link>
+                          </td>
+                        )}
                         {!readOnly && (
                           <td className="px-4 py-2.5">
                             {holder ? (
@@ -472,6 +497,7 @@ export default function IssuedKeys() {
           </TabsContent>
         </Tabs>
       </div>
+
 
       {/* Issue key dialog */}
       {!readOnly && (
