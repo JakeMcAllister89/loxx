@@ -2272,6 +2272,7 @@ function DetailPanel({
   const isMk = node.type === "MK";
   const isSmk = node.type === "SMK";
   const isMkOrSmk = isMk || isSmk;
+  const nodeCounts = issueCounts?.get(node.id) ?? { issued: 0, lost: 0 };
 
   const displayName = (isMkOrSmk && node.location?.trim()) ? node.location.trim() : node.label;
 
