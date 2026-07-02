@@ -1307,6 +1307,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
                   return next;
                 });
               }}
+              issueCounts={issueCounts}
+              onOpenIssues={(nodeId, filter) => navigate(`/builder/${systemId}/keys?nodeId=${nodeId}${filter === "lost" ? "&tab=lost" : ""}`)}
             />
           )}
         </div>
