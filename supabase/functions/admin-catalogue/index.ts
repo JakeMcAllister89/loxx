@@ -29,7 +29,9 @@ Deno.serve(async (req) => {
     if (action === "list") {
       const { data, error } = await admin
         .from("products")
-        .select("code,cost_price,product_description,name,cylinder_profile,size");
+        .select("*")
+        .order("cylinder_type")
+        .order("price_gbp");
       if (error) return json({ error: error.message }, 500);
       return json({ products: data ?? [] });
     }
