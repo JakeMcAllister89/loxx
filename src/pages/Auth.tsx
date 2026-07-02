@@ -53,6 +53,11 @@ export default function Auth() {
         });
         if (error) throw error;
         toast.success("Account created. You're signed in.");
+        setTimeout(() => {
+          supabase.functions.invoke("notify-new-signup", {
+            body: { source: "auth_signup", email },
+          }).catch(() => {});
+        }, 3000);
         navigate("/dashboard");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });

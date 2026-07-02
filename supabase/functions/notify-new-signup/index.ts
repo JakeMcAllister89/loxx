@@ -35,12 +35,35 @@ Deno.serve(async (req) => {
     const payload = await req.json();
     const record = payload.record ?? payload;
 
-    // Only notify for unapproved orgs (organic signups).
-    // Platform-invited customers are auto-approved so is_approved = true.
-    if (record.is_approved !== false) return json({ skipped: true });
+    let orgId: string | null = null;
+    let orgName: string = "Unknown organisation";
 
-    const orgName = record.name ?? "Unknown organisation";
-    const orgId = record.id;
+    if (record.id && record.is_approved === false) {
+      // Called from database webhook — org record in payload
+      orgId = record.id;
+      orgName = record.name ?? "Unknown organisation";
+    } else if (payload.source === "auth_signup" && payload.email) {
+      // Called from Auth.tsx after signup — look up org by email
+      const admin = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("org_id, organisations:org_id(id, name, is_approved)")
+        .eq("email", payload.email)
+        .maybeSingle();
+
+      const org = (profile as any)?.organisations;
+      if (!org || org.is_approved !== false) return json({ skipped: true });
+      orgId = org.id;
+      orgName = org.name ?? "Unknown organisation";
+    } else {
+      return json({ skipped: true });
+    }
+
+    if (!orgId) return json({ skipped: true });
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
