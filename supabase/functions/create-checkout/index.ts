@@ -1,4 +1,4 @@
-// Creates a Stripe Embedded Checkout session for a cart of LOXX cylinder line items. v4
+// v5
 // UK seller, physical goods → tax calculation only (no managed_payments).
 // Creates a pending order + order_items rows before payment so verify-checkout can finalise.
 
@@ -73,12 +73,32 @@ Deno.serve(async (req) => {
     if (!body.returnUrl) return jsonError("returnUrl is required");
     if (body.environment !== "sandbox" && body.environment !== "live") return jsonError("Invalid environment");
 
-    // Sanitise + price guard (in pence) — never trust client unit_price for >£1000.
-    const items = body.items.map((it) => ({
-      ...it,
-      quantity: Math.max(1, Math.min(999, Math.floor(Number(it.quantity) || 1))),
-      unit_price: Math.max(0, Math.min(100000, Number(it.unit_price) || 0)),
-    }));
+    // Fetch authoritative prices from the database for all product codes
+    // in this cart — never trust client-supplied unit_price for catalogued items.
+    const productCodes = body.items
+      .map(it => it.product_code)
+      .filter((c): c is string => !!c);
+    const priceMap = new Map<string, number>();
+    if (productCodes.length > 0) {
+      const { data: prods } = await supabase
+        .from("products")
+        .select("code,price_gbp")
+        .in("code", productCodes)
+        .eq("is_active", true);
+      (prods ?? []).forEach((p: any) => {
+        if (p.code && p.price_gbp != null) priceMap.set(p.code, Number(p.price_gbp));
+      });
+    }
+    const items = body.items.map((it) => {
+      const qty = Math.max(1, Math.min(999, Math.floor(Number(it.quantity) || 1)));
+      // Use server price for catalogued products; fall back to clamped client
+      // price only for delivery lines (which have no product_code).
+      const serverPrice = it.product_code ? priceMap.get(it.product_code) : undefined;
+      const unit_price = serverPrice !== undefined
+        ? serverPrice
+        : Math.max(0, Math.min(100000, Number(it.unit_price) || 0));
+      return { ...it, quantity: qty, unit_price };
+    });
 
     const productItems = items.filter((it) => it.kind !== "delivery");
     const deliveryItem = items.find((it) => it.kind === "delivery");
