@@ -32,6 +32,7 @@ export function AppSidebar() {
   const basketCount = items.reduce((s, i) => s + (i.quantity ?? 0), 0);
   const [systems, setSystems] = useState<{ id: string; name: string; door_count: number }[]>([]);
   const [quoteCount, setQuoteCount] = useState<number>(0);
+  const [approvalCount, setApprovalCount] = useState<number>(0);
   const [creating, setCreating] = useState(false);
   const [newSystemConfirm, setNewSystemConfirm] = useState(false);
 
