@@ -1111,7 +1111,12 @@ function BuilderInner({ systemId }: { systemId: string }) {
           </Button>
         )}
         <SaveStatusIndicator status={saveStatus} lastSavedAt={lastSavedAt} onRetry={save} />
-        <Button variant="outline" size="sm" onClick={() => {
+        {!readOnly && (
+          <Button variant="outline" size="sm" asChild title="View issued keys and key holders for this system">
+            <Link to={`/builder/${systemId}/keys`}><KeyRound className="h-4 w-4" /> Key Log</Link>
+          </Button>
+        )}
+        <Button variant="outline" size="sm" title="Download this system as a PDF" onClick={() => {
           try {
             const raw = localStorage.getItem("loxx_cart_meta_v1");
             const cartMeta = raw ? JSON.parse(raw) : null;
@@ -1120,11 +1125,6 @@ function BuilderInner({ systemId }: { systemId: string }) {
           } catch {}
           setTimeout(() => window.print(), 50);
         }}><Printer className="h-4 w-4" /> Export PDF</Button>
-        {!readOnly && (
-          <Button variant="outline" size="sm" asChild title="Key log for this system">
-            <Link to={`/builder/${systemId}/keys`}><KeyRound className="h-4 w-4" /> Key Log</Link>
-          </Button>
-        )}
         {!readOnly && (
           <Button variant="outline" size="sm" onClick={() => {
             if (!tree.root) { toast.error("Nothing to quote"); return; }
