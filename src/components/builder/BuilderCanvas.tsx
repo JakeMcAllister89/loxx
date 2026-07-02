@@ -151,7 +151,7 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 function CanvasInner({
   tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, onPaneClick, registerFitView,
   parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly,
-  collapsed, onToggleCollapsed,
+  collapsed, onToggleCollapsed, issueCounts, onOpenIssues,
 }: Props) {
   const { fitView, setCenter } = useReactFlow();
   const lastNodeCount = useRef(0);
