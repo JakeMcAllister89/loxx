@@ -25,7 +25,8 @@ Deno.serve(async (req) => {
     const { data: prof } = await admin.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
     if (!(prof as any)?.is_admin) return json({ error: "Forbidden" }, 403);
 
-    const { action, payload } = await req.json();
+    const body = await req.json();
+    const { action, payload } = body;
 
     if (action === "list") {
       const { data, error } = await admin
