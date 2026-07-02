@@ -1,12 +1,15 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, useIsAdmin } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, ExternalLink, Upload, Shield, ArrowRight, Loader2 } from "lucide-react";
-import { logAction } from "@/lib/audit";
+import {
+  Plus, ExternalLink, Upload, ArrowRight, Loader2,
+  Layers, DoorOpen, KeyRound, AlertTriangle, Clock, FileText, CheckCircle2,
+} from "lucide-react";
 import { createSystem } from "@/lib/createSystem";
+import { ActivityTimeline } from "@/components/ActivityTimeline";
 
 interface Sys { id: string; name: string; reference: string | null; door_count: number; updated_at: string; }
 interface Ord { id: string; status: string; total: number; created_at: string; }
@@ -18,44 +21,62 @@ const statusColor: Record<string, string> = {
   delivered: "bg-green-200 text-success",
 };
 
+const gbp = (n: number) => Number(n).toLocaleString("en-GB", { style: "currency", currency: "GBP" });
+
 export default function Dashboard() {
   const { user } = useAuth();
-  const isAdmin = useIsAdmin();
   const navigate = useNavigate();
   const [systems, setSystems] = useState<Sys[]>([]);
   const [orders, setOrders] = useState<Ord[]>([]);
-  const [totalSpend, setTotalSpend] = useState(0);
-  const [totalCyl, setTotalCyl] = useState(0);
-  const [catStats, setCatStats] = useState<{ avg: number; high: { name: string; m: number } | null; low: { name: string; m: number } | null; lowCount: number } | null>(null);
-
-  useEffect(() => {
-    if (!isAdmin) { setCatStats(null); return; }
-    supabase.functions.invoke("admin-catalogue", { body: { action: "list" } }).then(({ data }) => {
-      const prods = ((data as any)?.products ?? []).filter((p: any) => p.is_active);
-      const items = prods.map((p: any) => ({ name: p.name, m: p.cost_price && p.price_gbp ? ((p.price_gbp - p.cost_price) / p.price_gbp) * 100 : null })).filter((x: any) => x.m != null) as { name: string; m: number }[];
-      if (!items.length) { setCatStats({ avg: 0, high: null, low: null, lowCount: 0 }); return; }
-      const avg = items.reduce((s, x) => s + x.m, 0) / items.length;
-      const high = items.reduce((a, b) => (b.m > a.m ? b : a));
-      const low = items.reduce((a, b) => (b.m < a.m ? b : a));
-      const lowCount = items.filter(x => x.m < 30).length;
-      setCatStats({ avg, high, low, lowCount });
-    });
-  }, [isAdmin]);
+  const [issuedTotal, setIssuedTotal] = useState(0);
+  const [lostTotal, setLostTotal] = useState(0);
+  const [overdueCount, setOverdueCount] = useState(0);
+  const [pendingQuotes, setPendingQuotes] = useState(0);
+  const [systemCounts, setSystemCounts] = useState<Map<string, { issued: number; lost: number }>>(new Map());
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [s, o] = await Promise.all([
+      const today = new Date().toISOString().split("T")[0];
+      const [s, o, ki, kiSys, q] = await Promise.all([
         supabase.from("key_systems").select("id,name,reference,door_count,updated_at").order("updated_at", { ascending: false }),
         supabase.from("orders").select("id,status,total,created_at").order("created_at", { ascending: false }).limit(3),
+        (supabase.from("key_issues" as any) as any).select("status,quantity,expected_return_date").in("status", ["issued", "lost"]),
+        (supabase.from("key_issues" as any) as any).select("system_id,status,quantity").in("status", ["issued", "lost"]),
+        (supabase.from("quotes" as any) as any).select("id", { count: "exact", head: true }).eq("status", "sent"),
       ]);
       setSystems(s.data ?? []);
       setOrders(o.data ?? []);
-      setTotalSpend((o.data ?? []).reduce((sum, x) => sum + Number(x.total), 0));
-      setTotalCyl((s.data ?? []).reduce((sum, x) => sum + (x.door_count ?? 0), 0));
+
+      const rows = (ki.data ?? []) as Array<{ status: string; quantity: number | null; expected_return_date: string | null }>;
+      let issued = 0, lost = 0, overdue = 0;
+      for (const r of rows) {
+        const qty = r.quantity ?? 1;
+        if (r.status === "issued") {
+          issued += qty;
+          if (r.expected_return_date && r.expected_return_date < today) overdue += 1;
+        } else if (r.status === "lost") {
+          lost += qty;
+        }
+      }
+      setIssuedTotal(issued);
+      setLostTotal(lost);
+      setOverdueCount(overdue);
+
+      const map = new Map<string, { issued: number; lost: number }>();
+      for (const r of ((kiSys.data ?? []) as Array<{ system_id: string; status: string; quantity: number | null }>)) {
+        if (!r.system_id) continue;
+        const qty = r.quantity ?? 1;
+        const cur = map.get(r.system_id) ?? { issued: 0, lost: 0 };
+        if (r.status === "issued") cur.issued += qty;
+        else if (r.status === "lost") cur.lost += qty;
+        map.set(r.system_id, cur);
+      }
+      setSystemCounts(map);
+
+      setPendingQuotes((q as any).count ?? 0);
     })();
   }, [user]);
-
 
   const [creating, setCreating] = useState(false);
   const newSystem = async () => {
@@ -66,17 +87,21 @@ export default function Dashboard() {
     if (id) navigate(`/builder/${id}`);
   };
 
-
-
-
+  const totalDoors = systems.reduce((sum, x) => sum + (x.door_count ?? 0), 0);
 
   const stats = [
-    { label: "Total doors", value: totalCyl },
-    { label: "Active systems", value: systems.length },
-    { label: "Orders placed", value: orders.length },
-    { label: "Total spend", value: `£${totalSpend.toFixed(2)}` },
+    { label: "Active systems", hint: "Currently managed in My LOXX", value: systems.length, Icon: Layers },
+    { label: "Total doors", hint: "Across all active systems", value: totalDoors, Icon: DoorOpen },
+    { label: "Issued keys", hint: "Currently issued to holders", value: issuedTotal, Icon: KeyRound },
+    { label: "Lost / unresolved", hint: "Requires attention", value: lostTotal, Icon: AlertTriangle },
   ];
 
+  const attentionItems = [
+    { key: "lost", label: "Lost / unresolved keys", count: lostTotal, Icon: AlertTriangle, tone: "text-destructive" },
+    { key: "overdue", label: "Overdue returns", count: overdueCount, Icon: Clock, tone: "text-amber-600" },
+    { key: "quotes", label: "Quotes sent awaiting response", count: pendingQuotes, Icon: FileText, tone: "text-primary" },
+  ];
+  const attentionEmpty = lostTotal === 0 && overdueCount === 0 && pendingQuotes === 0;
 
   return (
     <DashboardLayout>
@@ -84,7 +109,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground text-sm">Your master key systems and recent activity.</p>
+            <p className="text-muted-foreground text-sm">Monitor your systems, issued keys, orders and unresolved risks.</p>
           </div>
           <Button onClick={newSystem} disabled={creating} className="bg-primary hover:bg-primary/90">{creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} New system</Button>
         </div>
@@ -93,32 +118,66 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {stats.map((s) => (
             <div key={s.label} className="rounded-[10px] border bg-card p-5 shadow-card">
-              <div className="text-xs text-muted-foreground uppercase tracking-wide">{s.label}</div>
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-muted-foreground uppercase tracking-wide">{s.label}</div>
+                <s.Icon className="h-4 w-4 text-muted-foreground" />
+              </div>
               <div className="text-2xl font-semibold mt-2">{s.value}</div>
+              <div className="text-[11px] text-muted-foreground mt-1">{s.hint}</div>
             </div>
           ))}
         </div>
 
-
-        {/* Start options */}
+        {/* Action cards */}
         <div className="grid md:grid-cols-2 gap-4 mb-8">
-          <button onClick={newSystem} className="text-left rounded-[10px] border bg-card p-5 shadow-card hover:border-primary transition-colors">
-            <div className="inline-flex h-9 w-9 rounded-full bg-accent-light items-center justify-center mb-3">
-              <Plus className="h-4 w-4 text-primary" />
+          <button onClick={newSystem} className="text-left rounded-[10px] border bg-card p-5 shadow-card hover:border-primary hover:shadow-elevated transition-all group">
+            <div className="flex items-start justify-between">
+              <div className="inline-flex h-9 w-9 rounded-full bg-accent-light items-center justify-center mb-3">
+                <Plus className="h-4 w-4 text-primary" />
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
-            <div className="font-semibold">Start from scratch</div>
-            <p className="text-xs text-muted-foreground mt-1">Build a new master key system step by step.</p>
+            <div className="font-semibold">Create a new system</div>
+            <p className="text-xs text-muted-foreground mt-1">Build a master key system from scratch.</p>
           </button>
-          <Link to="/import" className="rounded-[10px] border bg-card p-5 shadow-card hover:border-primary transition-colors block">
-            <div className="inline-flex h-9 w-9 rounded-full bg-accent-light items-center justify-center mb-3">
-              <Upload className="h-4 w-4 text-primary" />
+          <Link to="/import" className="rounded-[10px] border bg-card p-5 shadow-card hover:border-primary hover:shadow-elevated transition-all block group">
+            <div className="flex items-start justify-between">
+              <div className="inline-flex h-9 w-9 rounded-full bg-accent-light items-center justify-center mb-3">
+                <Upload className="h-4 w-4 text-primary" />
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
             <div className="font-semibold">Import existing system</div>
-            <p className="text-xs text-muted-foreground mt-1">Upload your DOM-XL file and we'll digitise your existing master key system.</p>
+            <p className="text-xs text-muted-foreground mt-1">Upload an existing schedule and convert it into a My LOXX system record.</p>
           </Link>
         </div>
 
-        {/* Recent systems */}
+        {/* Needs attention */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Needs attention</h2>
+          <div className="rounded-[10px] border bg-card shadow-card p-2">
+            {attentionEmpty ? (
+              <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
+                <CheckCircle2 className="h-4 w-4 text-success" />
+                All clear — no unresolved lost keys or overdue returns.
+              </div>
+            ) : (
+              <ul className="divide-y">
+                {attentionItems.filter(i => i.count > 0).map((i) => (
+                  <li key={i.key} className="flex items-center justify-between px-3 py-2.5 text-sm">
+                    <div className="flex items-center gap-2">
+                      <i.Icon className={`h-4 w-4 ${i.tone}`} />
+                      <span>{i.label}</span>
+                    </div>
+                    <span className="font-semibold">{i.count}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* My systems */}
         <div className="mb-8">
           <Link to="/systems" className="inline-flex items-center gap-1 text-lg font-semibold mb-3 hover:text-primary">
             My systems <ArrowRight className="h-4 w-4" />
@@ -129,21 +188,52 @@ export default function Dashboard() {
               <Button onClick={newSystem} disabled={creating} className="mt-4 bg-primary hover:bg-primary/90">Start your first system</Button>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-4">
-              {systems.slice(0, 4).map((s) => (
-                <div key={s.id} className="rounded-[10px] border bg-card p-5 shadow-card flex items-start justify-between">
-                  <div>
-                    <div className="font-semibold">{s.name}</div>
-                    <div className="text-xs text-muted-foreground mt-1">{s.reference} · {s.door_count} doors</div>
-                    <div className="text-xs text-muted-foreground mt-1">Updated {new Date(s.updated_at).toLocaleDateString("en-GB")}</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" asChild className="bg-primary hover:bg-primary/90"><Link to={`/builder/${s.id}`}>Open <ExternalLink className="h-3.5 w-3.5" /></Link></Button>
-                  </div>
+            <>
+              <div className="grid md:grid-cols-2 gap-4">
+                {systems.slice(0, 4).map((s) => {
+                  const c = systemCounts.get(s.id) ?? { issued: 0, lost: 0 };
+                  return (
+                    <div key={s.id} className="rounded-[10px] border bg-card p-5 shadow-card flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">{s.name}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{s.reference} · {s.door_count} doors</div>
+                        <div className="text-xs text-muted-foreground mt-1">Updated {new Date(s.updated_at).toLocaleDateString("en-GB")}</div>
+                        <div className="flex items-center gap-3 mt-2 text-xs">
+                          <span className="inline-flex items-center gap-1 text-muted-foreground">
+                            <KeyRound className="h-3.5 w-3.5" /> {c.issued} issued
+                          </span>
+                          <span className={`inline-flex items-center gap-1 ${c.lost > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                            <AlertTriangle className="h-3.5 w-3.5" /> {c.lost} lost
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 shrink-0">
+                        <Button size="sm" asChild className="bg-primary hover:bg-primary/90"><Link to={`/builder/${s.id}`}>Open <ExternalLink className="h-3.5 w-3.5" /></Link></Button>
+                        <Button size="sm" variant="outline" asChild><Link to={`/builder/${s.id}/keys`}><KeyRound className="h-3.5 w-3.5" /> Key Log</Link></Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {systems.length > 4 && (
+                <div className="mt-3">
+                  <Link to="/systems" className="text-sm text-primary hover:underline">View all systems →</Link>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
+        </div>
+
+        {/* Recent key activity */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Recent key activity</h2>
+          <div className="rounded-[10px] border bg-card shadow-card p-5">
+            <ActivityTimeline
+              limit={10}
+              actionTypes={["key_issued", "key_returned", "key_lost_reported", "key_resolved", "key_holder_created", "key_holder_archived"]}
+              emptyText="No key activity yet."
+            />
+          </div>
         </div>
 
         {/* Recent orders */}
@@ -162,13 +252,16 @@ export default function Dashboard() {
                     <tr key={o.id} className="border-t">
                       <td className="px-4 py-3 text-xs text-muted-foreground">#{o.id.slice(0, 8).toUpperCase()}</td>
                       <td className="px-4 py-3">{new Date(o.created_at).toLocaleDateString("en-GB")}</td>
-                      <td className="px-4 py-3 font-medium">£{Number(o.total).toFixed(2)}</td>
+                      <td className="px-4 py-3 font-medium">{gbp(Number(o.total))}</td>
                       <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs ${statusColor[o.status] ?? "bg-muted"}`}>{o.status}</span></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
+          </div>
+          <div className="mt-3">
+            <Link to="/orders" className="text-sm text-primary hover:underline">View all orders →</Link>
           </div>
         </div>
       </div>
