@@ -1111,7 +1111,12 @@ function BuilderInner({ systemId }: { systemId: string }) {
           </Button>
         )}
         <SaveStatusIndicator status={saveStatus} lastSavedAt={lastSavedAt} onRetry={save} />
-        <Button variant="outline" size="sm" onClick={() => {
+        {!readOnly && (
+          <Button variant="outline" size="sm" asChild title="View issued keys and key holders for this system">
+            <Link to={`/builder/${systemId}/keys`}><KeyRound className="h-4 w-4" /> Key Log</Link>
+          </Button>
+        )}
+        <Button variant="outline" size="sm" title="Download this system as a PDF" onClick={() => {
           try {
             const raw = localStorage.getItem("loxx_cart_meta_v1");
             const cartMeta = raw ? JSON.parse(raw) : null;
@@ -1120,11 +1125,6 @@ function BuilderInner({ systemId }: { systemId: string }) {
           } catch {}
           setTimeout(() => window.print(), 50);
         }}><Printer className="h-4 w-4" /> Export PDF</Button>
-        {!readOnly && (
-          <Button variant="outline" size="sm" asChild title="Key log for this system">
-            <Link to={`/builder/${systemId}/keys`}><KeyRound className="h-4 w-4" /> Key Log</Link>
-          </Button>
-        )}
         {!readOnly && (
           <Button variant="outline" size="sm" onClick={() => {
             if (!tree.root) { toast.error("Nothing to quote"); return; }
@@ -1665,6 +1665,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 }
               } : undefined}
               readOnly={readOnly}
+              issueCounts={issueCounts}
+              systemId={systemId}
             />
           )}
         </aside>
@@ -2247,7 +2249,7 @@ function Legend({ type }: { type: NodeType }) {
 
 function DetailPanel({
   node, parent, trail, products, onPatch, addOptions, onAddChildType, onDelete, isRoot, onClose,
-  isFulfilled, onReplace, onCopySpec, onAddCE, readOnly = false,
+  isFulfilled, onReplace, onCopySpec, onAddCE, readOnly = false, issueCounts, systemId,
 }: {
   node: TNode; parent: TNode | null; trail: TNode[]; products: Product[];
   onPatch: (p: Partial<TNode>) => void;
@@ -2261,6 +2263,8 @@ function DetailPanel({
   onCopySpec?: () => void;
   onAddCE?: () => void;
   readOnly?: boolean;
+  issueCounts?: Map<string, { issued: number; lost: number }>;
+  systemId?: string;
 }) {
   const meta = TYPE_META[node.type];
   const isCyl = node.type === "CYL";
@@ -2268,6 +2272,7 @@ function DetailPanel({
   const isMk = node.type === "MK";
   const isSmk = node.type === "SMK";
   const isMkOrSmk = isMk || isSmk;
+  const nodeCounts = issueCounts?.get(node.id) ?? { issued: 0, lost: 0 };
 
   const displayName = (isMkOrSmk && node.location?.trim()) ? node.location.trim() : node.label;
 
@@ -2375,6 +2380,29 @@ function DetailPanel({
           <X className="h-4 w-4" />
         </button>
       </div>
+      {(nodeCounts.issued > 0 || nodeCounts.lost > 0) && (
+        <div className="flex items-center gap-3 px-4 pb-3 text-xs">
+          {nodeCounts.issued > 0 && (
+            <span className="text-muted-foreground">
+              <KeyRound className="h-3 w-3 inline mr-1 text-amber-500" />
+              {nodeCounts.issued} issued
+            </span>
+          )}
+          {nodeCounts.lost > 0 && (
+            <span className="text-amber-600 font-medium">
+              ⚠ {nodeCounts.lost} lost
+            </span>
+          )}
+          {systemId && (
+            <Link
+              to={`/builder/${systemId}/keys?nodeId=${node.id}`}
+              className="ml-auto text-amber-600 hover:underline text-[11px]"
+            >
+              View in Key Log →
+            </Link>
+          )}
+        </div>
+      )}
       <h3 className="text-lg font-semibold mt-1 truncate" title={displayName}>{displayName || "Unnamed"}</h3>
       <p className="text-[11px] text-muted-foreground mt-1">{meta.description}</p>
 
