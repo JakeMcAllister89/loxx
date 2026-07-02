@@ -639,19 +639,22 @@ export default function IssuedKeys() {
 /* ---------------- Issue Key dialog ---------------- */
 
 function IssueKeyDialog({
-  open, onOpenChange, treeNodes, holders, orgId, userId, systemId, initialNodeId, onCreated, onHolderCreated,
+  open, onOpenChange, systems, defaultSystemId, treeNodes, holders, orgId, userId, initialNodeId, onCreated, onHolderCreated,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  systems: { id: string; name: string }[];
+  defaultSystemId: string | null;
   treeNodes: NodeMeta[];
   holders: Holder[];
   orgId: string | null;
   userId: string | null;
-  systemId: string;
   initialNodeId: string | null;
   onCreated: () => void;
   onHolderCreated: () => void;
 }) {
+  const [selectedSystemId, setSelectedSystemId] = useState<string>("");
+  const [localTreeNodes, setLocalTreeNodes] = useState<NodeMeta[]>([]);
   const [nodeId, setNodeId] = useState<string>("");
   const [holderId, setHolderId] = useState<string>("");
   const [qty, setQty] = useState<number>(1);
@@ -663,10 +666,21 @@ function IssueKeyDialog({
 
   useEffect(() => {
     if (open) {
+      setSelectedSystemId(defaultSystemId ?? "");
       setNodeId(initialNodeId ?? "");
       setHolderId(""); setQty(1); setExpected(""); setNotes(""); setHolderSearch("");
     }
-  }, [open, initialNodeId]);
+  }, [open, initialNodeId, defaultSystemId]);
+
+  useEffect(() => {
+    if (!open || !selectedSystemId) { setLocalTreeNodes([]); return; }
+    if (selectedSystemId === defaultSystemId) { setLocalTreeNodes(treeNodes); return; }
+    (async () => {
+      const { data } = await supabase.from("key_systems").select("tree_data").eq("id", selectedSystemId).maybeSingle();
+      const tree = (data as any)?.tree_data as TreeData | null;
+      setLocalTreeNodes(walkTree(tree?.root ?? null));
+    })();
+  }, [selectedSystemId, open, defaultSystemId, treeNodes]);
 
   const filteredHolders = useMemo(() => {
     const q = holderSearch.trim().toLowerCase();
