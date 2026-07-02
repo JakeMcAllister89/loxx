@@ -178,6 +178,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const isFulfilledRef = useRef(false);
   const [issueCounts, setIssueCounts] = useState<Map<string, { issued: number; lost: number }>>(new Map());
   const loadIssueCounts = useCallback(async () => {
+    if (readOnly) return;
     const { data } = await supabase
       .from("key_issues")
       .select("node_id,status")
@@ -191,7 +192,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       m.set(r.node_id, cur);
     });
     setIssueCounts(m);
-  }, [systemId]);
+  }, [systemId, readOnly]);
   useEffect(() => { loadIssueCounts(); }, [loadIssueCounts]);
   // Replace-cylinder modal state: target node id + current step + draft note
   const [replaceState, setReplaceState] = useState<
@@ -1118,9 +1119,11 @@ function BuilderInner({ systemId }: { systemId: string }) {
           } catch {}
           setTimeout(() => window.print(), 50);
         }}><Printer className="h-4 w-4" /> Export PDF</Button>
-        <Button variant="outline" size="sm" asChild title="Key log for this system">
-          <Link to={`/builder/${systemId}/keys`}><KeyRound className="h-4 w-4" /> Key Log</Link>
-        </Button>
+        {!readOnly && (
+          <Button variant="outline" size="sm" asChild title="Key log for this system">
+            <Link to={`/builder/${systemId}/keys`}><KeyRound className="h-4 w-4" /> Key Log</Link>
+          </Button>
+        )}
         {!readOnly && (
           <Button variant="outline" size="sm" onClick={() => {
             if (!tree.root) { toast.error("Nothing to quote"); return; }

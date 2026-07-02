@@ -169,11 +169,13 @@ export default function IssuedKeys() {
   const { user, orgRole, orgId } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const readOnly = orgRole === "view_only";
+  const globalMode = !systemId;
 
   const [systemName, setSystemName] = useState("");
   const [treeNodes, setTreeNodes] = useState<NodeMeta[]>([]);
   const [holders, setHolders] = useState<Holder[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [systemsMap, setSystemsMap] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
 
   // Filters
@@ -182,6 +184,7 @@ export default function IssuedKeys() {
   const [fNode, setFNode] = useState<string>(searchParams.get("nodeId") ?? "all");
   const [fStatus, setFStatus] = useState<string>("all");
   const [fDept, setFDept] = useState<string>("all");
+  const [fSystem, setFSystem] = useState<string>("all");
   const [fFrom, setFFrom] = useState<string>("");
   const [fTo, setFTo] = useState<string>("");
 
@@ -197,24 +200,39 @@ export default function IssuedKeys() {
   const [resolveNotes, setResolveNotes] = useState("");
 
   const loadAll = async () => {
-    if (!systemId) return;
     setLoading(true);
-    const [{ data: sys }, { data: hs }, { data: is }] = await Promise.all([
-      supabase.from("key_systems").select("name,tree_data").eq("id", systemId).maybeSingle(),
-      supabase.from("key_holders").select("*").order("name"),
-      supabase.from("key_issues").select("*").eq("system_id", systemId).order("issued_at", { ascending: false }),
-    ]);
-    if (sys) {
-      setSystemName((sys as any).name);
-      const tree = (sys as any).tree_data as TreeData | null;
-      setTreeNodes(walkTree(tree?.root ?? null));
+    if (globalMode) {
+      const [{ data: sysList }, { data: hs }, { data: is }] = await Promise.all([
+        supabase.from("key_systems").select("id,name").order("name"),
+        supabase.from("key_holders").select("*").order("name"),
+        supabase.from("key_issues").select("*").order("issued_at", { ascending: false }),
+      ]);
+      const m = new Map<string, string>();
+      (sysList as any[] ?? []).forEach(s => m.set(s.id, s.name));
+      setSystemsMap(m);
+      setTreeNodes([]);
+      setSystemName("");
+      setHolders((hs as any[] ?? []) as Holder[]);
+      setIssues((is as any[] ?? []) as Issue[]);
+    } else {
+      const [{ data: sys }, { data: hs }, { data: is }] = await Promise.all([
+        supabase.from("key_systems").select("name,tree_data").eq("id", systemId).maybeSingle(),
+        supabase.from("key_holders").select("*").order("name"),
+        supabase.from("key_issues").select("*").eq("system_id", systemId).order("issued_at", { ascending: false }),
+      ]);
+      if (sys) {
+        setSystemName((sys as any).name);
+        const tree = (sys as any).tree_data as TreeData | null;
+        setTreeNodes(walkTree(tree?.root ?? null));
+      }
+      setHolders((hs as any[] ?? []) as Holder[]);
+      setIssues((is as any[] ?? []) as Issue[]);
     }
-    setHolders((hs as any[] ?? []) as Holder[]);
-    setIssues((is as any[] ?? []) as Issue[]);
     setLoading(false);
   };
 
   useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, [systemId]);
+
 
   const nodeById = useMemo(() => new Map(treeNodes.map(n => [n.id, n])), [treeNodes]);
   const holderById = useMemo(() => new Map(holders.map(h => [h.id, h])), [holders]);
@@ -224,6 +242,21 @@ export default function IssuedKeys() {
     return Array.from(s).sort();
   }, [holders]);
 
+  // In global mode, build node/key filter options from the issues themselves.
+  const nodeOptions = useMemo(() => {
+    if (!globalMode) return treeNodes.map(n => ({ id: n.id, label: `${n.typeLabel} · ${n.label}` }));
+    const seen = new Map<string, string>();
+    issues.forEach((r: any) => {
+      const key = r.node_id;
+      if (!key || seen.has(key)) return;
+      const typeLabel = NODE_TYPE_LABEL[r.node_type] ?? r.node_type ?? "";
+      const label = r.node_label ?? "(unnamed)";
+      const ref = r.key_ref ? ` — ${r.key_ref}` : "";
+      seen.set(key, `${typeLabel ? typeLabel + " · " : ""}${label}${ref}`);
+    });
+    return Array.from(seen.entries()).map(([id, label]) => ({ id, label })).sort((a, b) => a.label.localeCompare(b.label));
+  }, [globalMode, treeNodes, issues]);
+
   const filteredIssues = useMemo(() => {
     let rows = issues;
     if (tab === "issued") rows = rows.filter(r => r.status === "issued");
@@ -232,10 +265,12 @@ export default function IssuedKeys() {
     if (fNode !== "all") rows = rows.filter(r => r.node_id === fNode);
     if (fStatus !== "all") rows = rows.filter(r => r.status === fStatus);
     if (fDept !== "all") rows = rows.filter(r => holderById.get(r.holder_id)?.department === fDept);
+    if (globalMode && fSystem !== "all") rows = rows.filter(r => r.system_id === fSystem);
     if (fFrom) rows = rows.filter(r => r.issued_at >= fFrom);
     if (fTo) rows = rows.filter(r => r.issued_at <= fTo + "T23:59:59");
     return rows;
-  }, [issues, tab, fHolder, fNode, fStatus, fDept, fFrom, fTo, holderById]);
+  }, [issues, tab, fHolder, fNode, fStatus, fDept, fSystem, fFrom, fTo, holderById, globalMode]);
+
 
   // Actions
   const doReturn = async (i: Issue) => {
@@ -247,7 +282,7 @@ export default function IssuedKeys() {
     const label = (i as any).node_label ?? nodeById.get(i.node_id)?.label;
     const keyRef = (i as any).key_ref;
     const holder = holderById.get(i.holder_id);
-    logAction({ system_id: systemId!, action: "key_returned", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
+    logAction({ system_id: i.system_id, action: "key_returned", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
     toast.success("Key marked returned");
     setReturnOf(null);
     loadAll();
@@ -263,7 +298,7 @@ export default function IssuedKeys() {
     const label = (lostOf as any).node_label ?? nodeById.get(lostOf.node_id)?.label;
     const keyRef = (lostOf as any).key_ref;
     const holder = holderById.get(lostOf.holder_id);
-    logAction({ system_id: systemId!, action: "key_lost_reported", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
+    logAction({ system_id: lostOf.system_id, action: "key_lost_reported", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef } });
     toast.success("Reported as lost");
     setLostOf(null); setLostNotes("");
     loadAll();
@@ -278,7 +313,7 @@ export default function IssuedKeys() {
     if (error) { toast.error(error.message); return; }
     const label = (resolveOf as any).node_label ?? nodeById.get(resolveOf.node_id)?.label;
     const keyRef = (resolveOf as any).key_ref;
-    logAction({ system_id: systemId!, action: "key_resolved", node_label: label, metadata: { resolution_type: resolveType, key_ref: keyRef } });
+    logAction({ system_id: resolveOf.system_id, action: "key_resolved", node_label: label, metadata: { resolution_type: resolveType, key_ref: keyRef } });
     toast.success("Marked resolved");
     setResolveOf(null); setResolveNotes(""); setResolveType("replacement_ordered");
     loadAll();
@@ -291,20 +326,28 @@ export default function IssuedKeys() {
   return (
     <DashboardLayout>
       <div className="p-8 max-w-7xl">
-        <div className="mb-2">
-          <Link to={`/builder/${systemId}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to system
-          </Link>
-        </div>
+        {!globalMode && (
+          <div className="mb-2">
+            <Link to={`/builder/${systemId}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-3.5 w-3.5" /> Back to system
+            </Link>
+          </div>
+        )}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Key Log</h1>
-            <p className="text-muted-foreground text-sm mt-1">{systemName || "System"} — track who holds which keys.</p>
+            <p className="text-muted-foreground text-sm mt-1">
+              {globalMode
+                ? "All systems — track who holds which keys across your organisation."
+                : `${systemName || "System"} — track who holds which keys.`}
+            </p>
           </div>
           {!readOnly && (
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setHoldersOpen(true)}><Users className="h-4 w-4" /> Manage Holders</Button>
-              <Button onClick={() => setIssueOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white"><Plus className="h-4 w-4" /> Issue Key</Button>
+              {!globalMode && (
+                <Button onClick={() => setIssueOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white"><Plus className="h-4 w-4" /> Issue Key</Button>
+              )}
             </div>
           )}
         </div>
@@ -317,7 +360,7 @@ export default function IssuedKeys() {
           </TabsList>
 
           {/* Filters */}
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-6 gap-2">
+          <div className={`mt-4 grid grid-cols-2 gap-2 ${globalMode ? "md:grid-cols-7" : "md:grid-cols-6"}`}>
             <Select value={fHolder} onValueChange={setFHolder}>
               <SelectTrigger><SelectValue placeholder="Holder" /></SelectTrigger>
               <SelectContent>
@@ -325,6 +368,15 @@ export default function IssuedKeys() {
                 {holders.filter(h => !h.archived_at).map(h => <SelectItem key={h.id} value={h.id}>{h.name}</SelectItem>)}
               </SelectContent>
             </Select>
+            {globalMode && (
+              <Select value={fSystem} onValueChange={setFSystem}>
+                <SelectTrigger><SelectValue placeholder="System" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All systems</SelectItem>
+                  {Array.from(systemsMap.entries()).map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
             <Select value={fNode} onValueChange={(v) => {
               setFNode(v);
               if (v === "all") { searchParams.delete("nodeId"); } else { searchParams.set("nodeId", v); }
@@ -333,7 +385,7 @@ export default function IssuedKeys() {
               <SelectTrigger><SelectValue placeholder="Key / Node" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All keys</SelectItem>
-                {treeNodes.map(n => <SelectItem key={n.id} value={n.id}>{n.type} · {n.label}</SelectItem>)}
+                {nodeOptions.map(n => <SelectItem key={n.id} value={n.id}>{n.label}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={fStatus} onValueChange={setFStatus}>
@@ -363,6 +415,7 @@ export default function IssuedKeys() {
                 <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="text-left px-4 py-2.5 font-medium">Key / Node</th>
+                    {globalMode && <th className="text-left px-4 py-2.5 font-medium">System</th>}
                     {!readOnly && <th className="text-left px-4 py-2.5 font-medium">Holder</th>}
                     <th className="text-left px-4 py-2.5 font-medium">Qty</th>
                     <th className="text-left px-4 py-2.5 font-medium">Status</th>
@@ -373,9 +426,9 @@ export default function IssuedKeys() {
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={7} className="text-center p-8 text-muted-foreground">Loading…</td></tr>
+                    <tr><td colSpan={8} className="text-center p-8 text-muted-foreground">Loading…</td></tr>
                   ) : filteredIssues.length === 0 ? (
-                    <tr><td colSpan={7} className="text-center p-8 text-muted-foreground">No records</td></tr>
+                    <tr><td colSpan={8} className="text-center p-8 text-muted-foreground">No records</td></tr>
                   ) : filteredIssues.map(i => {
                     const node = nodeById.get(i.node_id);
                     const holder = holderById.get(i.holder_id);
@@ -393,6 +446,13 @@ export default function IssuedKeys() {
                             </div>
                           </div>
                         </td>
+                        {globalMode && (
+                          <td className="px-4 py-2.5">
+                            <Link to={`/builder/${i.system_id}/keys`} className="text-sm hover:text-amber-600 hover:underline">
+                              {systemsMap.get(i.system_id) ?? "—"}
+                            </Link>
+                          </td>
+                        )}
                         {!readOnly && (
                           <td className="px-4 py-2.5">
                             {holder ? (
@@ -438,8 +498,9 @@ export default function IssuedKeys() {
         </Tabs>
       </div>
 
+
       {/* Issue key dialog */}
-      {!readOnly && (
+      {!readOnly && !globalMode && (
         <IssueKeyDialog
           open={issueOpen}
           onOpenChange={setIssueOpen}

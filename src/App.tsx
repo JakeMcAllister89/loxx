@@ -76,7 +76,8 @@ const App = () => (
               <Route path="/catalogue" element={<RoleRoute allow={["master_admin","admin","standard"]}><Catalogue /></RoleRoute>} />
               <Route path="/builder" element={<ProtectedRoute><Builder /></ProtectedRoute>} />
               <Route path="/builder/:id" element={<ProtectedRoute><Builder /></ProtectedRoute>} />
-              <Route path="/builder/:id/keys" element={<ProtectedRoute><IssuedKeys /></ProtectedRoute>} />
+              <Route path="/builder/:id/keys" element={<RoleRoute allow={["master_admin","admin","standard"]}><IssuedKeys /></RoleRoute>} />
+              <Route path="/key-log" element={<RoleRoute allow={["master_admin","admin","standard"]}><IssuedKeys /></RoleRoute>} />
               <Route path="/cart" element={<RoleRoute allow={["master_admin","admin"]}><Cart /></RoleRoute>} />
               <Route path="/cart/review" element={<RoleRoute allow={["master_admin","admin"]}><CartReview /></RoleRoute>} />
               <Route path="/basket" element={<RoleRoute allow={["master_admin","admin"]}><Cart /></RoleRoute>} />
