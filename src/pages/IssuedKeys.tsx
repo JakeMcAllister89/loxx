@@ -346,9 +346,7 @@ export default function IssuedKeys() {
           {!readOnly && (
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setHoldersOpen(true)}><Users className="h-4 w-4" /> Manage Holders</Button>
-              {!globalMode && (
-                <Button onClick={() => setIssueOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white"><Plus className="h-4 w-4" /> Issue Key</Button>
-              )}
+              <Button onClick={() => setIssueOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white"><Plus className="h-4 w-4" /> Issue Key</Button>
             </div>
           )}
         </div>
