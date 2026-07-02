@@ -63,7 +63,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     (async () => {
       // products → cost map
-      const { data: prods } = await supabase.from("products").select("id,code,product_description,name,cost_price,price_gbp").eq("is_active", true);
+      const { data: prodsData } = await supabase.functions.invoke("admin-catalogue", { body: { action: "list" } });
+      const prods = ((prodsData as any)?.products ?? []).filter((p: any) => p.is_active);
       const cMap: Record<string, number> = {};
       const low: { id: string; desc: string; margin: number }[] = [];
       (prods ?? []).forEach((p: any) => {
