@@ -74,6 +74,29 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    if (action === "assign_system") {
+      const { system_id, target_org_id } = body;
+      if (!system_id || !target_org_id) return json({ error: "Missing system_id or target_org_id" }, 400);
+
+      const { data: member } = await admin
+        .from("org_members")
+        .select("user_id")
+        .eq("org_id", target_org_id)
+        .eq("org_role", "master_admin")
+        .eq("status", "active")
+        .maybeSingle();
+      const newUserId = (member as any)?.user_id ?? null;
+      if (!newUserId) return json({ error: "Target org has no active master admin" }, 400);
+
+      const { error } = await admin
+        .from("key_systems")
+        .update({ org_id: target_org_id, user_id: newUserId })
+        .eq("id", system_id);
+      if (error) return json({ error: error.message }, 500);
+
+      return json({ ok: true });
+    }
+
     return json({ error: "Unknown action" }, 400);
   } catch (e: any) {
     return json({ error: "Server error" }, 500);
