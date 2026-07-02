@@ -136,7 +136,7 @@ export default function Dashboard() {
           </div>
           <div className={`rounded-[10px] border bg-card p-4 shadow-card ${lostTotal > 0 ? "border-destructive/30 bg-destructive/[0.02]" : ""}`}>
             <div className="flex items-center justify-between">
-              <div className="text-xs text-muted-foreground uppercase tracking-wide">Lost / unresolved</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">Unresolved lost keys</div>
               {lostTotal > 0 ? (
                 <AlertTriangle className="h-4 w-4 text-destructive" />
               ) : (
