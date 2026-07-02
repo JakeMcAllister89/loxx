@@ -669,6 +669,13 @@ export default function Index() {
                     <Link to="/auth?mode=signup" className="text-sm text-muted-foreground hover:text-foreground text-center">
                       Or create an account
                     </Link>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Prefer email?{" "}
+                      <a href="mailto:hello@myloxx.co.uk"
+                         className="text-amber-600 hover:underline">
+                        hello@myloxx.co.uk
+                      </a>
+                    </p>
                   </div>
                   <div className="mt-6 pt-6 border-t border-border space-y-2.5">
                     {[
@@ -745,6 +752,10 @@ export default function Index() {
               <p className="mt-3 text-sm text-muted-foreground max-w-xs leading-relaxed">
                 The digital home for your master key system.
               </p>
+              <a href="mailto:hello@myloxx.co.uk"
+                 className="text-sm text-foreground/70 hover:text-foreground transition-colors mt-1 block">
+                hello@myloxx.co.uk
+              </a>
             </div>
 
             {/* Product */}

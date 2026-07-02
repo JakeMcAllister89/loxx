@@ -358,20 +358,20 @@ export default function AdminOrders() {
                     onCheckedChange={(c) => toggleAll(!!c)}
                   />
                 </TableHead>
-                <TableHead>Ref</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>System</TableHead>
-                <TableHead>Ordered</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Revenue (ex VAT)</TableHead>
-                <TableHead>Cost</TableHead>
-                <TableHead>Profit</TableHead>
-                <TableHead>Margin</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>PO</TableHead>
-                <TableHead></TableHead>
+                <TableHead className="w-[90px]">Ref</TableHead>
+                <TableHead className="w-[120px]">Customer</TableHead>
+                <TableHead className="w-[100px]">Company</TableHead>
+                <TableHead className="w-[90px]">Payment</TableHead>
+                <TableHead className="w-[110px]">System</TableHead>
+                <TableHead className="w-[110px] whitespace-nowrap">Date</TableHead>
+                <TableHead className="w-[50px]">Items</TableHead>
+                <TableHead className="w-[100px] whitespace-nowrap">Revenue</TableHead>
+                <TableHead className="w-[80px]">Cost</TableHead>
+                <TableHead className="w-[80px]">Profit</TableHead>
+                <TableHead className="w-[70px]">Margin</TableHead>
+                <TableHead className="w-[130px]">Status</TableHead>
+                <TableHead className="w-[130px]">PO</TableHead>
+                <TableHead className="w-[60px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -432,7 +432,20 @@ export default function AdminOrders() {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-amber-700">{o.po_number ?? "—"}</TableCell>
+                    <TableCell>
+                      {o.po_number ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-mono text-xs text-amber-700">{o.po_number}</span>
+                          {o.po_sent_at ? (
+                            <span className="text-[10px] text-emerald-600 font-medium">✓ Sent</span>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground">Not sent</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
+                    </TableCell>
                     <TableCell className="flex gap-1">
                       <Button size="sm" variant="outline" onClick={() => setOpenId(o.id)}>View</Button>
 {o.po_sent_at ? (
