@@ -176,6 +176,23 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [legacyCKDetected, setLegacyCKDetected] = useState(false);
   const [isFulfilled, setIsFulfilled] = useState(false);
   const isFulfilledRef = useRef(false);
+  const [issueCounts, setIssueCounts] = useState<Map<string, { issued: number; lost: number }>>(new Map());
+  const loadIssueCounts = useCallback(async () => {
+    const { data } = await supabase
+      .from("key_issues")
+      .select("node_id,status")
+      .eq("system_id", systemId)
+      .in("status", ["issued", "lost"]);
+    const m = new Map<string, { issued: number; lost: number }>();
+    (data ?? []).forEach((r: any) => {
+      const cur = m.get(r.node_id) ?? { issued: 0, lost: 0 };
+      if (r.status === "issued") cur.issued += 1;
+      else if (r.status === "lost") cur.lost += 1;
+      m.set(r.node_id, cur);
+    });
+    setIssueCounts(m);
+  }, [systemId]);
+  useEffect(() => { loadIssueCounts(); }, [loadIssueCounts]);
   // Replace-cylinder modal state: target node id + current step + draft note
   const [replaceState, setReplaceState] = useState<
     | { open: false }
