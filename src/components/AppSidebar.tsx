@@ -12,7 +12,6 @@ interface NavItem { to: string; label: string; icon: any; builder?: boolean; bas
 
 const nav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/team", label: "Team", icon: Users },
   { to: "/systems", label: "My Systems", icon: LayoutGrid },
   { to: "/key-log", label: "Key Log", icon: KeyRound, hideForViewOnly: true },
   { to: "/builder", label: "System Builder", icon: Network, builder: true },
@@ -20,6 +19,7 @@ const nav: NavItem[] = [
   { to: "/quotes", label: "My Quotes", icon: FileText, hideForViewOnly: true, quoteCount: true },
   { to: "/cart", label: "Basket", icon: ShoppingCart, basket: true, hideForViewOnly: true },
   { to: "/orders", label: "My Orders", icon: ClipboardList, hideForViewOnly: true },
+  { to: "/team", label: "Team", icon: Users },
   { to: "/account", label: "Account", icon: Settings },
 ];
 
