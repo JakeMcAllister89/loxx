@@ -35,6 +35,10 @@ export interface CanvasNodeData {
   isCollapsed?: boolean;
   hasChildren?: boolean;
   onToggleCollapsed?: () => void;
+  issuedCount?: number;
+  lostCount?: number;
+  onOpenIssuedKeys?: () => void;
+  onOpenLostKeys?: () => void;
 }
 
 const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string; tintHsl: string; description: string }> = {
@@ -395,6 +399,33 @@ function CanvasNodeImpl(props: NodeProps) {
 
         {hasError && (
           <AlertCircle className="absolute top-1 right-1 h-3 w-3 text-destructive" />
+        )}
+
+        {((d.issuedCount ?? 0) > 0 || (d.lostCount ?? 0) > 0) && (
+          <div className="mt-1.5 flex items-center justify-center gap-1 flex-wrap">
+            {(d.issuedCount ?? 0) > 0 && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); d.onOpenIssuedKeys?.(); }}
+                title="View issued keys"
+                className="nodrag inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                style={{ fontSize: 9, fontWeight: 600 }}
+              >
+                <Key className="h-2 w-2" /> Issued: {d.issuedCount}
+              </button>
+            )}
+            {(d.lostCount ?? 0) > 0 && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); d.onOpenLostKeys?.(); }}
+                title="View lost keys"
+                className="nodrag inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
+                style={{ fontSize: 9, fontWeight: 600 }}
+              >
+                <AlertCircle className="h-2 w-2" /> Lost: {d.lostCount}
+              </button>
+            )}
+          </div>
         )}
 
         {hasDecommissionedChildren && (

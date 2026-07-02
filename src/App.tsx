@@ -43,6 +43,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Returns from "./pages/Returns";
 import BacsConfirmed from "./pages/BacsConfirmed";
+import IssuedKeys from "./pages/IssuedKeys";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +76,7 @@ const App = () => (
               <Route path="/catalogue" element={<RoleRoute allow={["master_admin","admin","standard"]}><Catalogue /></RoleRoute>} />
               <Route path="/builder" element={<ProtectedRoute><Builder /></ProtectedRoute>} />
               <Route path="/builder/:id" element={<ProtectedRoute><Builder /></ProtectedRoute>} />
+              <Route path="/builder/:id/keys" element={<ProtectedRoute><IssuedKeys /></ProtectedRoute>} />
               <Route path="/cart" element={<RoleRoute allow={["master_admin","admin"]}><Cart /></RoleRoute>} />
               <Route path="/cart/review" element={<RoleRoute allow={["master_admin","admin"]}><CartReview /></RoleRoute>} />
               <Route path="/basket" element={<RoleRoute allow={["master_admin","admin"]}><Cart /></RoleRoute>} />

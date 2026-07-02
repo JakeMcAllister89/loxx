@@ -200,6 +200,156 @@ export type Database = {
         }
         Relationships: []
       }
+      key_holders: {
+        Row: {
+          archived_at: string | null
+          archived_by: string | null
+          archived_reason: string | null
+          created_at: string
+          created_by: string | null
+          department: string | null
+          email: string | null
+          external_reference: string | null
+          holder_type: string
+          id: string
+          name: string
+          notes: string | null
+          org_id: string
+          phone: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
+          archived_reason?: string | null
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          email?: string | null
+          external_reference?: string | null
+          holder_type?: string
+          id?: string
+          name: string
+          notes?: string | null
+          org_id: string
+          phone?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          archived_by?: string | null
+          archived_reason?: string | null
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          email?: string | null
+          external_reference?: string | null
+          holder_type?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          org_id?: string
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_holders_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      key_issues: {
+        Row: {
+          created_at: string
+          expected_return_date: string | null
+          holder_id: string
+          id: string
+          issued_at: string
+          issued_by: string | null
+          lost_reported_at: string | null
+          lost_reported_by: string | null
+          node_id: string
+          notes: string | null
+          quantity: number
+          replacement_order_id: string | null
+          resolution_notes: string | null
+          resolution_type: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          returned_at: string | null
+          returned_by: string | null
+          status: string
+          system_id: string
+        }
+        Insert: {
+          created_at?: string
+          expected_return_date?: string | null
+          holder_id: string
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          lost_reported_at?: string | null
+          lost_reported_by?: string | null
+          node_id: string
+          notes?: string | null
+          quantity?: number
+          replacement_order_id?: string | null
+          resolution_notes?: string | null
+          resolution_type?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          returned_at?: string | null
+          returned_by?: string | null
+          status?: string
+          system_id: string
+        }
+        Update: {
+          created_at?: string
+          expected_return_date?: string | null
+          holder_id?: string
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          lost_reported_at?: string | null
+          lost_reported_by?: string | null
+          node_id?: string
+          notes?: string | null
+          quantity?: number
+          replacement_order_id?: string | null
+          resolution_notes?: string | null
+          resolution_type?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          returned_at?: string | null
+          returned_by?: string | null
+          status?: string
+          system_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_issues_holder_id_fkey"
+            columns: ["holder_id"]
+            isOneToOne: false
+            referencedRelation: "key_holders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_issues_replacement_order_id_fkey"
+            columns: ["replacement_order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "key_issues_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "key_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       key_systems: {
         Row: {
           commission_pct: number | null

@@ -39,6 +39,8 @@ interface Props {
   readOnly?: boolean;
   collapsed?: Set<string>;
   onToggleCollapsed?: (id: string) => void;
+  issueCounts?: Map<string, { issued: number; lost: number }>;
+  onOpenIssues?: (nodeId: string, filter: "issued" | "lost") => void;
 }
 
 const nodeTypes = { keynode: CanvasNode };
@@ -149,7 +151,7 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 function CanvasInner({
   tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, onPaneClick, registerFitView,
   parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly,
-  collapsed, onToggleCollapsed,
+  collapsed, onToggleCollapsed, issueCounts, onOpenIssues,
 }: Props) {
   const { fitView, setCenter } = useReactFlow();
   const lastNodeCount = useRef(0);
@@ -193,6 +195,10 @@ function CanvasInner({
           isCollapsed: collapsedSet.has(l.id),
           hasChildren: l.node.children.length > 0 && !isSubCE,
           onToggleCollapsed: () => onToggleCollapsed?.(l.id),
+          issuedCount: issueCounts?.get(l.id)?.issued ?? 0,
+          lostCount: issueCounts?.get(l.id)?.lost ?? 0,
+          onOpenIssuedKeys: () => onOpenIssues?.(l.id, "issued"),
+          onOpenLostKeys: () => onOpenIssues?.(l.id, "lost"),
         },
       };
     });
@@ -245,7 +251,7 @@ function CanvasInner({
     if (tree.root) addCrossEdges(tree.root);
 
     return { nodes, edges };
-  }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly, collapsed, onToggleCollapsed]);
+  }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly, collapsed, onToggleCollapsed, issueCounts, onOpenIssues]);
 
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState(nodes);
   const [rfEdges, setRfEdges, onEdgesChange] = useEdgesState(edges);
