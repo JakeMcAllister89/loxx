@@ -478,8 +478,8 @@ export default function IssuedKeys() {
                             <DropdownMenuContent align="end">
                               {!readOnly && i.status === "issued" && (
                                 <>
-                                  <DropdownMenuItem onClick={() => setReturnOf(i)}>Return</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-red-600" onClick={() => setLostOf(i)}>Report lost</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => { setReturnOf(i); setReturnQty(i.quantity ?? 1); }}>Return</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-red-600" onClick={() => { setLostOf(i); setLostQty(i.quantity ?? 1); }}>Report lost</DropdownMenuItem>
                                 </>
                               )}
                               {!readOnly && i.status === "lost" && (
