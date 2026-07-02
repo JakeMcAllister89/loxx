@@ -62,8 +62,8 @@ const features = [
     id: "audit-permissions",
     icon: ShieldCheck,
     label: "Audit & Permissions",
-    headline: "Control who can see and change your system.",
-    copy: "Give the right people the right access and keep a clear history of important changes.",
+    headline: "Control access and keep a clear history.",
+    copy: "Invite the right people, manage roles and keep a clear audit trail of system changes, issued keys and key activity.",
   },
 ];
 
@@ -216,7 +216,7 @@ export default function Index() {
             </h1>
 
             <p className="mt-6 text-lg text-foreground/65 max-w-xl leading-relaxed">
-              My LOXX brings your entire master key system together in one secure platform. Design systems, manage changes, order replacements and keep a permanent digital record your team can trust.
+              My LOXX brings your entire master key system together in one secure platform. Design systems, manage issued keys, track changes, order replacements and keep a permanent digital record your team can trust.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
