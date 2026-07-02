@@ -585,6 +585,21 @@ export default function IssuedKeys() {
               This closes out the current issue. It stays in history.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {returnOf && (returnOf.quantity ?? 1) > 1 && (
+            <div className="space-y-1.5 py-2">
+              <Label>How many keys are being returned?</Label>
+              <Input
+                type="number"
+                min={1}
+                max={returnOf.quantity ?? 1}
+                value={returnQty}
+                onChange={(e) => setReturnQty(Math.min(Math.max(1, Number(e.target.value)), returnOf.quantity ?? 1))}
+              />
+              <p className="text-xs text-muted-foreground">
+                {(returnOf.quantity ?? 1)} issued in this batch. Any remainder stays as issued.
+              </p>
+            </div>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => returnOf && doReturn(returnOf)} className="bg-amber-500 hover:bg-amber-600 text-white">Confirm</AlertDialogAction>
