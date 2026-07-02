@@ -181,14 +181,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
     if (readOnly) return;
     const { data } = await supabase
       .from("key_issues")
-      .select("node_id,status")
+      .select("node_id,status,quantity")
       .eq("system_id", systemId)
       .in("status", ["issued", "lost"]);
     const m = new Map<string, { issued: number; lost: number }>();
     (data ?? []).forEach((r: any) => {
       const cur = m.get(r.node_id) ?? { issued: 0, lost: 0 };
-      if (r.status === "issued") cur.issued += 1;
-      else if (r.status === "lost") cur.lost += 1;
+      const qty = r.quantity ?? 1;
+      if (r.status === "issued") cur.issued += qty;
+      else if (r.status === "lost") cur.lost += qty;
       m.set(r.node_id, cur);
     });
     setIssueCounts(m);
