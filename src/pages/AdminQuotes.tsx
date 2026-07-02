@@ -32,7 +32,8 @@ export default function AdminQuotes() {
 
   useEffect(() => {
     (async () => {
-      const { data: prods } = await supabase.from("products").select("code,cost_price").eq("is_active", true);
+      const { data: prodsData } = await supabase.functions.invoke("admin-catalogue", { body: { action: "list" } });
+      const prods = ((prodsData as any)?.products ?? []).filter((p: any) => p.is_active);
       const cMap: Record<string, number> = {};
       (prods ?? []).forEach((p: any) => { if (p.code) cMap[p.code] = Number(p.cost_price ?? 0); });
       setCostMap(cMap);

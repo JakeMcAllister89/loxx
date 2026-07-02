@@ -30,8 +30,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!isAdmin) { setCatStats(null); return; }
-    supabase.from("products").select("name,cost_price,price_gbp").eq("is_active", true).then(({ data }) => {
-      const items = (data ?? []).map((p: any) => ({ name: p.name, m: p.cost_price && p.price_gbp ? ((p.price_gbp - p.cost_price) / p.price_gbp) * 100 : null })).filter(x => x.m != null) as { name: string; m: number }[];
+    supabase.functions.invoke("admin-catalogue", { body: { action: "list" } }).then(({ data }) => {
+      const prods = ((data as any)?.products ?? []).filter((p: any) => p.is_active);
+      const items = prods.map((p: any) => ({ name: p.name, m: p.cost_price && p.price_gbp ? ((p.price_gbp - p.cost_price) / p.price_gbp) * 100 : null })).filter((x: any) => x.m != null) as { name: string; m: number }[];
       if (!items.length) { setCatStats({ avg: 0, high: null, low: null, lowCount: 0 }); return; }
       const avg = items.reduce((s, x) => s + x.m, 0) / items.length;
       const high = items.reduce((a, b) => (b.m > a.m ? b : a));
