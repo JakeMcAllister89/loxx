@@ -39,6 +39,8 @@ interface Props {
   readOnly?: boolean;
   collapsed?: Set<string>;
   onToggleCollapsed?: (id: string) => void;
+  issueCounts?: Map<string, { issued: number; lost: number }>;
+  onOpenIssues?: (nodeId: string, filter: "issued" | "lost") => void;
 }
 
 const nodeTypes = { keynode: CanvasNode };
