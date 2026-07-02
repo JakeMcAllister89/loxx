@@ -1665,6 +1665,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 }
               } : undefined}
               readOnly={readOnly}
+              issueCounts={issueCounts}
+              systemId={systemId}
             />
           )}
         </aside>
