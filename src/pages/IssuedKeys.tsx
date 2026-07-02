@@ -93,6 +93,9 @@ function nodeDisplayLabel(n: TNode): string {
   if ((n.type === "MK" || n.type === "SMK") && n.location?.trim()) {
     return `${n.location.trim()} (${n.label || "(unnamed)"})`;
   }
+  if (n.type === "CYL") {
+    return `${n.label || "(unnamed)"} (D${String(n.differ ?? 0).padStart(3, "0")})`;
+  }
   return n.label || "(unnamed)";
 }
 
@@ -295,7 +298,7 @@ export default function IssuedKeys() {
         </div>
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">Issued Keys</h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Key Log</h1>
             <p className="text-muted-foreground text-sm mt-1">{systemName || "System"} — track who holds which keys.</p>
           </div>
           {!readOnly && (
