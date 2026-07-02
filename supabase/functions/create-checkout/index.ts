@@ -1,4 +1,4 @@
-// v6
+// v7
 // UK seller, physical goods → tax calculation only (no managed_payments).
 // Creates a pending order + order_items rows before payment so verify-checkout can finalise.
 
@@ -89,21 +89,45 @@ Deno.serve(async (req) => {
         if (p.code && p.price_gbp != null) priceMap.set(p.code, Number(p.price_gbp));
       });
     }
+
+    // Fetch authoritative delivery rates — never trust client-supplied
+    // unit_price for the delivery line either. Rate depends on whether
+    // the cart contains any cylinder items, mirroring CartContext's logic.
+    const { data: deliverySettings } = await supabase
+      .from("admin_settings")
+      .select("key,value")
+      .in("key", ["delivery_charge_keys_only", "delivery_charge_with_cylinders"]);
+    const deliveryMap = new Map<string, number>();
+    (deliverySettings ?? []).forEach((s: any) => deliveryMap.set(s.key, parseFloat(s.value)));
+    const hasCylinders = body.items.some((it) => it.kind === "cylinder");
+    const authoritativeDeliveryCharge = hasCylinders
+      ? (deliveryMap.get("delivery_charge_with_cylinders") ?? 9.50)
+      : (deliveryMap.get("delivery_charge_keys_only") ?? 7.50);
+
     const items = body.items.map((it) => {
       const qty = Math.max(1, Math.min(999, Math.floor(Number(it.quantity) || 1)));
-      // Use server price for catalogued products; fall back to clamped client
-      // price only for delivery lines (which have no product_code).
-      const serverPrice = it.product_code ? priceMap.get(it.product_code) : undefined;
-      const unit_price = serverPrice !== undefined
-        ? serverPrice
-        : Math.max(0, Math.min(100000, Number(it.unit_price) || 0));
+      let unit_price: number;
+      if (it.kind === "delivery") {
+        // Always server-derived — client value is ignored entirely.
+        unit_price = authoritativeDeliveryCharge;
+      } else if (it.product_code && priceMap.has(it.product_code)) {
+        unit_price = priceMap.get(it.product_code)!;
+      } else {
+        // No catalogued price available (shouldn't normally happen for
+        // cylinder/key lines) — reject rather than trust client price.
+        unit_price = -1;
+      }
       return { ...it, quantity: qty, unit_price };
     });
+
+    if (items.some((it) => it.kind !== "delivery" && it.unit_price < 0)) {
+      return jsonError("One or more items could not be priced — please refresh your basket and try again");
+    }
 
     const productItems = items.filter((it) => it.kind !== "delivery");
     const deliveryItem = items.find((it) => it.kind === "delivery");
     const subtotal = productItems.reduce((s, i) => s + i.quantity * i.unit_price, 0);
-    const deliveryCharge = deliveryItem?.unit_price ?? 0;
+    const deliveryCharge = deliveryItem ? authoritativeDeliveryCharge : 0;
     if (subtotal <= 0) return jsonError("Order total must be greater than zero");
 
     const deliveryText = body.delivery ? [
@@ -138,7 +162,7 @@ Deno.serve(async (req) => {
       .insert(orderInsert)
       .select("id")
       .single();
-    if (orderErr || !order) return jsonError(`Failed to create order: ${orderErr?.message}`, 500);
+    if (orderErr || !order) { console.error(orderErr); return jsonError("Could not create your order — please try again", 500); }
 
     // Snapshot commission rate for this order based on attributed partner (locked at order time)
     let commissionPct: number | null = null;
@@ -180,7 +204,7 @@ Deno.serve(async (req) => {
       };
     });
     const { error: itemsErr } = await supabase.from("order_items").insert(itemRows);
-    if (itemsErr) return jsonError(`Failed to write order items: ${itemsErr.message}`, 500);
+    if (itemsErr) { console.error(itemsErr); return jsonError("Could not save your order items — please try again", 500); }
 
 
     const stripe = createStripeClient(body.environment);
