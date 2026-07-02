@@ -376,12 +376,18 @@ export default function IssuedKeys() {
                   ) : filteredIssues.map(i => {
                     const node = nodeById.get(i.node_id);
                     const holder = holderById.get(i.holder_id);
+                    const displayType = (i as any).node_type ?? node?.type;
+                    const displayLabel = (i as any).node_label ?? node?.label ?? "—";
+                    const displayRef = (i as any).key_ref;
                     return (
                       <tr key={i.id} className="border-t hover:bg-muted/30">
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
-                            {node ? typeBadge(node.type) : null}
-                            <span className="font-medium">{node?.label ?? "—"}</span>
+                            {displayType ? typeBadge(displayType) : null}
+                            <div>
+                              <div className="font-medium">{displayLabel}</div>
+                              {displayRef && <div className="text-[11px] text-muted-foreground font-mono">{displayRef}</div>}
+                            </div>
                           </div>
                         </td>
                         {!readOnly && (
@@ -396,7 +402,7 @@ export default function IssuedKeys() {
                         )}
                         <td className="px-4 py-2.5">{i.quantity}</td>
                         <td className="px-4 py-2.5">{statusBadge(i.status)}</td>
-                        <td className="px-4 py-2.5">{fmtDate(i.issued_at)}</td>
+                        <td className="px-4 py-2.5">{fmtDateTime(i.issued_at)}</td>
                         <td className="px-4 py-2.5 text-muted-foreground">{fmtDate(i.expected_return_date)}</td>
                         <td className="px-4 py-2.5 text-right">
                           <DropdownMenu>
