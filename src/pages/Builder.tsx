@@ -2380,6 +2380,29 @@ function DetailPanel({
           <X className="h-4 w-4" />
         </button>
       </div>
+      {(nodeCounts.issued > 0 || nodeCounts.lost > 0) && (
+        <div className="flex items-center gap-3 px-4 pb-3 text-xs">
+          {nodeCounts.issued > 0 && (
+            <span className="text-muted-foreground">
+              <KeyRound className="h-3 w-3 inline mr-1 text-amber-500" />
+              {nodeCounts.issued} issued
+            </span>
+          )}
+          {nodeCounts.lost > 0 && (
+            <span className="text-amber-600 font-medium">
+              ⚠ {nodeCounts.lost} lost
+            </span>
+          )}
+          {systemId && (
+            <Link
+              to={`/builder/${systemId}/keys?nodeId=${node.id}`}
+              className="ml-auto text-amber-600 hover:underline text-[11px]"
+            >
+              View in Key Log →
+            </Link>
+          )}
+        </div>
+      )}
       <h3 className="text-lg font-semibold mt-1 truncate" title={displayName}>{displayName || "Unnamed"}</h3>
       <p className="text-[11px] text-muted-foreground mt-1">{meta.description}</p>
 
