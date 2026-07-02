@@ -689,12 +689,12 @@ function IssueKeyDialog({
   }, [holders, holderSearch]);
 
   const submit = async () => {
-    if (!nodeId || !holderId || !userId) { toast.error("Pick a key and a holder"); return; }
-    const node = treeNodes.find(n => n.id === nodeId);
+    if (!selectedSystemId || !nodeId || !holderId || !userId) { toast.error("Pick a system, a key, and a holder"); return; }
+    const node = localTreeNodes.find(n => n.id === nodeId);
     const holder = holders.find(h => h.id === holderId);
     setBusy(true);
     const { error } = await supabase.from("key_issues").insert({
-      system_id: systemId, node_id: nodeId, holder_id: holderId,
+      system_id: selectedSystemId, node_id: nodeId, holder_id: holderId,
       node_type: node?.type ?? null, node_label: node?.label ?? null, key_ref: node?.keyRef ?? null,
       quantity: qty, status: "issued",
       issued_at: new Date().toISOString(), issued_by: userId,
@@ -703,7 +703,7 @@ function IssueKeyDialog({
     } as any);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
-    logAction({ system_id: systemId, action: "key_issued", node_label: node?.label, metadata: { holder_name: holder?.name, quantity: qty, key_ref: node?.keyRef, node_type: node?.type } });
+    logAction({ system_id: selectedSystemId, action: "key_issued", node_label: node?.label, metadata: { holder_name: holder?.name, quantity: qty, key_ref: node?.keyRef, node_type: node?.type } });
     toast.success("Key issued");
     onOpenChange(false);
     onCreated();
