@@ -192,7 +192,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       m.set(r.node_id, cur);
     });
     setIssueCounts(m);
-  }, [systemId]);
+  }, [systemId, readOnly]);
   useEffect(() => { loadIssueCounts(); }, [loadIssueCounts]);
   // Replace-cylinder modal state: target node id + current step + draft note
   const [replaceState, setReplaceState] = useState<
