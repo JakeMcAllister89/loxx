@@ -169,11 +169,13 @@ export default function IssuedKeys() {
   const { user, orgRole, orgId } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const readOnly = orgRole === "view_only";
+  const globalMode = !systemId;
 
   const [systemName, setSystemName] = useState("");
   const [treeNodes, setTreeNodes] = useState<NodeMeta[]>([]);
   const [holders, setHolders] = useState<Holder[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [systemsMap, setSystemsMap] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
 
   // Filters
@@ -182,6 +184,7 @@ export default function IssuedKeys() {
   const [fNode, setFNode] = useState<string>(searchParams.get("nodeId") ?? "all");
   const [fStatus, setFStatus] = useState<string>("all");
   const [fDept, setFDept] = useState<string>("all");
+  const [fSystem, setFSystem] = useState<string>("all");
   const [fFrom, setFFrom] = useState<string>("");
   const [fTo, setFTo] = useState<string>("");
 
@@ -197,24 +200,39 @@ export default function IssuedKeys() {
   const [resolveNotes, setResolveNotes] = useState("");
 
   const loadAll = async () => {
-    if (!systemId) return;
     setLoading(true);
-    const [{ data: sys }, { data: hs }, { data: is }] = await Promise.all([
-      supabase.from("key_systems").select("name,tree_data").eq("id", systemId).maybeSingle(),
-      supabase.from("key_holders").select("*").order("name"),
-      supabase.from("key_issues").select("*").eq("system_id", systemId).order("issued_at", { ascending: false }),
-    ]);
-    if (sys) {
-      setSystemName((sys as any).name);
-      const tree = (sys as any).tree_data as TreeData | null;
-      setTreeNodes(walkTree(tree?.root ?? null));
+    if (globalMode) {
+      const [{ data: sysList }, { data: hs }, { data: is }] = await Promise.all([
+        supabase.from("key_systems").select("id,name").order("name"),
+        supabase.from("key_holders").select("*").order("name"),
+        supabase.from("key_issues").select("*").order("issued_at", { ascending: false }),
+      ]);
+      const m = new Map<string, string>();
+      (sysList as any[] ?? []).forEach(s => m.set(s.id, s.name));
+      setSystemsMap(m);
+      setTreeNodes([]);
+      setSystemName("");
+      setHolders((hs as any[] ?? []) as Holder[]);
+      setIssues((is as any[] ?? []) as Issue[]);
+    } else {
+      const [{ data: sys }, { data: hs }, { data: is }] = await Promise.all([
+        supabase.from("key_systems").select("name,tree_data").eq("id", systemId).maybeSingle(),
+        supabase.from("key_holders").select("*").order("name"),
+        supabase.from("key_issues").select("*").eq("system_id", systemId).order("issued_at", { ascending: false }),
+      ]);
+      if (sys) {
+        setSystemName((sys as any).name);
+        const tree = (sys as any).tree_data as TreeData | null;
+        setTreeNodes(walkTree(tree?.root ?? null));
+      }
+      setHolders((hs as any[] ?? []) as Holder[]);
+      setIssues((is as any[] ?? []) as Issue[]);
     }
-    setHolders((hs as any[] ?? []) as Holder[]);
-    setIssues((is as any[] ?? []) as Issue[]);
     setLoading(false);
   };
 
   useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, [systemId]);
+
 
   const nodeById = useMemo(() => new Map(treeNodes.map(n => [n.id, n])), [treeNodes]);
   const holderById = useMemo(() => new Map(holders.map(h => [h.id, h])), [holders]);
