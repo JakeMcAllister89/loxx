@@ -338,7 +338,7 @@ export default function IssuedKeys() {
         quantity: totalQty - qty,
         status: "issued",
         issued_at: lostOf.issued_at, issued_by: lostOf.issued_by,
-        expected_return_date: lostOf.expected formatDate ?? null,
+        expected_return_date: lostOf.expected_return_date ?? null,
         notes: lostOf.notes ?? null,
       } as any);
       if (e2) { toast.error(e2.message); return; }
