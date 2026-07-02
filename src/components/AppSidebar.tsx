@@ -32,6 +32,7 @@ export function AppSidebar() {
   const basketCount = items.reduce((s, i) => s + (i.quantity ?? 0), 0);
   const [systems, setSystems] = useState<{ id: string; name: string; door_count: number }[]>([]);
   const [quoteCount, setQuoteCount] = useState<number>(0);
+  const [approvalCount, setApprovalCount] = useState<number>(0);
   const [creating, setCreating] = useState(false);
   const [newSystemConfirm, setNewSystemConfirm] = useState(false);
 
@@ -75,6 +76,24 @@ export function AppSidebar() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchApprovals = () => {
+      (supabase.from("organisations") as any)
+        .select("id", { count: "exact", head: true })
+        .eq("is_approved", false)
+        .then(({ count }: { count: number | null }) => setApprovalCount(count ?? 0));
+    };
+    fetchApprovals();
+    const channel = supabase
+      .channel("sidebar-approvals")
+      .on("postgres_changes", { event: "*", schema: "public", table: "organisations" }, () => {
+        if (document.visibilityState === "visible") fetchApprovals();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [isAdmin]);
 
   const newSystem = async () => {
     if (!user || creating || !canCreate) return;
@@ -161,7 +180,12 @@ export function AppSidebar() {
               { to: "/admin/settings", label: "Settings", icon: Settings },
             ].map((a) => (
               <NavLink key={a.to} to={a.to} end={a.end} className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded-md text-sm ${isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60 hover:text-amber-500"}`}>
-                <a.icon className="h-4 w-4" /> {a.label}
+                <a.icon className="h-4 w-4" /> <span className="flex-1">{a.label}</span>
+                {a.to === "/admin/approvals" && approvalCount > 0 && (
+                  <span className="ml-auto inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold h-4 min-w-[16px] px-1">
+                    {approvalCount > 99 ? "99+" : approvalCount}
+                  </span>
+                )}
               </NavLink>
             ))}
           </div>
