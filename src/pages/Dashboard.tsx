@@ -245,7 +245,7 @@ export default function Dashboard() {
             <h2 className="text-lg font-semibold">Recent key activity</h2>
             <Link to="/key-log" className="text-sm text-primary hover:underline">View Key Log →</Link>
           </div>
-          <div className="rounded-[10px] border bg-card shadow-card p-4">
+          <div className="rounded-[10px] border bg-card shadow-card p-3">
             <ActivityTimeline
               limit={4}
               actionTypes={["key_issued", "key_returned", "key_lost_reported", "key_resolved", "key_holder_created", "key_holder_archived"]}
