@@ -195,6 +195,10 @@ function CanvasInner({
           isCollapsed: collapsedSet.has(l.id),
           hasChildren: l.node.children.length > 0 && !isSubCE,
           onToggleCollapsed: () => onToggleCollapsed?.(l.id),
+          issuedCount: issueCounts?.get(l.id)?.issued ?? 0,
+          lostCount: issueCounts?.get(l.id)?.lost ?? 0,
+          onOpenIssuedKeys: () => onOpenIssues?.(l.id, "issued"),
+          onOpenLostKeys: () => onOpenIssues?.(l.id, "lost"),
         },
       };
     });
