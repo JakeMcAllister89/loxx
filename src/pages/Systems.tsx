@@ -202,8 +202,8 @@ export default function Systems() {
                         )}
                       </div>
                       <div className="text-xs mt-1.5">
-                        <span className="text-muted-foreground">{c.issued} issued · </span>
-                        <span className={c.lost > 0 ? "text-amber-600 font-medium" : "text-muted-foreground"}>{c.lost} lost</span>
+                        <span className="text-muted-foreground">{c.issued} {c.issued === 1 ? "key" : "keys"} issued · </span>
+                        <span className={c.lost > 0 ? "text-amber-600 font-medium" : "text-muted-foreground"}>{c.lost} {c.lost === 1 ? "key" : "keys"} lost</span>
                       </div>
                       <div className="text-xs text-muted-foreground mt-1.5">Updated {timeAgo(s.updated_at)}</div>
                     </div>
