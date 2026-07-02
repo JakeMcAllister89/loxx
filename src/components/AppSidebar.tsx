@@ -128,7 +128,7 @@ export function AppSidebar() {
         })}
 
         <div className="pt-5 mt-3 border-t border-sidebar-border">
-          <div className="px-3 pb-2 text-[11px] uppercase tracking-wider text-sidebar-foreground/50">Your systems</div>
+          <div className="px-3 pb-2 text-[11px] uppercase tracking-wider text-sidebar-foreground/50">My systems</div>
           <div className="space-y-0.5">
             {systems.length === 0 && <div className="px-3 py-2 text-xs text-sidebar-foreground/40">No systems yet</div>}
             {systems.map((s) => (
