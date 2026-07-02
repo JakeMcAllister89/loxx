@@ -222,6 +222,7 @@ export default function IssuedKeys() {
       ]);
       if (sys) {
         setSystemName((sys as any).name);
+        setSystemsMap(new Map([[systemId!, (sys as any).name]]));
         const tree = (sys as any).tree_data as TreeData | null;
         setTreeNodes(walkTree(tree?.root ?? null));
       }
