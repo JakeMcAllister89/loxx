@@ -235,11 +235,6 @@ export default function Dashboard() {
                   );
                 })}
               </div>
-              {systems.length > 4 && (
-                <div className="mt-2">
-                  <Link to="/systems" className="text-sm text-primary hover:underline">View all systems →</Link>
-                </div>
-              )}
             </>
           )}
         </div>
