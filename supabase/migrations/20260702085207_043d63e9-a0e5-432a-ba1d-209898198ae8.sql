@@ -1,0 +1,1 @@
+ALTER TABLE public.key_issues DROP CONSTRAINT IF EXISTS key_issues_node_id_fkey;

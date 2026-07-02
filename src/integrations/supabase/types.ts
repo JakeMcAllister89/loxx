@@ -335,13 +335,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "key_issues_node_id_fkey"
-            columns: ["node_id"]
-            isOneToOne: false
-            referencedRelation: "nodes"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "key_issues_replacement_order_id_fkey"
             columns: ["replacement_order_id"]
             isOneToOne: false
