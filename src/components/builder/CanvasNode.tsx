@@ -35,6 +35,10 @@ export interface CanvasNodeData {
   isCollapsed?: boolean;
   hasChildren?: boolean;
   onToggleCollapsed?: () => void;
+  issuedCount?: number;
+  lostCount?: number;
+  onOpenIssuedKeys?: () => void;
+  onOpenLostKeys?: () => void;
 }
 
 const TYPE_META: Record<NodeType, { label: string; tone: string; dot: string; border: string; tintHsl: string; description: string }> = {
