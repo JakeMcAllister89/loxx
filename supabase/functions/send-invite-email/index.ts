@@ -72,8 +72,10 @@ Deno.serve(async (req) => {
       <div style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:auto;padding:24px;background:#f5f4f1;color:#17171a">
         <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px">
           <tr>
-            <td style="background:#d4820a;border-radius:6px;width:32px;height:32px;text-align:center;vertical-align:middle;padding:4px">
-              <span style="font-size:16px;line-height:24px;color:#ffffff">🔑</span>
+            <td style="vertical-align:middle">
+  <img src="https://wrblvasfekwaaayorccv.supabase.co/storage/v1/object/public/brand/email-logo.png" alt="My LOXX" width="40" height="40" style="display:block;border-radius:8px" />
+</td>
+  
             </td>
             <td style="padding-left:10px;font-size:20px;font-weight:700;color:#17171a;font-family:Inter,system-ui,sans-serif;vertical-align:middle">My LOXX</td>
           </tr>
