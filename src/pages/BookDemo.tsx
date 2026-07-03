@@ -50,6 +50,7 @@ export default function BookDemo() {
           style={{ minWidth: "320px", height: "700px" }}
         />
       </div>
+      <MarketingFooter />
     </div>
   );
 }
