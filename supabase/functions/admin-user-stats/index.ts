@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     let page = 1;
     while (true) {
       const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       for (const u of data.users) {
         out.push({
           id: u.id,
