@@ -91,24 +91,24 @@ export function HeroShowcase() {
         </div>
       </div>
 
-      {/* Subtle product-value overlay chips */}
+      {/* Subtle product-value overlay chips — desktop only */}
       <div
         aria-hidden
-        className="pointer-events-none absolute top-4 -right-4 sm:-right-6 inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/90 backdrop-blur-sm px-2.5 py-1.5 shadow-sm"
+        className="pointer-events-none hidden sm:inline-flex absolute top-4 -right-6 items-center gap-1.5 rounded-lg border border-border bg-card/90 backdrop-blur-sm px-2.5 py-1.5 shadow-sm"
       >
         <KeyRound className="h-3 w-3 text-primary" />
         <span className="text-[10px] font-medium text-foreground">Keys issued</span>
       </div>
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-10 -left-4 sm:-left-6 inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/90 backdrop-blur-sm px-2.5 py-1.5 shadow-sm"
+        className="pointer-events-none hidden sm:inline-flex absolute bottom-10 -left-6 items-center gap-1.5 rounded-lg border border-border bg-card/90 backdrop-blur-sm px-2.5 py-1.5 shadow-sm"
       >
         <AlertTriangle className="h-3 w-3 text-destructive" />
         <span className="text-[10px] font-medium text-foreground">Lost key risk visible</span>
       </div>
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-2 -right-3 sm:-right-5 inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/90 backdrop-blur-sm px-2.5 py-1.5 shadow-sm"
+        className="pointer-events-none hidden sm:inline-flex absolute bottom-2 -right-5 items-center gap-1.5 rounded-lg border border-border bg-card/90 backdrop-blur-sm px-2.5 py-1.5 shadow-sm"
       >
         <History className="h-3 w-3 text-info" />
         <span className="text-[10px] font-medium text-foreground">System history recorded</span>
