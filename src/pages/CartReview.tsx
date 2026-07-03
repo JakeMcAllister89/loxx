@@ -373,6 +373,7 @@ function flattenCKForDisplay(n: TNode): TNode {
   for (const c of n.children) {
     const fc = flattenCKForDisplay(c);
     if ((fc.type as string) === "CK") kids.push(...fc.children);
+
     else kids.push(fc);
   }
   return { ...n, children: kids };
