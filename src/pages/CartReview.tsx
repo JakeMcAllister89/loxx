@@ -396,58 +396,52 @@ function filterToCartItems(n: TNode, itemsByDifferRef?: Map<string, any>): TNode
 }
 
 function HierarchyView({ root, itemsByDifferRef }: { root: TNode; itemsByDifferRef?: Map<string, any> }) {
-  const flattened = flattenCKForDisplay(root);
-  const view = filterToCartItems(flattened, itemsByDifferRef) ?? { ...flattened, children: [] };
+  type Row = { key: string; ref: string; label: string; isCE: boolean; node: TNode };
+  const rows: Row[] = [];
+  const walk = (n: TNode) => {
+    if (n.type === "CYL") {
+      const ref = n.differ != null ? `D${String(n.differ).padStart(3, "0")}` : null;
+      if (ref && itemsByDifferRef?.has(ref)) {
+        rows.push({ key: n.id, ref, label: n.label ?? "", isCE: false, node: n });
+      }
+    } else if (n.type === "CE") {
+      if (n.z_ref && itemsByDifferRef?.has(n.z_ref)) {
+        rows.push({ key: n.id, ref: n.z_ref, label: n.label ?? "", isCE: true, node: n });
+      }
+    }
+    n.children.forEach(walk);
+  };
+  walk(root);
 
-  const renderNode = (n: TNode, depth: number) => (
-    <div key={n.id}>
-      <div className="flex items-center gap-2 py-1 text-sm" style={{ paddingLeft: depth * 18 }}>
-        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${TYPE_PILL[n.type] ?? TYPE_PILL.SMK}`}>{n.type}</span>
-        <span className={n.type === "CYL" ? "" : "font-medium"}>{n.label}</span>
-        {(n.type === "MK" || n.type === "SMK") && n.location && (
-          <span className="text-xs text-muted-foreground">({n.location})</span>
-        )}
-        {(n.type === "GMK" || n.type === "MK" || n.type === "SMK") && (() => {
-          const keysArr = Array.isArray(n.keys) ? n.keys : [];
-          const totalKeys = keysArr.reduce((s: number, k: any) => s + (k.qty ?? 0), 0);
-          return totalKeys > 0 ? (
-            <span className="text-xs text-muted-foreground">· {totalKeys} key{totalKeys === 1 ? "" : "s"}</span>
-          ) : null;
-        })()}
-        {n.type === "CYL" && (() => {
-          const differRef = n.differ != null ? `D${String(n.differ).padStart(3, "0")}` : null;
-          const item = differRef ? itemsByDifferRef?.get(differRef) : undefined;
-          const lockType = item?.cylinder_type ?? null;
-          const lockFunction = item?.cylinder_profile ?? null;
-          return (
-            <span className="text-xs text-muted-foreground ml-1">
-              {differRef && <span className="mr-2 text-amber-700 font-medium">{differRef}</span>}
-              <span>× {n.quantity ?? 1}</span>
-              {n.size && <span> · {n.size}</span>}
-              {n.finish && <span> · {n.finish}</span>}
-              {lockFunction && <span> · {lockFunction}</span>}
-              {lockType && <span> · {lockType}</span>}
+  if (rows.length === 0) {
+    return <div className="text-sm text-muted-foreground">No items from this system in your basket.</div>;
+  }
+
+  return (
+    <div className="divide-y">
+      {rows.map((r) => {
+        const item = itemsByDifferRef?.get(r.ref);
+        const lockType = item?.cylinder_type ?? null;
+        const lockFunction = item?.cylinder_profile ?? null;
+        const qty = r.node.quantity ?? item?.quantity ?? 1;
+        const pillCls = r.isCE ? TYPE_PILL.CE : TYPE_PILL.CYL;
+        const refCls = r.isCE ? "text-sky-700" : "text-amber-700";
+        return (
+          <div key={r.key} className="flex items-center gap-2 py-2 text-sm">
+            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${pillCls}`}>{r.isCE ? "CE" : "CYL"}</span>
+            <span className={`font-mono text-xs font-medium ${refCls}`}>{r.ref}</span>
+            {r.label && <span>{r.label}</span>}
+            <span className="text-xs text-muted-foreground ml-auto">
+              × {qty}
+              {r.node.size && <> · {r.node.size}</>}
+              {r.node.finish && <> · {r.node.finish}</>}
+              {lockFunction && <> · {lockFunction}</>}
+              {lockType && <> · {lockType}</>}
             </span>
-          );
-        })()}
-        {n.type === "CE" && (() => {
-          const item = n.z_ref ? itemsByDifferRef?.get(n.z_ref) : undefined;
-          const lockType = item?.cylinder_type ?? null;
-          const lockFunction = item?.cylinder_profile ?? null;
-          return (
-            <span className="text-xs text-muted-foreground ml-1">
-              {n.z_ref && <span className="mr-2 text-sky-700 font-medium">{n.z_ref}</span>}
-              <span>× {n.quantity ?? 1}</span>
-              {n.size && <span> · {n.size}</span>}
-              {n.finish && <span> · {n.finish}</span>}
-              {lockFunction && <span> · {lockFunction}</span>}
-              {lockType && <span> · {lockType}</span>}
-            </span>
-          );
-        })()}
-      </div>
-      {n.children.map(c => renderNode(c, depth + 1))}
+          </div>
+        );
+      })}
     </div>
   );
-  return <div>{renderNode(view, 0)}</div>;
 }
+
