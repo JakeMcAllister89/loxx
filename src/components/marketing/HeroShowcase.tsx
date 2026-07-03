@@ -32,7 +32,7 @@ export function HeroShowcase() {
             <img
               src={builderShot.url}
               alt="My LOXX System Builder — Grand Master, Master, Sub Master and Cylinder hierarchy"
-              className="absolute inset-0 h-full w-full object-contain object-center select-none"
+              className="absolute inset-0 h-full w-full object-cover object-center select-none"
               draggable={false}
             />
           </div>
