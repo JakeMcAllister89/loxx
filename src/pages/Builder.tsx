@@ -2735,7 +2735,8 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
         .from("order_items")
         .select("quantity, differ_ref, order_id")
         .in("order_id", orderIds)
-        .eq("differ_ref", differRef);
+        .eq("differ_ref", differRef)
+        .eq("item_type", "cylinder");
 
       console.log("Items for differ:", differRef, itemData, itemError);
 
