@@ -2716,12 +2716,11 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
     setLoading(true);
     (async () => {
       // Step 1: get order IDs for this system
-      const {found = await supabase
+      const { data: orderData } = await supabase
         .from("orders")
         .select("id, created_at, customer_name, customer_email, status, system_id, purchase_order_ref")
         .eq("system_id", systemId);
 
-      const orderData = found.data ?? [];
       const orderIds = orderData.map((o: any) => o.id);
 
       if (orderIds.length === 0) {
