@@ -45,7 +45,7 @@ export default function BookDemo() {
         </div>
         <div
           className="calendly-inline-widget"
-          data-url="https://calendly.com/iron-worx-sales/30min"
+          data-url="https://calendly.com/myloxx/30min"
           style={{ minWidth: "320px", height: "700px" }}
         />
       </div>
