@@ -1,12 +1,11 @@
 import builderShot from "@/assets/builder-screenshot.png.asset.json";
-import { KeyRound, AlertTriangle, History } from "lucide-react";
 
 /**
  * HeroShowcase
- * Premium marketing framing of the real My LOXX System Builder.
- * - Larger, more prominent hierarchy visual
- * - Subtle product-value overlay chips
+ * Premium marketing framing of the real My LOXX System Builder screenshot.
+ * - Contain-fit so the full GMK→MK→SMK→CYL hierarchy is visible
  * - Slow ken-burns pan on the image (respects reduced-motion)
+ * - Subtle overlays: soft branch glow, gentle pulse on one add button
  */
 export function HeroShowcase() {
   return (
@@ -44,13 +43,13 @@ export function HeroShowcase() {
           </span>
         </div>
 
-        {/* Screenshot stage — taller frame, less padding, subtle float */}
-        <div className="relative bg-[#fafafa] aspect-[16/14] sm:aspect-[16/14] overflow-hidden">
+        {/* Screenshot stage — taller frame, contain-fit, subtle float */}
+        <div className="relative bg-[#fafafa] aspect-[7/6] sm:aspect-[16/13] overflow-hidden">
           <div className="absolute inset-0 hero-float">
             <img
               src={builderShot.url}
               alt="My LOXX System Builder — Grand Master, Master, Sub Master and Cylinder hierarchy"
-              className="absolute inset-0 h-full w-full object-contain object-center p-1 sm:p-2 select-none"
+              className="absolute inset-0 h-full w-full object-contain object-center p-4 sm:p-6 select-none"
               draggable={false}
             />
           </div>
@@ -61,13 +60,13 @@ export function HeroShowcase() {
             className="pointer-events-none absolute left-[28%] top-[52%] -translate-x-1/2 -translate-y-1/2 h-[55%] w-[32%] rounded-[45%] bg-primary/15 blur-3xl hero-glow"
           />
 
-          {/* Subtle pulse over one add button */}
+          {/* Subtle pulse over one orange add button (approx GMK→MK connector) */}
           <span
             aria-hidden
             className="pointer-events-none absolute left-1/2 top-[19%] -translate-x-1/2 h-6 w-6 rounded-full bg-primary/40 blur-md hero-pulse"
           />
 
-          {/* Very gentle edge fades */}
+          {/* Very gentle edge fades — subtle so nothing important gets hidden */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#fafafa] to-transparent"
@@ -89,29 +88,6 @@ export function HeroShowcase() {
           </span>
           <span className="font-medium text-foreground/70">Live preview</span>
         </div>
-      </div>
-
-      {/* Subtle product-value overlay chips — desktop only */}
-      <div
-        aria-hidden
-        className="pointer-events-none hidden sm:inline-flex absolute top-4 -right-6 items-center gap-1.5 rounded-lg border border-border bg-card/90 backdrop-blur-sm px-2.5 py-1.5 shadow-sm"
-      >
-        <KeyRound className="h-3 w-3 text-primary" />
-        <span className="text-[10px] font-medium text-foreground">Keys issued</span>
-      </div>
-      <div
-        aria-hidden
-        className="pointer-events-none hidden sm:inline-flex absolute bottom-10 -left-6 items-center gap-1.5 rounded-lg border border-border bg-card/90 backdrop-blur-sm px-2.5 py-1.5 shadow-sm"
-      >
-        <AlertTriangle className="h-3 w-3 text-destructive" />
-        <span className="text-[10px] font-medium text-foreground">Lost key risk visible</span>
-      </div>
-      <div
-        aria-hidden
-        className="pointer-events-none hidden sm:inline-flex absolute bottom-2 -right-5 items-center gap-1.5 rounded-lg border border-border bg-card/90 backdrop-blur-sm px-2.5 py-1.5 shadow-sm"
-      >
-        <History className="h-3 w-3 text-info" />
-        <span className="text-[10px] font-medium text-foreground">System history recorded</span>
       </div>
 
       <style>{`
