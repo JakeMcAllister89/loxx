@@ -2636,6 +2636,18 @@ function DetailPanel({
           )}
         </div>
 
+        {systemId && (isCyl || isCE || node.type === "GMK" || node.type === "MK" || node.type === "SMK") && (() => {
+          const differRef = isCyl
+            ? (node.differ != null ? `D${String(node.differ).padStart(3, "0")}` : null)
+            : isCE
+              ? (node.z_ref ?? null)
+              : (node.label ?? null);
+          return differRef ? (
+            <OrderHistorySection systemId={systemId} differRef={differRef} />
+          ) : null;
+        })()}
+
+
 
 
 
@@ -2663,7 +2675,107 @@ function DetailPanel({
   );
 }
 
+/* ------------------------- Order History Section ------------------------- */
+
+type OrderHistoryRow = {
+  quantity: number;
+  differ_ref: string | null;
+  orders: {
+    id: string;
+    created_at: string;
+    customer_name: string | null;
+    customer_email: string | null;
+    status: string | null;
+    system_id: string | null;
+  } | null;
+};
+
+function OrderHistorySection({ systemId, differRef }: { systemId: string; differRef: string }) {
+  const [open, setOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState<OrderHistoryRow[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    supabase
+      .from("order_items")
+      .select("quantity, differ_ref, orders!inner(id, created_at, customer_name, customer_email, status, system_id)")
+      .eq("orders.system_id", systemId)
+      .eq("differ_ref", differRef)
+      .order("orders.created_at", { ascending: false })
+      .then(({ data }) => {
+        if (cancelled) return;
+        setRows((data ?? []) as any);
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [systemId, differRef]);
+
+  const fmtDate = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  };
+
+  const statusPill = (status: string | null) => {
+    const s = (status ?? "").toLowerCase();
+    if (s === "pending_bacs") return { label: "Awaiting payment", cls: "bg-amber-100 text-amber-800 border-amber-200" };
+    if (s === "paid" || s === "confirmed") return { label: "Confirmed", cls: "bg-emerald-100 text-emerald-800 border-emerald-200" };
+    if (s === "fulfilled") return { label: "Fulfilled", cls: "bg-sky-100 text-sky-800 border-sky-200" };
+    if (s === "cancelled") return { label: "Cancelled", cls: "bg-red-100 text-red-800 border-red-200" };
+    return { label: status || "pending", cls: "bg-muted text-muted-foreground border-border" };
+  };
+
+  return (
+    <div className="pt-3 mt-3 border-t">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between text-sm font-medium mb-2"
+      >
+        <span>Order history</span>
+        {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+      </button>
+      {open && (
+        <div>
+          {loading ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading…
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="text-xs text-muted-foreground py-2">No order history</div>
+          ) : (
+            <ul className="space-y-2">
+              {rows.map((r, i) => {
+                const o = r.orders;
+                if (!o) return null;
+                const who = o.customer_name || o.customer_email || "Unknown";
+                const ref = o.id.slice(0, 8).toUpperCase();
+                const pill = statusPill(o.status);
+                return (
+                  <li key={i} className="rounded-md border p-2 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{fmtDate(o.created_at)}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${pill.cls}`}>{pill.label}</span>
+                    </div>
+                    <div className="text-muted-foreground">{who}</div>
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span className="font-mono">{ref}</span>
+                      <span>Qty {r.quantity}</span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ------------------------- Save Status Indicator ------------------------- */
+
 
 function SaveStatusIndicator({
   status,

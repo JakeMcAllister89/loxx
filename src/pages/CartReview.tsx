@@ -373,13 +373,32 @@ function flattenCKForDisplay(n: TNode): TNode {
   for (const c of n.children) {
     const fc = flattenCKForDisplay(c);
     if ((fc.type as string) === "CK") kids.push(...fc.children);
+
     else kids.push(fc);
   }
   return { ...n, children: kids };
 }
 
+/** Remove CYL/CE leaves not present in the cart, and prune empty branches. */
+function filterToCartItems(n: TNode, itemsByDifferRef?: Map<string, any>): TNode | null {
+  if (n.type === "CYL") {
+    const differRef = n.differ != null ? `D${String(n.differ).padStart(3, "0")}` : null;
+    return differRef && itemsByDifferRef?.has(differRef) ? n : null;
+  }
+  if (n.type === "CE") {
+    return n.z_ref && itemsByDifferRef?.has(n.z_ref) ? n : null;
+  }
+  const kids = n.children
+    .map((c) => filterToCartItems(c, itemsByDifferRef))
+    .filter(Boolean) as TNode[];
+  if (kids.length === 0 && (n.type === "MK" || n.type === "SMK")) return null;
+  return { ...n, children: kids };
+}
+
 function HierarchyView({ root, itemsByDifferRef }: { root: TNode; itemsByDifferRef?: Map<string, any> }) {
-  const view = flattenCKForDisplay(root);
+  const flattened = flattenCKForDisplay(root);
+  const view = filterToCartItems(flattened, itemsByDifferRef) ?? { ...flattened, children: [] };
+
   const renderNode = (n: TNode, depth: number) => (
     <div key={n.id}>
       <div className="flex items-center gap-2 py-1 text-sm" style={{ paddingLeft: depth * 18 }}>
