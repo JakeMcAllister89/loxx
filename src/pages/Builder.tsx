@@ -2714,28 +2714,50 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    supabase
-      .from("order_items")
-      .select("quantity, differ_ref, orders!inner(id, created_at, customer_name, customer_email, status, system_id, purchase_order_ref)")
-      .eq("differ_ref", differRef)
-      .filter("orders.system_id", "eq", systemId)
-      .order("order_id", { ascending: false })
-      .then(({ data }) => {
-        if (cancelled) return;
-        const seen = new Map<string, OrderHistoryRow>();
-        for (const row of (data ?? []) as any) {
-          const o = row.orders;
-          if (!o) continue;
-          const existing = seen.get(o.id);
-          if (existing) {
-            existing.quantity += Number(row.quantity || 0);
-          } else {
-            seen.set(o.id, { ...row });
-          }
+    (async () => {
+      // Step 1: get order IDs for this system
+      const {found = await supabase
+        .from("orders")
+        .select("id, created_at, customer_name, customer_email, status, system_id, purchase_order_ref")
+        .eq("system_id", systemId);
+
+      const orderData = found.data ?? [];
+      const orderIds = orderData.map((o: any) => o.id);
+
+      if (orderIds.length === 0) {
+        if (!cancelled) { setRows([]); setLoading(false); }
+        return;
+      }
+
+      // Step 2: get items for this differ ref within those orders
+      const { data: itemData } = await supabase
+        .from("order_items")
+        .select("quantity, differ_ref, order_id")
+        .in("order_id", orderIds)
+        .eq("differ_ref", differRef);
+
+      // Merge: one entry per order, summing quantities
+      const orderMap = new Map(orderData.map((o: any) => [o.id, o]));
+      const seen = new Map<string, any>();
+
+      for (const item of (itemData ?? [])) {
+        const o = orderMap.get(item.order_id);
+        if (!o) continue;
+        const existing = seen.get(item.order_id);
+        if (existing) {
+          existing.quantity += Number(item.quantity || 0);
+        } else {
+          seen.set(item.order_id, { quantity: Number(item.quantity || 0), orders: o });
         }
-        setRows(Array.from(seen.values()));
+      }
+
+      if (!cancelled) {
+        setRows(Array.from(seen.values()).sort((a, b) =>
+          new Date(b.orders.created_at).getTime() - new Date(a.orders.created_at).getTime()
+        ));
         setLoading(false);
-      });
+      }
+    })();
     return () => { cancelled = true; };
   }, [systemId, differRef]);
 
