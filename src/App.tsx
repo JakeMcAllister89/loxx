@@ -45,6 +45,7 @@ import Privacy from "./pages/Privacy";
 import Returns from "./pages/Returns";
 import BacsConfirmed from "./pages/BacsConfirmed";
 import IssuedKeys from "./pages/IssuedKeys";
+import BookDemo from "./pages/BookDemo";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/returns" element={<Returns />} />
+              <Route path="/book-a-demo" element={<BookDemo />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
               <Route path="/systems" element={<ProtectedRoute><Systems /></ProtectedRoute>} />
