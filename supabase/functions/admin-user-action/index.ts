@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
       if (!user_id) return json({ error: "Missing user_id" }, 400);
       if (user_id === user.id) return json({ error: "Cannot disable yourself" }, 400);
       const { error } = await (admin.auth.admin as any).updateUserById(user_id, { ban_duration: "876600h" });
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       await admin.from("org_members").update({ status: "removed" }).eq("user_id", user_id);
       return json({ ok: true });
     }
@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
         email,
         options: { redirectTo: `${origin}/auth` },
       });
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       const link = (linkData as any)?.properties?.action_link ?? (linkData as any)?.action_link;
       if (!link) return json({ error: "Could not generate link" }, 500);
 
@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
       if (user_id === user.id) return json({ error: "Cannot suspend yourself" }, 400);
       await admin.from("org_members").update({ status: "suspended" }).eq("user_id", user_id).eq("status", "active");
       const { error } = await (admin.auth.admin as any).updateUserById(user_id, { ban_duration: "876600h" });
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       return json({ ok: true });
     }
 
@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
         _initiated_by: user.id,
         _reason: reason ?? null,
       });
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       return json({ ok: true });
     }
 
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
         type: "magiclink",
         email: targetEmail,
       });
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       const hashedToken = (linkData as any)?.properties?.hashed_token;
       if (!hashedToken) return json({ error: "Could not generate impersonation token" }, 500);
 
