@@ -2712,7 +2712,6 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
   const [rows, setRows] = useState<OrderHistoryRow[]>([]);
 
   useEffect(() => {
-    let cancelled = false;
     setLoading(true);
     (async () => {
       // Step 1: get order IDs for this system
@@ -2726,7 +2725,8 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
       const orderIds = orderData.map((o: any) => o.id);
 
       if (orderIds.length === 0) {
-        if (!cancelled) { setRows([]); setLoading(false); }
+        setRows([]);
+        setLoading(false);
         return;
       }
 
@@ -2740,9 +2740,8 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
       console.log("Items for differ:", differRef, itemData, itemError);
 
       // Merge: one entry per order, summing quantities
-      
       const seen = new Map<string, any>();
-const orderMap = new Map((orderData ?? []).map((o: any) => [o.id, o]));
+      const orderMap = new Map((orderData ?? []).map((o: any) => [o.id, o]));
       for (const item of (itemData ?? [])) {
         const o = orderMap.get(item.order_id);
         if (!o) continue;
@@ -2754,15 +2753,12 @@ const orderMap = new Map((orderData ?? []).map((o: any) => [o.id, o]));
         }
       }
 
-      if (!cancelled) {
-        console.log("Final rows:", Array.from(seen.values()));
-        setRows(Array.from(seen.values()).sort((a, b) =>
-          new Date(b.orders.created_at).getTime() - new Date(a.orders.created_at).getTime()
-        ));
-        setLoading(false);
-      }
+      console.log("Final rows:", Array.from(seen.values()));
+      setRows(Array.from(seen.values()).sort((a, b) =>
+        new Date(b.orders.created_at).getTime() - new Date(a.orders.created_at).getTime()
+      ));
+      setLoading(false);
     })();
-    return () => { cancelled = true; };
   }, [systemId, differRef]);
 
   const fmtDate = (iso: string) => {
