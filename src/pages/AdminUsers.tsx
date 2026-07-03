@@ -110,7 +110,7 @@ export default function AdminUsers() {
     setLoading(true);
     const [p, m, o, i] = await Promise.all([
       supabase.from("profiles").select("id,first_name,last_name,name,email,phone,default_address,default_invoice_address,created_at,org_id,is_admin").order("created_at", { ascending: false }),
-      supabase.from("org_members").select("user_id,org_id,org_role,status"),
+      supabase.from("org_members").select("user_id,org_id,org_role,status").neq("status", "removed"),
       supabase.from("organisations").select("id,name"),
       supabase.from("platform_invites").select("*").order("created_at", { ascending: false }),
     ]);
