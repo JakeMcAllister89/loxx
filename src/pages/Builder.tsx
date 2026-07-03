@@ -2740,9 +2740,9 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
       console.log("Items for differ:", differRef, itemData, itemError);
 
       // Merge: one entry per order, summing quantities
-      const orderMap = new Map(orderData.map((o: any) => [o.id, o]));
+      
       const seen = new Map<string, any>();
-
+const orderMap = new Map((orderData ?? []).map((o: any) => [o.id, o]));
       for (const item of (itemData ?? [])) {
         const o = orderMap.get(item.order_id);
         if (!o) continue;
