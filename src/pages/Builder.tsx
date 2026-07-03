@@ -2716,12 +2716,23 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
     setLoading(true);
     supabase
       .from("order_items")
-      .select("quantity, differ_ref, orders!inner(id, created_at, customer_name, customer_email, status, system_id)")
+      .select("quantity, differ_ref, orders!inner(id, created_at, customer_name, customer_email, status, system_id, purchase_order_ref)")
       .eq("differ_ref", differRef)
       .order("order_id", { ascending: false })
       .then(({ data }) => {
         if (cancelled) return;
-        setRows((data ?? []) as any);
+        const seen = new Map<string, OrderHistoryRow>();
+        for (const row of (data ?? []) as any) {
+          const o = row.orders;
+          if (!o) continue;
+          const existing = seen.get(o.id);
+          if (existing) {
+            existing.quantity += Number(row.quantity || 0);
+          } else {
+            seen.set(o.id, { ...row });
+          }
+        }
+        setRows(Array.from(seen.values()));
         setLoading(false);
       });
     return () => { cancelled = true; };
