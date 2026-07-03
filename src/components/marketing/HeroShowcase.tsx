@@ -45,7 +45,7 @@ export function HeroShowcase() {
         </div>
 
         {/* Screenshot stage — taller frame, less padding, subtle float */}
-        <div className="relative bg-[#fafafa] aspect-[16/14] sm:aspect-[16/12] overflow-hidden">
+        <div className="relative bg-[#fafafa] aspect-[16/14] sm:aspect-[16/14] overflow-hidden">
           <div className="absolute inset-0 hero-float">
             <img
               src={builderShot.url}
