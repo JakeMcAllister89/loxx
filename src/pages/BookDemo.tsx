@@ -1,4 +1,7 @@
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { LoxxLogo } from "@/components/LoxxLogo";
 
 export default function BookDemo() {
   useEffect(() => {
