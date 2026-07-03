@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LoxxLogo } from "@/components/LoxxLogo";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 
 export default function BookDemo() {
   useEffect(() => {
@@ -27,7 +28,7 @@ export default function BookDemo() {
     <div className="min-h-screen bg-background">
       <header className="bg-[#fafafa] text-foreground border-b border-border/60">
         <div className="container flex items-center justify-between py-4">
-          <LoxxLogo />
+          <Link to="/"><LoxxLogo /></Link>
           <nav className="flex items-center gap-2">
             <Link to="/auth" className="text-sm px-3 py-2 text-foreground/70 hover:text-foreground">Sign In</Link>
             <Button asChild className="bg-primary hover:bg-primary/90"><Link to="/auth?mode=signup">Get Started</Link></Button>
