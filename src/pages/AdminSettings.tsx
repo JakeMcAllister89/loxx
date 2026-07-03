@@ -58,7 +58,7 @@ export default function AdminSettings() {
         </Section>
 
         <Section title="Company details" help="Appears on the PO header." onSave={() => save(["company_name", "company_address", "company_phone", "company_email"], "Company details")}>
-          <Field label="Company name"><Input value={values.company_name ?? ""} onChange={(e) => set("company_name", e.target.value)} /></Field>
+          <Field label="Company name / organisation"><Input value={values.company_name ?? ""} onChange={(e) => set("company_name", e.target.value)} /></Field>
           <Field label="Company address"><Textarea rows={3} value={values.company_address ?? ""} onChange={(e) => set("company_address", e.target.value)} /></Field>
           <Field label="Company phone"><Input value={values.company_phone ?? ""} onChange={(e) => set("company_phone", e.target.value)} /></Field>
           <Field label="Company email"><Input type="email" value={values.company_email ?? ""} onChange={(e) => set("company_email", e.target.value)} /></Field>
