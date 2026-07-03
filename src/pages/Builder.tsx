@@ -2651,25 +2651,40 @@ function DetailPanel({
 
 
 
-        {(node.type === "GMK" || node.type === "MK" || node.type === "SMK") && node.children.length > 0 && (
-          <div className="pt-3 border-t">
-            <div className="text-xs font-medium text-muted-foreground mb-2">Contains</div>
-            <ul className="text-sm space-y-1">
-              {node.children.map((c) => {
-                const isMkOrSmkChild = c.type === "MK" || c.type === "SMK";
-                const main = isMkOrSmkChild && c.location?.trim() ? c.location.trim() : c.label;
-                const showRef = isMkOrSmkChild && !!c.location?.trim();
-                return (
-                  <li key={c.id} className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: TYPE_META[c.type].color }} />
-                    <span className="truncate">{main}</span>
-                    {showRef && <span className="text-[11px] text-[hsl(var(--node-cyl))]">· {c.label}</span>}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
+        {(node.type === "GMK" || node.type === "MK" || node.type === "SMK") && (() => {
+          const doors: Array<{ ref: string; label: string }> = [];
+          const walk = (x: any) => {
+            if (x.decommissioned_at) return;
+            if (x.type === "CYL") {
+              const ref = x.differ != null ? `D${String(x.differ).padStart(3, "0")}` : "";
+              if (ref) doors.push({ ref, label: x.label ?? "" });
+            } else if (x.type === "CE") {
+              if (x.z_ref) doors.push({ ref: x.z_ref, label: x.label ?? "" });
+            }
+            (x.children ?? []).forEach(walk);
+          };
+          (node.children ?? []).forEach(walk);
+          return (
+            <div className="pt-3 border-t">
+              <div className="text-sm font-medium">What does this key open?</div>
+              <div className="text-xs text-muted-foreground mb-2">
+                This key opens every door listed below, plus all doors in any sub-groups.
+              </div>
+              {doors.length === 0 ? (
+                <div className="text-xs text-muted-foreground">No doors yet.</div>
+              ) : (
+                <div className="text-xs space-y-0.5">
+                  {doors.map((d, i) => (
+                    <div key={i}>
+                      <span className="font-mono text-[hsl(var(--node-cyl))]">{d.ref}</span>
+                      {d.label && <> — {d.label}</>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
