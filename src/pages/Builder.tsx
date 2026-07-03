@@ -2718,6 +2718,7 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
       .from("order_items")
       .select("quantity, differ_ref, orders!inner(id, created_at, customer_name, customer_email, status, system_id, purchase_order_ref)")
       .eq("differ_ref", differRef)
+      .filter("orders.system_id", "eq", systemId)
       .order("order_id", { ascending: false })
       .then(({ data }) => {
         if (cancelled) return;
