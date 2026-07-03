@@ -2716,10 +2716,12 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
     setLoading(true);
     (async () => {
       // Step 1: get order IDs for this system
-      const { data: orderData } = await supabase
+      const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .select("id, created_at, customer_name, customer_email, status, system_id, purchase_order_ref")
         .eq("system_id", systemId);
+
+      console.log("Orders for system:", systemId, orderData, orderError);
 
       const orderIds = orderData.map((o: any) => o.id);
 
@@ -2729,11 +2731,13 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
       }
 
       // Step 2: get items for this differ ref within those orders
-      const { data: itemData } = await supabase
+      const { data: itemData, error: itemError } = await supabase
         .from("order_items")
         .select("quantity, differ_ref, order_id")
         .in("order_id", orderIds)
         .eq("differ_ref", differRef);
+
+      console.log("Items for differ:", differRef, itemData, itemError);
 
       // Merge: one entry per order, summing quantities
       const orderMap = new Map(orderData.map((o: any) => [o.id, o]));
