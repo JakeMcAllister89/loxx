@@ -2702,6 +2702,7 @@ type OrderHistoryRow = {
     customer_email: string | null;
     status: string | null;
     system_id: string | null;
+    purchase_order_ref: string | null;
   } | null;
 };
 
