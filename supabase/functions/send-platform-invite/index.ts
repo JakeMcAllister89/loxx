@@ -8,7 +8,7 @@ const SR = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
 
 const esc = (s: string) =>
-  s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       const txt = await res.text();
       console.error("Resend error:", txt);
-      return json({ ok: false, error: txt, link }, 502);
+      return json({ ok: false, error: "Could not send invite email" }, 502);
     }
     return json({ ok: true, sent: true, link });
   } catch (e: any) {
