@@ -2786,7 +2786,12 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
                     </div>
                     <div className="text-muted-foreground">{who}</div>
                     <div className="flex items-center justify-between text-muted-foreground">
-                      <span className="font-mono">{ref}</span>
+                      <div>
+                        <span className="font-mono">{ref}</span>
+                        {o.purchase_order_ref && (
+                          <div className="text-muted-foreground">PO: {o.purchase_order_ref}</div>
+                        )}
+                      </div>
                       <span>Qty {r.quantity}</span>
                     </div>
                   </li>
