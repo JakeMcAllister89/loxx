@@ -34,43 +34,43 @@ Deno.serve(async (req) => {
         .select("*")
         .order("cylinder_type")
         .order("price_gbp");
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       return json({ products: data ?? [] });
     }
 
     if (action === "insert_cylinder_type") {
       const { name, sort_order } = payload;
       const { data, error } = await admin.from("cylinder_types").insert({ name, sort_order, is_active: true }).select().single();
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       return json({ data });
     }
     if (action === "update_cylinder_type") {
       const { id, ...updates } = payload;
       const { error } = await admin.from("cylinder_types").update(updates).eq("id", id);
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       return json({ ok: true });
     }
     if (action === "delete_cylinder_type") {
       const { id } = payload;
       const { error } = await admin.from("cylinder_types").update({ is_active: false }).eq("id", id);
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       return json({ ok: true });
     }
     if (action === "insert_product") {
       const { data, error } = await admin.from("products").insert(payload).select().single();
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       return json({ data });
     }
     if (action === "update_product") {
       const { id, ...updates } = payload;
       const { error } = await admin.from("products").update(updates).eq("id", id);
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       return json({ ok: true });
     }
     if (action === "delete_product") {
       const { id } = payload;
       const { error } = await admin.from("products").delete().eq("id", id);
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       return json({ ok: true });
     }
 
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
         .from("key_systems")
         .update({ org_id: target_org_id, user_id: newUserId })
         .eq("id", system_id);
-      if (error) return json({ error: error.message }, 500);
+      if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
 
       return json({ ok: true });
     }
