@@ -10,7 +10,7 @@ const SR = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
 
 const esc = (s: string) =>
-  s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 
 const roleLabel: Record<string, string> = {
   admin: "Admin",
@@ -37,6 +37,22 @@ Deno.serve(async (req) => {
       .eq("id", invite_id)
       .maybeSingle();
     if (!invite) return json({ error: "Invite not found" }, 404);
+
+    // Authorization: the caller must be an admin/master_admin of the SAME
+    // org this invite belongs to. Being merely authenticated is not enough —
+    // otherwise any signed-in user could trigger an invite email for any
+    // org by guessing/enumerating invite_id.
+    const { data: membership } = await admin
+      .from("org_members")
+      .select("org_role")
+      .eq("user_id", user.id)
+      .eq("org_id", (invite as any).org_id)
+      .eq("status", "active")
+      .maybeSingle();
+    const callerRole = (membership as any)?.org_role;
+    if (callerRole !== "master_admin" && callerRole !== "admin") {
+      return json({ error: "Forbidden" }, 403);
+    }
 
     // Inviter first name
     const { data: inviterProfile } = await admin
@@ -89,7 +105,7 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       const txt = await res.text();
       console.error("Resend error:", txt);
-      return json({ ok: false, error: txt }, 502);
+      return json({ ok: false, error: "Could not send invite email" }, 502);
     }
     return json({ ok: true, sent: true });
   } catch (e: any) {
