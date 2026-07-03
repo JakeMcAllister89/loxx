@@ -93,9 +93,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [deliveryRates, setDeliveryRates] = useState<{ keys: number; cylinders: number }>({ keys: 7.50, cylinders: 9.50 });
 
   useEffect(() => {
-    supabase.from("admin_settings")
-      .select("key,value")
-      .in("key", ["delivery_charge_keys_only", "delivery_charge_with_cylinders"])
+    supabase.rpc("get_delivery_rates")
       .then(({ data }) => {
         const m: Record<string, string> = {};
         (data ?? []).forEach((r: any) => (m[r.key] = r.value));
