@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
   <img src="https://wrblvasfekwaaayorccv.supabase.co/storage/v1/object/public/brand/email-logo.png" alt="My LOXX" width="40" height="40" style="display:block;border-radius:8px" />
 </td>
   
-            </td>
+            
             <td style="padding-left:10px;font-size:20px;font-weight:700;color:#17171a;font-family:Inter,system-ui,sans-serif;vertical-align:middle">My LOXX</td>
           </tr>
         </table>
