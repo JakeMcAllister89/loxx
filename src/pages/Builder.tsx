@@ -2636,6 +2636,18 @@ function DetailPanel({
           )}
         </div>
 
+        {systemId && (isCyl || isCE || node.type === "GMK" || node.type === "MK" || node.type === "SMK") && (() => {
+          const differRef = isCyl
+            ? (node.differ != null ? `D${String(node.differ).padStart(3, "0")}` : null)
+            : isCE
+              ? (node.z_ref ?? null)
+              : (node.label ?? null);
+          return differRef ? (
+            <OrderHistorySection systemId={systemId} differRef={differRef} />
+          ) : null;
+        })()}
+
+
 
 
 
