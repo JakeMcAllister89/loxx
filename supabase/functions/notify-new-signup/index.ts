@@ -22,16 +22,6 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // Verify Supabase webhook secret header if configured
-    if (WEBHOOK_SECRET) {
-      const incomingSecret = req.headers.get("x-supabase-secret") ?? "";
-      if (incomingSecret !== WEBHOOK_SECRET) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
     const payload = await req.json();
     const record = payload.record ?? payload;
 
@@ -39,11 +29,35 @@ Deno.serve(async (req) => {
     let orgName: string = "Unknown organisation";
 
     if (record.id && record.is_approved === false) {
-      // Called from database webhook — org record in payload
+      // Called from the Supabase Database Webhook — verified via shared
+      // secret header, since there's no end-user JWT on this path.
+      // Fail closed: an unset secret must never mean "no verification".
+      if (!WEBHOOK_SECRET) {
+        console.error("[notify-new-signup] NOTIFY_WEBHOOK_SECRET is not configured");
+        return json({ error: "Server misconfigured" }, 500);
+      }
+      const incomingSecret = req.headers.get("x-supabase-secret") ?? "";
+      if (incomingSecret !== WEBHOOK_SECRET) {
+        return json({ error: "Unauthorized" }, 401);
+      }
       orgId = record.id;
       orgName = record.name ?? "Unknown organisation";
     } else if (payload.source === "auth_signup" && payload.email) {
-      // Called from Auth.tsx after signup — look up org by email
+      // Called from Auth.tsx right after signup. Verify via the caller's
+      // own JWT rather than a shared secret — this must be the same
+      // person who just signed up, matched against their own email,
+      // not an arbitrary client-supplied address.
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const userClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      const { data: { user } } = await userClient.auth.getUser();
+      if (!user || user.email !== payload.email) {
+        return json({ error: "Unauthorized" }, 401);
+      }
+
       const admin = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
