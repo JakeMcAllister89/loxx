@@ -201,7 +201,7 @@ export function AppSidebar() {
           <span>·</span>
           <Link to="/returns" className="hover:text-amber-500">Returns</Link>
         </div>
-        <a href="mailto:hello@myloxx.co.uk" className="w-full flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-amber-500">
+        <a href="/book-a-demo" className="w-full flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-amber-500">
           <Mail className="h-3.5 w-3.5" /> Contact us
         </a>
         <button onClick={async () => { await signOut(); navigate("/"); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-sidebar-foreground/70 hover:text-amber-500">
