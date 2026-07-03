@@ -27,7 +27,7 @@ export function HeroShowcase() {
       {/* App frame */}
       <div className="relative rounded-2xl border border-border/80 bg-card shadow-[0_30px_80px_-30px_rgba(0,0,0,0.28)] overflow-hidden">
         {/* Screenshot stage — contain-fit, subtle float */}
-        <div className="relative bg-card aspect-[7/6] sm:aspect-[16/13] overflow-hidden">
+        <div className="relative bg-card aspect-[16/10] sm:aspect-[16/10] overflow-hidden">
           <div className="absolute inset-0 hero-float">
             <img
               src={builderShot.url}
