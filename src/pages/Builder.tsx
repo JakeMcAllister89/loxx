@@ -2702,6 +2702,7 @@ type OrderHistoryRow = {
     customer_email: string | null;
     status: string | null;
     system_id: string | null;
+    purchase_order_ref: string | null;
   } | null;
 };
 
@@ -2715,12 +2716,23 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
     setLoading(true);
     supabase
       .from("order_items")
-      .select("quantity, differ_ref, orders!inner(id, created_at, customer_name, customer_email, status, system_id)")
+      .select("quantity, differ_ref, orders!inner(id, created_at, customer_name, customer_email, status, system_id, purchase_order_ref)")
       .eq("differ_ref", differRef)
       .order("order_id", { ascending: false })
       .then(({ data }) => {
         if (cancelled) return;
-        setRows((data ?? []) as any);
+        const seen = new Map<string, OrderHistoryRow>();
+        for (const row of (data ?? []) as any) {
+          const o = row.orders;
+          if (!o) continue;
+          const existing = seen.get(o.id);
+          if (existing) {
+            existing.quantity += Number(row.quantity || 0);
+          } else {
+            seen.set(o.id, { ...row });
+          }
+        }
+        setRows(Array.from(seen.values()));
         setLoading(false);
       });
     return () => { cancelled = true; };
@@ -2735,7 +2747,7 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
     const s = (status ?? "").toLowerCase();
     if (s === "pending_bacs") return { label: "Awaiting payment", cls: "bg-amber-100 text-amber-800 border-amber-200" };
     if (s === "paid" || s === "confirmed") return { label: "Confirmed", cls: "bg-emerald-100 text-emerald-800 border-emerald-200" };
-    if (s === "fulfilled") return { label: "Fulfilled", cls: "bg-sky-100 text-sky-800 border-sky-200" };
+    if (s === "fulfilled" || s === "delivered") return { label: "Delivered", cls: "bg-sky-100 text-sky-800 border-sky-200" };
     if (s === "cancelled") return { label: "Cancelled", cls: "bg-red-100 text-red-800 border-red-200" };
     return { label: status || "pending", cls: "bg-muted text-muted-foreground border-border" };
   };
@@ -2774,7 +2786,12 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
                     </div>
                     <div className="text-muted-foreground">{who}</div>
                     <div className="flex items-center justify-between text-muted-foreground">
-                      <span className="font-mono">{ref}</span>
+                      <div>
+                        <span className="font-mono">{ref}</span>
+                        {o.purchase_order_ref && (
+                          <div className="text-muted-foreground">PO: {o.purchase_order_ref}</div>
+                        )}
+                      </div>
                       <span>Qty {r.quantity}</span>
                     </div>
                   </li>
