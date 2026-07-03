@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
     let poNumber = order.po_number as string | null;
     if (!poNumber) {
       const { data: poRes, error: poErr } = await supabase.rpc("assign_po_number");
-      if (poErr) return json({ error: `Could not assign PO number: ${poErr.message}` }, 500);
+      if (poErr) { console.error(poErr); return json({ error: "Could not assign PO number — please try again" }, 500); }
       poNumber = poRes as string;
       await supabase.from("orders").update({ po_number: poNumber }).eq("id", order.id);
     }
