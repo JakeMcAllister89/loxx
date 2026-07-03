@@ -1227,6 +1227,7 @@ export type Database = {
           created_at: string
           granted_by: string | null
           id: string
+          org_id: string | null
           system_id: string
           user_id: string
         }
@@ -1234,6 +1235,7 @@ export type Database = {
           created_at?: string
           granted_by?: string | null
           id?: string
+          org_id?: string | null
           system_id: string
           user_id: string
         }
@@ -1241,10 +1243,18 @@ export type Database = {
           created_at?: string
           granted_by?: string | null
           id?: string
+          org_id?: string | null
           system_id?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "system_access_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "system_access_system_id_fkey"
             columns: ["system_id"]

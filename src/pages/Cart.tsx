@@ -201,7 +201,7 @@ export default function Cart() {
           <aside className="space-y-4">
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Order details</h2>
-              <Label className="text-xs">Company name *</Label>
+              <Label className="text-xs">Company name / organisation *</Label>
               <Input
                 value={meta.companyName}
                 onChange={(e) => setMeta({ companyName: e.target.value })}
@@ -260,7 +260,7 @@ export default function Cart() {
             <div className="rounded-[10px] border bg-card shadow-card p-5">
               <h2 className="font-semibold mb-3">Delivery address</h2>
               <div className="space-y-2">
-                <div><Label className="text-xs">Company name</Label><Input placeholder="e.g. Acme Ltd" value={meta.delivery.company_name} onChange={(e) => setMeta({ delivery: { ...meta.delivery, company_name: e.target.value } })} /></div>
+                <div><Label className="text-xs">Company name / organisation</Label><Input placeholder="e.g. Acme Ltd" value={meta.delivery.company_name} onChange={(e) => setMeta({ delivery: { ...meta.delivery, company_name: e.target.value } })} /></div>
                 <div><Label className="text-xs">Delivery contact name *</Label><Input placeholder="e.g. John Smith" value={meta.delivery.contact_name} onChange={(e) => setMeta({ delivery: { ...meta.delivery, contact_name: e.target.value } })} /></div>
 
                 <div><Label className="text-xs">Contact telephone *</Label><Input type="tel" placeholder="e.g. 07700 900000" value={meta.delivery.contact_phone} onChange={(e) => setMeta({ delivery: { ...meta.delivery, contact_phone: e.target.value } })} /></div>

@@ -193,7 +193,7 @@ export default function Account() {
                 <Label className="text-sm font-medium">Default delivery / invoice address</Label>
                 <p className="text-xs text-muted-foreground mt-0.5 mb-3">Used to pre-fill checkout. You can still change it per order.</p>
                 <div className="space-y-3">
-                  <div><Label htmlFor="addrCompany">Company name</Label><Input id="addrCompany" value={addrCompany} onChange={(e) => setAddrCompany(e.target.value)} /></div>
+                  <div><Label htmlFor="addrCompany">Company name / organisation</Label><Input id="addrCompany" value={addrCompany} onChange={(e) => setAddrCompany(e.target.value)} /></div>
                   <div><Label htmlFor="addrLine1">Address line 1</Label><Input id="addrLine1" value={addrLine1} onChange={(e) => setAddrLine1(e.target.value)} /></div>
                   <div><Label htmlFor="addrLine2">Address line 2</Label><Input id="addrLine2" value={addrLine2} onChange={(e) => setAddrLine2(e.target.value)} /></div>
                   <div className="grid grid-cols-2 gap-3">
@@ -221,7 +221,7 @@ export default function Account() {
                 </div>
                 {!invoiceSameAsDelivery && (
                   <div className="space-y-3 mt-3">
-                    <div><Label htmlFor="invCompany">Company name</Label><Input id="invCompany" value={invCompany} onChange={(e) => setInvCompany(e.target.value)} /></div>
+                    <div><Label htmlFor="invCompany">Company name / organisation</Label><Input id="invCompany" value={invCompany} onChange={(e) => setInvCompany(e.target.value)} /></div>
                     <div><Label htmlFor="invLine1">Address line 1</Label><Input id="invLine1" value={invLine1} onChange={(e) => setInvLine1(e.target.value)} /></div>
                     <div><Label htmlFor="invLine2">Address line 2</Label><Input id="invLine2" value={invLine2} onChange={(e) => setInvLine2(e.target.value)} /></div>
                     <div className="grid grid-cols-2 gap-3">
