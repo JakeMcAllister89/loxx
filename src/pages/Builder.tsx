@@ -2747,7 +2747,7 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
     const s = (status ?? "").toLowerCase();
     if (s === "pending_bacs") return { label: "Awaiting payment", cls: "bg-amber-100 text-amber-800 border-amber-200" };
     if (s === "paid" || s === "confirmed") return { label: "Confirmed", cls: "bg-emerald-100 text-emerald-800 border-emerald-200" };
-    if (s === "fulfilled") return { label: "Fulfilled", cls: "bg-sky-100 text-sky-800 border-sky-200" };
+    if (s === "fulfilled" || s === "delivered") return { label: "Delivered", cls: <parameter name="cls">bg-sky-100 text-sky-800 border-sky-200</parameter> };
     if (s === "cancelled") return { label: "Cancelled", cls: "bg-red-100 text-red-800 border-red-200" };
     return { label: status || "pending", cls: "bg-muted text-muted-foreground border-border" };
   };
