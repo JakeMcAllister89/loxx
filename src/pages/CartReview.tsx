@@ -367,33 +367,6 @@ const TYPE_PILL: Record<string, string> = {
   CE:  "bg-sky-100 text-sky-800 border-sky-200",
 };
 
-/** Visually flatten legacy CK nodes when summarising for the customer. */
-function flattenCKForDisplay(n: TNode): TNode {
-  const kids: TNode[] = [];
-  for (const c of n.children) {
-    const fc = flattenCKForDisplay(c);
-    if ((fc.type as string) === "CK") kids.push(...fc.children);
-
-    else kids.push(fc);
-  }
-  return { ...n, children: kids };
-}
-
-/** Remove CYL/CE leaves not present in the cart, and prune empty branches. */
-function filterToCartItems(n: TNode, itemsByDifferRef?: Map<string, any>): TNode | null {
-  if (n.type === "CYL") {
-    const differRef = n.differ != null ? `D${String(n.differ).padStart(3, "0")}` : null;
-    return differRef && itemsByDifferRef?.has(differRef) ? n : null;
-  }
-  if (n.type === "CE") {
-    return n.z_ref && itemsByDifferRef?.has(n.z_ref) ? n : null;
-  }
-  const kids = n.children
-    .map((c) => filterToCartItems(c, itemsByDifferRef))
-    .filter(Boolean) as TNode[];
-  if (kids.length === 0 && (n.type === "MK" || n.type === "SMK")) return null;
-  return { ...n, children: kids };
-}
 
 function HierarchyView({ root, itemsByDifferRef }: { root: TNode; itemsByDifferRef?: Map<string, any> }) {
   type Row = { key: string; ref: string; label: string; isCE: boolean; node: TNode };
