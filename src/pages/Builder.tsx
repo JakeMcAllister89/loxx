@@ -2716,9 +2716,8 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
     supabase
       .from("order_items")
       .select("quantity, differ_ref, orders!inner(id, created_at, customer_name, customer_email, status, system_id)")
-      .eq("orders.system_id", systemId)
       .eq("differ_ref", differRef)
-      .order("orders.created_at", { ascending: false })
+      .order("created_at", { ascending: false })
       .then(({ data }) => {
         if (cancelled) return;
         setRows((data ?? []) as any);
