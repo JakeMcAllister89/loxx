@@ -1,7 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Loader2, Building2, CreditCard } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronRight, Loader2, Building2, CreditCard, Lock } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -401,6 +401,13 @@ function HierarchyView({ root, itemsByDifferRef }: { root: TNode; itemsByDifferR
         const refCls = r.isCE ? "text-sky-700" : "text-amber-700";
         return (
           <div key={r.key} className="flex items-center gap-2 py-2 text-sm">
+            {item?.image_url ? (
+              <img src={item.image_url} alt="" className="h-12 w-12 rounded object-cover bg-muted shrink-0" />
+            ) : (
+              <div className="h-12 w-12 rounded bg-muted flex items-center justify-center shrink-0">
+                <Lock className="h-5 w-5 text-muted-foreground" />
+              </div>
+            )}
             <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${pillCls}`}>{r.isCE ? "CE" : "CYL"}</span>
             <span className={`font-mono text-xs font-medium ${refCls}`}>{r.ref}</span>
             {r.label && <span>{r.label}</span>}

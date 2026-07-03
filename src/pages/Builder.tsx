@@ -2720,7 +2720,7 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
         .select("id, created_at, customer_name, customer_email, status, system_id, purchase_order_ref")
         .eq("system_id", systemId);
 
-      console.log("Orders for system:", systemId, orderData, orderError);
+      
 
       const orderIds = orderData.map((o: any) => o.id);
 
@@ -2738,7 +2738,7 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
         .eq("differ_ref", differRef)
         .eq("item_type", "cylinder");
 
-      console.log("Items for differ:", differRef, itemData, itemError);
+      
 
       // Merge: one entry per order, summing quantities
       const seen = new Map<string, any>();
@@ -2754,7 +2754,7 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
         }
       }
 
-      console.log("Final rows:", Array.from(seen.values()));
+      
       setRows(Array.from(seen.values()).sort((a, b) =>
         new Date(b.orders.created_at).getTime() - new Date(a.orders.created_at).getTime()
       ));
