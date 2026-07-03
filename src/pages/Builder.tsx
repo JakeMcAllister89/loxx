@@ -2755,6 +2755,7 @@ function OrderHistorySection({ systemId, differRef }: { systemId: string; differ
       }
 
       if (!cancelled) {
+        console.log("Final rows:", Array.from(seen.values()));
         setRows(Array.from(seen.values()).sort((a, b) =>
           new Date(b.orders.created_at).getTime() - new Date(a.orders.created_at).getTime()
         ));
