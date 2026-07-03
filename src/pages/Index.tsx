@@ -224,7 +224,7 @@ export default function Index() {
                 <Link to="/auth?mode=signup">Get Started <ArrowRight className="h-4 w-4" /></Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-border bg-transparent text-foreground hover:bg-black/[0.03]">
-                <a href="mailto:hello@myloxx.co.uk">Book a Demo</a>
+                <a href="/book-a-demo">Book a Demo</a>
               </Button>
             </div>
           </div>
@@ -664,7 +664,7 @@ export default function Index() {
                   </p>
                   <div className="mt-6 flex flex-col gap-3">
                     <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25">
-                      <a href="mailto:hello@myloxx.co.uk">Book a Demo</a>
+                      <a href="/book-a-demo">Book a Demo</a>
                     </Button>
                     <Link to="/auth?mode=signup" className="text-sm text-muted-foreground hover:text-foreground text-center">
                       Or create an account
@@ -737,7 +737,7 @@ export default function Index() {
               <Link to="/auth?mode=signup">Get Started <ArrowRight className="h-4 w-4" /></Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="bg-transparent border-primary-foreground/35 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground hover:border-primary-foreground/50">
-              <a href="mailto:hello@myloxx.co.uk">Book a Demo</a>
+              <a href="/book-a-demo">Book a Demo</a>
             </Button>
           </div>
         </div>
@@ -775,7 +775,7 @@ export default function Index() {
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Get Started</div>
               <ul className="space-y-2.5">
                 <li><Link to="/auth?mode=signup" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Get Started</Link></li>
-                <li><a href="mailto:hello@myloxx.co.uk" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Book a Demo</a></li>
+                <li><a href="/book-a-demo" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Book a Demo</a></li>
                 <li><Link to="/auth" className="text-sm text-foreground/80 hover:text-foreground transition-colors">Sign In</Link></li>
               </ul>
             </div>
