@@ -134,7 +134,7 @@ export default function AdminUsers() {
 
   const orgName = (id: string | null) => orgs.find(o => o.id === id)?.name ?? "—";
   const memberFor = (uid: string) => members.find(m => m.user_id === uid && m.status === "active");
-
+const memberStatusFor = (uid: string) => members.find(m => m.user_id === uid)?.status;
   const enriched = useMemo(() => profiles.map(p => {
     const mem = memberFor(p.id);
     return {
