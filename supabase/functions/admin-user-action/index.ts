@@ -81,7 +81,13 @@ Deno.serve(async (req) => {
       if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
       return json({ ok: true });
     }
-
+if (action === "enable") {
+  if (!user_id) return json({ error: "Missing user_id" }, 400);
+  const { error } = await (admin.auth.admin as any).updateUserById(user_id, { ban_duration: "none" });
+  if (error) { console.error(error); return json({ error: "Something went wrong processing your request" }, 500); }
+  await admin.from("org_members").update({ status: "active" }).eq("user_id", user_id).eq("status", "suspended");
+  return json({ ok: true });
+}
     if (action === "transfer_master_admin") {
       if (!org_id || !from_user_id || !to_user_id) {
         return json({ error: "Missing org_id, from_user_id or to_user_id" }, 400);
