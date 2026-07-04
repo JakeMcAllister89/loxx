@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
 <html>
   <body style="font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#f5f5f4; padding:24px; color:#111;">
     <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;padding:28px;border:1px solid #e7e5e4;">
-      <div style="font-weight:600;font-size:14px;color:#78716c;margin-bottom:16px;">My LOXX</div>
+     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><img src="https://wrblvasfekwaaayorccv.supabase.co/storage/v1/object/public/brand/email-logo.png" alt="My LOXX" width="24" height="24" style="border-radius:5px" /><span style="font-weight:600;font-size:14px;color:#78716c;">My LOXX</span></div>
       <h1 style="font-size:20px;margin:0 0 8px;">New account awaiting approval</h1>
       <p style="margin:0 0 20px;color:#44403c;">A new organisation has signed up and is waiting for your approval before they can access My LOXX.</p>
       <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px;">
