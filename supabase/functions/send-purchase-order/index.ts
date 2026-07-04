@@ -327,11 +327,7 @@ th{background:#f8fafc;text-transform:uppercase;font-size:10px;letter-spacing:.5p
 <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid #0f172a;margin-bottom:4px">
   <div>
     <div style="display:flex;align-items:center;gap:10px">
-      <span style="display:inline-flex;align-items:center;justify-content:center;background:#f59e0b;border-radius:6px;padding:6px">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>
-        </svg>
-      </span>
+     <img src="https://wrblvasfekwaaayorccv.supabase.co/storage/v1/object/public/brand/email-logo.png" alt="Logo" width="32" height="32" style="border-radius:6px;display:block" />
       <span style="font-size:22px;font-weight:700;letter-spacing:1px">${esc(S.company_name || "LOXX")}</span>
     </div>
     ${S.company_address ? `<div style="font-size:11px;color:#64748b;margin-top:6px;margin-left:38px;white-space:pre-line">${esc(S.company_address)}</div>` : ""}
