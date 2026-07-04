@@ -215,7 +215,12 @@ const memberStatusFor = (uid: string) => members.find(m => m.user_id === uid)?.s
     setSuspendOf(null);
     loadAll();
   };
-
+const doEnable = async (uid: string, name: string) => {
+  const { data, error } = await supabase.functions.invoke("admin-user-action", { body: { action: "enable", user_id: uid } });
+  if (error || !(data as any)?.ok) { toast.error((data as any)?.error ?? "Failed to reactivate"); return; }
+  toast.success(`${name} reactivated`);
+  loadAll();
+};
   const doTransfer = async () => {
     if (!transferState || !transferToId) return;
     setTransferring(true);
@@ -384,14 +389,22 @@ const memberStatusFor = (uid: string) => members.find(m => m.user_id === uid)?.s
                                   <ArrowLeftRight className="h-4 w-4 mr-2" /> Transfer Master Admin
                                 </DropdownMenuItem>
                               )}
-                              {!isSelf && (
-                                <DropdownMenuItem
-                                  className="text-amber-700"
-                                  onClick={() => setSuspendOf({ id: u.id, name: fullName })}
-                                >
-                                  <Ban className="h-4 w-4 mr-2" /> Suspend user
-                                </DropdownMenuItem>
-                              )}
+                             {!isSelf && memberStatusFor(u.id) === "suspended" && (
+  <DropdownMenuItem
+    className="text-green-700"
+    onClick={() => doEnable(u.id, fullName)}
+  >
+    <Ban className="h-4 w-4 mr-2" /> Reactivate user
+  </DropdownMenuItem>
+)}
+{!isSelf && memberStatusFor(u.id) !== "suspended" && (
+  <DropdownMenuItem
+    className="text-amber-700"
+    onClick={() => setSuspendOf({ id: u.id, name: fullName })}
+  >
+    <Ban className="h-4 w-4 mr-2" /> Suspend user
+  </DropdownMenuItem>
+)}
                               {!isSelf && (
                                 <DropdownMenuItem className="text-destructive" onClick={() => setRemoveOf({ id: u.id, name: fullName })}>
                                   <UserX className="h-4 w-4 mr-2" /> Remove account
