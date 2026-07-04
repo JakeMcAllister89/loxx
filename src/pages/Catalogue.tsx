@@ -39,9 +39,10 @@ interface Family {
 function buildFamilies(products: Product[]): Family[] {
   const map = new Map<string, Product[]>();
   for (const p of products) {
-    const arr = map.get(p.cylinder_type) ?? [];
+    const familyKey = p.cylinder_profile ? `${p.cylinder_type} — ${p.cylinder_profile}` : p.cylinder_type;
+    const arr = map.get(familyKey) ?? [];
     arr.push(p);
-    map.set(p.cylinder_type, arr);
+    map.set(familyKey, arr);
   }
   return Array.from(map.entries()).map(([type, variants]) => {
     const finishes = Array.from(new Set(variants.map(v => v.finish).filter(Boolean))) as string[];

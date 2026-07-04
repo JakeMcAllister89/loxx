@@ -38,10 +38,10 @@ export default function BookDemo() {
       <div className="max-w-5xl mx-auto px-6 py-16">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold tracking-tight text-foreground mb-4">
-            Book a Demo
+            Book a My LOXX Demo
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            See My LOXX in action. Pick a time that works for you and we'll walk you through the platform.
+            Choose a time to talk through your current master key system and see how My LOXX can help you design systems, manage issued keys and order hardware from one secure digital record.
           </p>
         </div>
         <div
