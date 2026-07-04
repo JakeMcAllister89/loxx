@@ -260,7 +260,7 @@ Deno.serve(async (req) => {
     <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
       <div style="padding:24px 28px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">
         <div>
-          <div style="font-size:24px;font-weight:700;letter-spacing:1px;color:#0f172a;">LOXX</div>
+          <div style="display:flex;align-items:center;gap:8px;"><img src="https://wrblvasfekwaaayorccv.supabase.co/storage/v1/object/public/brand/email-logo.png" alt="LOXX" width="28" height="28" style="border-radius:6px" /><span style="font-size:24px;font-weight:700;letter-spacing:1px;color:#0f172a;">LOXX</span></div>
           <div style="font-size:11px;color:#6b7280;margin-top:2px;text-transform:uppercase;letter-spacing:1px;">Pro-Forma Invoice</div>
         </div>
         <div style="text-align:right;">
