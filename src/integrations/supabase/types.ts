@@ -585,6 +585,7 @@ export type Database = {
           delivery_charge: number
           id: string
           notes: string | null
+          org_id: string | null
           paid_at: string | null
           payment_method: string
           payment_status: string
@@ -613,6 +614,7 @@ export type Database = {
           delivery_charge?: number
           id?: string
           notes?: string | null
+          org_id?: string | null
           paid_at?: string | null
           payment_method?: string
           payment_status?: string
@@ -641,6 +643,7 @@ export type Database = {
           delivery_charge?: number
           id?: string
           notes?: string | null
+          org_id?: string | null
           paid_at?: string | null
           payment_method?: string
           payment_status?: string
@@ -660,6 +663,13 @@ export type Database = {
           vat?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_system_id_fkey"
             columns: ["system_id"]
