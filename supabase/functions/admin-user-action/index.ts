@@ -129,7 +129,7 @@ if (action === "enable") {
         .insert({ admin_id: user.id, target_user_id: user_id, target_email: targetEmail })
         .select("id")
         .single();
-      if (logError) return json({ error: logError.message }, 500);
+      if (logError) { console.error("[admin-user-action] impersonation log insert failed:", logError); return json({ error: "Something went wrong processing your request" }, 500); }
 
       return json({ ok: true, token_hash: hashedToken, email: targetEmail, log_id: (logRow as any).id });
     }
