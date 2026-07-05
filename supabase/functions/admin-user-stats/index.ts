@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     const { data: prof } = await admin.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
     if (!(prof as any)?.is_admin) return json({ error: "Forbidden" }, 403);
 
-    const out: { id: string; last_sign_in_at: string | null; email_confirmed_at: string | null }[] = [];
+    const out: { id: string; last_sign_in_at: string | null; email_confirmed_at: string | null; banned_until: string | null }[] = [];
     let page = 1;
     while (true) {
       const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
@@ -28,6 +28,7 @@ Deno.serve(async (req) => {
           id: u.id,
           last_sign_in_at: (u as any).last_sign_in_at ?? null,
           email_confirmed_at: (u as any).email_confirmed_at ?? null,
+          banned_until: (u as any).banned_until ?? null,
         });
       }
       if (data.users.length < 1000) break;

@@ -31,7 +31,7 @@ interface MemberRow {
   status: string;
 }
 interface OrgRow { id: string; name: string }
-interface UserStat { id: string; last_sign_in_at: string | null; email_confirmed_at: string | null }
+interface UserStat { id: string; last_sign_in_at: string | null; email_confirmed_at: string | null; banned_until: string | null }
 
 interface PlatformInvite {
   id: string;
@@ -62,7 +62,10 @@ function RoleBadge({ role }: { role: string }) {
   return <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${styles[role] ?? "bg-gray-200"}`}>{roleLabel[role] ?? role}</span>;
 }
 
-function StatusBadge({ last, confirmed }: { last: string | null; confirmed: string | null }) {
+function StatusBadge({ last, confirmed, bannedUntil }: { last: string | null; confirmed: string | null; bannedUntil: string | null }) {
+  if (bannedUntil && new Date(bannedUntil).getTime() > Date.now()) {
+    return <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-red-100 text-red-800">Banned</span>;
+  }
   if (!last) {
     return <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-800">Pending</span>;
   }
@@ -143,8 +146,14 @@ const memberStatusFor = (uid: string) => members.find(m => m.user_id === uid)?.s
       org_name: orgName(p.org_id ?? mem?.org_id ?? null),
       last_sign_in_at: stats[p.id]?.last_sign_in_at ?? null,
       email_confirmed_at: stats[p.id]?.email_confirmed_at ?? null,
+      banned_until: stats[p.id]?.banned_until ?? null,
     };
   }), [profiles, members, orgs, stats]);
+
+  const isBanned = (uid: string) => {
+    const b = stats[uid]?.banned_until;
+    return !!b && new Date(b).getTime() > Date.now();
+  };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -362,7 +371,7 @@ const doEnable = async (uid: string, name: string) => {
                         <TableCell>{u.org_role !== "—" ? <RoleBadge role={u.org_role} /> : <span className="text-muted-foreground">—</span>}</TableCell>
                         <TableCell className="font-mono text-xs">{fmtDate(u.created_at)}</TableCell>
                         <TableCell className="font-mono text-xs">{last ?? <span className="text-muted-foreground italic">Never</span>}</TableCell>
-                        <TableCell><StatusBadge last={u.last_sign_in_at} confirmed={u.email_confirmed_at} /></TableCell>
+                        <TableCell><StatusBadge last={u.last_sign_in_at} confirmed={u.email_confirmed_at} bannedUntil={u.banned_until} /></TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -389,7 +398,7 @@ const doEnable = async (uid: string, name: string) => {
                                   <ArrowLeftRight className="h-4 w-4 mr-2" /> Transfer Master Admin
                                 </DropdownMenuItem>
                               )}
-                             {!isSelf && memberStatusFor(u.id) === "suspended" && (
+                             {!isSelf && (isBanned(u.id) || memberStatusFor(u.id) === "suspended") && (
   <DropdownMenuItem
     className="text-green-700"
     onClick={() => doEnable(u.id, fullName)}
@@ -397,7 +406,7 @@ const doEnable = async (uid: string, name: string) => {
     <Ban className="h-4 w-4 mr-2" /> Reactivate user
   </DropdownMenuItem>
 )}
-{!isSelf && memberStatusFor(u.id) !== "suspended" && (
+{!isSelf && !isBanned(u.id) && memberStatusFor(u.id) !== "suspended" && (
   <DropdownMenuItem
     className="text-amber-700"
     onClick={() => setSuspendOf({ id: u.id, name: fullName })}
