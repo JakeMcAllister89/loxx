@@ -49,8 +49,11 @@ export default function AdminApprovals() {
   useEffect(() => { load(); }, []);
 
   const approve = async (id: string) => {
-    await supabase.from("organisations").update({ is_approved: true }).eq("id", id);
-    toast.success("Account approved");
+    const { error } = await supabase.from("organisations").update({ is_approved: true }).eq("id", id);
+    if (error) { toast.error("Failed to approve"); return; }
+    const { error: mailErr } = await supabase.functions.invoke("send-approval-email", { body: { org_id: id } });
+    if (mailErr) toast.warning("Approved, but confirmation email failed to send");
+    else toast.success("Account approved — confirmation email sent");
     load();
   };
 

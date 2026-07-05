@@ -1,0 +1,1 @@
+CREATE POLICY "Platform admins read all organisations" ON public.organisations FOR SELECT TO authenticated USING (public.check_is_admin());
