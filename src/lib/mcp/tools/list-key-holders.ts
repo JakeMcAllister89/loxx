@@ -19,15 +19,15 @@ export default defineTool({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ include_archived }, ctx) => {
     if (!ctx.isAuthenticated())
-      return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+      return { content: [{ type: "text", text: "Not authenticated" }], isError: true }; }
     let q = supabaseForUser(ctx)
       .from("key_holders")
       .select("id,name,email,phone,role,archived_at,created_at")
       .order("name");
     if (!include_archived) q = q.is("archived_at", null);
     const { data, error } = await q;
-    if (error)
-      return { content: [{ type: "text", text: "Something went wrong processing your request" }], isError: true };
+    if (error) { console.error("[mcp] tool error:", error);
+      return { content: [{ type: "text", text: "Something went wrong processing your request" }], isError: true }; }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { key_holders: data ?? [] },
