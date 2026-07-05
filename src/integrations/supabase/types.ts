@@ -17,18 +17,21 @@ export type Database = {
       admin_settings: {
         Row: {
           id: string
+          is_public: boolean
           key: string
           updated_at: string | null
           value: string | null
         }
         Insert: {
           id?: string
+          is_public?: boolean
           key: string
           updated_at?: string | null
           value?: string | null
         }
         Update: {
           id?: string
+          is_public?: boolean
           key?: string
           updated_at?: string | null
           value?: string | null
