@@ -51,7 +51,17 @@ Deno.serve(async (req) => {
           name: `${first_name ?? invite.first_name} ${last_name ?? invite.last_name}`.trim(),
         },
       });
-      if (cErr || !created.user) return json({ error: cErr?.message ?? "Could not create user" }, 400);
+      if (cErr || !created.user) {
+        console.error("[accept-invite] createUser failed:", cErr);
+        // Preserve only known-safe, user-actionable messages; hide raw internals.
+        const msg = cErr?.message ?? "";
+        const safe = /already registered|already been registered|user already exists/i.test(msg)
+          ? "An account with this email already exists"
+          : /password/i.test(msg)
+          ? "Password does not meet requirements"
+          : "Could not create user";
+        return json({ error: safe }, 400);
+      }
       const uid = created.user.id;
 
       // Ensure profile points to the invited org (handle_new_user normally creates a fresh org; override)
