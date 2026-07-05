@@ -46,6 +46,7 @@ import Returns from "./pages/Returns";
 import BacsConfirmed from "./pages/BacsConfirmed";
 import IssuedKeys from "./pages/IssuedKeys";
 import BookDemo from "./pages/BookDemo";
+import OAuthConsent from "./pages/OAuthConsent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,6 +106,7 @@ const App = () => (
               <Route path="/quotes" element={<RoleRoute allow={["master_admin","admin","standard"]}><Quotes /></RoleRoute>} />
               <Route path="/quotes/new" element={<RoleRoute allow={["master_admin","admin","standard"]}><QuoteNew /></RoleRoute>} />
               <Route path="/quotes/:id" element={<RoleRoute allow={["master_admin","admin","standard"]}><QuoteDetail /></RoleRoute>} />
+              <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
