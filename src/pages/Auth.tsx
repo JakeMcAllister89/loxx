@@ -23,11 +23,14 @@ export default function Auth() {
   const { user } = useAuth();
   const location = useLocation();
 
+  const rawNext = params.get("next");
+  const nextPath = rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
+
   useEffect(() => {
     if (user && (location.pathname === "/auth" || location.pathname === "/")) {
-      navigate("/dashboard", { replace: true });
+      navigate(nextPath, { replace: true });
     }
-  }, [user, navigate, location.pathname]);
+  }, [user, navigate, location.pathname, nextPath]);
 
   const switchMode = (m: "login" | "signup") => { setMode(m); setParams({ mode: m }); };
 
@@ -40,7 +43,7 @@ export default function Auth() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: window.location.origin + nextPath,
             data: {
               first_name: firstName,
               last_name: lastName,
@@ -58,11 +61,11 @@ export default function Auth() {
             body: { source: "auth_signup", email },
           }).catch(() => {});
         }, 3000);
-        navigate("/dashboard");
+        navigate(nextPath);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate("/dashboard");
+        navigate(nextPath);
       }
     } catch (err: any) {
       toast.error(err.message ?? "Something went wrong");
@@ -73,9 +76,9 @@ export default function Auth() {
 
   const google = async () => {
     setBusy(true);
-    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/dashboard" });
+    const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + nextPath });
     if (res.error) { toast.error(res.error.message ?? "Google sign-in failed"); setBusy(false); }
-    if (!res.redirected && !res.error) navigate("/dashboard");
+    if (!res.redirected && !res.error) navigate(nextPath);
   };
 
   return (
