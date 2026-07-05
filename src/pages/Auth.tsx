@@ -23,11 +23,14 @@ export default function Auth() {
   const { user } = useAuth();
   const location = useLocation();
 
+  const rawNext = params.get("next");
+  const nextPath = rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
+
   useEffect(() => {
     if (user && (location.pathname === "/auth" || location.pathname === "/")) {
-      navigate("/dashboard", { replace: true });
+      navigate(nextPath, { replace: true });
     }
-  }, [user, navigate, location.pathname]);
+  }, [user, navigate, location.pathname, nextPath]);
 
   const switchMode = (m: "login" | "signup") => { setMode(m); setParams({ mode: m }); };
 
