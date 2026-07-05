@@ -26,6 +26,9 @@ Deno.serve(async (req) => {
     if (action === "accept") {
       const { first_name, last_name, company, password } = body ?? {};
       if (!password || password.length < 8) return json({ error: "Password too short" }, 400);
+      if (typeof first_name === "string" && first_name.length > 100) return json({ error: "Field first_name is too long (max 100 characters)" }, 400);
+      if (typeof last_name === "string" && last_name.length > 100) return json({ error: "Field last_name is too long (max 100 characters)" }, 400);
+      if (typeof company === "string" && company.length > 100) return json({ error: "Field company is too long (max 100 characters)" }, 400);
 
       const { data: created, error: cErr } = await admin.auth.admin.createUser({
         email: (invite as any).email,

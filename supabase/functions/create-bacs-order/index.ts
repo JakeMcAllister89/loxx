@@ -75,6 +75,28 @@ Deno.serve(async (req) => {
       return jsonError("Delivery contact and address are required (contact name, phone, line 1, city, postcode)");
     }
 
+    // Length caps for free-text fields — prevent excessively long input
+    // from being stored or emailed downstream.
+    const checkLen = (val: unknown, max: number, label: string): string | null => {
+      if (val == null) return null;
+      if (typeof val === "string" && val.length > max) return `Field ${label} is too long (max ${max} characters)`;
+      return null;
+    };
+    const lenErr =
+      checkLen(body.notes, 1000, "notes") ||
+      checkLen(body.customerPoRef, 1000, "customerPoRef") ||
+      checkLen(body.poRef, 1000, "poRef") ||
+      checkLen(body.customer?.name, 200, "customer.name") ||
+      checkLen(body.customer?.company, 200, "customer.company") ||
+      checkLen(d.contact_name, 200, "delivery.contact_name") ||
+      checkLen(d.line1, 200, "delivery.line1") ||
+      checkLen(d.line2, 200, "delivery.line2") ||
+      checkLen(d.city, 200, "delivery.city") ||
+      checkLen(d.county, 200, "delivery.county") ||
+      checkLen(d.contact_phone, 30, "delivery.contact_phone") ||
+      checkLen(d.postcode, 30, "delivery.postcode");
+    if (lenErr) return jsonError(lenErr);
+
     // Fetch authoritative prices from the database for all product codes
     // in this cart — never trust client-supplied unit_price for catalogued items.
     const productCodes = body.items
