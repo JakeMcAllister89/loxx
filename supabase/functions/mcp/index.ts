@@ -21,11 +21,14 @@ var list_systems_default = defineTool({
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {
-    if (!ctx.isAuthenticated())
+    if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
     const { data, error } = await supabaseForUser(ctx).from("key_systems").select("id,name,reference,status,created_at").order("created_at", { ascending: false });
-    if (error)
+    if (error) {
+      console.error("[mcp] list_key_systems error:", error);
       return { content: [{ type: "text", text: "Something went wrong processing your request" }], isError: true };
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { systems: data ?? [] }
@@ -52,11 +55,14 @@ var list_orders_default = defineTool2({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ limit }, ctx) => {
-    if (!ctx.isAuthenticated())
+    if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
     const { data, error } = await supabaseForUser2(ctx).from("orders").select("id,po_number,status,total,currency,created_at,customer_po_ref,project_name").order("created_at", { ascending: false }).limit(limit ?? 10);
-    if (error)
+    if (error) {
+      console.error("[mcp] list_orders error:", error);
       return { content: [{ type: "text", text: "Something went wrong processing your request" }], isError: true };
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { orders: data ?? [] }
@@ -83,13 +89,16 @@ var list_key_holders_default = defineTool3({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ include_archived }, ctx) => {
-    if (!ctx.isAuthenticated())
+    if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
     let q = supabaseForUser3(ctx).from("key_holders").select("id,name,email,phone,role,archived_at,created_at").order("name");
     if (!include_archived) q = q.is("archived_at", null);
     const { data, error } = await q;
-    if (error)
+    if (error) {
+      console.error("[mcp] list_key_holders error:", error);
       return { content: [{ type: "text", text: "Something went wrong processing your request" }], isError: true };
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { key_holders: data ?? [] }
