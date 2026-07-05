@@ -23,7 +23,7 @@ export default defineTool({
       .select("id,name,reference,status,created_at")
       .order("created_at", { ascending: false });
     if (error)
-      return { content: [{ type: "text", text: error.message }], isError: true };
+      return { content: [{ type: "text", text: "Something went wrong processing your request" }], isError: true };
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { systems: data ?? [] },

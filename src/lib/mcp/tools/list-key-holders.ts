@@ -27,7 +27,7 @@ export default defineTool({
     if (!include_archived) q = q.is("archived_at", null);
     const { data, error } = await q;
     if (error)
-      return { content: [{ type: "text", text: error.message }], isError: true };
+      return { content: [{ type: "text", text: "Something went wrong processing your request" }], isError: true };
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { key_holders: data ?? [] },

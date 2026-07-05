@@ -25,7 +25,7 @@ var list_systems_default = defineTool({
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     const { data, error } = await supabaseForUser(ctx).from("key_systems").select("id,name,reference,status,created_at").order("created_at", { ascending: false });
     if (error)
-      return { content: [{ type: "text", text: error.message }], isError: true };
+      return { content: [{ type: "text", text: "Something went wrong processing your request" }], isError: true };
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { systems: data ?? [] }
@@ -56,7 +56,7 @@ var list_orders_default = defineTool2({
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     const { data, error } = await supabaseForUser2(ctx).from("orders").select("id,po_number,status,total,currency,created_at,customer_po_ref,project_name").order("created_at", { ascending: false }).limit(limit ?? 10);
     if (error)
-      return { content: [{ type: "text", text: error.message }], isError: true };
+      return { content: [{ type: "text", text: "Something went wrong processing your request" }], isError: true };
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { orders: data ?? [] }
@@ -89,7 +89,7 @@ var list_key_holders_default = defineTool3({
     if (!include_archived) q = q.is("archived_at", null);
     const { data, error } = await q;
     if (error)
-      return { content: [{ type: "text", text: error.message }], isError: true };
+      return { content: [{ type: "text", text: "Something went wrong processing your request" }], isError: true };
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { key_holders: data ?? [] }
