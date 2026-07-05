@@ -18,15 +18,18 @@ export default defineTool({
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ limit }, ctx) => {
-    if (!ctx.isAuthenticated())
+    if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
+    }
     const { data, error } = await supabaseForUser(ctx)
       .from("orders")
       .select("id,po_number,status,total,currency,created_at,customer_po_ref,project_name")
       .order("created_at", { ascending: false })
       .limit(limit ?? 10);
-    if (error)
-      return { content: [{ type: "text", text: error.message }], isError: true };
+    if (error) {
+      console.error("[mcp] list_orders error:", error);
+      return { content: [{ type: "text", text: "Something went wrong processing your request" }], isError: true };
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? []) }],
       structuredContent: { orders: data ?? [] },

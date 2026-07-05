@@ -43,8 +43,12 @@ Deno.serve(async (req) => {
       if (!link) return json({ error: "Could not generate link" }, 500);
 
       if (!RESEND_KEY) {
-        console.log(`[admin-user-action] No RESEND_API_KEY — recovery link for ${email}: ${link}`);
-        return json({ ok: true, sent: false, link });
+        // Dev-only fallback: RESEND_API_KEY is not configured, so the email
+        // cannot be delivered. Log the recovery link server-side so a developer
+        // running locally can still complete the flow. Never returned to the
+        // caller in production.
+        console.warn(`[admin-user-action] DEV-ONLY FALLBACK — RESEND_API_KEY not set. Recovery link for ${email}: ${link}`);
+        return json({ ok: true, sent: false });
       }
       const subject = "Reset your My LOXX password";
       const html = `
@@ -68,7 +72,8 @@ Deno.serve(async (req) => {
       });
       if (!res.ok) {
         const txt = await res.text();
-        return json({ ok: false, error: txt, link }, 502);
+        console.error("[admin-user-action] Resend error:", res.status, txt);
+        return json({ ok: false, error: "Could not send password reset email" }, 502);
       }
       return json({ ok: true, sent: true });
     }
@@ -124,7 +129,7 @@ if (action === "enable") {
         .insert({ admin_id: user.id, target_user_id: user_id, target_email: targetEmail })
         .select("id")
         .single();
-      if (logError) return json({ error: logError.message }, 500);
+      if (logError) { console.error("[admin-user-action] impersonation log insert failed:", logError); return json({ error: "Something went wrong processing your request" }, 500); }
 
       return json({ ok: true, token_hash: hashedToken, email: targetEmail, log_id: (logRow as any).id });
     }

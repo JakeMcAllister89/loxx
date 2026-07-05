@@ -41,7 +41,16 @@ Deno.serve(async (req) => {
           name: `${first_name ?? (invite as any).first_name} ${last_name ?? (invite as any).last_name}`.trim(),
         },
       });
-      if (cErr || !created.user) return json({ error: cErr?.message ?? "Could not create user" }, 400);
+      if (cErr || !created.user) {
+        console.error("[accept-platform-invite] createUser failed:", cErr);
+        const msg = cErr?.message ?? "";
+        const safe = /already registered|already been registered|user already exists/i.test(msg)
+          ? "An account with this email already exists"
+          : /password/i.test(msg)
+          ? "Password does not meet requirements"
+          : "Could not create user";
+        return json({ error: safe }, 400);
+      }
 
       // Platform-invited customers were vetted by an admin before the
       // invite was sent — auto-approve their organisation rather than
