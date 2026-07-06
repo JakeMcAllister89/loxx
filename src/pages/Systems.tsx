@@ -156,7 +156,6 @@ export default function Systems() {
             <p className="mt-4 text-lg font-medium">No systems yet</p>
             <div className="flex gap-3 justify-center mt-5">
               <Button onClick={onNew} disabled={creating} className="bg-amber-500 hover:bg-amber-600 text-white">Create a new system</Button>
-              <Button asChild variant="outline"><Link to="/import">Import existing</Link></Button>
             </div>
           </div>
         ) : (
