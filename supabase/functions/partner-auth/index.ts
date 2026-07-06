@@ -4,6 +4,18 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import bcrypt from "npm:bcryptjs@2.4.3";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
+
+const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
+
+const esc = (s: string) =>
+  s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+
+function randToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -70,6 +82,79 @@ Deno.serve(async (req) => {
   try {
     const { action, email, password, token: clientToken, partnerId, newPassword } =
       await req.json();
+
+    if (action === "request_reset") {
+      const target = String(email || "").toLowerCase().trim();
+      if (!target) return json({ ok: true }); // don't leak
+      const rl = await checkRateLimit(supabase, `partner-reset:${target}`, 5, 60, corsHeaders);
+      if (!rl.allowed) return rl.response;
+
+      const { data: login } = await supabase
+        .from("partner_logins")
+        .select("id, partner_id")
+        .eq("email", target)
+        .maybeSingle();
+      if (!login) return json({ ok: true }); // don't reveal
+
+      const { data: partner } = await supabase
+        .from("partners")
+        .select("id, name, company, is_active")
+        .eq("id", login.partner_id)
+        .maybeSingle();
+      if (!partner || partner.is_active === false) return json({ ok: true });
+
+      const tok = randToken();
+      const { error: iErr } = await supabase.from("partner_invites").insert({
+        partner_id: partner.id,
+        email: target,
+        token: tok,
+      });
+      if (iErr) {
+        console.error("[partner-auth request_reset] insert failed:", iErr);
+        return json({ ok: true });
+      }
+
+      const origin = "https://myloxx.co.uk";
+      const link = `${origin}/accept-partner-invite?token=${tok}`;
+      const partnerName = esc(partner.name || "there");
+
+      if (!RESEND_KEY) {
+        console.log(`[partner-auth request_reset] No RESEND_API_KEY — reset link: ${link}`);
+        return json({ ok: true });
+      }
+
+      const html = `
+        <div style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:auto;padding:24px;background:#f5f4f1;color:#17171a">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px">
+            <tr>
+              <td style="vertical-align:middle"><img src="https://wrblvasfekwaaayorccv.supabase.co/storage/v1/object/public/brand/email-logo.png" alt="My LOXX" width="40" height="40" style="display:block;border-radius:8px" /></td>
+              <td style="padding-left:10px;font-size:20px;font-weight:700;color:#17171a;font-family:Inter,system-ui,sans-serif;vertical-align:middle">My LOXX</td>
+            </tr>
+          </table>
+          <h2 style="margin:0 0 12px">Reset your partner portal password</h2>
+          <p>Hi ${partnerName},</p>
+          <p>We received a request to reset the password on your My LOXX partner portal account. Click below to choose a new password.</p>
+          <p style="margin:24px 0"><a href="${link}" style="background:#d4820a;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600">Set a new password</a></p>
+          <p style="font-size:14px;color:#444">This link expires in 7 days. If you didn't request this, you can safely ignore this email.</p>
+          <p style="font-size:12px;color:#666">If the button doesn't work, copy and paste this link into your browser:<br>${link}</p>
+        </div>`;
+
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_KEY}` },
+        body: JSON.stringify({
+          from: "My LOXX <noreply@myloxx.co.uk>",
+          to: [target],
+          subject: "Reset your My LOXX partner portal password",
+          html,
+        }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error("[partner-auth request_reset] Resend error:", txt);
+      }
+      return json({ ok: true });
+    }
 
     if (action === "login") {
       if (!email || !password) return json({ error: "Email and password required" }, 400);
