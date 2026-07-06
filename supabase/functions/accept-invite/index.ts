@@ -2,6 +2,7 @@
 // Accepts and looks up org invites. Public — no JWT required.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
 
 const admin = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -11,6 +12,10 @@ const admin = createClient(
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
+    const ip = getClientIp(req);
+    const rl = await checkRateLimit(admin, `accept-invite:${ip}`, 10, 60, corsHeaders);
+    if (!rl.allowed) return rl.response;
+
     const { action, token, first_name, last_name, password } = await req.json();
     if (!token) return json({ error: "Missing token" }, 400);
 

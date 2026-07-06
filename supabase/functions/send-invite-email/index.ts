@@ -29,6 +29,9 @@ Deno.serve(async (req) => {
     const { data: { user } } = await userClient.auth.getUser();
     if (!user) return json({ error: "Unauthorized" }, 401);
 
+    const rl = await checkRateLimit(admin, `send-invite-email:${user.id}`, 20, 60, corsHeaders);
+    if (!rl.allowed) return rl.response;
+
     const { invite_id } = await req.json();
     if (!invite_id) return json({ error: "Missing invite_id" }, 400);
 

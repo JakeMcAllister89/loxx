@@ -1,6 +1,7 @@
 // v2
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SR = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -9,6 +10,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const admin = createClient(SUPABASE_URL, SR);
+    const ip = getClientIp(req);
+    const rl = await checkRateLimit(admin, `accept-platform-invite:${ip}`, 10, 60, corsHeaders);
+    if (!rl.allowed) return rl.response;
+
     const body = await req.json();
     const { action, token } = body ?? {};
     if (!token) return json({ error: "Missing token" }, 400);
