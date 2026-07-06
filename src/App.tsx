@@ -39,6 +39,7 @@ import PartnerPortal from "./pages/PartnerPortal";
 import Team from "./pages/Team";
 import AcceptInvite from "./pages/AcceptInvite";
 import AcceptPlatformInvite from "./pages/AcceptPlatformInvite";
+import AcceptPartnerInvite from "./pages/AcceptPartnerInvite";
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/accept-invite" element={<AcceptInvite />} />
               <Route path="/accept-platform-invite" element={<AcceptPlatformInvite />} />
+              <Route path="/accept-partner-invite" element={<AcceptPartnerInvite />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/returns" element={<Returns />} />

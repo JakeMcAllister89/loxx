@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Pencil, Key, FileText, BarChart3, Search, Link as LinkIcon } from "lucide-react";
+import { Plus, Pencil, Key, FileText, BarChart3, Search, Link as LinkIcon, Mail } from "lucide-react";
 
 interface Partner {
   id: string;
@@ -324,7 +324,10 @@ export default function AdminPartners() {
                         }} title="Copy signup link">
                           <LinkIcon className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => openPwDialog(p)} title="Set portal password">
+                        <Button size="sm" variant="ghost" onClick={() => sendInvite(p)} title="Send invite email" disabled={!p.email}>
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => openPwDialog(p)} title="Set portal password (manual)">
                           <Key className="h-4 w-4" />
                         </Button>
                         <Button size="sm" variant="ghost" onClick={() => openEdit(p)}>
