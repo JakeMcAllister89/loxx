@@ -148,16 +148,18 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-3 mb-6">
-          <button onClick={newSystem} className="text-left rounded-[10px] border bg-card p-4 shadow-card hover:border-primary hover:shadow-elevated transition-all group">
-            <div className="flex items-start justify-between">
-              <div className="inline-flex h-9 w-9 rounded-full bg-accent-light items-center justify-center mb-3">
-                <Plus className="h-4 w-4 text-primary" />
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            </div>
-            <div className="font-semibold">Create a new system</div>
-            <p className="text-xs text-muted-foreground mt-1">Build a master key system from scratch.</p>
+        <div className="mb-6">
+          <button
+            onClick={newSystem}
+            disabled={creating}
+            className="w-full rounded-[10px] border bg-card p-10 shadow-card hover:border-primary hover:shadow-elevated transition-all group flex flex-col items-center justify-center text-center disabled:opacity-60"
+          >
+            <KeyRound className="h-12 w-12 text-amber-500" strokeWidth={2.2} />
+            <div className="mt-5 text-2xl font-semibold">Create a new system</div>
+            <p className="text-sm text-muted-foreground mt-2">Build a master key system from scratch.</p>
+            <span className="mt-6 inline-flex items-center gap-2 rounded-md bg-amber-500 group-hover:bg-amber-600 text-white px-5 py-2.5 text-sm font-medium">
+              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} New system
+            </span>
           </button>
         </div>
 

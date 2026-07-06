@@ -124,7 +124,7 @@ function BuilderEmptyState() {
     <div className="flex flex-col items-center justify-center text-center px-6 py-20 max-w-xl mx-auto">
       <KeyRound className="h-12 w-12 text-amber-500" strokeWidth={2.2} />
       <h2 className="text-2xl font-semibold mt-5">Build your master key system</h2>
-      <p className="text-sm text-muted-foreground mt-2">Start from scratch or import your existing lockchart</p>
+      <p className="text-sm text-muted-foreground mt-2">Start building your master key system from scratch.</p>
       <div className="flex gap-3 mt-6">
         <Button size="lg" onClick={onNew} disabled={creating || !user} className="bg-amber-500 hover:bg-amber-600 text-white">
           {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} New system

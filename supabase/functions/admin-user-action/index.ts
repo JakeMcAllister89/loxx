@@ -1,6 +1,7 @@
 // v5
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -32,6 +33,8 @@ Deno.serve(async (req) => {
 
     if (action === "reset_password") {
       if (!email) return json({ error: "Missing email" }, 400);
+      const rl = await checkRateLimit(admin, `reset_password:${email.toLowerCase()}`, 3, 60, corsHeaders);
+      if (!rl.allowed) return rl.response;
       const origin = "https://myloxx.co.uk";
       const { data: linkData, error } = await (admin.auth.admin as any).generateLink({
         type: "recovery",

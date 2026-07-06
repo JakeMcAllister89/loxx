@@ -3,6 +3,7 @@
 // Falls back to logging the invite URL if no key configured.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -27,6 +28,9 @@ Deno.serve(async (req) => {
 
     const { data: { user } } = await userClient.auth.getUser();
     if (!user) return json({ error: "Unauthorized" }, 401);
+
+    const rl = await checkRateLimit(admin, `send-invite-email:${user.id}`, 20, 60, corsHeaders);
+    if (!rl.allowed) return rl.response;
 
     const { invite_id } = await req.json();
     if (!invite_id) return json({ error: "Missing invite_id" }, 400);
