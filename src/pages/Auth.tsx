@@ -19,6 +19,9 @@ export default function Auth() {
   const [lastName, setLastName] = useState("");
   const [company, setCompany] = useState("");
   const [busy, setBusy] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotBusy, setForgotBusy] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const location = useLocation();
@@ -79,6 +82,21 @@ export default function Auth() {
     const res = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + nextPath });
     if (res.error) { toast.error(res.error.message ?? "Google sign-in failed"); setBusy(false); }
     if (!res.redirected && !res.error) navigate(nextPath);
+  };
+
+  const sendReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = forgotEmail.trim();
+    if (!target) return;
+    setForgotBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(target, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("If that account exists, a reset link is on its way.");
+    setForgotOpen(false);
+    setForgotEmail("");
   };
 
   return (
