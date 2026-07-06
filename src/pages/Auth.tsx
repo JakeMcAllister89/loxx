@@ -149,7 +149,14 @@ export default function Auth() {
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                {mode === "login" && (
+                  <button type="button" onClick={() => { setForgotOpen(true); setForgotEmail(email); }} className="text-xs text-primary hover:underline">
+                    Forgot password?
+                  </button>
+                )}
+              </div>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
               {mode === "signup" && (
                 <p className="text-xs text-muted-foreground mt-1">Use at least 8 characters.</p>
@@ -181,6 +188,27 @@ export default function Auth() {
           <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">← Back to home</Link>
         </div>
       </div>
+
+      {forgotOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50" onClick={() => setForgotOpen(false)}>
+          <div className="w-full max-w-sm bg-card rounded-[10px] border shadow-card p-6" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-semibold">Reset your password</h2>
+            <p className="text-sm text-muted-foreground mt-1">Enter your account email and we'll send you a link to set a new password.</p>
+            <form onSubmit={sendReset} className="space-y-3 mt-4">
+              <div>
+                <Label htmlFor="forgot-email">Email</Label>
+                <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required autoFocus />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setForgotOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={forgotBusy} className="bg-primary hover:bg-primary/90">
+                  {forgotBusy ? "Sending…" : "Send reset link"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
