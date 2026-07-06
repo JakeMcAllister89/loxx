@@ -1078,7 +1078,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         </div>
 
         <div className="flex-1" />
-        <Button variant="outline" size="sm" asChild title="Import existing system"><Link to="/import"><Upload className="h-4 w-4" /></Link></Button>
+        
         <Button variant="outline" size="sm" onClick={() => fitViewRef.current?.()} title="Fit view"><Maximize2 className="h-4 w-4" /></Button>
         <Button variant="outline" size="sm" title="Collapse all" onClick={() => {
           const toCollapse = new Set<string>();
