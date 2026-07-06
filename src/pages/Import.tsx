@@ -111,7 +111,7 @@ export default function ImportPage() {
       <div className="p-8 max-w-5xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight">Import existing system</h1>
-          <p className="text-muted-foreground text-sm mt-1">Upload your master key system planning file (.xlsm) and we'll build the digital record for you.</p>
+          <p className="text-muted-foreground text-sm mt-1">Upload a customer's master key system planning file (.xlsm) and assign it to their organisation.</p>
         </div>
 
         <Stepper step={step} warningCount={step === "review" ? warnings.length : 0} />
@@ -127,6 +127,9 @@ export default function ImportPage() {
             systemName={systemName}
             setSystemName={setSystemName}
             products={products}
+            orgs={orgs}
+            selectedOrgId={selectedOrgId}
+            setSelectedOrgId={setSelectedOrgId}
             onBack={() => setStep("upload")}
             onBuild={() => { setStep("build"); build(); }}
           />
