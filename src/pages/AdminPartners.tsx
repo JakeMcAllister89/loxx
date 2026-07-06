@@ -232,6 +232,14 @@ export default function AdminPartners() {
   const openPwDialog = (p: Partner) => {
     setPwForm({ open: true, partnerId: p.id, email: p.email ?? "", password: "" });
   };
+  const sendInvite = async (p: Partner) => {
+    if (!p.email) return toast.error("This partner has no email address on file");
+    const { data, error } = await supabase.functions.invoke("send-partner-invite", {
+      body: { partner_id: p.id, email: p.email },
+    });
+    if (error || !data?.ok) return toast.error(data?.error ?? error?.message ?? "Could not send invite");
+    toast.success(data?.sent ? `Invite emailed to ${p.email}` : "Invite created (email not configured)");
+  };
   const savePassword = async () => {
     if (!pwForm.email || !pwForm.password) return toast.error("Email and password required");
     const { data: sess } = await supabase.auth.getSession();
