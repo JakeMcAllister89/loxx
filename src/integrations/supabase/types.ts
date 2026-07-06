@@ -1088,6 +1088,27 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          count: number
+          key: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key: string
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          count?: number
+          key?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       system_access: {
         Row: {
           created_at: string
@@ -1138,6 +1159,10 @@ export type Database = {
       assign_po_number: { Args: never; Returns: string }
       assign_quote_number: { Args: never; Returns: string }
       check_is_admin: { Args: never; Returns: boolean }
+      check_rate_limit: {
+        Args: { _key: string; _max: number; _window_minutes: number }
+        Returns: boolean
+      }
       current_user_org_approved: { Args: never; Returns: boolean }
       current_user_org_id: { Args: never; Returns: string }
       current_user_org_role: { Args: never; Returns: string }
