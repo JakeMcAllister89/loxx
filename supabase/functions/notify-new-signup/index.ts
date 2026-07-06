@@ -3,6 +3,7 @@
 // is created with is_approved = false (organic signup, not platform invite).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://myloxx.co.uk",
@@ -20,6 +21,12 @@ const WEBHOOK_SECRET = Deno.env.get("NOTIFY_WEBHOOK_SECRET");
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const rlAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const ip = getClientIp(req);
+  const rl = await checkRateLimit(rlAdmin, `notify-new-signup:${ip}`, 5, 60, corsHeaders);
+  if (!rl.allowed) return rl.response;
+
 
   try {
     const payload = await req.json();
