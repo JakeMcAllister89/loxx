@@ -33,6 +33,31 @@ export default function PartnerPortal() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotBusy, setForgotBusy] = useState(false);
+
+  const sendReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = forgotEmail.trim();
+    if (!target) return;
+    setForgotBusy(true);
+    try {
+      const res = await fetch(FN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "request_reset", email: target }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.status === 429) { toast.error(j.error ?? "Too many attempts, please try again later."); return; }
+      // Do not reveal whether the email exists.
+      toast.success("If that account exists, a reset link is on its way.");
+      setForgotOpen(false);
+      setForgotEmail("");
+    } finally {
+      setForgotBusy(false);
+    }
+  };
 
   const fetchData = async (tok: string) => {
     setLoading(true);
@@ -96,7 +121,15 @@ export default function PartnerPortal() {
             <p className="text-sm text-muted-foreground text-center mt-1">Sign in to view your commission statements.</p>
             <form onSubmit={login} className="space-y-3 mt-6">
               <div><Label htmlFor="pp-email">Email</Label><Input id="pp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
-              <div><Label htmlFor="pp-password">Password</Label><Input id="pp-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="pp-password">Password</Label>
+                  <button type="button" onClick={() => { setForgotOpen(true); setForgotEmail(email); }} className="text-xs text-[#d4820a] hover:underline">
+                    Forgot password?
+                  </button>
+                </div>
+                <Input id="pp-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              </div>
               <Button type="submit" disabled={loading} className="w-full bg-[#d4820a] hover:bg-[#b86d08] text-white">
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
               </Button>
@@ -106,9 +139,31 @@ export default function PartnerPortal() {
             <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">← Back to home</Link>
           </div>
         </div>
+
+        {forgotOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50" onClick={() => setForgotOpen(false)}>
+            <div className="w-full max-w-sm bg-card rounded-[10px] border shadow-card p-6" onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-lg font-semibold">Reset your password</h2>
+              <p className="text-sm text-muted-foreground mt-1">Enter your partner portal email and we'll send you a link to set a new password.</p>
+              <form onSubmit={sendReset} className="space-y-3 mt-4">
+                <div>
+                  <Label htmlFor="pp-forgot-email">Email</Label>
+                  <Input id="pp-forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required autoFocus />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button type="button" variant="outline" onClick={() => setForgotOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={forgotBusy} className="bg-[#d4820a] hover:bg-[#b86d08] text-white">
+                    {forgotBusy ? "Sending…" : "Send reset link"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
+
 
 
   if (loading || !data) {
