@@ -142,7 +142,6 @@ export default function Systems() {
             <p className="text-muted-foreground text-sm mt-1">All your master key systems.</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" asChild><Link to="/import"><Upload className="h-4 w-4" /> Import existing</Link></Button>
             <Button onClick={onNew} disabled={creating} className="bg-amber-500 hover:bg-amber-600 text-white">
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} New system
             </Button>
@@ -157,7 +156,6 @@ export default function Systems() {
             <p className="mt-4 text-lg font-medium">No systems yet</p>
             <div className="flex gap-3 justify-center mt-5">
               <Button onClick={onNew} disabled={creating} className="bg-amber-500 hover:bg-amber-600 text-white">Create a new system</Button>
-              <Button asChild variant="outline"><Link to="/import">Import existing</Link></Button>
             </div>
           </div>
         ) : (

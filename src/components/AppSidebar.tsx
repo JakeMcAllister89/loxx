@@ -1,5 +1,5 @@
 import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Network, Package, ShoppingCart, ClipboardList, Settings, Plus, LogOut, Shield, FileText, ShoppingBag, LayoutGrid, Loader2, Users, UserCheck, Check, Mail, KeyRound } from "lucide-react";
+import { LayoutDashboard, Network, Package, ShoppingCart, ClipboardList, Settings, Plus, LogOut, Shield, FileText, ShoppingBag, LayoutGrid, Loader2, Users, UserCheck, Check, Mail, KeyRound, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useIsAdmin } from "@/lib/auth";
@@ -176,6 +176,7 @@ export function AppSidebar() {
               { to: "/admin/approvals", label: "Approvals", icon: Check },
               { to: "/admin/users", label: "Users", icon: UserCheck },
               { to: "/admin/systems", label: "Systems", icon: LayoutGrid },
+              { to: "/admin/system-import", label: "System Import", icon: Upload },
               { to: "/admin/partners", label: "Partners", icon: Users },
               { to: "/admin/products", label: "Product catalogue", icon: Package },
               { to: "/admin/settings", label: "Settings", icon: Settings },

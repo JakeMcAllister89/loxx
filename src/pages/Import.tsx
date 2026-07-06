@@ -26,6 +26,8 @@ type Source = "csv" | "pdf" | "domxl";
 
 type Product = ProductFull;
 
+type Org = { id: string; name: string };
+
 export default function ImportPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -37,9 +39,12 @@ export default function ImportPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [busy, setBusy] = useState(false);
   const [source, setSource] = useState<Source>("domxl");
+  const [orgs, setOrgs] = useState<Org[]>([]);
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("");
 
   useEffect(() => {
     supabase.from("products").select("id,code,name,product_description,cylinder_type,cylinder_profile,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as ProductFull[]));
+    supabase.from("organisations").select("id,name").order("name").then(({ data }) => setOrgs((data ?? []) as Org[]));
   }, []);
 
   const goReview = (nodes: ParsedNode[], srcType: Source, suggestedName?: string) => {
@@ -54,13 +59,32 @@ export default function ImportPage() {
 
   const build = async () => {
     if (!user || !tree) return;
+    if (!selectedOrgId) { toast.error("Select a customer organisation"); return; }
     setBusy(true);
+
+    // Look up master_admin for the selected organisation
+    const { data: masterRows, error: mErr } = await supabase
+      .from("org_members")
+      .select("user_id")
+      .eq("org_id", selectedOrgId)
+      .eq("org_role", "master_admin")
+      .eq("status", "active")
+      .limit(1);
+    if (mErr || !masterRows || masterRows.length === 0 || !masterRows[0].user_id) {
+      setBusy(false);
+      setStep("review");
+      toast.error("This organisation has no active master admin — cannot import a system for it.");
+      return;
+    }
+    const ownerUserId = masterRows[0].user_id as string;
+
     const ref = `IMPORT-${Math.floor(1000 + Math.random() * 9000)}`;
     const counts = countByType(tree);
     const { data, error } = await supabase
       .from("key_systems")
       .insert({
-        user_id: user.id,
+        user_id: ownerUserId,
+        org_id: selectedOrgId,
         name: systemName || "Imported system",
         reference: ref,
         tree_data: tree as any,
@@ -87,7 +111,7 @@ export default function ImportPage() {
       <div className="p-8 max-w-5xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight">Import existing system</h1>
-          <p className="text-muted-foreground text-sm mt-1">Upload your master key system planning file (.xlsm) and we'll build the digital record for you.</p>
+          <p className="text-muted-foreground text-sm mt-1">Upload a customer's master key system planning file (.xlsm) and assign it to their organisation.</p>
         </div>
 
         <Stepper step={step} warningCount={step === "review" ? warnings.length : 0} />
@@ -103,6 +127,9 @@ export default function ImportPage() {
             systemName={systemName}
             setSystemName={setSystemName}
             products={products}
+            orgs={orgs}
+            selectedOrgId={selectedOrgId}
+            setSelectedOrgId={setSelectedOrgId}
             onBack={() => setStep("upload")}
             onBuild={() => { setStep("build"); build(); }}
           />
@@ -242,7 +269,7 @@ function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: 
 /* ----------------------------- Review Step ----------------------------- */
 
 function ReviewStep({
-  tree, setTree, warnings, systemName, setSystemName, products, onBack, onBuild,
+  tree, setTree, warnings, systemName, setSystemName, products, orgs, selectedOrgId, setSelectedOrgId, onBack, onBuild,
 }: {
   tree: TreeData;
   setTree: (t: TreeData) => void;
@@ -250,9 +277,18 @@ function ReviewStep({
   systemName: string;
   setSystemName: (s: string) => void;
   products: Product[];
+  orgs: Org[];
+  selectedOrgId: string;
+  setSelectedOrgId: (id: string) => void;
   onBack: () => void;
   onBuild: () => void;
 }) {
+  const [orgSearch, setOrgSearch] = useState("");
+  const filteredOrgs = useMemo(
+    () => orgs.filter(o => o.name?.toLowerCase().includes(orgSearch.toLowerCase())),
+    [orgs, orgSearch]
+  );
+  const selectedOrg = orgs.find(o => o.id === selectedOrgId);
   const counts = useMemo(() => countByType(tree), [tree]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
@@ -376,10 +412,50 @@ function ReviewStep({
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back</Button>
-          <Button onClick={onBuild} className="bg-primary hover:bg-primary/90">
+          <Button onClick={onBuild} disabled={!selectedOrgId} className="bg-primary hover:bg-primary/90">
             Build system <ArrowRight className="h-3.5 w-3.5 ml-1" />
           </Button>
         </div>
+      </div>
+
+      <div className="rounded-[10px] border bg-card p-4 shadow-card">
+        <Label className="text-xs">Assign to customer organisation</Label>
+        <div className="mt-2 border rounded-md overflow-hidden">
+          <div className="flex items-center border-b px-3">
+            <Input
+              value={orgSearch}
+              onChange={e => setOrgSearch(e.target.value)}
+              placeholder="Search organisations…"
+              className="border-0 focus-visible:ring-0 h-9 px-0 text-sm"
+            />
+          </div>
+          <div className="max-h-52 overflow-y-auto">
+            {filteredOrgs.map(o => (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => setSelectedOrgId(o.id)}
+                className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between hover:bg-muted/50 transition-colors ${
+                  selectedOrgId === o.id ? "bg-primary/10 text-primary font-medium" : ""
+                }`}
+              >
+                <span>{o.name}</span>
+                {selectedOrgId === o.id && <span className="text-primary text-xs">✓</span>}
+              </button>
+            ))}
+            {filteredOrgs.length === 0 && (
+              <p className="px-3 py-4 text-sm text-muted-foreground text-center">No organisations match.</p>
+            )}
+          </div>
+        </div>
+        {selectedOrg && (
+          <p className="text-xs text-muted-foreground mt-2">
+            System will be owned by the master admin of <strong>{selectedOrg.name}</strong>.
+          </p>
+        )}
+        {!selectedOrgId && (
+          <p className="text-xs text-amber-700 mt-2">Select an organisation before building the system.</p>
+        )}
       </div>
 
       {warnings.length > 0 && (
