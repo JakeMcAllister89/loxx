@@ -412,10 +412,50 @@ function ReviewStep({
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back</Button>
-          <Button onClick={onBuild} className="bg-primary hover:bg-primary/90">
+          <Button onClick={onBuild} disabled={!selectedOrgId} className="bg-primary hover:bg-primary/90">
             Build system <ArrowRight className="h-3.5 w-3.5 ml-1" />
           </Button>
         </div>
+      </div>
+
+      <div className="rounded-[10px] border bg-card p-4 shadow-card">
+        <Label className="text-xs">Assign to customer organisation</Label>
+        <div className="mt-2 border rounded-md overflow-hidden">
+          <div className="flex items-center border-b px-3">
+            <Input
+              value={orgSearch}
+              onChange={e => setOrgSearch(e.target.value)}
+              placeholder="Search organisations…"
+              className="border-0 focus-visible:ring-0 h-9 px-0 text-sm"
+            />
+          </div>
+          <div className="max-h-52 overflow-y-auto">
+            {filteredOrgs.map(o => (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => setSelectedOrgId(o.id)}
+                className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between hover:bg-muted/50 transition-colors ${
+                  selectedOrgId === o.id ? "bg-primary/10 text-primary font-medium" : ""
+                }`}
+              >
+                <span>{o.name}</span>
+                {selectedOrgId === o.id && <span className="text-primary text-xs">✓</span>}
+              </button>
+            ))}
+            {filteredOrgs.length === 0 && (
+              <p className="px-3 py-4 text-sm text-muted-foreground text-center">No organisations match.</p>
+            )}
+          </div>
+        </div>
+        {selectedOrg && (
+          <p className="text-xs text-muted-foreground mt-2">
+            System will be owned by the master admin of <strong>{selectedOrg.name}</strong>.
+          </p>
+        )}
+        {!selectedOrgId && (
+          <p className="text-xs text-amber-700 mt-2">Select an organisation before building the system.</p>
+        )}
       </div>
 
       {warnings.length > 0 && (
