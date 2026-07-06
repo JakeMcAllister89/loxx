@@ -201,9 +201,13 @@ Deno.serve(async (req) => {
         const partner = (sys as any).partners;
         const sysPct = (sys as any).commission_pct;
         const defPct = partner?.default_commission_pct;
-        commissionPct = typeof sysPct === "number" ? sysPct
-          : typeof defPct === "number" ? Number(defPct)
-          : 0;
+        if (partner?.is_active === false) {
+          commissionPct = 0;
+        } else {
+          commissionPct = typeof sysPct === "number" ? sysPct
+            : typeof defPct === "number" ? Number(defPct)
+            : 0;
+        }
       }
     }
 
