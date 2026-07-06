@@ -83,26 +83,33 @@ export default function PartnerPortal() {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-[#f5f4f1] flex flex-col">
-        <header className="bg-[#17171a] text-white px-6 py-4">
-          <LoxxLogo />
-        </header>
-        <div className="flex-1 flex items-center justify-center p-6">
-          <form onSubmit={login} className="w-full max-w-sm bg-white rounded-[10px] border shadow-card p-6 space-y-4">
-            <div>
-              <h1 className="text-xl font-semibold">Partner portal</h1>
-              <p className="text-sm text-muted-foreground">Sign in to view your commission statements.</p>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md">
+          <div className="flex justify-center mb-6"><LoxxLogo size="lg" /></div>
+          <div className="bg-card rounded-[10px] border shadow-card p-8">
+            <div className="flex justify-center mb-4">
+              <span className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-[#d4820a]/10 text-[#d4820a]">
+                <Handshake className="h-6 w-6" />
+              </span>
             </div>
-            <div><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
-            <div><Label>Password</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
-            <Button type="submit" disabled={loading} className="w-full bg-[#d4820a] hover:bg-[#b86d08] text-white">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
-            </Button>
-          </form>
+            <h1 className="text-2xl font-semibold tracking-tight text-center">Partner portal</h1>
+            <p className="text-sm text-muted-foreground text-center mt-1">Sign in to view your commission statements.</p>
+            <form onSubmit={login} className="space-y-3 mt-6">
+              <div><Label htmlFor="pp-email">Email</Label><Input id="pp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
+              <div><Label htmlFor="pp-password">Password</Label><Input id="pp-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></div>
+              <Button type="submit" disabled={loading} className="w-full bg-[#d4820a] hover:bg-[#b86d08] text-white">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
+              </Button>
+            </form>
+          </div>
+          <div className="text-center mt-6">
+            <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">← Back to home</Link>
+          </div>
         </div>
       </div>
     );
   }
+
 
   if (loading || !data) {
     return (
