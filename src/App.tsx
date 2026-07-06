@@ -11,6 +11,7 @@ import { RoleRoute } from "@/components/RoleRoute";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Systems from "./pages/Systems";
 import Catalogue from "./pages/Catalogue";
@@ -69,6 +70,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/accept-invite" element={<AcceptInvite />} />
               <Route path="/accept-platform-invite" element={<AcceptPlatformInvite />} />
               <Route path="/accept-partner-invite" element={<AcceptPartnerInvite />} />
