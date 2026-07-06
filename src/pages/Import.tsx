@@ -269,7 +269,7 @@ function UploadStep({ onParsed }: { onParsed: (rows: ParsedNode[], systemName?: 
 /* ----------------------------- Review Step ----------------------------- */
 
 function ReviewStep({
-  tree, setTree, warnings, systemName, setSystemName, products, onBack, onBuild,
+  tree, setTree, warnings, systemName, setSystemName, products, orgs, selectedOrgId, setSelectedOrgId, onBack, onBuild,
 }: {
   tree: TreeData;
   setTree: (t: TreeData) => void;
@@ -277,9 +277,18 @@ function ReviewStep({
   systemName: string;
   setSystemName: (s: string) => void;
   products: Product[];
+  orgs: Org[];
+  selectedOrgId: string;
+  setSelectedOrgId: (id: string) => void;
   onBack: () => void;
   onBuild: () => void;
 }) {
+  const [orgSearch, setOrgSearch] = useState("");
+  const filteredOrgs = useMemo(
+    () => orgs.filter(o => o.name?.toLowerCase().includes(orgSearch.toLowerCase())),
+    [orgs, orgSearch]
+  );
+  const selectedOrg = orgs.find(o => o.id === selectedOrgId);
   const counts = useMemo(() => countByType(tree), [tree]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
