@@ -148,7 +148,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Action cards */}
         <div className="grid md:grid-cols-2 gap-3 mb-6">
           <button onClick={newSystem} className="text-left rounded-[10px] border bg-card p-4 shadow-card hover:border-primary hover:shadow-elevated transition-all group">
             <div className="flex items-start justify-between">
@@ -160,16 +159,6 @@ export default function Dashboard() {
             <div className="font-semibold">Create a new system</div>
             <p className="text-xs text-muted-foreground mt-1">Build a master key system from scratch.</p>
           </button>
-          <Link to="/import" className="rounded-[10px] border bg-card p-4 shadow-card hover:border-primary hover:shadow-elevated transition-all block group">
-            <div className="flex items-start justify-between">
-              <div className="inline-flex h-9 w-9 rounded-full bg-accent-light items-center justify-center mb-3">
-                <Upload className="h-4 w-4 text-primary" />
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            </div>
-            <div className="font-semibold">Import existing system</div>
-            <p className="text-xs text-muted-foreground mt-1">Upload an existing schedule and convert it into a My LOXX system record.</p>
-          </Link>
         </div>
 
         {/* Needs attention */}
