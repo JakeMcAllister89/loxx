@@ -81,15 +81,18 @@ Deno.serve(async (req) => {
       if (!login) return json({ error: "Invalid credentials" }, 401);
       const ok = await bcrypt.compare(password, login.password_hash);
       if (!ok) return json({ error: "Invalid credentials" }, 401);
+      const { data: partner } = await supabase
+        .from("partners")
+        .select("id, name, company, partner_type, is_active")
+        .eq("id", login.partner_id)
+        .single();
+      if (!partner || partner.is_active === false) {
+        return json({ error: "Account is inactive, please contact support" }, 403);
+      }
       await supabase
         .from("partner_logins")
         .update({ last_login_at: new Date().toISOString() })
         .eq("id", login.id);
-      const { data: partner } = await supabase
-        .from("partners")
-        .select("id, name, company, partner_type")
-        .eq("id", login.partner_id)
-        .single();
       const tok = await signToken(login.partner_id);
       return json({ token: tok, partner });
     }
