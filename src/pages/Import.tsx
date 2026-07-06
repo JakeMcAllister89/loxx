@@ -26,6 +26,8 @@ type Source = "csv" | "pdf" | "domxl";
 
 type Product = ProductFull;
 
+type Org = { id: string; name: string };
+
 export default function ImportPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -37,9 +39,12 @@ export default function ImportPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [busy, setBusy] = useState(false);
   const [source, setSource] = useState<Source>("domxl");
+  const [orgs, setOrgs] = useState<Org[]>([]);
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("");
 
   useEffect(() => {
     supabase.from("products").select("id,code,name,product_description,cylinder_type,cylinder_profile,pin_count,finish,size,price_gbp,bs_en_1303,description,image_url").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as ProductFull[]));
+    supabase.from("organisations").select("id,name").order("name").then(({ data }) => setOrgs((data ?? []) as Org[]));
   }, []);
 
   const goReview = (nodes: ParsedNode[], srcType: Source, suggestedName?: string) => {
@@ -54,13 +59,32 @@ export default function ImportPage() {
 
   const build = async () => {
     if (!user || !tree) return;
+    if (!selectedOrgId) { toast.error("Select a customer organisation"); return; }
     setBusy(true);
+
+    // Look up master_admin for the selected organisation
+    const { data: masterRows, error: mErr } = await supabase
+      .from("org_members")
+      .select("user_id")
+      .eq("org_id", selectedOrgId)
+      .eq("org_role", "master_admin")
+      .eq("status", "active")
+      .limit(1);
+    if (mErr || !masterRows || masterRows.length === 0 || !masterRows[0].user_id) {
+      setBusy(false);
+      setStep("review");
+      toast.error("This organisation has no active master admin — cannot import a system for it.");
+      return;
+    }
+    const ownerUserId = masterRows[0].user_id as string;
+
     const ref = `IMPORT-${Math.floor(1000 + Math.random() * 9000)}`;
     const counts = countByType(tree);
     const { data, error } = await supabase
       .from("key_systems")
       .insert({
-        user_id: user.id,
+        user_id: ownerUserId,
+        org_id: selectedOrgId,
         name: systemName || "Imported system",
         reference: ref,
         tree_data: tree as any,
