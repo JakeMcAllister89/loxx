@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoxxLogo } from "@/components/LoxxLogo";
 import { LogOut, Loader2, Handshake } from "lucide-react";
 import { toast } from "sonner";
+import { DateRangePicker } from "@/components/admin/DateRangePicker";
+import { presetRange, RangePreset } from "@/lib/dateRanges";
 
 const STORAGE_KEY = "loxx_partner_session";
 const FN_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/partner-auth`;
@@ -15,9 +17,18 @@ const FN_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/
 interface PartnerInfo { id: string; name: string; company: string; partner_type: string; }
 interface PortalData {
   partner: PartnerInfo;
-  summary: { lifetimeRevenue: number; lifetimeCommission: number; systemsCount: number; pendingCommission: number };
+  summary: {
+    revenue: number;
+    commission: number;
+    cylindersSupplied: number;
+    keysSupplied: number;
+    activeSystems: number;
+    systemsCount: number;
+    pendingCommission: number;
+  };
   quarterly: { key: string; period_start: string; period_end: string; revenue: number; commission: number; commission_pct: number; status: string }[];
   systems: { id: string; name: string; reference: string | null; firstOrderDate: string | null; customerCompany: string | null; revenue: number; commission: number }[];
+  recentOrders: { id: string; reference: string; customer: string; system: string; created_at: string; total: number; status: string; payment_status: string }[];
 }
 
 const gbp = (n: number) => `£${Number(n ?? 0).toFixed(2)}`;
@@ -25,6 +36,15 @@ const fmtDate = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString(
 const quarterLabel = (key: string) => {
   const [y, q] = key.split("-");
   return `${q} ${y}`;
+};
+
+const statusColor: Record<string, string> = {
+  pending: "bg-amber-100 text-amber-800 border-amber-300",
+  paid: "bg-blue-100 text-blue-800 border-blue-300",
+  processing: "bg-indigo-100 text-indigo-800 border-indigo-300",
+  shipped: "bg-teal-100 text-teal-800 border-teal-300",
+  delivered: "bg-green-100 text-green-800 border-green-300",
+  cancelled: "bg-red-100 text-red-800 border-red-300",
 };
 
 export default function PartnerPortal() {
@@ -36,6 +56,11 @@ export default function PartnerPortal() {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotBusy, setForgotBusy] = useState(false);
+
+  const initial = presetRange("month");
+  const [from, setFrom] = useState<Date>(initial.from);
+  const [to, setTo] = useState<Date>(initial.to);
+  const [preset, setPreset] = useState<RangePreset>("month");
 
   const sendReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +75,6 @@ export default function PartnerPortal() {
       });
       const j = await res.json().catch(() => ({}));
       if (res.status === 429) { toast.error(j.error ?? "Too many attempts, please try again later."); return; }
-      // Do not reveal whether the email exists.
       toast.success("If that account exists, a reset link is on its way.");
       setForgotOpen(false);
       setForgotEmail("");
@@ -59,13 +83,13 @@ export default function PartnerPortal() {
     }
   };
 
-  const fetchData = async (tok: string) => {
+  const fetchData = async (tok: string, f: Date, t: Date) => {
     setLoading(true);
     try {
       const res = await fetch(FN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "data", token: tok }),
+        body: JSON.stringify({ action: "data", token: tok, from: f.toISOString(), to: t.toISOString() }),
       });
       const j = await res.json();
       if (!res.ok) {
@@ -80,7 +104,7 @@ export default function PartnerPortal() {
     }
   };
 
-  useEffect(() => { if (token) fetchData(token); }, [token]);
+  useEffect(() => { if (token) fetchData(token, from, to); }, [token, from, to]);
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +129,8 @@ export default function PartnerPortal() {
     setToken(null);
     setData(null);
   };
+
+  const onRangeChange = (f: Date, t: Date, p: RangePreset) => { setFrom(f); setTo(t); setPreset(p); };
 
   if (!token) {
     return (
@@ -164,18 +190,16 @@ export default function PartnerPortal() {
     );
   }
 
-
-
-  if (loading || !data) {
+  if (!data) {
     return (
-      <div className="min-h-screen bg-[#f5f4f1] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f4f1]">
+    <div className="min-h-screen bg-background">
       <header className="bg-[#17171a] text-white px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <LoxxLogo />
@@ -189,107 +213,153 @@ export default function PartnerPortal() {
         </Button>
       </header>
 
-      <main className="p-6 max-w-6xl mx-auto space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <Card label="Lifetime revenue (ex VAT)" value={gbp(data.summary.lifetimeRevenue)} />
-          <Card label="Lifetime commission" value={gbp(data.summary.lifetimeCommission)} accent />
-          <Card label="Systems referred" value={String(data.summary.systemsCount)} />
-          <Card label="Pending commission" value={gbp(data.summary.pendingCommission)} />
+      <main className="p-8 max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-semibold tracking-tight">Partner dashboard</h1>
+          <p className="text-muted-foreground text-sm">Your commissions and referred activity{loading ? " · refreshing…" : ""}.</p>
         </div>
 
-        <div className="rounded-[10px] border bg-white shadow-card p-4">
-          <h2 className="text-sm font-semibold">Your signup link</h2>
-          <p className="text-xs text-muted-foreground mt-0.5 mb-3">
-            Share this with your clients — anyone who signs up through it is automatically credited to you, with instant access (no approval wait).
-          </p>
-          <div className="flex items-center gap-2">
-            <Input
-              readOnly
-              value={`${window.location.origin}/auth?mode=signup&ref=${data.partner.id}`}
-              className="font-mono text-xs bg-muted/40"
-              onClick={(e) => (e.target as HTMLInputElement).select()}
-            />
-            <Button
-              type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/auth?mode=signup&ref=${data.partner.id}`);
-                toast.success("Link copied");
-              }}
-              className="bg-[#d4820a] hover:bg-[#b86d08] text-white shrink-0"
-            >
-              Copy
-            </Button>
-          </div>
+        <div className="mb-6">
+          <DateRangePicker from={from} to={to} preset={preset} onChange={onRangeChange} />
         </div>
 
-        <section>
-          <h2 className="text-lg font-semibold mb-2">Quarterly breakdown</h2>
-          <div className="rounded-[10px] border bg-white shadow-card overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Period</TableHead>
-                  <TableHead className="text-right">Revenue (ex VAT)</TableHead>
-                  <TableHead className="text-right">%</TableHead>
-                  <TableHead className="text-right">Commission</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.quarterly.map((q) => (
-                  <TableRow key={q.key}>
-                    <TableCell className="font-mono">{quarterLabel(q.key)}</TableCell>
-                    <TableCell className="text-right font-mono">{gbp(q.revenue)}</TableCell>
-                    <TableCell className="text-right font-mono">{q.commission_pct.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-mono">{gbp(q.commission)}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={q.status === "paid" ? "bg-green-100 text-green-800 border-green-300" : "bg-amber-100 text-amber-800 border-amber-300"}>
-                        {q.status === "paid" ? "Paid" : "Pending"}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {data.quarterly.length === 0 && (
-                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No earnings yet.</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </section>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <StatCard label="Revenue (ex VAT)" value={gbp(data.summary.revenue)} />
+          <StatCard label="Commission" value={gbp(data.summary.commission)} accent />
+          <StatCard label="Active systems" value={data.summary.activeSystems} sub="with orders in range" />
+          <StatCard label="Pending commission" value={gbp(data.summary.pendingCommission)} sub="across all periods" />
+          <StatCard label="Cylinders supplied" value={data.summary.cylindersSupplied} />
+          <StatCard label="Keys supplied" value={data.summary.keysSupplied} />
+          <StatCard label="Systems referred" value={data.summary.systemsCount} sub="lifetime" />
+        </div>
 
-        <section>
-          <h2 className="text-lg font-semibold mb-2">Referred systems</h2>
-          <div className="rounded-[10px] border bg-white shadow-card overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>System</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>First order</TableHead>
-                  <TableHead className="text-right">Revenue (ex VAT)</TableHead>
-                  <TableHead className="text-right">Commission</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.systems.map((s) => (
-                  <TableRow key={s.id}>
-                    <TableCell>
-                      <div>{s.name}</div>
-                      {s.reference && <div className="text-xs font-mono text-muted-foreground">{s.reference}</div>}
-                    </TableCell>
-                    <TableCell>{s.customerCompany ?? "—"}</TableCell>
-                    <TableCell>{fmtDate(s.firstOrderDate)}</TableCell>
-                    <TableCell className="text-right font-mono">{gbp(s.revenue)}</TableCell>
-                    <TableCell className="text-right font-mono">{gbp(s.commission)}</TableCell>
-                  </TableRow>
-                ))}
-                {data.systems.length === 0 && (
-                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No referred systems yet.</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
+        <Section title="Your signup link">
+          <div className="p-5">
+            <p className="text-xs text-muted-foreground mb-3">
+              Share this with your clients — anyone who signs up through it is automatically credited to you, with instant access.
+            </p>
+            <div className="flex items-center gap-2">
+              <Input
+                readOnly
+                value={`${window.location.origin}/auth?mode=signup&ref=${data.partner.id}`}
+                className="font-mono text-xs bg-muted/40"
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
+              <Button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/auth?mode=signup&ref=${data.partner.id}`);
+                  toast.success("Link copied");
+                }}
+                className="bg-[#d4820a] hover:bg-[#b86d08] text-white shrink-0"
+              >
+                Copy
+              </Button>
+            </div>
           </div>
-        </section>
+        </Section>
+
+        <Section title="Recent orders">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Ref</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>System</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Total</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.recentOrders.map((o) => (
+                <TableRow key={o.id}>
+                  <TableCell className="text-sm text-amber-700 font-mono">{o.reference}</TableCell>
+                  <TableCell>{o.customer}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{o.system}</TableCell>
+                  <TableCell className="text-xs">{fmtDate(o.created_at)}</TableCell>
+                  <TableCell className="text-right font-mono font-semibold">{gbp(o.total)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <Badge className={statusColor[o.status] ?? ""}>{o.status}</Badge>
+                      {o.payment_status === "paid" ? (
+                        <Badge className="bg-green-100 text-green-800 border-green-300 text-[10px]">Paid ✓</Badge>
+                      ) : (
+                        <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-[10px]">Unpaid</Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {data.recentOrders.length === 0 && (
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No orders in this period.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Section>
+
+        <Section title="Quarterly breakdown">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Period</TableHead>
+                <TableHead className="text-right">Revenue (ex VAT)</TableHead>
+                <TableHead className="text-right">%</TableHead>
+                <TableHead className="text-right">Commission</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.quarterly.map((q) => (
+                <TableRow key={q.key}>
+                  <TableCell className="font-mono">{quarterLabel(q.key)}</TableCell>
+                  <TableCell className="text-right font-mono">{gbp(q.revenue)}</TableCell>
+                  <TableCell className="text-right font-mono">{q.commission_pct.toFixed(2)}</TableCell>
+                  <TableCell className="text-right font-mono">{gbp(q.commission)}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={q.status === "paid" ? "bg-green-100 text-green-800 border-green-300" : "bg-amber-100 text-amber-800 border-amber-300"}>
+                      {q.status === "paid" ? "Paid" : "Pending"}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {data.quarterly.length === 0 && (
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No earnings yet.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Section>
+
+        <Section title="Referred systems">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>System</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>First order</TableHead>
+                <TableHead className="text-right">Revenue (ex VAT)</TableHead>
+                <TableHead className="text-right">Commission</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.systems.map((s) => (
+                <TableRow key={s.id}>
+                  <TableCell>
+                    <div>{s.name}</div>
+                    {s.reference && <div className="text-xs font-mono text-muted-foreground">{s.reference}</div>}
+                  </TableCell>
+                  <TableCell>{s.customerCompany ?? "—"}</TableCell>
+                  <TableCell>{fmtDate(s.firstOrderDate)}</TableCell>
+                  <TableCell className="text-right font-mono">{gbp(s.revenue)}</TableCell>
+                  <TableCell className="text-right font-mono">{gbp(s.commission)}</TableCell>
+                </TableRow>
+              ))}
+              {data.systems.length === 0 && (
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No referred systems yet.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Section>
 
         <footer className="text-xs text-muted-foreground text-center py-6">
           LOXX Partner Portal · Read-only commission view
@@ -299,11 +369,23 @@ export default function PartnerPortal() {
   );
 }
 
-function Card({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function StatCard({ label, value, sub, accent }: { label: string; value: React.ReactNode; sub?: string; accent?: boolean }) {
   return (
-    <div className={`rounded-[10px] border bg-white p-4 shadow-card ${accent ? "border-[#d4820a]" : ""}`}>
-      <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={`text-2xl font-semibold mt-1 font-mono ${accent ? "text-[#d4820a]" : ""}`}>{value}</div>
+    <div className={`rounded-[10px] border bg-card p-5 shadow-card ${accent ? "border-[#d4820a]" : ""}`}>
+      <div className="text-xs text-muted-foreground uppercase tracking-wide">{label}</div>
+      <div className={`text-2xl font-semibold mt-2 ${accent ? "text-[#d4820a]" : ""}`}>{value}</div>
+      {sub && <div className="text-xs text-muted-foreground mt-1">{sub}</div>}
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-[10px] border bg-card shadow-card mb-8 overflow-hidden">
+      <div className="px-5 py-4 border-b">
+        <h2 className="text-sm font-semibold uppercase tracking-wide">{title}</h2>
+      </div>
+      <div>{children}</div>
     </div>
   );
 }
