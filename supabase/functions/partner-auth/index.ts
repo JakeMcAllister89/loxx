@@ -80,7 +80,7 @@ function json(body: unknown, status = 200) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const { action, email, password, token: clientToken, partnerId, newPassword } =
+    const { action, email, password, token: clientToken, partnerId, newPassword, from: fromIso, to: toIso } =
       await req.json();
 
     if (action === "request_reset") {
@@ -194,7 +194,11 @@ Deno.serve(async (req) => {
       if (!partner) return json({ error: "Partner not found" }, 404);
       if (action === "me") return json({ partner });
 
-      // data: aggregate revenue & commission per system and quarterly breakdown
+      // data: aggregate revenue & commission per system and quarterly breakdown.
+      // Range-filtered stats respect from/to; systemsList & quarterly stay lifetime.
+      const rangeFrom = fromIso ? new Date(fromIso) : null;
+      const rangeTo = toIso ? new Date(toIso) : null;
+
       const { data: systems } = await supabase
         .from("key_systems")
         .select("id, name, reference, commission_pct, created_at")
@@ -205,7 +209,7 @@ Deno.serve(async (req) => {
       if (sysIds.length) {
         const { data: o } = await supabase
           .from("orders")
-          .select("id, system_id, created_at, status, payment_status, company")
+          .select("id, system_id, created_at, status, payment_status, company, customer_name, total")
           .in("system_id", sysIds)
           .neq("status", "cancelled");
         orders = o ?? [];
@@ -213,7 +217,7 @@ Deno.serve(async (req) => {
         if (orderIds.length) {
           const { data: it } = await supabase
             .from("order_items")
-            .select("order_id, line_total, commission_pct, commission_amount")
+            .select("order_id, item_type, quantity, line_total, commission_pct, commission_amount")
             .in("order_id", orderIds);
           items = it ?? [];
         }
@@ -222,10 +226,19 @@ Deno.serve(async (req) => {
       orders.forEach((o) => (orderToSystem[o.id] = o.system_id));
       const orderToDate: Record<string, string> = {};
       orders.forEach((o) => (orderToDate[o.id] = o.created_at));
-      const orderToPaid: Record<string, boolean> = {};
-      orders.forEach((o) => (orderToPaid[o.id] = o.payment_status === "paid"));
 
-      // Aggregate per system
+      // Range predicate
+      const inRange = (iso: string) => {
+        const d = new Date(iso);
+        if (rangeFrom && d < rangeFrom) return false;
+        if (rangeTo && d > rangeTo) return false;
+        return true;
+      };
+      const rangeOrders = orders.filter((o) => inRange(o.created_at));
+      const rangeOrderIds = new Set(rangeOrders.map((o) => o.id));
+      const rangeItems = items.filter((it) => rangeOrderIds.has(it.order_id));
+
+      // Aggregate per system (lifetime — powers Referred systems table)
       const sysAgg = new Map<string, { revenue: number; commission: number; firstDate: string | null; company: string | null }>();
       (systems ?? []).forEach((s) => sysAgg.set(s.id, { revenue: 0, commission: 0, firstDate: null, company: null }));
       items.forEach((it) => {
@@ -244,7 +257,7 @@ Deno.serve(async (req) => {
         }
       });
 
-      // Quarterly breakdown
+      // Quarterly breakdown (lifetime)
       const quarters = new Map<string, { period_start: string; period_end: string; revenue: number; commission: number }>();
       items.forEach((it) => {
         const d = orderToDate[it.order_id];
@@ -267,7 +280,6 @@ Deno.serve(async (req) => {
         qq.commission += Number(it.commission_amount ?? 0);
       });
 
-      // Fetch payment statuses for these quarters
       const { data: payments } = await supabase
         .from("partner_payments")
         .select("period_start, period_end, status, total_commission")
@@ -284,8 +296,17 @@ Deno.serve(async (req) => {
         }))
         .sort((a, b) => (a.key < b.key ? 1 : -1));
 
-      const lifetimeRevenue = items.reduce((s, it) => s + Number(it.line_total ?? 0), 0);
-      const lifetimeCommission = items.reduce((s, it) => s + Number(it.commission_amount ?? 0), 0);
+      // Range-scoped figures
+      const revenue = rangeItems.reduce((s, it) => s + Number(it.line_total ?? 0), 0);
+      const commission = rangeItems.reduce((s, it) => s + Number(it.commission_amount ?? 0), 0);
+      const cylindersSupplied = rangeItems
+        .filter((it) => it.item_type === "cylinder")
+        .reduce((s, it) => s + Number(it.quantity ?? 0), 0);
+      const keysSupplied = rangeItems
+        .filter((it) => it.item_type === "key")
+        .reduce((s, it) => s + Number(it.quantity ?? 0), 0);
+      const activeSystems = new Set(rangeOrders.map((o) => o.system_id).filter(Boolean)).size;
+
       const pendingCommission = quarterly
         .filter((q) => q.status !== "paid")
         .reduce((s, q) => s + q.commission, 0);
@@ -303,16 +324,38 @@ Deno.serve(async (req) => {
         };
       });
 
+      // Recent orders — scoped to partner systems + selected range
+      const sysNameMap = new Map<string, { name: string; reference: string | null }>();
+      (systems ?? []).forEach((s) => sysNameMap.set(s.id, { name: s.name, reference: s.reference }));
+      const recentOrders = rangeOrders
+        .slice()
+        .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+        .slice(0, 50)
+        .map((o) => ({
+          id: o.id,
+          reference: o.id.slice(0, 8).toUpperCase(),
+          customer: o.customer_name ?? o.company ?? "—",
+          system: sysNameMap.get(o.system_id)?.reference ?? sysNameMap.get(o.system_id)?.name ?? "—",
+          created_at: o.created_at,
+          total: Number(o.total ?? 0),
+          status: o.status,
+          payment_status: o.payment_status,
+        }));
+
       return json({
         partner,
         summary: {
-          lifetimeRevenue,
-          lifetimeCommission,
+          revenue,
+          commission,
+          cylindersSupplied,
+          keysSupplied,
+          activeSystems,
           systemsCount: systemsList.filter((s) => s.revenue > 0).length,
           pendingCommission,
         },
         quarterly,
         systems: systemsList,
+        recentOrders,
       });
     }
 

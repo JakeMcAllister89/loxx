@@ -76,6 +76,9 @@
   .font-mono, code, pre, kbd, samp {
     font-family: var(--font-mono);
   }
+  #lovable-badge {
+    display: none !important;
+  }
 }
 
 

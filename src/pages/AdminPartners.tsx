@@ -167,9 +167,18 @@ export default function AdminPartners() {
   };
 
   const markPaid = async (id: string) => {
-    await supabase.from("partner_payments").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", id);
+    const { data, error } = await supabase.functions.invoke("mark-partner-payment-paid", { body: { payment_id: id } });
+    if (error || (data && data.error)) {
+      toast.error((data as any)?.error ?? error?.message ?? "Failed to mark paid");
+      return;
+    }
+    if (data?.sent) toast.success("Marked paid — confirmation email sent");
+    else if (data?.reason === "no_email") toast.success("Marked paid — no email on file, so no confirmation was sent");
+    else if (data?.reason === "email_failed" || data?.reason === "email_exception") toast.success("Marked paid — but the confirmation email failed to send");
+    else toast.success("Marked paid");
     load();
   };
+
 
   const generateStatements = async () => {
     const yStr = window.prompt("Year (e.g. 2026):", String(new Date().getFullYear()));
