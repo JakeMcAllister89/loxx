@@ -13,6 +13,8 @@ import { presetRange, RangePreset } from "@/lib/dateRanges";
 
 const STORAGE_KEY = "loxx_partner_session";
 const FN_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/partner-auth`;
+const MEMBER_INVITE_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/send-partner-member-invite`;
+
 
 interface PartnerInfo { id: string; name: string; company: string; partner_type: string; }
 interface TeamMember {
