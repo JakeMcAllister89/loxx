@@ -319,8 +319,10 @@ export default function AdminPartners() {
                     <TableHead>Type</TableHead>
                     <TableHead>Default %</TableHead>
                     <TableHead>Systems</TableHead>
+                    <TableHead>Members</TableHead>
                     <TableHead>Active</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
+
                   </TableRow>
                 </TableHeader>
                 <TableBody>
