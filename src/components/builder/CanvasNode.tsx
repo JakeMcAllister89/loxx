@@ -16,7 +16,7 @@ export interface CanvasNodeData {
   node: TNode;
   selected: boolean;
   hasError: boolean;
-  product?: { code?: string; name: string; image_url: string | null; finish_colour?: string | null; finish?: string | null; size?: string | null; price_gbp?: number | null } | null;
+  product?: { code?: string; name: string; image_url: string | null; finish_colour?: string | null; finish?: string | null; size?: string | null; price_gbp?: number | null; effective_price?: number | null } | null;
   childMkCount?: number;
   childSmkCount?: number;
   childCylCount?: number;
@@ -332,8 +332,8 @@ function CanvasNodeImpl(props: NodeProps) {
                               <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{product.size}</span>
                             )}
                           </div>
-                          {product.price_gbp != null && (
-                            <p className="text-xs font-semibold text-[hsl(var(--node-cyl))] pt-0.5">£{Number(product.price_gbp).toFixed(2)}</p>
+                          {(product.effective_price ?? product.price_gbp) != null && (
+                            <p className="text-xs font-semibold text-[hsl(var(--node-cyl))] pt-0.5">£{Number(product.effective_price ?? product.price_gbp).toFixed(2)}</p>
                           )}
                         </div>
                       </TooltipContent>

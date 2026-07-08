@@ -98,6 +98,80 @@ export type Database = {
           },
         ]
       }
+      customer_pricing: {
+        Row: {
+          default_margin_pct: number | null
+          id: string
+          org_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          default_margin_pct?: number | null
+          id?: string
+          org_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          default_margin_pct?: number | null
+          id?: string
+          org_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_pricing_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_product_pricing: {
+        Row: {
+          id: string
+          margin_pct: number
+          org_id: string
+          product_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          margin_pct: number
+          org_id: string
+          product_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          margin_pct?: number
+          org_id?: string
+          product_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_product_pricing_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_product_pricing_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cylinder_types: {
         Row: {
           created_at: string | null
@@ -1215,6 +1289,14 @@ export type Database = {
         Returns: {
           key: string
           value: string
+        }[]
+      }
+      get_org_product_prices: {
+        Args: { _org_id: string }
+        Returns: {
+          code: string
+          effective_price: number
+          product_id: string
         }[]
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }

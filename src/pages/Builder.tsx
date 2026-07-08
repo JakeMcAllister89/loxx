@@ -48,6 +48,7 @@ import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { stashQuoteDraft, treeToQuoteItems } from "@/lib/quote";
 import { useAuth, useIsAdmin } from "@/lib/auth";
 import { createSystem } from "@/lib/createSystem";
+import { useOrgProductPrices } from "@/hooks/useOrgProductPrices";
 
 const TYPE_META: Record<NodeType, { label: string; color: string; pill: string; description: string }> = {
   GMK: { label: "Grand Master Key", color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30", description: "The master key that opens every door in the building — held by senior management." },
@@ -140,6 +141,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const { orgRole } = useAuth();
   const isAdmin = useIsAdmin();
   const readOnly = orgRole === "view_only";
+  const { priceFor: orgPriceFor } = useOrgProductPrices();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const imported = searchParams.get("imported") === "1";
@@ -367,9 +369,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
       finish: (p as any).finish ?? null,
       size: (p as any).size ?? null,
       price_gbp: (p as any).price_gbp ?? null,
+      effective_price: orgPriceFor(p.code, (p as any).price_gbp ?? null),
     }));
     return m;
-  }, [products]);
+  }, [products, orgPriceFor]);
 
   useEffect(() => {
     setLoading(true);
@@ -907,7 +910,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         normaliseKeys(n).forEach((k) => {
           if (k.qty > 0) {
             const keyProd = keyProductForNode(n.type);
-            const keyPrice = keyProd ? Number((keyProd as any).price_gbp) : 12;
+            const keyPrice = keyProd ? orgPriceFor((keyProd as any).code, (keyProd as any).price_gbp) : 12;
             lines.push({
               kind: "key",
               key_reference: n.label && n.label !== k.ref ? `${k.ref} — ${n.label}` : k.ref,
@@ -928,7 +931,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       }
       if (n.type === "CYL" && n.cylinder_type && (!isFulfilled || n.is_new)) {
         const p = productByCode.get(n.cylinder_type);
-        const unit = Number(p?.price_gbp ?? 0);
+        const unit = orgPriceFor(n.cylinder_type, p?.price_gbp);
         const qty = n.quantity ?? 1;
         const differRef = `D${String(n.differ ?? 0).padStart(3, "0")}`;
         lines.push({
@@ -951,7 +954,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         const extra = n.extra_keys ?? 0;
         if (extra > 0) {
           const differKeyProd = keyProductForNode("CYL");
-          const differKeyPrice = differKeyProd ? Number((differKeyProd as any).price_gbp) : 12;
+          const differKeyPrice = differKeyProd ? orgPriceFor((differKeyProd as any).code, (differKeyProd as any).price_gbp) : 12;
           lines.push({
             kind: "key",
             key_reference: `Extra Differ Keys — ${n.label} (${differRef})`,
@@ -970,7 +973,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       }
       if (n.type === "CE" && n.cylinder_type && (!isFulfilled || n.is_new)) {
         const p = productByCode.get(n.cylinder_type);
-        const unit = Number(p?.price_gbp ?? 0);
+        const unit = orgPriceFor(n.cylinder_type, p?.price_gbp);
         const qty = n.quantity ?? 1;
         const mkAnc  = ancestors.find(a => a.type === "MK");
         const smkAnc = ancestors.find(a => a.type === "SMK");

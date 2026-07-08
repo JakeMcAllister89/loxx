@@ -97,19 +97,35 @@ Deno.serve(async (req) => {
 
     // Fetch authoritative prices from the database for all product codes
     // in this cart — never trust client-supplied unit_price for catalogued items.
+    // Uses the customer's org-specific effective pricing when set.
     const productCodes = body.items
       .map(it => it.product_code)
       .filter((c): c is string => !!c);
     const priceMap = new Map<string, number>();
     if (productCodes.length > 0) {
-      const { data: prods } = await supabase
-        .from("products")
-        .select("code,price_gbp")
-        .in("code", productCodes)
-        .eq("is_active", true);
-      (prods ?? []).forEach((p: any) => {
-        if (p.code && p.price_gbp != null) priceMap.set(p.code, Number(p.price_gbp));
-      });
+      const { data: prof } = await supabase
+        .from("profiles").select("org_id").eq("id", user.id).maybeSingle();
+      const orgId = (prof as any)?.org_id ?? null;
+      if (orgId) {
+        const { data: eff } = await supabase.rpc("get_org_product_prices", { _org_id: orgId });
+        (eff ?? []).forEach((r: any) => {
+          if (r?.code && r?.effective_price != null && productCodes.includes(r.code)) {
+            priceMap.set(r.code, Number(r.effective_price));
+          }
+        });
+      }
+      // Fallback for any codes not returned by the RPC (e.g. no org, inactive product).
+      const missing = productCodes.filter((c) => !priceMap.has(c));
+      if (missing.length > 0) {
+        const { data: prods } = await supabase
+          .from("products")
+          .select("code,price_gbp")
+          .in("code", missing)
+          .eq("is_active", true);
+        (prods ?? []).forEach((p: any) => {
+          if (p.code && p.price_gbp != null) priceMap.set(p.code, Number(p.price_gbp));
+        });
+      }
     }
 
     // Fetch authoritative delivery rates — never trust client-supplied
