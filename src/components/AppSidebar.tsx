@@ -115,7 +115,12 @@ export function AppSidebar() {
   return (
     <aside className="w-[220px] shrink-0 bg-sidebar text-sidebar-foreground flex flex-col h-screen overflow-y-auto sticky top-0">
       <div className="px-5 py-5 border-b border-sidebar-border">
-        <NavLink to="/dashboard"><LoxxLogo /></NavLink>
+        <NavLink to="/dashboard" className="flex items-center gap-2">
+          <LoxxLogo />
+          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold bg-primary text-primary-foreground">
+            Beta
+          </span>
+        </NavLink>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
