@@ -15,6 +15,15 @@ const STORAGE_KEY = "loxx_partner_session";
 const FN_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/partner-auth`;
 
 interface PartnerInfo { id: string; name: string; company: string; partner_type: string; }
+interface TeamMember {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: "master_admin" | "member";
+  status: "active" | "pending" | "removed";
+  created_at: string;
+}
 interface PortalData {
   partner: PartnerInfo;
   summary: {
@@ -30,6 +39,7 @@ interface PortalData {
   systems: { id: string; name: string; reference: string | null; firstOrderDate: string | null; customerCompany: string | null; revenue: number; commission: number }[];
   recentOrders: { id: string; reference: string; customer: string; system: string; created_at: string; total: number; status: string; payment_status: string }[];
 }
+
 
 const gbp = (n: number) => `£${Number(n ?? 0).toFixed(2)}`;
 const fmtDate = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString("en-GB") : "—";
