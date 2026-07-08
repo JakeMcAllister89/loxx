@@ -255,11 +255,12 @@ Deno.serve(async (req) => {
       const pid = verified.pid;
       const { data: partner } = await supabase
         .from("partners")
-        .select("id, name, company, partner_type, default_commission_pct")
+        .select("id, name, first_name, last_name, phone, company, partner_type, default_commission_pct, bank_account_name, bank_sort_code, bank_account_number")
         .eq("id", pid)
         .single();
       if (!partner) return json({ error: "Partner not found" }, 404);
       if (action === "me") return json({ partner, role: verified.role, email: verified.email });
+
 
 
 
