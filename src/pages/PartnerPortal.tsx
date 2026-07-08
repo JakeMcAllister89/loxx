@@ -217,6 +217,62 @@ export default function PartnerPortal() {
     }
   };
 
+  const callAction = async (payload: Record<string, unknown>) => {
+    const res = await fetch(FN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const j = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, body: j as any };
+  };
+
+  const saveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setProfileBusy(true);
+    try {
+      const r = await callAction({ action: "update_profile", token, ...profileForm });
+      if (!r.ok || !r.body.ok) { toast.error(r.body.error ?? "Could not save profile"); return; }
+      toast.success("Profile saved");
+      fetchData(token, from, to);
+    } finally { setProfileBusy(false); }
+  };
+
+  const saveBank = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setBankBusy(true);
+    try {
+      const r = await callAction({ action: "update_bank_details", token, ...bankForm });
+      if (!r.ok || !r.body.ok) { toast.error(r.body.error ?? "Could not save bank details"); return; }
+      toast.success("Bank details saved");
+      fetchData(token, from, to);
+    } finally { setBankBusy(false); }
+  };
+
+  const changePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    if (pwForm.next.length < 8) { toast.error("New password must be at least 8 characters"); return; }
+    if (pwForm.next !== pwForm.confirm) { toast.error("New passwords do not match"); return; }
+    setPwBusy(true);
+    try {
+      const r = await callAction({
+        action: "change_password",
+        token,
+        current_password: pwForm.current,
+        newPassword: pwForm.next,
+      });
+      if (r.status === 429) { toast.error(r.body.error ?? "Too many attempts, please try again later."); return; }
+      if (!r.ok || !r.body.ok) { toast.error(r.body.error ?? "Could not change password"); return; }
+      toast.success("Password changed");
+      setPwForm({ current: "", next: "", confirm: "" });
+    } finally { setPwBusy(false); }
+  };
+
+
+
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
