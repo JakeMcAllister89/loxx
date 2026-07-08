@@ -36,6 +36,7 @@ import AdminPartners from "./pages/AdminPartners";
 import AdminPartnersReport from "./pages/AdminPartnersReport";
 import AdminUsers from "./pages/AdminUsers";
 import AdminSystems from "./pages/AdminSystems";
+import AdminPriceLists from "./pages/AdminPriceLists";
 import PartnerPortal from "./pages/PartnerPortal";
 import Team from "./pages/Team";
 import AcceptInvite from "./pages/AcceptInvite";
@@ -106,6 +107,7 @@ const App = () => (
               <Route path="/admin/partners/report" element={<AdminRoute><AdminPartnersReport /></AdminRoute>} />
               <Route path="/partner-portal" element={<PartnerPortal />} />
               <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+              <Route path="/admin/price-lists" element={<AdminRoute><AdminPriceLists /></AdminRoute>} />
               <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
               <Route path="/quotes" element={<RoleRoute allow={["master_admin","admin","standard"]}><Quotes /></RoleRoute>} />
               <Route path="/quotes/new" element={<RoleRoute allow={["master_admin","admin","standard"]}><QuoteNew /></RoleRoute>} />
