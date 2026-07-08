@@ -86,6 +86,13 @@ export default function PartnerPortal() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: "", first_name: "", last_name: "" });
   const [inviteBusy, setInviteBusy] = useState(false);
+  const [profileForm, setProfileForm] = useState({ first_name: "", last_name: "", phone: "" });
+  const [profileBusy, setProfileBusy] = useState(false);
+  const [bankForm, setBankForm] = useState({ bank_account_name: "", bank_sort_code: "", bank_account_number: "" });
+  const [bankBusy, setBankBusy] = useState(false);
+  const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
+  const [pwBusy, setPwBusy] = useState(false);
+
 
 
   const initial = presetRange("month");
