@@ -38,7 +38,12 @@ interface Props {
   onPatch: (p: Partial<TNode>) => void;
 }
 
-export function CylinderConfigurator({ node, products, onPatch }: Props) {
+export function CylinderConfigurator({ node, products: rawProducts, onPatch }: Props) {
+  const { priceFor } = useOrgProductPrices();
+  const products = useMemo(
+    () => rawProducts.map((p) => ({ ...p, price_gbp: priceFor(p.code, p.price_gbp) })),
+    [rawProducts, priceFor]
+  );
   // Group products by family (cylinder_type, e.g. "Single", "Double", "Oval")
   const families = useMemo(() => {
     const set = new Map<string, ProductFull[]>();
