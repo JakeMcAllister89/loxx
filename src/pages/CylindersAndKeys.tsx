@@ -7,7 +7,7 @@ import {
   Wrench, Drill, Puzzle, FileBadge, Boxes, Settings2, Repeat,
   ClipboardList, Truck, Building2,
 } from "lucide-react";
-import cylinderImg from "@/assets/cylinder.png";
+import cylinderAsset from "@/assets/cylinder.png.asset.json";
 
 const hardwareCards = [
   { icon: Layers, title: "Specified in the system", copy: "Every cylinder and key is linked to the correct door, suite and access level." },
@@ -86,7 +86,7 @@ export default function CylindersAndKeys() {
           </div>
           <div className="relative">
             <div className="rounded-2xl border border-border bg-card p-8 shadow-card flex items-center justify-center">
-              <img src={cylinderImg} alt="Euro profile master key cylinder with keys" className="max-h-[380px] w-auto object-contain" />
+              <img src={cylinderAsset.url} alt="Euro profile master key cylinder with keys" className="max-h-[380px] w-auto object-contain" />
             </div>
           </div>
         </div>
