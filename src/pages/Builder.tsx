@@ -910,7 +910,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         normaliseKeys(n).forEach((k) => {
           if (k.qty > 0) {
             const keyProd = keyProductForNode(n.type);
-            const keyPrice = keyProd ? Number((keyProd as any).price_gbp) : 12;
+            const keyPrice = keyProd ? orgPriceFor((keyProd as any).code, (keyProd as any).price_gbp) : 12;
             lines.push({
               kind: "key",
               key_reference: n.label && n.label !== k.ref ? `${k.ref} — ${n.label}` : k.ref,
