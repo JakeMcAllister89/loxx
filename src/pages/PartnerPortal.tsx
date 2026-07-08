@@ -146,12 +146,17 @@ export default function PartnerPortal() {
     if (!token) return;
     setInviteBusy(true);
     try {
-      const { data, error } = await supabaseInvokeMemberInvite(token, inviteForm);
-      if (error || !data?.ok) {
-        toast.error(data?.error ?? "Could not send invite");
+      const res = await fetch(MEMBER_INVITE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, ...inviteForm }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) {
+        toast.error(j.error ?? "Could not send invite");
         return;
       }
-      toast.success(data.sent === false ? "Invite created (email not sent — no email service configured)" : "Invitation sent");
+      toast.success(j.sent === false ? "Invite created (email not sent — no email service configured)" : "Invitation sent");
       setInviteOpen(false);
       setInviteForm({ email: "", first_name: "", last_name: "" });
       loadTeam(token);
@@ -159,6 +164,7 @@ export default function PartnerPortal() {
       setInviteBusy(false);
     }
   };
+
 
   const removeMember = async (memberEmail: string) => {
     if (!token) return;
