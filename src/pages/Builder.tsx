@@ -369,9 +369,10 @@ function BuilderInner({ systemId }: { systemId: string }) {
       finish: (p as any).finish ?? null,
       size: (p as any).size ?? null,
       price_gbp: (p as any).price_gbp ?? null,
+      effective_price: orgPriceFor(p.code, (p as any).price_gbp ?? null),
     }));
     return m;
-  }, [products]);
+  }, [products, orgPriceFor]);
 
   useEffect(() => {
     setLoading(true);
