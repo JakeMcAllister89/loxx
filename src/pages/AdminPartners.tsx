@@ -344,6 +344,8 @@ export default function AdminPartners() {
                         />
                       </TableCell>
                       <TableCell className="font-mono">{counts[p.id] ?? 0}</TableCell>
+                      <TableCell className="font-mono">{memberCounts[p.id] ?? 0}</TableCell>
+
                       <TableCell>
                         <Switch checked={p.is_active} onCheckedChange={() => toggleActive(p)} />
                       </TableCell>
