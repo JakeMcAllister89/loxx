@@ -973,7 +973,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       }
       if (n.type === "CE" && n.cylinder_type && (!isFulfilled || n.is_new)) {
         const p = productByCode.get(n.cylinder_type);
-        const unit = Number(p?.price_gbp ?? 0);
+        const unit = orgPriceFor(n.cylinder_type, p?.price_gbp);
         const qty = n.quantity ?? 1;
         const mkAnc  = ancestors.find(a => a.type === "MK");
         const smkAnc = ancestors.find(a => a.type === "SMK");
