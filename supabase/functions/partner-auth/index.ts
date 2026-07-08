@@ -50,13 +50,13 @@ async function hmac(payload: string): Promise<string> {
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
   return b64url(sig);
 }
-async function signToken(partnerId: string): Promise<string> {
-  const payload = { pid: partnerId, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 };
+async function signToken(partnerId: string, email: string, role: string): Promise<string> {
+  const payload = { pid: partnerId, email, role, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 };
   const body = b64url(new TextEncoder().encode(JSON.stringify(payload)));
   const sig = await hmac(body);
   return `${body}.${sig}`;
 }
-async function verifyToken(token: string): Promise<string | null> {
+async function verifyToken(token: string): Promise<{ pid: string; email: string; role: string } | null> {
   try {
     const [body, sig] = token.split(".");
     if (!body || !sig) return null;
@@ -64,11 +64,12 @@ async function verifyToken(token: string): Promise<string | null> {
     if (expected !== sig) return null;
     const payload = JSON.parse(new TextDecoder().decode(b64urlDecode(body)));
     if (!payload.pid || payload.exp < Date.now()) return null;
-    return payload.pid as string;
+    return { pid: payload.pid, email: payload.email ?? "", role: payload.role ?? "member" };
   } catch {
     return null;
   }
 }
+
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -158,10 +159,11 @@ Deno.serve(async (req) => {
 
     if (action === "login") {
       if (!email || !password) return json({ error: "Email and password required" }, 400);
+      const lower = String(email).toLowerCase().trim();
       const { data: login } = await supabase
         .from("partner_logins")
         .select("id, partner_id, password_hash")
-        .eq("email", String(email).toLowerCase().trim())
+        .eq("email", lower)
         .maybeSingle();
       if (!login) return json({ error: "Invalid credentials" }, 401);
       const ok = await bcrypt.compare(password, login.password_hash);
@@ -174,25 +176,85 @@ Deno.serve(async (req) => {
       if (!partner || partner.is_active === false) {
         return json({ error: "Account is inactive, please contact support" }, 403);
       }
+      // Check membership + role
+      const { data: member } = await supabase
+        .from("partner_members")
+        .select("role, status")
+        .eq("partner_id", login.partner_id)
+        .eq("email", lower)
+        .maybeSingle();
+      if (!member || member.status !== "active") {
+        return json({ error: "Your access to this partner account has been removed" }, 403);
+      }
       await supabase
         .from("partner_logins")
         .update({ last_login_at: new Date().toISOString() })
         .eq("id", login.id);
-      const tok = await signToken(login.partner_id);
-      return json({ token: tok, partner });
+      const tok = await signToken(login.partner_id, lower, member.role);
+      return json({ token: tok, partner, role: member.role, email: lower });
+    }
+
+    if (action === "list_team") {
+      if (!clientToken) return json({ error: "Unauthorized" }, 401);
+      const verified = await verifyToken(clientToken);
+      if (!verified) return json({ error: "Invalid token" }, 401);
+      const { data: members } = await supabase
+        .from("partner_members")
+        .select("id, email, first_name, last_name, role, status, created_at")
+        .eq("partner_id", verified.pid)
+        .neq("status", "removed")
+        .order("created_at", { ascending: true });
+      return json({ members: members ?? [], me: { email: verified.email, role: verified.role } });
+    }
+
+    if (action === "remove_member") {
+      if (!clientToken) return json({ error: "Unauthorized" }, 401);
+      const verified = await verifyToken(clientToken);
+      if (!verified) return json({ error: "Invalid token" }, 401);
+      if (verified.role !== "master_admin") return json({ error: "Only master admins can remove members" }, 403);
+      const targetEmail = String(email || "").toLowerCase().trim();
+      if (!targetEmail) return json({ error: "Missing email" }, 400);
+
+      // Prevent removing the last master_admin
+      if (targetEmail === verified.email) {
+        const { data: admins } = await supabase
+          .from("partner_members")
+          .select("id")
+          .eq("partner_id", verified.pid)
+          .eq("role", "master_admin")
+          .eq("status", "active");
+        if ((admins?.length ?? 0) <= 1) {
+          return json({ error: "You cannot remove yourself as the last master admin" }, 400);
+        }
+      }
+
+      await supabase
+        .from("partner_members")
+        .update({ status: "removed" })
+        .eq("partner_id", verified.pid)
+        .eq("email", targetEmail);
+      await supabase
+        .from("partner_logins")
+        .delete()
+        .eq("partner_id", verified.pid)
+        .eq("email", targetEmail);
+      return json({ ok: true });
     }
 
     if (action === "me" || action === "data") {
       if (!clientToken) return json({ error: "Unauthorized" }, 401);
-      const pid = await verifyToken(clientToken);
-      if (!pid) return json({ error: "Invalid token" }, 401);
+      const verified = await verifyToken(clientToken);
+      if (!verified) return json({ error: "Invalid token" }, 401);
+      const pid = verified.pid;
       const { data: partner } = await supabase
         .from("partners")
         .select("id, name, company, partner_type, default_commission_pct")
         .eq("id", pid)
         .single();
       if (!partner) return json({ error: "Partner not found" }, 404);
-      if (action === "me") return json({ partner });
+      if (action === "me") return json({ partner, role: verified.role, email: verified.email });
+
+
 
       // data: aggregate revenue & commission per system and quarterly breakdown.
       // Range-filtered stats respect from/to; systemsList & quarterly stay lifetime.

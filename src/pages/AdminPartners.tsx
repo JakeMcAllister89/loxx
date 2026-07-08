@@ -74,6 +74,8 @@ export default function AdminPartners() {
     open: false, sys: null, partnerId: "", pct: "",
   });
 
+  const [memberCounts, setMemberCounts] = useState<Record<string, number>>({});
+
   const load = async () => {
     const { data } = await supabase.from("partners").select("*").order("name");
     setPartners((data as any) ?? []);
@@ -81,6 +83,14 @@ export default function AdminPartners() {
     const c: Record<string, number> = {};
     (sys ?? []).forEach((s: any) => { c[s.partner_id] = (c[s.partner_id] ?? 0) + 1; });
     setCounts(c);
+    const { data: mems } = await supabase
+      .from("partner_members")
+      .select("partner_id, status");
+    const mc: Record<string, number> = {};
+    (mems ?? []).forEach((m: any) => {
+      if (m.status !== "removed") mc[m.partner_id] = (mc[m.partner_id] ?? 0) + 1;
+    });
+    setMemberCounts(mc);
     const { data: pays } = await supabase.from("partner_payments").select("*").order("period_start", { ascending: false });
     setPayments((pays as any) ?? []);
     const { data: allSys } = await supabase
@@ -90,6 +100,7 @@ export default function AdminPartners() {
     setSystems((allSys as any) ?? []);
   };
   useEffect(() => { load(); }, []);
+
 
   const filteredSystems = useMemo(() => {
     const q = sysSearch.trim().toLowerCase();
@@ -308,8 +319,10 @@ export default function AdminPartners() {
                     <TableHead>Type</TableHead>
                     <TableHead>Default %</TableHead>
                     <TableHead>Systems</TableHead>
+                    <TableHead>Members</TableHead>
                     <TableHead>Active</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
+
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -331,6 +344,8 @@ export default function AdminPartners() {
                         />
                       </TableCell>
                       <TableCell className="font-mono">{counts[p.id] ?? 0}</TableCell>
+                      <TableCell className="font-mono">{memberCounts[p.id] ?? 0}</TableCell>
+
                       <TableCell>
                         <Switch checked={p.is_active} onCheckedChange={() => toggleActive(p)} />
                       </TableCell>
@@ -354,7 +369,7 @@ export default function AdminPartners() {
                     </TableRow>
                   ))}
                   {partners.length === 0 && (
-                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No partners yet.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No partners yet.</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>

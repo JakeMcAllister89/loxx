@@ -13,8 +13,19 @@ import { presetRange, RangePreset } from "@/lib/dateRanges";
 
 const STORAGE_KEY = "loxx_partner_session";
 const FN_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/partner-auth`;
+const MEMBER_INVITE_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/send-partner-member-invite`;
+
 
 interface PartnerInfo { id: string; name: string; company: string; partner_type: string; }
+interface TeamMember {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: "master_admin" | "member";
+  status: "active" | "pending" | "removed";
+  created_at: string;
+}
 interface PortalData {
   partner: PartnerInfo;
   summary: {
@@ -30,6 +41,7 @@ interface PortalData {
   systems: { id: string; name: string; reference: string | null; firstOrderDate: string | null; customerCompany: string | null; revenue: number; commission: number }[];
   recentOrders: { id: string; reference: string; customer: string; system: string; created_at: string; total: number; status: string; payment_status: string }[];
 }
+
 
 const gbp = (n: number) => `£${Number(n ?? 0).toFixed(2)}`;
 const fmtDate = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString("en-GB") : "—";
@@ -56,6 +68,12 @@ export default function PartnerPortal() {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotBusy, setForgotBusy] = useState(false);
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [me, setMe] = useState<{ email: string; role: "master_admin" | "member" } | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState({ email: "", first_name: "", last_name: "" });
+  const [inviteBusy, setInviteBusy] = useState(false);
+
 
   const initial = presetRange("month");
   const [from, setFrom] = useState<Date>(initial.from);
@@ -104,13 +122,74 @@ export default function PartnerPortal() {
     }
   };
 
-  useEffect(() => { if (token) fetchData(token, from, to); }, [token, from, to]);
+  const loadTeam = async (tok: string) => {
+    try {
+      const res = await fetch(FN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "list_team", token: tok }),
+      });
+      const j = await res.json();
+      if (res.ok) {
+        setTeam(j.members ?? []);
+        setMe(j.me ?? null);
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (token) { fetchData(token, from, to); loadTeam(token); }
+  }, [token, from, to]);
+
+  const submitInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setInviteBusy(true);
+    try {
+      const res = await fetch(MEMBER_INVITE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, ...inviteForm }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) {
+        toast.error(j.error ?? "Could not send invite");
+        return;
+      }
+      toast.success(j.sent === false ? "Invite created (email not sent — no email service configured)" : "Invitation sent");
+      setInviteOpen(false);
+      setInviteForm({ email: "", first_name: "", last_name: "" });
+      loadTeam(token);
+    } finally {
+      setInviteBusy(false);
+    }
+  };
+
+
+  const removeMember = async (memberEmail: string) => {
+    if (!token) return;
+    if (!confirm(`Remove ${memberEmail} from your team? They will lose access immediately.`)) return;
+    try {
+      const res = await fetch(FN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "remove_member", token, email: memberEmail }),
+      });
+      const j = await res.json();
+      if (!res.ok) { toast.error(j.error ?? "Could not remove member"); return; }
+      toast.success("Member removed");
+      loadTeam(token);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not remove member");
+    }
+  };
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       const res = await fetch(FN_URL, {
+
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "login", email, password }),
@@ -258,6 +337,103 @@ export default function PartnerPortal() {
             </div>
           </div>
         </Section>
+
+        <Section title="Team">
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-muted-foreground">
+                People who can sign in to this partner portal.
+                {me?.role === "master_admin" && " Master admins can invite or remove members."}
+              </p>
+              {me?.role === "master_admin" && (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="bg-[#d4820a] hover:bg-[#b86d08] text-white"
+                  onClick={() => setInviteOpen(true)}
+                >
+                  Invite member
+                </Button>
+              )}
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  {me?.role === "master_admin" && <TableHead className="text-right">Actions</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {team.map((m) => {
+                  const name = [m.first_name, m.last_name].filter(Boolean).join(" ") || "—";
+                  const isMe = me?.email === m.email;
+                  return (
+                    <TableRow key={m.id}>
+                      <TableCell>{name}{isMe && <span className="text-xs text-muted-foreground ml-1">(you)</span>}</TableCell>
+                      <TableCell className="text-sm">{m.email}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={m.role === "master_admin" ? "bg-[#d4820a]/10 text-[#d4820a] border-[#d4820a]/40" : ""}>
+                          {m.role === "master_admin" ? "Master admin" : "Member"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={m.status === "active" ? "bg-green-100 text-green-800 border-green-300" : "bg-amber-100 text-amber-800 border-amber-300"}>
+                          {m.status === "active" ? "Active" : "Pending"}
+                        </Badge>
+                      </TableCell>
+                      {me?.role === "master_admin" && (
+                        <TableCell className="text-right">
+                          <Button size="sm" variant="ghost" onClick={() => removeMember(m.email)}>
+                            Remove
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })}
+                {team.length === 0 && (
+                  <TableRow><TableCell colSpan={me?.role === "master_admin" ? 5 : 4} className="text-center text-muted-foreground py-8">No team members yet.</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </Section>
+
+        {inviteOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50" onClick={() => setInviteOpen(false)}>
+            <div className="w-full max-w-sm bg-card rounded-[10px] border shadow-card p-6" onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-lg font-semibold">Invite a team member</h2>
+              <p className="text-sm text-muted-foreground mt-1">They'll receive an email to set their password and join this partner account.</p>
+              <form onSubmit={submitInvite} className="space-y-3 mt-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="inv-first">First name</Label>
+                    <Input id="inv-first" value={inviteForm.first_name} onChange={(e) => setInviteForm({ ...inviteForm, first_name: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label htmlFor="inv-last">Last name</Label>
+                    <Input id="inv-last" value={inviteForm.last_name} onChange={(e) => setInviteForm({ ...inviteForm, last_name: e.target.value })} />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="inv-email">Email</Label>
+                  <Input id="inv-email" type="email" required value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button type="button" variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={inviteBusy} className="bg-[#d4820a] hover:bg-[#b86d08] text-white">
+                    {inviteBusy ? "Sending…" : "Send invitation"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+
 
         <Section title="Recent orders">
           <Table>
