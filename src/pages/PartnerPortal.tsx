@@ -66,6 +66,12 @@ export default function PartnerPortal() {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotBusy, setForgotBusy] = useState(false);
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [me, setMe] = useState<{ email: string; role: "master_admin" | "member" } | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState({ email: "", first_name: "", last_name: "" });
+  const [inviteBusy, setInviteBusy] = useState(false);
+
 
   const initial = presetRange("month");
   const [from, setFrom] = useState<Date>(initial.from);
