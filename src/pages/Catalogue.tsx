@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useOrgProductPrices } from "@/hooks/useOrgProductPrices";
 
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
