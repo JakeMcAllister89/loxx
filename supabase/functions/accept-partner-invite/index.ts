@@ -75,10 +75,25 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Ensure a partner_members row exists and is active for this email.
+      await admin
+        .from("partner_members")
+        .upsert(
+          { partner_id: invite.partner_id, email, status: "active" },
+          { onConflict: "partner_id,email" },
+        );
+      // If the member was pending/removed, activate.
+      await admin
+        .from("partner_members")
+        .update({ status: "active" })
+        .eq("partner_id", invite.partner_id)
+        .eq("email", email);
+
       await admin
         .from("partner_invites")
         .update({ accepted_at: new Date().toISOString() })
         .eq("id", invite.id);
+
 
       return json({ ok: true, email });
     }
