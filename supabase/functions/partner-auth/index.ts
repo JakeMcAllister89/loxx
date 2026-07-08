@@ -81,8 +81,15 @@ function json(body: unknown, status = 200) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const { action, email, password, token: clientToken, partnerId, newPassword, from: fromIso, to: toIso } =
-      await req.json();
+    const body = await req.json();
+    const {
+      action, email, password, token: clientToken, partnerId, newPassword,
+      from: fromIso, to: toIso,
+      first_name, last_name, phone,
+      bank_account_name, bank_sort_code, bank_account_number,
+      current_password,
+    } = body;
+
 
     if (action === "request_reset") {
       const target = String(email || "").toLowerCase().trim();
