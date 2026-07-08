@@ -48,6 +48,7 @@ import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { stashQuoteDraft, treeToQuoteItems } from "@/lib/quote";
 import { useAuth, useIsAdmin } from "@/lib/auth";
 import { createSystem } from "@/lib/createSystem";
+import { useOrgProductPrices } from "@/hooks/useOrgProductPrices";
 
 const TYPE_META: Record<NodeType, { label: string; color: string; pill: string; description: string }> = {
   GMK: { label: "Grand Master Key", color: "hsl(var(--node-gmk))", pill: "bg-[hsl(245_70%_96%)] text-[hsl(var(--node-gmk))] border-[hsl(var(--node-gmk))]/30", description: "The master key that opens every door in the building — held by senior management." },
