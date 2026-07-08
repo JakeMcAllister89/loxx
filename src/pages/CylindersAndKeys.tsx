@@ -86,7 +86,7 @@ export default function CylindersAndKeys() {
           </div>
           <div className="relative">
             <div className="rounded-2xl border border-border bg-card p-8 shadow-card flex items-center justify-center">
-              <img src={cylinderImg} alt="Euro profile master key cylinder with keys" className="max-h-[380px] w-auto object-contain" />
+              <img src={cylinderAsset.url} alt="Euro profile master key cylinder with keys" className="max-h-[380px] w-auto object-contain" />
             </div>
           </div>
         </div>
