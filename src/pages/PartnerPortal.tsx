@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoxxLogo } from "@/components/LoxxLogo";
 import { LogOut, Loader2, Handshake } from "lucide-react";
 import { toast } from "sonner";
@@ -16,7 +17,19 @@ const FN_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/
 const MEMBER_INVITE_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/send-partner-member-invite`;
 
 
-interface PartnerInfo { id: string; name: string; company: string; partner_type: string; }
+interface PartnerInfo {
+  id: string;
+  name: string;
+  company: string;
+  partner_type: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  bank_account_name?: string | null;
+  bank_sort_code?: string | null;
+  bank_account_number?: string | null;
+}
+
 interface TeamMember {
   id: string;
   email: string;
@@ -73,6 +86,13 @@ export default function PartnerPortal() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: "", first_name: "", last_name: "" });
   const [inviteBusy, setInviteBusy] = useState(false);
+  const [profileForm, setProfileForm] = useState({ first_name: "", last_name: "", phone: "" });
+  const [profileBusy, setProfileBusy] = useState(false);
+  const [bankForm, setBankForm] = useState({ bank_account_name: "", bank_sort_code: "", bank_account_number: "" });
+  const [bankBusy, setBankBusy] = useState(false);
+  const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
+  const [pwBusy, setPwBusy] = useState(false);
+
 
 
   const initial = presetRange("month");
@@ -117,6 +137,19 @@ export default function PartnerPortal() {
         return;
       }
       setData(j);
+      // Sync settings forms from freshly loaded partner data.
+      const p = j.partner ?? {};
+      setProfileForm({
+        first_name: p.first_name ?? "",
+        last_name: p.last_name ?? "",
+        phone: p.phone ?? "",
+      });
+      setBankForm({
+        bank_account_name: p.bank_account_name ?? "",
+        bank_sort_code: p.bank_sort_code ?? "",
+        bank_account_number: p.bank_account_number ?? "",
+      });
+
     } finally {
       setLoading(false);
     }
@@ -183,6 +216,62 @@ export default function PartnerPortal() {
       toast.error(e?.message ?? "Could not remove member");
     }
   };
+
+  const callAction = async (payload: Record<string, unknown>) => {
+    const res = await fetch(FN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const j = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, body: j as any };
+  };
+
+  const saveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setProfileBusy(true);
+    try {
+      const r = await callAction({ action: "update_profile", token, ...profileForm });
+      if (!r.ok || !r.body.ok) { toast.error(r.body.error ?? "Could not save profile"); return; }
+      toast.success("Profile saved");
+      fetchData(token, from, to);
+    } finally { setProfileBusy(false); }
+  };
+
+  const saveBank = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setBankBusy(true);
+    try {
+      const r = await callAction({ action: "update_bank_details", token, ...bankForm });
+      if (!r.ok || !r.body.ok) { toast.error(r.body.error ?? "Could not save bank details"); return; }
+      toast.success("Bank details saved");
+      fetchData(token, from, to);
+    } finally { setBankBusy(false); }
+  };
+
+  const changePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    if (pwForm.next.length < 8) { toast.error("New password must be at least 8 characters"); return; }
+    if (pwForm.next !== pwForm.confirm) { toast.error("New passwords do not match"); return; }
+    setPwBusy(true);
+    try {
+      const r = await callAction({
+        action: "change_password",
+        token,
+        current_password: pwForm.current,
+        newPassword: pwForm.next,
+      });
+      if (r.status === 429) { toast.error(r.body.error ?? "Too many attempts, please try again later."); return; }
+      if (!r.ok || !r.body.ok) { toast.error(r.body.error ?? "Could not change password"); return; }
+      toast.success("Password changed");
+      setPwForm({ current: "", next: "", confirm: "" });
+    } finally { setPwBusy(false); }
+  };
+
+
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -298,109 +387,296 @@ export default function PartnerPortal() {
           <p className="text-muted-foreground text-sm">Your commissions and referred activity{loading ? " · refreshing…" : ""}.</p>
         </div>
 
-        <div className="mb-6">
-          <DateRangePicker from={from} to={to} preset={preset} onChange={onRangeChange} />
-        </div>
+        <Tabs defaultValue="dashboard">
+          <TabsList>
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard label="Revenue (ex VAT)" value={gbp(data.summary.revenue)} />
-          <StatCard label="Commission" value={gbp(data.summary.commission)} accent />
-          <StatCard label="Active systems" value={data.summary.activeSystems} sub="with orders in range" />
-          <StatCard label="Pending commission" value={gbp(data.summary.pendingCommission)} sub="across all periods" />
-          <StatCard label="Cylinders supplied" value={data.summary.cylindersSupplied} />
-          <StatCard label="Keys supplied" value={data.summary.keysSupplied} />
-          <StatCard label="Systems referred" value={data.summary.systemsCount} sub="lifetime" />
-        </div>
-
-        <Section title="Your signup link">
-          <div className="p-5">
-            <p className="text-xs text-muted-foreground mb-3">
-              Share this with your clients — anyone who signs up through it is automatically credited to you, with instant access.
-            </p>
-            <div className="flex items-center gap-2">
-              <Input
-                readOnly
-                value={`${window.location.origin}/auth?mode=signup&ref=${data.partner.id}`}
-                className="font-mono text-xs bg-muted/40"
-                onClick={(e) => (e.target as HTMLInputElement).select()}
-              />
-              <Button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/auth?mode=signup&ref=${data.partner.id}`);
-                  toast.success("Link copied");
-                }}
-                className="bg-[#d4820a] hover:bg-[#b86d08] text-white shrink-0"
-              >
-                Copy
-              </Button>
+          <TabsContent value="dashboard" className="mt-6">
+            <div className="mb-6">
+              <DateRangePicker from={from} to={to} preset={preset} onChange={onRangeChange} />
             </div>
-          </div>
-        </Section>
 
-        <Section title="Team">
-          <div className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-muted-foreground">
-                People who can sign in to this partner portal.
-                {me?.role === "master_admin" && " Master admins can invite or remove members."}
-              </p>
-              {me?.role === "master_admin" && (
-                <Button
-                  type="button"
-                  size="sm"
-                  className="bg-[#d4820a] hover:bg-[#b86d08] text-white"
-                  onClick={() => setInviteOpen(true)}
-                >
-                  Invite member
-                </Button>
-              )}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <StatCard label="Revenue (ex VAT)" value={gbp(data.summary.revenue)} />
+              <StatCard label="Commission" value={gbp(data.summary.commission)} accent />
+              <StatCard label="Active systems" value={data.summary.activeSystems} sub="with orders in range" />
+              <StatCard label="Pending commission" value={gbp(data.summary.pendingCommission)} sub="across all periods" />
+              <StatCard label="Cylinders supplied" value={data.summary.cylindersSupplied} />
+              <StatCard label="Keys supplied" value={data.summary.keysSupplied} />
+              <StatCard label="Systems referred" value={data.summary.systemsCount} sub="lifetime" />
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  {me?.role === "master_admin" && <TableHead className="text-right">Actions</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {team.map((m) => {
-                  const name = [m.first_name, m.last_name].filter(Boolean).join(" ") || "—";
-                  const isMe = me?.email === m.email;
-                  return (
-                    <TableRow key={m.id}>
-                      <TableCell>{name}{isMe && <span className="text-xs text-muted-foreground ml-1">(you)</span>}</TableCell>
-                      <TableCell className="text-sm">{m.email}</TableCell>
+
+            <Section title="Your signup link">
+              <div className="p-5">
+                <p className="text-xs text-muted-foreground mb-3">
+                  Share this with your clients — anyone who signs up through it is automatically credited to you, with instant access.
+                </p>
+                <div className="flex items-center gap-2">
+                  <Input
+                    readOnly
+                    value={`${window.location.origin}/auth?mode=signup&ref=${data.partner.id}`}
+                    className="font-mono text-xs bg-muted/40"
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/auth?mode=signup&ref=${data.partner.id}`);
+                      toast.success("Link copied");
+                    }}
+                    className="bg-[#d4820a] hover:bg-[#b86d08] text-white shrink-0"
+                  >
+                    Copy
+                  </Button>
+                </div>
+              </div>
+            </Section>
+
+            <Section title="Recent orders">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ref</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>System</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.recentOrders.map((o) => (
+                    <TableRow key={o.id}>
+                      <TableCell className="text-sm text-amber-700 font-mono">{o.reference}</TableCell>
+                      <TableCell>{o.customer}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{o.system}</TableCell>
+                      <TableCell className="text-xs">{fmtDate(o.created_at)}</TableCell>
+                      <TableCell className="text-right font-mono font-semibold">{gbp(o.total)}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={m.role === "master_admin" ? "bg-[#d4820a]/10 text-[#d4820a] border-[#d4820a]/40" : ""}>
-                          {m.role === "master_admin" ? "Master admin" : "Member"}
-                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Badge className={statusColor[o.status] ?? ""}>{o.status}</Badge>
+                          {o.payment_status === "paid" ? (
+                            <Badge className="bg-green-100 text-green-800 border-green-300 text-[10px]">Paid ✓</Badge>
+                          ) : (
+                            <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-[10px]">Unpaid</Badge>
+                          )}
+                        </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={m.status === "active" ? "bg-green-100 text-green-800 border-green-300" : "bg-amber-100 text-amber-800 border-amber-300"}>
-                          {m.status === "active" ? "Active" : "Pending"}
-                        </Badge>
-                      </TableCell>
-                      {me?.role === "master_admin" && (
-                        <TableCell className="text-right">
-                          <Button size="sm" variant="ghost" onClick={() => removeMember(m.email)}>
-                            Remove
-                          </Button>
-                        </TableCell>
-                      )}
                     </TableRow>
-                  );
-                })}
-                {team.length === 0 && (
-                  <TableRow><TableCell colSpan={me?.role === "master_admin" ? 5 : 4} className="text-center text-muted-foreground py-8">No team members yet.</TableCell></TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </Section>
+                  ))}
+                  {data.recentOrders.length === 0 && (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No orders in this period.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Section>
+
+            <Section title="Quarterly breakdown">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Period</TableHead>
+                    <TableHead className="text-right">Revenue (ex VAT)</TableHead>
+                    <TableHead className="text-right">%</TableHead>
+                    <TableHead className="text-right">Commission</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.quarterly.map((q) => (
+                    <TableRow key={q.key}>
+                      <TableCell className="font-mono">{quarterLabel(q.key)}</TableCell>
+                      <TableCell className="text-right font-mono">{gbp(q.revenue)}</TableCell>
+                      <TableCell className="text-right font-mono">{q.commission_pct.toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-mono">{gbp(q.commission)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={q.status === "paid" ? "bg-green-100 text-green-800 border-green-300" : "bg-amber-100 text-amber-800 border-amber-300"}>
+                          {q.status === "paid" ? "Paid" : "Pending"}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {data.quarterly.length === 0 && (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No earnings yet.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Section>
+
+            <Section title="Referred systems">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>System</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>First order</TableHead>
+                    <TableHead className="text-right">Revenue (ex VAT)</TableHead>
+                    <TableHead className="text-right">Commission</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.systems.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell>
+                        <div>{s.name}</div>
+                        {s.reference && <div className="text-xs font-mono text-muted-foreground">{s.reference}</div>}
+                      </TableCell>
+                      <TableCell>{s.customerCompany ?? "—"}</TableCell>
+                      <TableCell>{fmtDate(s.firstOrderDate)}</TableCell>
+                      <TableCell className="text-right font-mono">{gbp(s.revenue)}</TableCell>
+                      <TableCell className="text-right font-mono">{gbp(s.commission)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {data.systems.length === 0 && (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No referred systems yet.</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Section>
+          </TabsContent>
+
+          <TabsContent value="settings" className="mt-6">
+            <Section title="Profile">
+              <form onSubmit={saveProfile} className="p-5 space-y-4 max-w-xl">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="pf-first">First name</Label>
+                    <Input id="pf-first" value={profileForm.first_name} onChange={(e) => setProfileForm({ ...profileForm, first_name: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label htmlFor="pf-last">Last name</Label>
+                    <Input id="pf-last" value={profileForm.last_name} onChange={(e) => setProfileForm({ ...profileForm, last_name: e.target.value })} />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="pf-phone">Phone</Label>
+                  <Input id="pf-phone" value={profileForm.phone} onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })} />
+                </div>
+                <div>
+                  <Button type="submit" disabled={profileBusy} className="bg-[#d4820a] hover:bg-[#b86d08] text-white">
+                    {profileBusy ? "Saving…" : "Save profile"}
+                  </Button>
+                </div>
+              </form>
+            </Section>
+
+            <Section title="Bank details">
+              <form onSubmit={saveBank} className="p-5 space-y-4 max-w-xl">
+                <p className="text-xs text-muted-foreground">
+                  These details are used by My LOXX to process your commission payments. They are not shared with third parties.
+                </p>
+                <div>
+                  <Label htmlFor="bk-name">Account name</Label>
+                  <Input id="bk-name" value={bankForm.bank_account_name} onChange={(e) => setBankForm({ ...bankForm, bank_account_name: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="bk-sort">Sort code</Label>
+                    <Input id="bk-sort" placeholder="00-00-00" value={bankForm.bank_sort_code} onChange={(e) => setBankForm({ ...bankForm, bank_sort_code: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label htmlFor="bk-num">Account number</Label>
+                    <Input id="bk-num" value={bankForm.bank_account_number} onChange={(e) => setBankForm({ ...bankForm, bank_account_number: e.target.value })} />
+                  </div>
+                </div>
+                <div>
+                  <Button type="submit" disabled={bankBusy} className="bg-[#d4820a] hover:bg-[#b86d08] text-white">
+                    {bankBusy ? "Saving…" : "Save bank details"}
+                  </Button>
+                </div>
+              </form>
+            </Section>
+
+            <Section title="Team">
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-muted-foreground">
+                    People who can sign in to this partner portal.
+                    {me?.role === "master_admin" && " Master admins can invite or remove members."}
+                  </p>
+                  {me?.role === "master_admin" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="bg-[#d4820a] hover:bg-[#b86d08] text-white"
+                      onClick={() => setInviteOpen(true)}
+                    >
+                      Invite member
+                    </Button>
+                  )}
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      {me?.role === "master_admin" && <TableHead className="text-right">Actions</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {team.map((m) => {
+                      const name = [m.first_name, m.last_name].filter(Boolean).join(" ") || "—";
+                      const isMe = me?.email === m.email;
+                      return (
+                        <TableRow key={m.id}>
+                          <TableCell>{name}{isMe && <span className="text-xs text-muted-foreground ml-1">(you)</span>}</TableCell>
+                          <TableCell className="text-sm">{m.email}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={m.role === "master_admin" ? "bg-[#d4820a]/10 text-[#d4820a] border-[#d4820a]/40" : ""}>
+                              {m.role === "master_admin" ? "Master admin" : "Member"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={m.status === "active" ? "bg-green-100 text-green-800 border-green-300" : "bg-amber-100 text-amber-800 border-amber-300"}>
+                              {m.status === "active" ? "Active" : "Pending"}
+                            </Badge>
+                          </TableCell>
+                          {me?.role === "master_admin" && (
+                            <TableCell className="text-right">
+                              <Button size="sm" variant="ghost" onClick={() => removeMember(m.email)}>
+                                Remove
+                              </Button>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      );
+                    })}
+                    {team.length === 0 && (
+                      <TableRow><TableCell colSpan={me?.role === "master_admin" ? 5 : 4} className="text-center text-muted-foreground py-8">No team members yet.</TableCell></TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </Section>
+
+            <Section title="Change password">
+              <form onSubmit={changePassword} className="p-5 space-y-4 max-w-xl">
+                <div>
+                  <Label htmlFor="pw-current">Current password</Label>
+                  <Input id="pw-current" type="password" required value={pwForm.current} onChange={(e) => setPwForm({ ...pwForm, current: e.target.value })} />
+                </div>
+                <div>
+                  <Label htmlFor="pw-next">New password</Label>
+                  <Input id="pw-next" type="password" required minLength={8} value={pwForm.next} onChange={(e) => setPwForm({ ...pwForm, next: e.target.value })} />
+                  <p className="text-xs text-muted-foreground mt-1">Use at least 8 characters.</p>
+                </div>
+                <div>
+                  <Label htmlFor="pw-confirm">Confirm new password</Label>
+                  <Input id="pw-confirm" type="password" required minLength={8} value={pwForm.confirm} onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })} />
+                </div>
+                <div>
+                  <Button type="submit" disabled={pwBusy} className="bg-[#d4820a] hover:bg-[#b86d08] text-white">
+                    {pwBusy ? "Updating…" : "Change password"}
+                  </Button>
+                </div>
+              </form>
+            </Section>
+          </TabsContent>
+        </Tabs>
 
         {inviteOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50" onClick={() => setInviteOpen(false)}>
@@ -433,114 +709,11 @@ export default function PartnerPortal() {
           </div>
         )}
 
-
-
-        <Section title="Recent orders">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ref</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>System</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.recentOrders.map((o) => (
-                <TableRow key={o.id}>
-                  <TableCell className="text-sm text-amber-700 font-mono">{o.reference}</TableCell>
-                  <TableCell>{o.customer}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{o.system}</TableCell>
-                  <TableCell className="text-xs">{fmtDate(o.created_at)}</TableCell>
-                  <TableCell className="text-right font-mono font-semibold">{gbp(o.total)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      <Badge className={statusColor[o.status] ?? ""}>{o.status}</Badge>
-                      {o.payment_status === "paid" ? (
-                        <Badge className="bg-green-100 text-green-800 border-green-300 text-[10px]">Paid ✓</Badge>
-                      ) : (
-                        <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-[10px]">Unpaid</Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {data.recentOrders.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No orders in this period.</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </Section>
-
-        <Section title="Quarterly breakdown">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Period</TableHead>
-                <TableHead className="text-right">Revenue (ex VAT)</TableHead>
-                <TableHead className="text-right">%</TableHead>
-                <TableHead className="text-right">Commission</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.quarterly.map((q) => (
-                <TableRow key={q.key}>
-                  <TableCell className="font-mono">{quarterLabel(q.key)}</TableCell>
-                  <TableCell className="text-right font-mono">{gbp(q.revenue)}</TableCell>
-                  <TableCell className="text-right font-mono">{q.commission_pct.toFixed(2)}</TableCell>
-                  <TableCell className="text-right font-mono">{gbp(q.commission)}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={q.status === "paid" ? "bg-green-100 text-green-800 border-green-300" : "bg-amber-100 text-amber-800 border-amber-300"}>
-                      {q.status === "paid" ? "Paid" : "Pending"}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {data.quarterly.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No earnings yet.</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </Section>
-
-        <Section title="Referred systems">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>System</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>First order</TableHead>
-                <TableHead className="text-right">Revenue (ex VAT)</TableHead>
-                <TableHead className="text-right">Commission</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.systems.map((s) => (
-                <TableRow key={s.id}>
-                  <TableCell>
-                    <div>{s.name}</div>
-                    {s.reference && <div className="text-xs font-mono text-muted-foreground">{s.reference}</div>}
-                  </TableCell>
-                  <TableCell>{s.customerCompany ?? "—"}</TableCell>
-                  <TableCell>{fmtDate(s.firstOrderDate)}</TableCell>
-                  <TableCell className="text-right font-mono">{gbp(s.revenue)}</TableCell>
-                  <TableCell className="text-right font-mono">{gbp(s.commission)}</TableCell>
-                </TableRow>
-              ))}
-              {data.systems.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No referred systems yet.</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </Section>
-
         <footer className="text-xs text-muted-foreground text-center py-6">
           LOXX Partner Portal · Read-only commission view
         </footer>
       </main>
+
     </div>
   );
 }

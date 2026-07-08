@@ -81,8 +81,15 @@ function json(body: unknown, status = 200) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    const { action, email, password, token: clientToken, partnerId, newPassword, from: fromIso, to: toIso } =
-      await req.json();
+    const body = await req.json();
+    const {
+      action, email, password, token: clientToken, partnerId, newPassword,
+      from: fromIso, to: toIso,
+      first_name, last_name, phone,
+      bank_account_name, bank_sort_code, bank_account_number,
+      current_password,
+    } = body;
+
 
     if (action === "request_reset") {
       const target = String(email || "").toLowerCase().trim();
@@ -241,6 +248,74 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    if (action === "update_profile") {
+      if (!clientToken) return json({ error: "Unauthorized" }, 401);
+      const verified = await verifyToken(clientToken);
+      if (!verified) return json({ error: "Invalid token" }, 401);
+      const fn = typeof first_name === "string" ? first_name.trim() : "";
+      const ln = typeof last_name === "string" ? last_name.trim() : "";
+      const ph = typeof phone === "string" ? phone.trim() : "";
+      const combinedName = [fn, ln].filter(Boolean).join(" ");
+      const { error: uErr } = await supabase
+        .from("partners")
+        .update({
+          first_name: fn || null,
+          last_name: ln || null,
+          phone: ph || null,
+          name: combinedName || null,
+        })
+        .eq("id", verified.pid);
+      if (uErr) {
+        console.error("[partner-auth update_profile] failed:", uErr);
+        return json({ error: "Could not save profile" }, 500);
+      }
+      return json({ ok: true });
+    }
+
+    if (action === "update_bank_details") {
+      if (!clientToken) return json({ error: "Unauthorized" }, 401);
+      const verified = await verifyToken(clientToken);
+      if (!verified) return json({ error: "Invalid token" }, 401);
+      const { error: uErr } = await supabase
+        .from("partners")
+        .update({
+          bank_account_name: (bank_account_name ?? "").toString().trim() || null,
+          bank_sort_code: (bank_sort_code ?? "").toString().trim() || null,
+          bank_account_number: (bank_account_number ?? "").toString().trim() || null,
+        })
+        .eq("id", verified.pid);
+      if (uErr) {
+        console.error("[partner-auth update_bank_details] failed:", uErr);
+        return json({ error: "Could not save bank details" }, 500);
+      }
+      return json({ ok: true });
+    }
+
+    if (action === "change_password") {
+      if (!clientToken) return json({ error: "Unauthorized" }, 401);
+      const verified = await verifyToken(clientToken);
+      if (!verified) return json({ error: "Invalid token" }, 401);
+      if (!current_password || !newPassword) return json({ error: "Missing fields" }, 400);
+      if (String(newPassword).length < 8) return json({ error: "New password must be at least 8 characters" }, 400);
+
+      const rl = await checkRateLimit(supabase, `partner-change-password:${verified.email}`, 5, 60, corsHeaders);
+      if (!rl.allowed) return rl.response;
+
+      const { data: login } = await supabase
+        .from("partner_logins")
+        .select("id, password_hash")
+        .eq("partner_id", verified.pid)
+        .eq("email", verified.email)
+        .maybeSingle();
+      if (!login) return json({ error: "Login not found" }, 404);
+      const ok = await bcrypt.compare(current_password, login.password_hash);
+      if (!ok) return json({ error: "Current password is incorrect" }, 401);
+      const newHash = await bcrypt.hash(String(newPassword), 10);
+      await supabase.from("partner_logins").update({ password_hash: newHash }).eq("id", login.id);
+      return json({ ok: true });
+    }
+
+
     if (action === "me" || action === "data") {
       if (!clientToken) return json({ error: "Unauthorized" }, 401);
       const verified = await verifyToken(clientToken);
@@ -248,11 +323,12 @@ Deno.serve(async (req) => {
       const pid = verified.pid;
       const { data: partner } = await supabase
         .from("partners")
-        .select("id, name, company, partner_type, default_commission_pct")
+        .select("id, name, first_name, last_name, phone, company, partner_type, default_commission_pct, bank_account_name, bank_sort_code, bank_account_number")
         .eq("id", pid)
         .single();
       if (!partner) return json({ error: "Partner not found" }, 404);
       if (action === "me") return json({ partner, role: verified.role, email: verified.email });
+
 
 
 

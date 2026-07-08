@@ -949,36 +949,51 @@ export type Database = {
       }
       partners: {
         Row: {
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_sort_code: string | null
           company: string
           created_at: string
           default_commission_pct: number
           email: string | null
+          first_name: string | null
           id: string
           is_active: boolean
+          last_name: string | null
           name: string
           notes: string | null
           partner_type: string
           phone: string | null
         }
         Insert: {
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_sort_code?: string | null
           company: string
           created_at?: string
           default_commission_pct?: number
           email?: string | null
+          first_name?: string | null
           id?: string
           is_active?: boolean
+          last_name?: string | null
           name: string
           notes?: string | null
           partner_type?: string
           phone?: string | null
         }
         Update: {
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_sort_code?: string | null
           company?: string
           created_at?: string
           default_commission_pct?: number
           email?: string | null
+          first_name?: string | null
           id?: string
           is_active?: boolean
+          last_name?: string | null
           name?: string
           notes?: string | null
           partner_type?: string
