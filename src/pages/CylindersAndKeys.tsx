@@ -7,7 +7,7 @@ import {
   Wrench, Drill, Puzzle, FileBadge, Boxes, Settings2, Repeat,
   ClipboardList, Truck, Building2,
 } from "lucide-react";
-import cylinderImg from "@/assets/cylinder.png";
+import cylinderAsset from "@/assets/cylinder.png.asset.json";
 
 const hardwareCards = [
   { icon: Layers, title: "Specified in the system", copy: "Every cylinder and key is linked to the correct door, suite and access level." },
