@@ -11,6 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useOrgProductPrices } from "@/hooks/useOrgProductPrices";
 
 import { colorForFinish, FINISH_BORDER } from "@/lib/finishes";
 
