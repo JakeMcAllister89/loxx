@@ -954,7 +954,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         const extra = n.extra_keys ?? 0;
         if (extra > 0) {
           const differKeyProd = keyProductForNode("CYL");
-          const differKeyPrice = differKeyProd ? Number((differKeyProd as any).price_gbp) : 12;
+          const differKeyPrice = differKeyProd ? orgPriceFor((differKeyProd as any).code, (differKeyProd as any).price_gbp) : 12;
           lines.push({
             kind: "key",
             key_reference: `Extra Differ Keys — ${n.label} (${differRef})`,
