@@ -141,6 +141,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const { orgRole } = useAuth();
   const isAdmin = useIsAdmin();
   const readOnly = orgRole === "view_only";
+  const { priceFor: orgPriceFor } = useOrgProductPrices();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const imported = searchParams.get("imported") === "1";
