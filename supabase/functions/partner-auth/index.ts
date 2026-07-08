@@ -50,13 +50,13 @@ async function hmac(payload: string): Promise<string> {
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
   return b64url(sig);
 }
-async function signToken(partnerId: string): Promise<string> {
-  const payload = { pid: partnerId, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 };
+async function signToken(partnerId: string, email: string, role: string): Promise<string> {
+  const payload = { pid: partnerId, email, role, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 };
   const body = b64url(new TextEncoder().encode(JSON.stringify(payload)));
   const sig = await hmac(body);
   return `${body}.${sig}`;
 }
-async function verifyToken(token: string): Promise<string | null> {
+async function verifyToken(token: string): Promise<{ pid: string; email: string; role: string } | null> {
   try {
     const [body, sig] = token.split(".");
     if (!body || !sig) return null;
@@ -64,11 +64,12 @@ async function verifyToken(token: string): Promise<string | null> {
     if (expected !== sig) return null;
     const payload = JSON.parse(new TextDecoder().decode(b64urlDecode(body)));
     if (!payload.pid || payload.exp < Date.now()) return null;
-    return payload.pid as string;
+    return { pid: payload.pid, email: payload.email ?? "", role: payload.role ?? "member" };
   } catch {
     return null;
   }
 }
+
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
