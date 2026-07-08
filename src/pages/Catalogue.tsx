@@ -72,6 +72,7 @@ function buildFamilies(products: Product[]): Family[] {
 
 export default function Catalogue() {
   const [products, setProducts] = useState<Product[]>([]);
+  const { priceFor } = useOrgProductPrices();
   const [q, setQ] = useState("");
   const [type, setType] = useState<string>("all");
   const [finish, setFinish] = useState<string>("all");
@@ -82,7 +83,13 @@ export default function Catalogue() {
     supabase.from("products").select("id,name,code,cylinder_type,cylinder_profile,pin_count,finish,finish_colour,size,price_gbp,security_rating,bs_en_1303,description,product_description,product_features,image_url,is_active,created_at").eq("is_active", true).order("price_gbp").then(({ data }) => setProducts((data ?? []) as Product[]));
   }, []);
 
-  const families = useMemo(() => buildFamilies(products), [products]);
+  // Apply per-org effective pricing on top of the raw catalogue rows.
+  const pricedProducts = useMemo(
+    () => products.map((p) => ({ ...p, price_gbp: priceFor(p.code, p.price_gbp) })),
+    [products, priceFor]
+  );
+
+  const families = useMemo(() => buildFamilies(pricedProducts), [pricedProducts]);
 
   const types = useMemo(() => Array.from(new Set(families.map(f => f.type))).sort(), [families]);
   const allFinishes = useMemo(() => Array.from(new Set(products.map(p => p.finish).filter(Boolean))).sort() as string[], [products]);
