@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoxxLogo } from "@/components/LoxxLogo";
 import { LogOut, Loader2, Handshake } from "lucide-react";
 import { toast } from "sonner";
@@ -16,7 +17,19 @@ const FN_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/
 const MEMBER_INVITE_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/send-partner-member-invite`;
 
 
-interface PartnerInfo { id: string; name: string; company: string; partner_type: string; }
+interface PartnerInfo {
+  id: string;
+  name: string;
+  company: string;
+  partner_type: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  bank_account_name?: string | null;
+  bank_sort_code?: string | null;
+  bank_account_number?: string | null;
+}
+
 interface TeamMember {
   id: string;
   email: string;
