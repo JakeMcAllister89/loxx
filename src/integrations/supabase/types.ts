@@ -1222,6 +1222,10 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      system_belongs_to_org: {
+        Args: { _org_id: string; _system_id: string }
+        Returns: boolean
+      }
       transfer_org_master_admin: {
         Args: {
           _from_user_id: string
