@@ -16,6 +16,8 @@ export interface CanvasProduct {
   finish?: string | null;
   size?: string | null;
   price_gbp?: number | null;
+  /** Customer-specific effective price (falls back to price_gbp if unset). */
+  effective_price?: number | null;
 }
 
 interface Props {
