@@ -137,6 +137,19 @@ export default function PartnerPortal() {
         return;
       }
       setData(j);
+      // Sync settings forms from freshly loaded partner data.
+      const p = j.partner ?? {};
+      setProfileForm({
+        first_name: p.first_name ?? "",
+        last_name: p.last_name ?? "",
+        phone: p.phone ?? "",
+      });
+      setBankForm({
+        bank_account_name: p.bank_account_name ?? "",
+        bank_sort_code: p.bank_sort_code ?? "",
+        bank_account_number: p.bank_account_number ?? "",
+      });
+
     } finally {
       setLoading(false);
     }
