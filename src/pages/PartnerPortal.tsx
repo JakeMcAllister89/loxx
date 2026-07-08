@@ -120,13 +120,68 @@ export default function PartnerPortal() {
     }
   };
 
-  useEffect(() => { if (token) fetchData(token, from, to); }, [token, from, to]);
+  const loadTeam = async (tok: string) => {
+    try {
+      const res = await fetch(FN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "list_team", token: tok }),
+      });
+      const j = await res.json();
+      if (res.ok) {
+        setTeam(j.members ?? []);
+        setMe(j.me ?? null);
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (token) { fetchData(token, from, to); loadTeam(token); }
+  }, [token, from, to]);
+
+  const submitInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setInviteBusy(true);
+    try {
+      const { data, error } = await supabaseInvokeMemberInvite(token, inviteForm);
+      if (error || !data?.ok) {
+        toast.error(data?.error ?? "Could not send invite");
+        return;
+      }
+      toast.success(data.sent === false ? "Invite created (email not sent — no email service configured)" : "Invitation sent");
+      setInviteOpen(false);
+      setInviteForm({ email: "", first_name: "", last_name: "" });
+      loadTeam(token);
+    } finally {
+      setInviteBusy(false);
+    }
+  };
+
+  const removeMember = async (memberEmail: string) => {
+    if (!token) return;
+    if (!confirm(`Remove ${memberEmail} from your team? They will lose access immediately.`)) return;
+    try {
+      const res = await fetch(FN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "remove_member", token, email: memberEmail }),
+      });
+      const j = await res.json();
+      if (!res.ok) { toast.error(j.error ?? "Could not remove member"); return; }
+      toast.success("Member removed");
+      loadTeam(token);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not remove member");
+    }
+  };
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       const res = await fetch(FN_URL, {
+
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "login", email, password }),
