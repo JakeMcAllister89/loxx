@@ -338,6 +338,103 @@ export default function PartnerPortal() {
           </div>
         </Section>
 
+        <Section title="Team">
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-muted-foreground">
+                People who can sign in to this partner portal.
+                {me?.role === "master_admin" && " Master admins can invite or remove members."}
+              </p>
+              {me?.role === "master_admin" && (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="bg-[#d4820a] hover:bg-[#b86d08] text-white"
+                  onClick={() => setInviteOpen(true)}
+                >
+                  Invite member
+                </Button>
+              )}
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  {me?.role === "master_admin" && <TableHead className="text-right">Actions</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {team.map((m) => {
+                  const name = [m.first_name, m.last_name].filter(Boolean).join(" ") || "—";
+                  const isMe = me?.email === m.email;
+                  return (
+                    <TableRow key={m.id}>
+                      <TableCell>{name}{isMe && <span className="text-xs text-muted-foreground ml-1">(you)</span>}</TableCell>
+                      <TableCell className="text-sm">{m.email}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={m.role === "master_admin" ? "bg-[#d4820a]/10 text-[#d4820a] border-[#d4820a]/40" : ""}>
+                          {m.role === "master_admin" ? "Master admin" : "Member"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={m.status === "active" ? "bg-green-100 text-green-800 border-green-300" : "bg-amber-100 text-amber-800 border-amber-300"}>
+                          {m.status === "active" ? "Active" : "Pending"}
+                        </Badge>
+                      </TableCell>
+                      {me?.role === "master_admin" && (
+                        <TableCell className="text-right">
+                          <Button size="sm" variant="ghost" onClick={() => removeMember(m.email)}>
+                            Remove
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })}
+                {team.length === 0 && (
+                  <TableRow><TableCell colSpan={me?.role === "master_admin" ? 5 : 4} className="text-center text-muted-foreground py-8">No team members yet.</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </Section>
+
+        {inviteOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50" onClick={() => setInviteOpen(false)}>
+            <div className="w-full max-w-sm bg-card rounded-[10px] border shadow-card p-6" onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-lg font-semibold">Invite a team member</h2>
+              <p className="text-sm text-muted-foreground mt-1">They'll receive an email to set their password and join this partner account.</p>
+              <form onSubmit={submitInvite} className="space-y-3 mt-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="inv-first">First name</Label>
+                    <Input id="inv-first" value={inviteForm.first_name} onChange={(e) => setInviteForm({ ...inviteForm, first_name: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label htmlFor="inv-last">Last name</Label>
+                    <Input id="inv-last" value={inviteForm.last_name} onChange={(e) => setInviteForm({ ...inviteForm, last_name: e.target.value })} />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="inv-email">Email</Label>
+                  <Input id="inv-email" type="email" required value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button type="button" variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={inviteBusy} className="bg-[#d4820a] hover:bg-[#b86d08] text-white">
+                    {inviteBusy ? "Sending…" : "Send invitation"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+
+
         <Section title="Recent orders">
           <Table>
             <TableHeader>
