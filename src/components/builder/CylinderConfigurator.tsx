@@ -210,7 +210,6 @@ export function CylinderConfigurator({ node, products: rawProducts, onPatch }: P
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold leading-tight">{selected.product_description ?? selected.name}</div>
-              <div className="text-[11px] text-muted-foreground mt-0.5">{selected.code}</div>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 {selected.cylinder_profile && <Badge variant="secondary" className="text-[10px]">{selected.cylinder_profile}</Badge>}
                 {selected.size && <Badge variant="secondary" className="text-[10px]">{selected.size}</Badge>}
