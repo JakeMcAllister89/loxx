@@ -232,20 +232,19 @@ function CanvasInner({
       );
       if (subCEs.length > 0 && cylSiblings.length > 0) {
         for (const subCE of subCEs) {
-          for (const cyl of cylSiblings) {
-            edges.push({
-              id: `cross-${subCE.id}->${cyl.id}`,
-              source: subCE.id,
-              target: cyl.id,
-              type: "tree",
-              style: {
-                stroke: "hsl(var(--node-ce))",
-                strokeWidth: 1.5,
-                strokeDasharray: "4 3",
-                opacity: 0.6,
-              },
-            });
-          }
+          const firstCyl = cylSiblings[0];
+          edges.push({
+            id: `cross-${subCE.id}->${firstCyl.id}`,
+            source: subCE.id,
+            target: firstCyl.id,
+            type: "tree",
+            style: {
+              stroke: "hsl(var(--node-ce))",
+              strokeWidth: 1.5,
+              strokeDasharray: "4 3",
+              opacity: 0.6,
+            },
+          });
         }
       }
       n.children.forEach(addCrossEdges);
