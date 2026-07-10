@@ -1,103 +1,85 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LoxxLogo } from "@/components/LoxxLogo";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import {
   GraduationCap, HeartPulse, Briefcase, Home, Landmark, Ticket,
-  ChevronDown, ChevronUp, Key, ShieldCheck, Users, LayoutGrid,
-  FileText, AlertTriangle, CheckCircle2,
+  ChevronDown, ChevronUp, CheckCircle2, AlertTriangle,
 } from "lucide-react";
-import { useState } from "react";
 
 // ─── Environment cards ─────────────────────────────────────────────────────
 const environments = [
   {
     icon: GraduationCap,
     title: "Schools, colleges and universities",
-    body: "Education sites often need to control access across classrooms, staff rooms, offices, plant rooms, stores, sports areas and external gates. A well-planned master key system can give staff the access they need while keeping classrooms, restricted rooms and service areas separated. My LOXX helps estates teams keep the system record live, including issued keys, lost keys, replacement orders and future changes.",
+    body: "Education sites often need to control access across classrooms, staff rooms, offices, plant rooms, stores, sports areas and external gates. A well-planned system can give staff the access they need while keeping restricted areas separated. Over time, staff change and the system expands — keeping the record accurate is where most estates teams struggle.",
   },
   {
     icon: HeartPulse,
     title: "Hospitals and healthcare sites",
-    body: "Healthcare buildings often include public areas, wards, consultation rooms, administration areas, plant rooms and restricted clinical spaces. A master key system can help separate general access from sensitive or high-risk areas, while still allowing authorised staff to reach critical areas quickly. My LOXX gives facilities and security teams a clearer record of who holds keys and how access is structured across the site.",
+    body: "Healthcare buildings need to separate public areas, clinical spaces, administration and plant rooms. A master key system can support that structure while giving authorised facilities and security personnel access to critical areas. The system record needs to stay accurate as wards change and staff turn over.",
   },
   {
     icon: Briefcase,
     title: "Commercial buildings and offices",
-    body: "Offices often need different access levels for reception, meeting rooms, staff areas, IT/server rooms, stores, cleaning cupboards and management offices. A master key system can be structured around departments, floors or job roles. My LOXX helps keep the access hierarchy visible, so facilities teams can understand what each key opens without relying on old schedules or individual memory.",
+    body: "Offices often need different access levels for reception, meeting rooms, staff areas, server rooms, stores and management offices. A master key system can be structured around departments, floors or job roles. Without a clear record, facilities teams quickly lose track of what each key opens.",
   },
   {
     icon: Home,
     title: "Apartment buildings and managed properties",
-    body: "Residential blocks often need a mix of private and shared access: individual apartments, main entrances, bin stores, bike rooms, car parks, risers and plant areas. A central locking or master key structure can let residents use one key for permitted shared areas without giving access to other private units. My LOXX helps property managers keep communal access, replacement cylinders and future system extensions organised.",
+    body: "Residential blocks need a mix of private and shared access — individual apartments, main entrances, bin stores, bike rooms, car parks and plant areas. A master key structure lets residents use one key for permitted shared areas without accessing other private units. Replacement cylinders and future extensions need to be tracked carefully.",
   },
   {
     icon: Landmark,
     title: "Councils and public sector estates",
-    body: "Public sector estates often include multiple buildings, departments, contractors and long-term maintenance responsibilities. The challenge is not just designing the system — it is keeping the record accurate over time. My LOXX helps create a permanent system record for doors, cylinders, keys, holders, lost key events and replacement orders.",
+    body: "Public sector estates often span multiple buildings, departments, contractors and long-term maintenance responsibilities. Designing the system is only part of the challenge — keeping the record accurate over years of changes, staff turnover and building alterations is where the real management burden sits.",
   },
   {
     icon: Ticket,
     title: "Leisure, venues and public buildings",
-    body: "Cinemas, theatres, sports facilities and public buildings often need to separate public areas from staff-only, cash-handling, back-of-house and emergency access routes. A master key system can support day-to-day operations while keeping restricted areas controlled. My LOXX helps teams manage issued keys and understand the impact of changes or lost keys.",
+    body: "Cinemas, theatres, sports facilities and public buildings need to separate public areas from staff-only, cash-handling, back-of-house and emergency routes. A master key system can support day-to-day operations while keeping restricted areas controlled. Lost keys and contractor access are the most common management issues.",
   },
 ];
 
-// ─── Glossary terms ────────────────────────────────────────────────────────
-const glossary = [
-  { term: "Keyed to differ", def: "Each lock has its own individual key. No two locks share a key." },
-  { term: "Keyed alike", def: "Several locks are opened by the same key. Useful for shared areas or where one person needs access to multiple identical rooms." },
-  { term: "Master key", def: "A key that opens multiple locks within a defined group, while each lock still has its own individual key." },
-  { term: "Grand master key", def: "A higher-level key that opens multiple master key groups. In a large estate, the grand master might open every door across every building." },
-  { term: "Common entrance / central locking", def: "A shared door — such as a main entrance — that can be opened by many different user keys in the system, without those keys being master keys." },
-  { term: "Cross keying", def: "Where an extra key is allowed to operate a cylinder outside the normal hierarchy. Use carefully — it can reduce system clarity and make future management harder." },
-];
-
-// ─── Benefits ─────────────────────────────────────────────────────────────
-const benefits = [
-  { icon: Key, title: "Fewer keys in circulation", desc: "Staff carry one key for their access level rather than a separate key for every door." },
-  { icon: ShieldCheck, title: "Controlled access", desc: "Different areas can be restricted to specific people, job roles or time periods." },
-  { icon: AlertTriangle, title: "Emergency access", desc: "Senior staff or emergency responders can hold a master key that opens everything when needed." },
-  { icon: Users, title: "Cleaner administration", desc: "New starters get one key. Leavers hand one key back. Access levels are defined by the system, not individual arrangements." },
-  { icon: LayoutGrid, title: "Future expansion", desc: "A well-planned system can be extended to new floors, buildings or access groups without replacing existing cylinders." },
-];
-
-// ─── Risks ────────────────────────────────────────────────────────────────
-const risks = [
-  "No one knows who holds which keys",
-  "Lost keys are not assessed properly — the impact on the system is unknown",
-  "Replacement keys are ordered without a clear audit trail",
-  "Old records become out of date as staff change and buildings are extended",
-  "Future extensions become harder to plan without an accurate picture of the current system",
+// ─── Common mistakes ───────────────────────────────────────────────────────
+const mistakes = [
+  "Building the system around today's doors only, with no room for future expansion",
+  "Creating too many master key levels, which makes the system harder to understand and maintain",
+  "Allowing cross keying without recording why, creating confusion later",
+  "Not recording who holds each key after the system is handed over",
+  "Treating lost keys as a minor admin issue rather than an access risk",
+  "Keeping the system record in spreadsheets, PDFs, emails or individual memory",
 ];
 
 // ─── Planning steps ───────────────────────────────────────────────────────
 const planningSteps = [
-  { n: "01", title: "Map your buildings and doors", desc: "List every door that needs to be part of the system, including which areas need to be separated and which can be shared." },
-  { n: "02", title: "Define who needs access to what", desc: "Group people by job role, department or floor and map those groups to the areas they need to reach." },
-  { n: "03", title: "Keep the structure simple", desc: "A system with too many master key levels becomes difficult to manage. Start with the simplest hierarchy that meets your access needs." },
-  { n: "04", title: "Plan for future growth", desc: "If you are likely to add more floors, departments or buildings, leave room in the system design for expansion without disruption." },
-  { n: "05", title: "Decide who controls orders", desc: "Be clear about who is authorised to request new keys or replacement cylinders. This protects the security of the system." },
-  { n: "06", title: "Keep a live record", desc: "The system record should reflect the current state — including issued keys, lost keys, changes and new additions — not just the original design." },
+  { n: "1", t: "Map your buildings and doors", d: "List every door that needs to be part of the system, including which areas need to be separated and which can be shared." },
+  { n: "2", t: "Group doors by how the site actually works", d: "Let the real access patterns — not the floor plan — guide the hierarchy. A department that shares a corridor does not need to share a master key group." },
+  { n: "3", t: "Define who needs access to what", d: "Map people by job role or responsibility, not by name. The system should survive staff changes." },
+  { n: "4", t: "Keep the hierarchy as simple as possible", d: "Every additional master key level adds complexity. Use the minimum number of levels that meets your access requirements." },
+  { n: "5", t: "Plan for future expansion", d: "If you are likely to add floors, departments or buildings, leave room in the design without disrupting the existing system." },
+  { n: "6", t: "Decide who can approve new keys and cylinders", d: "Be clear about who is authorised to request replacements or additions. This protects the security of the system over time." },
+  { n: "7", t: "Keep the record live after handover", d: "The system record should reflect the current state — not just the original design. Every change, issued key and lost key event should be recorded." },
 ];
 
 // ─── FAQ ──────────────────────────────────────────────────────────────────
 const faqs = [
   {
     q: "What is the difference between keyed alike and master keyed?",
-    a: "Keyed alike means multiple locks share the same key, with no hierarchy. Master keyed means a higher-level key can open multiple locks, while each lock still has its own individual key. They are different things and should not be confused when planning a system.",
+    a: "Keyed alike means multiple locks share the same key, with no hierarchy. Master keyed means a higher-level key can open multiple locks, while each lock still has its own individual key. They solve different problems and should not be confused when planning a system.",
   },
   {
     q: "What is a grand master key?",
-    a: "A grand master key sits at the top of the hierarchy and opens every lock in the system. It is typically held by senior estate or facilities management and provides emergency access across all areas.",
+    a: "A grand master key sits at the top of the hierarchy and can open every lock in the system within its defined scope. It is typically held by authorised senior facilities, estates or security personnel and used for authorised access across the site.",
   },
   {
     q: "Can a master key system be expanded later?",
-    a: "Yes, if the original system was designed with expansion in mind. A well-planned system leaves room to add new master key groups, sub master levels and cylinders without replacing existing hardware. My LOXX helps you plan and visualise these extensions before ordering.",
+    a: "Yes, if the original system was designed with expansion in mind. A well-planned system leaves room to add new master key groups, sub master levels and cylinders without replacing existing hardware. My LOXX helps you plan and visualise extensions before ordering.",
   },
   {
     q: "What happens if a master key is lost?",
-    a: "The impact depends on which key is lost. A grand master key loss compromises the entire system. A sub master or individual key has a narrower impact. My LOXX helps you see exactly which doors a lost key could open, so you can respond accurately rather than having to guess.",
+    a: "A lost grand master key can create a serious risk because it may provide access to a wide part of the system. The right response depends on what the key opens, where it was lost and whether the system record is accurate. My LOXX helps you see which doors a lost key is associated with so you can assess the impact clearly.",
   },
   {
     q: "Who should be responsible for managing a master key system?",
@@ -105,15 +87,15 @@ const faqs = [
   },
   {
     q: "Can replacement keys be controlled?",
-    a: "Yes. DOM Sirius® cylinders use a patented key profile that cannot be copied on the high street. Replacement keys can only be ordered through My LOXX, which means the system stays under your control.",
+    a: "For systems supplied through My LOXX, replacement keys are ordered through the platform so requests can be recorded against the live system. This helps keep key control and order history in one place.",
   },
   {
     q: "Do master key systems work for schools and hospitals?",
-    a: "Yes. Both sectors use master key systems routinely. Schools need to separate classrooms, stores, plant rooms and staff areas. Hospitals need to separate public areas, clinical spaces and restricted zones. My LOXX was built specifically to support the management needs of these environments.",
+    a: "Yes. Both sectors use master key systems routinely. Schools need to separate classrooms, stores, plant rooms and staff areas. Hospitals need to separate public areas, clinical spaces and restricted zones. The management challenge in both is keeping the record accurate over time, not just designing the initial system.",
   },
   {
     q: "Is a master key system the same as access control?",
-    a: "No. Access control uses electronic readers, cards or fobs and can be programmed remotely. A master key system uses physical locks and keys. The two can coexist in the same building — access control for high-traffic or high-security entry points, master keying for the remainder. My LOXX manages physical master key systems only.",
+    a: "No. Access control uses electronic readers, cards or fobs. A master key system uses physical locks and keys. The two can coexist in the same building — access control for high-traffic or high-security entry points, master keying for the remainder. My LOXX manages physical master key systems only.",
   },
 ];
 
@@ -127,11 +109,11 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         className="w-full flex items-center justify-between gap-4 py-4 text-left text-sm font-semibold text-foreground hover:text-primary transition-colors"
       >
         <span>{q}</span>
-        {open ? <ChevronUp className="h-4 w-4 shrink-0 text-primary" /> : <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />}
+        {open
+          ? <ChevronUp className="h-4 w-4 shrink-0 text-primary" />
+          : <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />}
       </button>
-      {open && (
-        <p className="pb-4 text-sm text-muted-foreground leading-relaxed">{a}</p>
-      )}
+      {open && <p className="pb-5 text-sm text-muted-foreground leading-relaxed">{a}</p>}
     </div>
   );
 }
@@ -141,7 +123,7 @@ export default function WhatIsMasterKeySystem() {
   return (
     <div className="min-h-screen bg-background text-foreground">
 
-      {/* ── NAV — matches Index.tsx exactly ── */}
+      {/* ── NAV ── */}
       <header className="bg-[#fafafa] text-foreground border-b border-border/60">
         <div className="container flex items-center justify-between py-4">
           <Link to="/"><LoxxLogo /></Link>
@@ -165,10 +147,10 @@ export default function WhatIsMasterKeySystem() {
             What is a master key system?
           </h1>
           <p className="mt-5 text-lg text-muted-foreground leading-relaxed max-w-2xl">
-            A master key system allows different keys to open different doors within the same building or estate. It gives the right people access to the right areas, while reducing the number of keys in circulation.
+            A master key system is a planned lock and key structure that lets different people open different doors with the right level of access.
           </p>
           <p className="mt-3 text-base text-muted-foreground leading-relaxed max-w-2xl">
-            My LOXX helps organisations design, manage and maintain these systems from one secure digital record.
+            A site manager may need access to every door. A department lead may only need one area. A teacher, tenant or contractor may only need a single room or defined group of doors. My LOXX helps organisations keep that system clear, current and controlled from one digital record.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25">
@@ -181,121 +163,215 @@ export default function WhatIsMasterKeySystem() {
         </div>
       </section>
 
-      {/* ── 2. QUICK DEFINITION ── */}
+      {/* ── 2. PLAIN-ENGLISH DEFINITION ── */}
       <section className="container py-14 max-w-3xl">
         <h2 className="text-2xl font-bold tracking-tight">Master key systems, explained simply</h2>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          A master key system is a planned lock and key structure where selected keys can open more than one door.
+          In a basic lock setup, each door has its own key. That works for a small number of doors, but it quickly becomes difficult to manage across a school, hospital, office building or estate. Staff end up carrying large bunches of keys. There is no clear record of who has access to what. When someone leaves, you are never quite sure what to ask them to hand back.
         </p>
-        <div className="mt-4 p-5 rounded-xl border border-border bg-card text-sm text-muted-foreground leading-relaxed">
-          <span className="font-semibold text-foreground">Example:</span> A classroom key may only open one classroom. A department master key may open several classrooms. A grand master key may open every door in the building.
-        </div>
-        <div className="mt-6 flex flex-wrap items-center gap-2 text-xs font-bold">
-          <span className="px-3 py-1.5 rounded-full" style={{ backgroundColor: "hsl(245,60%,67%,0.14)", color: "hsl(245,45%,42%)" }}>GMK — opens all</span>
-          <span className="text-muted-foreground/40">→</span>
-          <span className="px-3 py-1.5 rounded-full" style={{ backgroundColor: "hsl(178,60%,45%,0.14)", color: "hsl(178,55%,28%)" }}>MK — opens one building or department</span>
-          <span className="text-muted-foreground/40">→</span>
-          <span className="px-3 py-1.5 rounded-full" style={{ backgroundColor: "hsl(154,71%,45%,0.14)", color: "hsl(154,55%,26%)" }}>SMK — opens a zone or smaller group</span>
-          <span className="text-muted-foreground/40">→</span>
-          <span className="px-3 py-1.5 rounded-full" style={{ backgroundColor: "hsl(33,91%,44%,0.16)", color: "hsl(33,85%,32%)" }}>Individual key — opens defined door(s)</span>
+        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+          A master key system solves this by creating a hierarchy. Individual keys open specific doors. Master keys open groups of doors. A grand master key can sit above those groups for authorised senior access, where specified.
+        </p>
+        <div className="mt-6 p-5 rounded-xl border border-border bg-card">
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Example</div>
+          <p className="text-sm text-foreground leading-relaxed">
+            In a school, a classroom key may only open Room 12. A department key may open all the science rooms. A site manager's key may open every classroom, store, plant room and office included in the system.
+          </p>
         </div>
       </section>
 
-      {/* ── 3. GLOSSARY ── */}
+      {/* ── 3. HIERARCHY VISUAL ── */}
       <section className="bg-card border-y border-border">
-        <div className="container py-14">
-          <h2 className="text-2xl font-bold tracking-tight">Common terms</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
-            {glossary.map((g) => (
-              <div key={g.term} className="rounded-xl border border-border bg-background p-5 shadow-sm">
-                <div className="text-sm font-bold text-foreground">{g.term}</div>
-                <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{g.def}</p>
+        <div className="container py-14 max-w-3xl">
+          <h2 className="text-2xl font-bold tracking-tight">The key hierarchy</h2>
+          <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+            Most master key systems are built around four levels. Not every system needs all four — simpler sites may only need two or three.
+          </p>
+          <div className="mt-8 space-y-3">
+            {/* GMK */}
+            <div className="flex gap-4 items-start p-5 rounded-xl border bg-background"
+              style={{ borderColor: "hsl(245,60%,67%,0.4)", borderLeftWidth: "3px", borderLeftColor: "hsl(245,60%,67%)" }}>
+              <div className="h-3 w-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: "hsl(245,60%,67%)" }} />
+              <div>
+                <div className="text-sm font-bold text-foreground">Grand Master Key</div>
+                <div className="text-sm text-muted-foreground mt-0.5">Highest level access across the system, where specified. Typically held by authorised senior facilities, estates or security personnel.</div>
+              </div>
+            </div>
+            {/* MK */}
+            <div className="ml-6 flex gap-4 items-start p-5 rounded-xl border bg-background"
+              style={{ borderColor: "hsl(178,60%,45%,0.4)", borderLeftWidth: "3px", borderLeftColor: "hsl(178,60%,45%)" }}>
+              <div className="h-3 w-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: "hsl(178,60%,45%)" }} />
+              <div>
+                <div className="text-sm font-bold text-foreground">Master Key</div>
+                <div className="text-sm text-muted-foreground mt-0.5">Access to a building, department or main group of doors within the system.</div>
+              </div>
+            </div>
+            {/* SMK */}
+            <div className="ml-12 flex gap-4 items-start p-5 rounded-xl border bg-background"
+              style={{ borderColor: "hsl(154,71%,36%,0.4)", borderLeftWidth: "3px", borderLeftColor: "hsl(154,71%,36%)" }}>
+              <div className="h-3 w-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: "hsl(154,71%,36%)" }} />
+              <div>
+                <div className="text-sm font-bold text-foreground">Sub Master Key</div>
+                <div className="text-sm text-muted-foreground mt-0.5">Access to a smaller zone, floor or team area within a master key group.</div>
+              </div>
+            </div>
+            {/* CYL */}
+            <div className="ml-18 flex gap-4 items-start p-5 rounded-xl border bg-background"
+              style={{ borderColor: "hsl(33,91%,44%,0.4)", borderLeftWidth: "3px", borderLeftColor: "hsl(33,91%,44%)", marginLeft: "4.5rem" }}>
+              <div className="h-3 w-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: "hsl(33,91%,44%)" }} />
+              <div>
+                <div className="text-sm font-bold text-foreground">Individual Key</div>
+                <div className="text-sm text-muted-foreground mt-0.5">Access to one door or a defined keyed-alike group. Each lock also has its own individual key.</div>
+              </div>
+            </div>
+          </div>
+          <p className="mt-5 text-xs text-muted-foreground">
+            These colours match the My LOXX System Builder, so the hierarchy you plan here is the same one you will see in the platform.
+          </p>
+        </div>
+      </section>
+
+      {/* ── 4. KEY TERMS ── */}
+      <section className="container py-14 max-w-3xl">
+        <h2 className="text-2xl font-bold tracking-tight">Key terms worth knowing</h2>
+        <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+          Master key terminology is used inconsistently in the industry. These definitions reflect standard UK practice.
+        </p>
+        <div className="mt-6 grid sm:grid-cols-2 gap-4">
+          {[
+            { term: "Keyed to differ", def: "Each lock has its own unique key. No two locks in the system share a key." },
+            { term: "Keyed alike", def: "Several locks share the same key. Useful for groups of identical rooms where one person needs access to all of them." },
+            { term: "Master key", def: "A key that opens multiple locks within a defined group, while each lock still has its own individual key." },
+            { term: "Grand master key", def: "A higher-level key that opens multiple master key groups across the system, where specified." },
+            { term: "Central locking", def: "A shared door — such as a main entrance — that can be opened by many different user keys in the system, without those keys being master keys." },
+            { term: "Cross keying", def: "When an extra key is allowed to open a cylinder outside the normal hierarchy. It can be useful in specific cases, but should be used carefully — it can make the system harder to understand and extend later." },
+          ].map((g) => (
+            <div key={g.term} className="p-4 rounded-lg border border-border bg-card">
+              <div className="text-sm font-bold text-foreground">{g.term}</div>
+              <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{g.def}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 5. WHY ORGANISATIONS USE THEM ── */}
+      <section className="bg-card border-y border-border">
+        <div className="container py-14 max-w-3xl">
+          <h2 className="text-2xl font-bold tracking-tight">Why organisations use master key systems</h2>
+          <div className="mt-6 space-y-4">
+            {[
+              { t: "Fewer keys to carry", d: "People carry one key for the areas they are authorised to access, rather than a separate key for every door." },
+              { t: "Clearer access levels", d: "Access can be planned around buildings, departments, roles or zones — making it easier to manage who can go where." },
+              { t: "Faster authorised access", d: "Authorised facilities, estates or security personnel can access critical areas when needed without relying on others to open doors." },
+              { t: "Cleaner handover", d: "A planned system is easier to explain, document and manage than a collection of unrelated locks and separate key bunches." },
+              { t: "Room for future expansion", d: "If the system is designed properly, new doors, departments or buildings can be added later without replacing existing cylinders." },
+            ].map((b) => (
+              <div key={b.t} className="flex gap-3 items-start">
+                <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" strokeWidth={2.25} />
+                <div>
+                  <div className="text-sm font-semibold text-foreground">{b.t}</div>
+                  <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{b.d}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── 4. BENEFITS ── */}
+      {/* ── 6. ENVIRONMENTS ── */}
       <section className="container py-14">
-        <h2 className="text-2xl font-bold tracking-tight">Why organisations use master key systems</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
-          {benefits.map((b) => (
-            <div key={b.title} className="rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-              <span className="flex items-center justify-center h-9 w-9 rounded-lg bg-primary/10">
-                <b.icon className="h-4 w-4 text-primary" strokeWidth={2.25} />
-              </span>
-              <div className="mt-3 text-sm font-bold text-foreground">{b.title}</div>
-              <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{b.desc}</p>
+        <div className="max-w-3xl mb-8">
+          <h2 className="text-2xl font-bold tracking-tight">How master key systems are used in different buildings</h2>
+          <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+            The structure of a master key system depends on how the building is used. The access needs of a school are different from those of a hospital or residential block, even if the underlying lock and key principles are the same.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {environments.map((e) => (
+            <div key={e.title} className="rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+              <div className="flex items-center gap-2 mb-3">
+                <e.icon className="h-4 w-4 text-primary shrink-0" strokeWidth={2} />
+                <h3 className="text-sm font-bold leading-snug">{e.title}</h3>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">{e.body}</p>
             </div>
           ))}
         </div>
-      </section>
-
-      {/* ── 5. ENVIRONMENTS ── */}
-      <section className="bg-card border-y border-border">
-        <div className="container py-14">
-          <h2 className="text-2xl font-bold tracking-tight">How master key systems work in different buildings</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
-            {environments.map((e) => (
-              <div key={e.title} className="rounded-xl border border-border bg-background p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-                <span className="flex items-center justify-center h-10 w-10 rounded-lg bg-primary/10">
-                  <e.icon className="h-5 w-5 text-primary" strokeWidth={2} />
-                </span>
-                <h3 className="mt-4 text-base font-bold leading-snug">{e.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{e.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 6. RISKS ── */}
-      <section className="container py-14 max-w-3xl">
-        <h2 className="text-2xl font-bold tracking-tight">The system is only as good as the record behind it</h2>
-        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          A master key system can become difficult to manage when records are spread across spreadsheets, PDFs, emails, locksmith notes and individual memory. Common problems include:
+        <p className="mt-6 text-sm text-muted-foreground max-w-3xl">
+          My LOXX is used across all of these environments to keep the system record live, track changes and manage replacement orders from one place.
         </p>
-        <div className="mt-6 space-y-3">
-          {risks.map((r) => (
-            <div key={r} className="flex gap-3 items-start p-4 rounded-lg border border-border bg-card">
-              <AlertTriangle className="h-4 w-4 text-primary shrink-0 mt-0.5" strokeWidth={2.25} />
-              <p className="text-sm text-muted-foreground leading-relaxed">{r}</p>
-            </div>
-          ))}
-        </div>
       </section>
 
-      {/* ── 7. PLANNING STEPS ── */}
+      {/* ── 7. COMMON MISTAKES ── */}
       <section className="bg-card border-y border-border">
-        <div className="container py-14">
-          <h2 className="text-2xl font-bold tracking-tight">How to plan a master key system</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
-            {planningSteps.map((s) => (
-              <div key={s.n} className="rounded-xl border border-border bg-background p-5 shadow-sm">
-                <div className="text-2xl font-extrabold text-primary/30 tracking-tight">{s.n}</div>
-                <div className="mt-2 text-sm font-bold text-foreground">{s.title}</div>
-                <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+        <div className="container py-14 max-w-3xl">
+          <h2 className="text-2xl font-bold tracking-tight">Common mistakes when managing a master key system</h2>
+          <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+            Most problems with master key systems are not technical. They are the result of record-keeping and process failures that build up over time.
+          </p>
+          <div className="mt-6 space-y-3">
+            {mistakes.map((m) => (
+              <div key={m} className="flex gap-3 items-start p-4 rounded-lg border border-border bg-background">
+                <AlertTriangle className="h-4 w-4 text-primary/70 shrink-0 mt-0.5" strokeWidth={2} />
+                <p className="text-sm text-muted-foreground leading-relaxed">{m}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── 8. HOW MY LOXX HELPS ── */}
+      {/* ── 8. THE RECORD PROBLEM ── */}
       <section className="container py-14 max-w-3xl">
-        <h2 className="text-2xl font-bold tracking-tight">My LOXX gives your master key system a permanent digital home</h2>
+        <h2 className="text-2xl font-bold tracking-tight">The problem is rarely the lock. It is the record.</h2>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          My LOXX is built for the day-to-day reality of managing a master key system — not just specifying a new one, but keeping the record accurate over time as keys are lost, staff change and buildings grow.
+          Most master key systems start with a proper schedule. A locksmith or architectural ironmonger designs the hierarchy, supplies the cylinders and keys, and hands over a document that describes the system.
+        </p>
+        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+          The problem is what happens afterwards. Keys are issued. Staff leave. Contractors borrow keys. Cylinders are replaced. Doors are added. Years later, the original schedule no longer reflects the real building.
+        </p>
+        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+          When that happens, facilities teams can lose confidence in the system. They may not know who holds which key, what a lost key actually opens, or whether a replacement order matches the current setup. At that point, the system becomes more of a liability than an asset.
+        </p>
+      </section>
+
+      {/* ── 9. PLANNING STEPS ── */}
+      <section className="bg-card border-y border-border">
+        <div className="container py-14 max-w-3xl">
+          <h2 className="text-2xl font-bold tracking-tight">How to plan a master key system</h2>
+          <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+            A well-planned system is easier to manage, easier to extend and less likely to create problems when staff change or buildings grow.
+          </p>
+          <div className="mt-8 space-y-5">
+            {planningSteps.map((s) => (
+              <div key={s.n} className="flex gap-4 items-start">
+                <div className="text-2xl font-extrabold text-primary/25 tracking-tight shrink-0 w-7 text-right leading-tight mt-0.5">{s.n}</div>
+                <div>
+                  <div className="text-sm font-bold text-foreground">{s.t}</div>
+                  <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{s.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 10. HOW MY LOXX HELPS ── */}
+      <section className="container py-14 max-w-3xl">
+        <h2 className="text-2xl font-bold tracking-tight">How My LOXX helps</h2>
+        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+          My LOXX gives your master key system a live digital record. Instead of relying on old schedules, spreadsheets and scattered emails, your team can see the system hierarchy, issued keys, lost key events, replacement orders and changes in one place.
+        </p>
+        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+          It is not a replacement for good system design — but it is the management layer that most organisations are missing once the system has been installed and handed over.
         </p>
         <div className="mt-6 space-y-3">
           {[
-            "Build a visual system hierarchy — floors, zones, cylinders and keys, all mapped in one place",
-            "Record every door, cylinder and key in your system",
-            "Manage issued keys and track changes over time",
-            "Report and resolve lost keys — with an instant view of what that key could open",
-            "Track every system change with a full audit log",
-            "Order replacement keys and cylinders directly from the live system record",
+            "Build or import a visual master key hierarchy",
+            "Record doors, cylinders and keys",
+            "Manage issued keys and key holders",
+            "Report lost keys and record the resolution",
+            "Keep an audit trail of system changes",
+            "Order replacement keys and cylinders from the live record",
           ].map((point) => (
             <div key={point} className="flex gap-3 items-start">
               <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" strokeWidth={2.25} />
@@ -310,11 +386,11 @@ export default function WhatIsMasterKeySystem() {
         </div>
       </section>
 
-      {/* ── 9. FAQ ── */}
+      {/* ── 11. FAQ ── */}
       <section className="bg-card border-y border-border">
         <div className="container py-14 max-w-3xl">
           <h2 className="text-2xl font-bold tracking-tight">Frequently asked questions</h2>
-          <div className="mt-8 rounded-xl border border-border bg-background divide-y divide-border overflow-hidden px-6">
+          <div className="mt-8 rounded-xl border border-border bg-background overflow-hidden px-6">
             {faqs.map((f) => (
               <FaqItem key={f.q} q={f.q} a={f.a} />
             ))}
