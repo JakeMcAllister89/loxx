@@ -50,6 +50,7 @@ import BacsConfirmed from "./pages/BacsConfirmed";
 import IssuedKeys from "./pages/IssuedKeys";
 import BookDemo from "./pages/BookDemo";
 import CylindersAndKeys from "./pages/CylindersAndKeys";
+import WhatIsMasterKeySystem from "@/pages/guides/WhatIsMasterKeySystem";
 import OAuthConsent from "./pages/OAuthConsent";
 
 const queryClient = new QueryClient({
