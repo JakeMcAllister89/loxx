@@ -13,31 +13,37 @@ const environments = [
   {
     icon: GraduationCap,
     title: "Schools, colleges and universities",
+    areas: "Classrooms, staff rooms, offices, plant rooms, sports halls, stores, external gates and contractor areas.",
     body: "Education sites often need to control access across classrooms, staff rooms, offices, plant rooms, stores, sports areas and external gates. A well-planned system can give staff the access they need while keeping restricted areas separated. Over time, staff change and the system expands — keeping the record accurate is where most estates teams struggle.",
   },
   {
     icon: HeartPulse,
     title: "Hospitals and healthcare sites",
+    areas: "Wards, consultation rooms, admin offices, plant rooms, stores, restricted clinical spaces and back-of-house areas.",
     body: "Healthcare buildings need to separate public areas, clinical spaces, administration and plant rooms. A master key system can support that structure while giving authorised facilities and security personnel access to critical areas. The system record needs to stay accurate as wards change and staff turn over.",
   },
   {
     icon: Briefcase,
     title: "Commercial buildings and offices",
+    areas: "Reception, meeting rooms, staff areas, server rooms, stores, cleaning cupboards and management offices.",
     body: "Offices often need different access levels for reception, meeting rooms, staff areas, server rooms, stores and management offices. A master key system can be structured around departments, floors or job roles. Without a clear record, facilities teams quickly lose track of what each key opens.",
   },
   {
     icon: Home,
     title: "Apartment buildings and managed properties",
+    areas: "Main entrance, individual apartments, bin stores, cycle rooms, car parks, plant rooms and riser cupboards.",
     body: "Residential blocks need a mix of private and shared access — individual apartments, main entrances, bin stores, bike rooms, car parks and plant areas. A master key structure lets residents use one key for permitted shared areas without accessing other private units. Replacement cylinders and future extensions need to be tracked carefully.",
   },
   {
     icon: Landmark,
     title: "Councils and public sector estates",
+    areas: "Offices, public counters, secure storage, plant rooms, depots, maintenance areas and contractor access points.",
     body: "Public sector estates often span multiple buildings, departments, contractors and long-term maintenance responsibilities. Designing the system is only part of the challenge — keeping the record accurate over years of changes, staff turnover and building alterations is where the real management burden sits.",
   },
   {
     icon: Ticket,
     title: "Leisure, venues and public buildings",
+    areas: "Public areas, box offices, cash-handling rooms, back-of-house, staff areas, plant rooms and emergency routes.",
     body: "Cinemas, theatres, sports facilities and public buildings need to separate public areas from staff-only, cash-handling, back-of-house and emergency routes. A master key system can support day-to-day operations while keeping restricted areas controlled. Lost keys and contractor access are the most common management issues.",
   },
 ];
@@ -46,7 +52,6 @@ const environments = [
 const mistakes = [
   "Building the system around today's doors only, with no room for future expansion",
   "Creating too many master key levels, which makes the system harder to understand and maintain",
-  "Allowing cross keying without recording why, creating confusion later",
   "Not recording who holds each key after the system is handed over",
   "Treating lost keys as a minor admin issue rather than an access risk",
   "Keeping the system record in spreadsheets, PDFs, emails or individual memory",
@@ -61,6 +66,38 @@ const planningSteps = [
   { n: "5", t: "Plan for future expansion", d: "If you are likely to add floors, departments or buildings, leave room in the design without disrupting the existing system." },
   { n: "6", t: "Decide who can approve new keys and cylinders", d: "Be clear about who is authorised to request replacements or additions. This protects the security of the system over time." },
   { n: "7", t: "Keep the record live after handover", d: "The system record should reflect the current state — not just the original design. Every change, issued key and lost key event should be recorded." },
+];
+
+// ─── System types ─────────────────────────────────────────────────────────
+const systemTypes = [
+  { t: "Keyed to differ", d: "Each lock has its own individual key. Simple to understand, but difficult to manage when there are many doors. The most common starting point for small buildings." },
+  { t: "Keyed alike", d: "Several locks are opened by the same key. Useful for small groups of identical rooms, but it does not create different access levels and should be used deliberately, not by default." },
+  { t: "Common entrance", d: "Shared entrances or communal areas can be opened by many authorised user keys, while private areas remain separate and independently keyed. Widely used in apartment blocks, student accommodation and managed residential developments." },
+  { t: "Master keyed", d: "Individual keys open specific doors, while a master key opens a wider group. The most common arrangement for organisations that need tiered access without a complex hierarchy." },
+  { t: "Grand master keyed", d: "Several master key groups sit beneath a higher-level grand master key, usually for authorised senior facilities or estates access. Used in larger buildings or multi-building estates." },
+  { t: "Complex systems", d: "Large estates may include multiple buildings, departments, shared areas and specialist access groups. These need careful planning so the system remains understandable and expandable as the estate changes." },
+];
+
+// ─── Pre-design checklist ─────────────────────────────────────────────────
+const preDesignChecklist = [
+  "A door schedule or list of openings",
+  "Cylinder types and sizes required for each door",
+  "Which doors, if any, need to be keyed alike",
+  "Which users or roles need access to each area",
+  "Any restricted or sensitive areas that need to be separated",
+  "Likely future extensions — new floors, departments or buildings",
+  "Who is authorised to approve replacement keys and cylinders",
+  "Preferred cylinder finishes",
+  "Any specialist requirements such as thumbturns, half cylinders, freewheel cylinders or padlocks",
+];
+
+// ─── Cylinder options ─────────────────────────────────────────────────────
+const cylinderOptions = [
+  { t: "Double cylinders", d: "Key operation from both sides of the door. Standard for most external doors and internal doors where both sides need key access." },
+  { t: "Thumbturn cylinders", d: "Key operation from one side, with a thumbturn on the other. Often used on internal doors where quick egress from one side is needed." },
+  { t: "Half cylinders", d: "Often used for plant rooms, cupboards, switches, gates or specialist applications where a full cylinder is not required." },
+  { t: "Freewheel cylinders", d: "Used where the door hardware or lock case requires freewheel operation — the cylinder rotates freely until the correct key is inserted." },
+  { t: "Padlocks and specialist cylinders", d: "Useful where gates, cabinets, stores or external assets need to sit within the same system and be opened by the same key hierarchy." },
 ];
 
 // ─── FAQ ──────────────────────────────────────────────────────────────────
@@ -221,7 +258,7 @@ export default function WhatIsMasterKeySystem() {
               <div className="h-3 w-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: "hsl(33,91%,44%)" }} />
               <div>
                 <div className="text-sm font-bold text-foreground">Individual Key</div>
-                <div className="text-sm text-muted-foreground mt-0.5">Access to one door or a defined keyed-alike group. Each lock also has its own individual key.</div>
+                <div className="text-sm text-muted-foreground mt-0.5">Access to one door or a defined keyed-alike group, depending on how the system is designed.</div>
               </div>
             </div>
           </div>
@@ -243,8 +280,8 @@ export default function WhatIsMasterKeySystem() {
             { term: "Keyed alike", def: "Several locks share the same key. Useful for groups of identical rooms where one person needs access to all of them." },
             { term: "Master key", def: "A key that opens multiple locks within a defined group, while each lock still has its own individual key." },
             { term: "Grand master key", def: "A higher-level key that opens multiple master key groups across the system, where specified." },
-            { term: "Central locking", def: "A shared door — such as a main entrance — that can be opened by many different user keys in the system, without those keys being master keys." },
-            { term: "Cross keying", def: "When an extra key is allowed to open a cylinder outside the normal hierarchy. It can be useful in specific cases, but should be used carefully — it can make the system harder to understand and extend later." },
+            { term: "Common entrance", def: "Designed for multi-occupancy buildings where controlled key access is required to shared areas without compromising the security of private spaces. Residents or staff hold keys for the main entrance and permitted communal areas — such as bin stores or cycle facilities — while individual flats, rooms or units remain independent. Building managers or caretakers can be issued higher-level keys to access additional service areas when required." },
+
           ].map((g) => (
             <div key={g.term} className="p-4 rounded-lg border border-border bg-card">
               <div className="text-sm font-bold text-foreground">{g.term}</div>
@@ -254,9 +291,30 @@ export default function WhatIsMasterKeySystem() {
         </div>
       </section>
 
-      {/* ── 5. WHY ORGANISATIONS USE THEM ── */}
+      {/* ── 5. SYSTEM TYPES ── */}
       <section className="bg-card border-y border-border">
         <div className="container py-14 max-w-3xl">
+          <h2 className="text-2xl font-bold tracking-tight">The main types of key system</h2>
+          <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+            Not every suited lock system is a full master key system. The right structure depends on how the building is used, how many access levels are needed and how much the system is likely to grow.
+          </p>
+          <div className="mt-6 space-y-4">
+            {systemTypes.map((s) => (
+              <div key={s.t} className="flex gap-3 items-start">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 mt-2" />
+                <div>
+                  <div className="text-sm font-bold text-foreground">{s.t}</div>
+                  <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{s.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 6. WHY ORGANISATIONS USE THEM ── */}
+
+      <section className="container py-14 max-w-3xl">
           <h2 className="text-2xl font-bold tracking-tight">Why organisations use master key systems</h2>
           <div className="mt-6 space-y-4">
             {[
@@ -275,7 +333,6 @@ export default function WhatIsMasterKeySystem() {
               </div>
             ))}
           </div>
-        </div>
       </section>
 
       {/* ── 6. ENVIRONMENTS ── */}
@@ -293,6 +350,8 @@ export default function WhatIsMasterKeySystem() {
                 <e.icon className="h-4 w-4 text-primary shrink-0" strokeWidth={2} />
                 <h3 className="text-sm font-bold leading-snug">{e.title}</h3>
               </div>
+              <p className="text-[11px] font-semibold text-primary/80 uppercase tracking-wide mb-2">Typical areas</p>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">{e.areas}</p>
               <p className="text-sm text-muted-foreground leading-relaxed">{e.body}</p>
             </div>
           ))}
@@ -320,21 +379,46 @@ export default function WhatIsMasterKeySystem() {
         </div>
       </section>
 
-      {/* ── 8. THE RECORD PROBLEM ── */}
+      {/* ── THE RECORD PROBLEM ── */}
       <section className="container py-14 max-w-3xl">
         <h2 className="text-2xl font-bold tracking-tight">The problem is rarely the lock. It is the record.</h2>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          Most master key systems start with a proper schedule. A locksmith or architectural ironmonger designs the hierarchy, supplies the cylinders and keys, and hands over a document that describes the system.
+          Most master key systems do not fail on day one. They fail slowly.
         </p>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          The problem is what happens afterwards. Keys are issued. Staff leave. Contractors borrow keys. Cylinders are replaced. Doors are added. Years later, the original schedule no longer reflects the real building.
+          A key is issued but not recorded. A contractor keeps a key longer than expected. A cylinder is replaced but the schedule is not updated. A staff member leaves and no one is certain whether their key was returned. Individually, these are small admin issues. Over time, they become a security problem.
         </p>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          When that happens, facilities teams can lose confidence in the system. They may not know who holds which key, what a lost key actually opens, or whether a replacement order matches the current setup. At that point, the system becomes more of a liability than an asset.
+          Most master key systems start with a proper schedule. A locksmith or architectural ironmonger designs the hierarchy, supplies the cylinders and keys, and hands over a document that describes the system. The problem is that the document stays static while the building keeps changing.
+        </p>
+        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+          When the record falls behind, facilities teams lose confidence in the system. They may not know who holds which key, what a lost key actually opens, or whether a replacement order matches the current setup. At that point, the system becomes more of a liability than an asset.
+        </p>
+        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+          In practice, key control means knowing which keys exist, who holds them, what they open, who approved them, and what action was taken when something changed.
         </p>
       </section>
 
-      {/* ── 9. PLANNING STEPS ── */}
+      {/* ── PRE-DESIGN CHECKLIST ── */}
+      <section className="container py-14 max-w-3xl">
+        <h2 className="text-2xl font-bold tracking-tight">What information is needed to design a master key system?</h2>
+        <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+          Before a system can be properly designed, the following information is normally required. Having this ready makes the design process faster and reduces the likelihood of changes after installation.
+        </p>
+        <div className="mt-6 space-y-2.5">
+          {preDesignChecklist.map((item) => (
+            <div key={item} className="flex gap-3 items-start">
+              <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" strokeWidth={2.25} />
+              <p className="text-sm text-muted-foreground leading-relaxed">{item}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-5 text-sm text-muted-foreground leading-relaxed">
+          My LOXX provides a structured place to record and maintain all of this information, so it stays accurate after handover rather than being locked in a spreadsheet or a supplier's files.
+        </p>
+      </section>
+
+      {/* ── PLANNING STEPS ── */}
       <section className="bg-card border-y border-border">
         <div className="container py-14 max-w-3xl">
           <h2 className="text-2xl font-bold tracking-tight">How to plan a master key system</h2>
@@ -355,7 +439,32 @@ export default function WhatIsMasterKeySystem() {
         </div>
       </section>
 
-      {/* ── 10. HOW MY LOXX HELPS ── */}
+      {/* ── CYLINDER OPTIONS ── */}
+      <section className="bg-card border-y border-border">
+        <div className="container py-14 max-w-3xl">
+          <h2 className="text-2xl font-bold tracking-tight">Common cylinder options in a master key system</h2>
+          <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+            A master key system is not limited to standard door cylinders. The right option depends on the door type, lock case, user requirements and escape requirements. Common options include:
+          </p>
+          <div className="mt-6 space-y-4">
+            {cylinderOptions.map((c) => (
+              <div key={c.t} className="flex gap-3 items-start">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 mt-2" />
+                <div>
+                  <div className="text-sm font-bold text-foreground">{c.t}</div>
+                  <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{c.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-sm text-muted-foreground leading-relaxed">
+            My LOXX supplies DOM rs Sirius® cylinders and keys for managed master key systems, including common cylinder functions such as double cylinders, thumbturn cylinders, half cylinders and specialist options where required.{" "}
+            <Link to="/cylinders-and-keys" className="text-primary hover:underline font-medium">View the full cylinder range →</Link>
+          </p>
+        </div>
+      </section>
+
+      {/* ── HOW MY LOXX HELPS ── */}
       <section className="container py-14 max-w-3xl">
         <h2 className="text-2xl font-bold tracking-tight">How My LOXX helps</h2>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed">
