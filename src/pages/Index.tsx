@@ -253,14 +253,49 @@ export default function Index() {
               </div>
               <p className="mt-1 text-xs text-muted-foreground/80">Information is scattered.</p>
 
-              <div className="relative mt-5 h-[220px]">
+              <div className="relative mt-5 h-[190px] rounded-xl border border-border/40 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--border))_1px,transparent_0)] bg-[length:24px_24px] overflow-hidden">
+                {/* Faint connector lines from scattered records to the convergence dot */}
+                <svg
+                  className="absolute inset-0 h-full w-full"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  {[
+                    { x1: 18, y1: 16, x2: 50, y2: 74 },
+                    { x1: 48, y1: 12, x2: 50, y2: 74 },
+                    { x1: 78, y1: 18, x2: 50, y2: 74 },
+                    { x1: 30, y1: 52, x2: 50, y2: 74 },
+                    { x1: 64, y1: 48, x2: 50, y2: 74 },
+                  ].map((line, i) => (
+                    <line
+                      key={i}
+                      x1={line.x1}
+                      y1={line.y1}
+                      x2={line.x2}
+                      y2={line.y2}
+                      stroke="hsl(var(--primary))"
+                      strokeWidth="0.5"
+                      strokeDasharray="2 2"
+                      opacity="0.4"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  ))}
+                </svg>
+
+                {/* Convergence dot above the live record */}
+                <span
+                  aria-hidden
+                  className="scatter-item absolute left-1/2 top-[74%] -translate-x-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]"
+                />
+
                 {oldWay.map((o, i) => {
                   const pos = [
-                    "left-0 top-2 -rotate-3",
-                    "left-[30%] top-0 rotate-2",
-                    "right-2 top-6 -rotate-2",
-                    "left-[12%] bottom-2 rotate-1",
-                    "right-[18%] bottom-0 -rotate-1",
+                    "left-[8%] top-[10%] -rotate-3",
+                    "left-[40%] top-[6%] rotate-2",
+                    "right-[10%] top-[12%] -rotate-2",
+                    "left-[18%] top-[48%] rotate-1",
+                    "right-[22%] top-[44%] -rotate-1",
                   ][i];
                   return (
                     <span
