@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LoxxLogo } from "@/components/LoxxLogo";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
-import builderCanvasExample from "@/assets/builder-canvas-example.png";
 import keyHierarchyImage from "@/assets/key-hierarchy.png";
 import cylinderDouble from "@/assets/cylinder-double.png";
 import cylinderThumbTurn from "@/assets/cylinder-thumbturn.jpg";
