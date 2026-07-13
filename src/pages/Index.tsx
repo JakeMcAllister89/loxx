@@ -7,7 +7,7 @@ import {
   LayoutDashboard, ShieldCheck, GitBranch, GraduationCap, HeartPulse,
   Building2, Landmark, Home, Factory, Cloud, History, Users, Wallet,
   FileSpreadsheet, FileText, Mail, StickyNote, Brain,
-  KeyRound, Boxes, Receipt,
+  KeyRound, Boxes, DoorOpen, Receipt,
 } from "lucide-react";
 
 import { HeroShowcase } from "@/components/marketing/HeroShowcase";
@@ -154,7 +154,7 @@ const faqs = [
 
 const oldWay = [
   { icon: FileSpreadsheet, t: "Spreadsheets" },
-  { icon: FileText, t: "PDFs" },
+  { icon: FileText, t: "PDF schedules" },
   { icon: Mail, t: "Emails" },
   { icon: StickyNote, t: "Locksmith notes" },
   { icon: Brain, t: "Individual memory" },
@@ -162,11 +162,11 @@ const oldWay = [
 
 const newWay = [
   { icon: Building2, t: "Buildings" },
-  { icon: KeyRound, t: "Keys" },
+  { icon: DoorOpen, t: "Doors" },
   { icon: Boxes, t: "Cylinders" },
+  { icon: KeyRound, t: "Issued keys" },
   { icon: Receipt, t: "Orders" },
   { icon: History, t: "Audit history" },
-  { icon: Users, t: "Team access" },
 ];
 
 function FaqItem({ q, a }: { q: string; a: string }) {
