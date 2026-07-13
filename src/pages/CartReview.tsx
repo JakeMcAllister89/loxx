@@ -23,7 +23,10 @@ export default function CartReview() {
 
   const itemsByDifferRef = useMemo(() => {
     const map = new Map<string, typeof items[0]>();
-    items.forEach(i => { if (i.differ_ref) map.set(i.differ_ref, i); });
+    items.forEach(i => {
+      if (i.differ_ref) map.set(i.differ_ref, i);
+      if (i.kind === "key" && i.key_reference) map.set(i.key_reference, i);
+    });
     return map;
   }, [items]);
 
