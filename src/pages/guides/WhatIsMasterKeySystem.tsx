@@ -322,4 +322,12 @@ export default function WhatIsMasterKeySystem() {
           In a basic lock setup, each door has its own key. That works for a small number of doors, but it quickly becomes difficult to manage across a school, hospital, office building or estate. Staff end up carrying large bunches of keys. There is no clear record of who has access to what. When someone leaves, you are never quite sure what to ask them to hand back.
         </p>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          A master key system solves this by creating a hierarchy. Individual keys 
+          A master key system solves this by creating a hierarchy. Individual keys open specific doors, while master keys open defined groups of doors. Each person holds only the keys they need, and every key in the system has a clear place in the plan.
+        </p>
+      </section>
+
+      <MarketingFooter />
+    </div>
+  );
+}
+
