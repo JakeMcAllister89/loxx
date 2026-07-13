@@ -317,7 +317,7 @@ export default function Index() {
             </div>
 
             {/* AFTER — single organised system container */}
-            <div className="relative rounded-2xl border border-border border-l-[3px] border-l-primary bg-card p-6 shadow-sm overflow-hidden after-highlight">
+            <div className="relative rounded-2xl border border-border border-l-[4px] border-l-primary bg-card p-6 shadow-lg overflow-hidden after-highlight">
               <div aria-hidden className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -330,7 +330,7 @@ export default function Index() {
                 </div>
                 <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-[10px] font-medium text-foreground/70">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  System record
+                  Live system record
                 </span>
               </div>
 
@@ -338,7 +338,7 @@ export default function Index() {
                 {newWay.map((n) => (
                   <span
                     key={n.t}
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-medium text-foreground"
+                    className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2.5 text-sm font-medium text-foreground"
                   >
                     <n.icon className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
                     {n.t}
@@ -356,8 +356,8 @@ export default function Index() {
             }
             .scatter-item { animation: scatterSettle 1.4s ease-out both; }
             @keyframes afterGlow {
-              0%,100% { box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-              50%     { box-shadow: 0 10px 40px -20px hsl(var(--primary) / 0.35); }
+              0%,100% { box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.05); }
+              50%     { box-shadow: 0 16px 40px -18px hsl(var(--primary) / 0.35); }
             }
             .after-highlight { animation: afterGlow 6s ease-in-out infinite; }
             @media (prefers-reduced-motion: reduce) {
