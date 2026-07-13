@@ -7,7 +7,7 @@ import {
   LayoutDashboard, ShieldCheck, GitBranch, GraduationCap, HeartPulse,
   Building2, Landmark, Home, Factory, Cloud, History, Users, Wallet,
   FileSpreadsheet, FileText, Mail, StickyNote, Brain,
-  KeyRound, Boxes, Receipt,
+  KeyRound, Boxes, DoorOpen, Receipt,
 } from "lucide-react";
 
 import { HeroShowcase } from "@/components/marketing/HeroShowcase";
@@ -154,7 +154,7 @@ const faqs = [
 
 const oldWay = [
   { icon: FileSpreadsheet, t: "Spreadsheets" },
-  { icon: FileText, t: "PDFs" },
+  { icon: FileText, t: "PDF schedules" },
   { icon: Mail, t: "Emails" },
   { icon: StickyNote, t: "Locksmith notes" },
   { icon: Brain, t: "Individual memory" },
@@ -162,11 +162,11 @@ const oldWay = [
 
 const newWay = [
   { icon: Building2, t: "Buildings" },
-  { icon: KeyRound, t: "Keys" },
+  { icon: DoorOpen, t: "Doors" },
   { icon: Boxes, t: "Cylinders" },
+  { icon: KeyRound, t: "Issued keys" },
   { icon: Receipt, t: "Orders" },
   { icon: History, t: "Audit history" },
-  { icon: Users, t: "Team access" },
 ];
 
 function FaqItem({ q, a }: { q: string; a: string }) {
@@ -253,14 +253,49 @@ export default function Index() {
               </div>
               <p className="mt-1 text-xs text-muted-foreground/80">Information is scattered.</p>
 
-              <div className="relative mt-5 h-[220px]">
+              <div className="relative mt-5 h-[190px] rounded-xl border border-border/40 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--border))_1px,transparent_0)] bg-[length:24px_24px] overflow-hidden">
+                {/* Faint connector lines from scattered records to the convergence dot */}
+                <svg
+                  className="absolute inset-0 h-full w-full"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  {[
+                    { x1: 18, y1: 16, x2: 50, y2: 74 },
+                    { x1: 48, y1: 12, x2: 50, y2: 74 },
+                    { x1: 78, y1: 18, x2: 50, y2: 74 },
+                    { x1: 30, y1: 52, x2: 50, y2: 74 },
+                    { x1: 64, y1: 48, x2: 50, y2: 74 },
+                  ].map((line, i) => (
+                    <line
+                      key={i}
+                      x1={line.x1}
+                      y1={line.y1}
+                      x2={line.x2}
+                      y2={line.y2}
+                      stroke="hsl(var(--primary))"
+                      strokeWidth="0.5"
+                      strokeDasharray="2 2"
+                      opacity="0.4"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  ))}
+                </svg>
+
+                {/* Convergence dot above the live record */}
+                <span
+                  aria-hidden
+                  className="scatter-item absolute left-1/2 top-[74%] -translate-x-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]"
+                />
+
                 {oldWay.map((o, i) => {
                   const pos = [
-                    "left-0 top-2 -rotate-3",
-                    "left-[30%] top-0 rotate-2",
-                    "right-2 top-6 -rotate-2",
-                    "left-[12%] bottom-2 rotate-1",
-                    "right-[18%] bottom-0 -rotate-1",
+                    "left-[8%] top-[10%] -rotate-3",
+                    "left-[40%] top-[6%] rotate-2",
+                    "right-[10%] top-[12%] -rotate-2",
+                    "left-[18%] top-[48%] rotate-1",
+                    "right-[22%] top-[44%] -rotate-1",
                   ][i];
                   return (
                     <span
@@ -276,14 +311,13 @@ export default function Index() {
               </div>
             </div>
 
-            {/* Transition — hierarchy line + dot into container */}
-            <div aria-hidden className="relative mx-auto my-4 h-10 w-px">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/60 to-primary" />
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]" />
+            {/* Transition — convergence dot into the live record */}
+            <div aria-hidden className="relative mx-auto my-1 h-6 w-px">
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/60 to-transparent" />
             </div>
 
             {/* AFTER — single organised system container */}
-            <div className="relative rounded-2xl border border-border border-l-[3px] border-l-primary bg-card p-6 shadow-sm overflow-hidden after-highlight">
+            <div className="relative rounded-2xl border border-border border-l-[4px] border-l-primary bg-card p-6 shadow-lg overflow-hidden after-highlight">
               <div aria-hidden className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -296,7 +330,7 @@ export default function Index() {
                 </div>
                 <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-[10px] font-medium text-foreground/70">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  System record
+                  Live system record
                 </span>
               </div>
 
@@ -304,7 +338,7 @@ export default function Index() {
                 {newWay.map((n) => (
                   <span
                     key={n.t}
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-medium text-foreground"
+                    className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2.5 text-sm font-medium text-foreground"
                   >
                     <n.icon className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
                     {n.t}
@@ -322,8 +356,8 @@ export default function Index() {
             }
             .scatter-item { animation: scatterSettle 1.4s ease-out both; }
             @keyframes afterGlow {
-              0%,100% { box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-              50%     { box-shadow: 0 10px 40px -20px hsl(var(--primary) / 0.35); }
+              0%,100% { box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.05); }
+              50%     { box-shadow: 0 16px 40px -18px hsl(var(--primary) / 0.35); }
             }
             .after-highlight { animation: afterGlow 6s ease-in-out infinite; }
             @media (prefers-reduced-motion: reduce) {
