@@ -311,10 +311,9 @@ export default function Index() {
               </div>
             </div>
 
-            {/* Transition — hierarchy line + dot into container */}
-            <div aria-hidden className="relative mx-auto my-4 h-10 w-px">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/60 to-primary" />
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]" />
+            {/* Transition — convergence dot into the live record */}
+            <div aria-hidden className="relative mx-auto my-1 h-6 w-px">
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/60 to-transparent" />
             </div>
 
             {/* AFTER — single organised system container */}
