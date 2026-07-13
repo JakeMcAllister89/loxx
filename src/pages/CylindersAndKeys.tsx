@@ -21,6 +21,7 @@ import cylinderThumbTurn from "@/assets/cylinder-thumbturn.jpg";
 import cylinderHalf from "@/assets/cylinder-half.jpg";
 import cylinderPadlock from "@/assets/cylinder-padlock.jpg";
 import cylinderRoundRim from "@/assets/cylinder-round-rim.jpg";
+import cylinderClassroom from "@/assets/cylinder-classroom.jpg";
 
 // ─── Sirius proof points (4, not 6 equal cards) ───────────────────────────
 const siriusPoints = [
@@ -68,7 +69,7 @@ const cylinderOptions = [
     copy: "Additional or replacement keys ordered against the live My LOXX system record.",
     img: domKey,
     alt: "DOM rs Sirius® replacement key",
-    darkBg: true,
+    darkBg: false,
   },
 ];
 
@@ -251,14 +252,85 @@ export default function CylindersAndKeys() {
         </div>
       </section>
 
-      {/* ── 5. FINISHES ── */}
+      {/* ── 5. CYLINDER FUNCTIONS FOR SPECIFIC ENVIRONMENTS ── */}
+      <section className="border-b border-border">
+        <div className="container py-20 md:py-24">
+          <div className="grid md:grid-cols-2 gap-12 items-center mb-14">
+            <div>
+              <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Functions</span>
+              <h2 className="mt-4 text-3xl md:text-4xl font-semibold tracking-tight">Cylinder functions for specific environments</h2>
+              <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed">
+                Different buildings and door types require different cylinder functions. The right function depends on the door's role, who needs access, and what level of override or control is required.
+              </p>
+              <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed">
+                With the introduction of Martyn's Law (Protect Duty), the specification of appropriate cylinder functions for educational and public venues is becoming increasingly relevant for specifiers and estates teams.
+              </p>
+            </div>
+            <div className="flex items-center justify-center">
+              <img
+                src={cylinderClassroom}
+                alt="Classroom and clutch security cylinders"
+                className="max-h-[320px] w-auto object-contain"
+              />
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              {
+                title: "Standard double cylinder",
+                env: "Offices, commercial buildings, general access doors",
+                desc: "Key operation from both sides. The most common cylinder function for external and internal commercial doors where both sides require key access.",
+                badge: null,
+              },
+              {
+                title: "Thumbturn cylinder",
+                env: "Internal doors, accessible exits, communal areas",
+                desc: "Key operation from outside with thumbturn operation from inside where suitable. Allows easy egress from one side without a key.",
+                badge: null,
+              },
+              {
+                title: "Round rim cylinder",
+                env: "Common entrances, student accommodation, residential blocks",
+                desc: "Used with traditional night-latch lock cases on shared building entrances. Allows authorised key access while maintaining private access to individual units.",
+                badge: null,
+              },
+              {
+                title: "Classroom cylinder",
+                env: "Schools, colleges, educational settings",
+                desc: "Can only be unlocked from the inside — not locked. Prevents students from locking themselves in while allowing authorised keyholders quick access from outside.",
+                badge: "Coming soon",
+              },
+              {
+                title: "Clutch cylinder",
+                env: "Hospitals, secure accommodation, public venues",
+                desc: "Can be locked from inside with a thumbturn, but always overridden from outside with a key. Used where staff need to maintain access even if a room is occupied. Relevant to Martyn's Law specifications.",
+                badge: "Coming soon",
+              },
+            ].map((f) => (
+              <div key={f.title} className="rounded-xl border border-border bg-card p-5 shadow-sm flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="text-sm font-bold text-foreground">{f.title}</div>
+                  {f.badge && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">{f.badge}</span>
+                  )}
+                </div>
+                <div className="text-[11px] font-medium text-primary/80 uppercase tracking-wide">{f.env}</div>
+                <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-sm text-muted-foreground">Classroom and clutch cylinders are planned additions to the My LOXX range. <Link to="/book-a-demo" className="text-primary hover:underline">Contact us to discuss your project requirements.</Link></p>
+        </div>
+      </section>
+
+      {/* ── 6. FINISHES ── */}
       <section className="border-b border-border bg-card">
         <div className="container py-20 md:py-24">
           <div className="max-w-2xl mb-10">
             <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Finishes</span>
             <h2 className="mt-4 text-3xl md:text-4xl font-semibold tracking-tight">Architectural finishes</h2>
             <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed">
-              Available in a wide range of standard finishes to match the ironmongery specification. Additional finishes available on request.
+              Available in a wide range of standard finishes to match the ironmongery specification.
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
@@ -279,7 +351,6 @@ export default function CylindersAndKeys() {
               </div>
             ))}
           </div>
-          <p className="mt-6 text-sm text-muted-foreground">Additional finishes and colour matching may be available for suitable project requirements.</p>
         </div>
       </section>
 
