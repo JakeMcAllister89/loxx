@@ -8,6 +8,14 @@ import {
 } from "lucide-react";
 import domHeroImage from "@/assets/domrssirius-main.jpg";
 import domLogo from "@/assets/dom-logo.jpg";
+import domKey from "@/assets/dom-key.jpg";
+import finishMattBlack from "@/assets/finish-matt-black.webp";
+import finishAntiqueBronze from "@/assets/finish-antique-bronze.webp";
+import finishDarkBronze from "@/assets/finish-dark-bronze.webp";
+import finishPolishedBrass from "@/assets/finish-polished-brass.webp";
+import finishSatinBrass from "@/assets/finish-satin-brass.png";
+import finishPolishedChrome from "@/assets/finish-polished-chrome.png";
+import finishSatinNickel from "@/assets/finish-satin-nickel.png";
 import cylinderDouble from "@/assets/cylinder-double.png";
 import cylinderThumbTurn from "@/assets/cylinder-thumbturn.jpg";
 import cylinderHalf from "@/assets/cylinder-half.jpg";
@@ -16,10 +24,14 @@ import cylinderRoundRim from "@/assets/cylinder-round-rim.jpg";
 
 // ─── Sirius proof points (4, not 6 equal cards) ───────────────────────────
 const siriusPoints = [
-  { icon: ShieldCheck, title: "Key copy protection", copy: "Restricted key profiles help prevent unauthorised duplication." },
-  { icon: FileBadge, title: "Patent protected", copy: "Patent-protected key profiles support long-term control over key supply." },
-  { icon: Lock, title: "Manipulation and drill resistance", copy: "Hardened components resist common attack methods. Selected TS007 3-star options available." },
-  { icon: Puzzle, title: "Modular range", copy: "A wide range of cylinder types and lengths to suit different door and ironmongery configurations." },
+  { icon: FileBadge, title: "Patent protection until 2043", copy: "Patent-protected key profiles provide long-term protection against unauthorised key duplication." },
+  { icon: ShieldCheck, title: "Starline key copy protection", copy: "Advanced technical key copy protection, exclusive to DOM, built into every key profile." },
+  { icon: Layers, title: "Scalable master key capability", copy: "Built to support everything from small single-site systems to complex multi-site master key installations." },
+  { icon: KeyRound, title: "Colour-coded key management", copy: "Each key includes a removable coloured ball to define user roles or access levels at a glance." },
+  { icon: Lock, title: "Drill and pull resistance", copy: "Robust construction to withstand common attack methods. Selected TS007 3-star options available." },
+  { icon: Puzzle, title: "Long key neck design", copy: "Ensures ease of use with escutcheons and protective furniture across a wide range of door hardware." },
+  { icon: RefreshCw, title: "Single or master keyed", copy: "Flexible to suit a range of security needs, from individual locks to complex grand master key systems." },
+  { icon: Building2, title: "High-value, high-volume", copy: "Cost-effective performance for large-scale rollouts without compromising on security." },
 ];
 
 // ─── Cylinder options with real product images where available ─────────────
@@ -57,8 +69,9 @@ const cylinderOptions = [
   {
     title: "Replacement keys",
     copy: "Additional or replacement keys cut to your existing system differ, ordered from the live record.",
-    img: null,
-    alt: null,
+    img: domKey,
+    alt: "DOM rs Sirius® replacement key",
+    darkBg: true,
   },
 ];
 
@@ -181,7 +194,7 @@ export default function CylindersAndKeys() {
                 Commercial-grade master key cylinders engineered and manufactured in Germany. The Sirius® range is designed for complex master key systems where long-term key control, security and modular configuration matter.
               </p>
               <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed">
-                DIN EN1303 rated. Patent-protected key profile to 2036. Supplied exclusively through My LOXX for managed master key systems.
+                DIN EN1303 rated. Patent-protected key profile to 2043. Supplied exclusively through My LOXX for managed master key systems.
               </p>
               <div className="mt-8 space-y-4">
                 {siriusPoints.map((p) => (
@@ -222,11 +235,11 @@ export default function CylindersAndKeys() {
             {cylinderOptions.map((o) => (
               <div key={o.title} className="rounded-xl border border-border bg-card p-5 shadow-sm flex gap-4 items-start">
                 {o.img ? (
-                  <div className="h-16 w-16 shrink-0 rounded-lg border border-border bg-white overflow-hidden flex items-center justify-center p-1.5">
+                  <div className={`h-20 w-20 shrink-0 rounded-lg border border-border overflow-hidden flex items-center justify-center p-1.5 ${o.darkBg ? 'bg-zinc-900' : 'bg-white'}`}>
                     <img src={o.img} alt={o.alt ?? o.title} className="max-h-full max-w-full object-contain" />
                   </div>
                 ) : (
-                  <div className="h-16 w-16 shrink-0 rounded-lg border border-border bg-primary/5 flex items-center justify-center">
+                  <div className="h-20 w-20 shrink-0 rounded-lg border border-border bg-primary/5 flex items-center justify-center">
                     <KeyRound className="h-6 w-6 text-primary/50" strokeWidth={1.5} />
                   </div>
                 )}
@@ -243,20 +256,32 @@ export default function CylindersAndKeys() {
       {/* ── 5. FINISHES ── */}
       <section className="border-b border-border bg-card">
         <div className="container py-20 md:py-24">
-          <div className="max-w-2xl">
+          <div className="max-w-2xl mb-10">
             <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">Finishes</span>
             <h2 className="mt-4 text-3xl md:text-4xl font-semibold tracking-tight">Architectural finishes</h2>
             <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed">
-              Available in a wide range of standard finishes to match the ironmongery specification. Colour matching is available for project-specific requirements.
+              Available in a wide range of standard finishes to match the ironmongery specification. Additional finishes available on request.
             </p>
           </div>
-          <div className="mt-10 flex flex-wrap gap-2">
-            {finishes.map((f) => (
-              <span key={f} className="inline-flex items-center rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground/80">
-                {f}
-              </span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            {[
+              { label: "Satin Nickel", img: finishSatinNickel },
+              { label: "Polished Chrome", img: finishPolishedChrome },
+              { label: "Satin Brass", img: finishSatinBrass },
+              { label: "Polished Brass", img: finishPolishedBrass },
+              { label: "Dark Bronze", img: finishDarkBronze },
+              { label: "Antique Bronze", img: finishAntiqueBronze },
+              { label: "Matt Black", img: finishMattBlack },
+            ].map((f) => (
+              <div key={f.label} className="flex flex-col items-center gap-2">
+                <div className="w-full aspect-square rounded-lg border border-border overflow-hidden shadow-sm">
+                  <img src={f.img} alt={f.label + " cylinder finish"} className="w-full h-full object-cover" />
+                </div>
+                <span className="text-xs text-muted-foreground text-center">{f.label}</span>
+              </div>
             ))}
           </div>
+          <p className="mt-6 text-sm text-muted-foreground">Additional finishes and colour matching available for project-specific requirements — contact us to discuss.</p>
         </div>
       </section>
 
