@@ -372,17 +372,22 @@ const TYPE_PILL: Record<string, string> = {
 
 
 function HierarchyView({ root, itemsByDifferRef }: { root: TNode; itemsByDifferRef?: Map<string, any> }) {
-  type Row = { key: string; ref: string; label: string; isCE: boolean; node: TNode };
+  type Row = { key: string; ref: string; label: string; kind: "CYL" | "CE" | "GMK" | "MK" | "SMK"; node: TNode };
   const rows: Row[] = [];
   const walk = (n: TNode) => {
     if (n.type === "CYL") {
       const ref = n.differ != null ? `D${String(n.differ).padStart(3, "0")}` : null;
       if (ref && itemsByDifferRef?.has(ref)) {
-        rows.push({ key: n.id, ref, label: n.label ?? "", isCE: false, node: n });
+        rows.push({ key: n.id, ref, label: n.label ?? "", kind: "CYL", node: n });
       }
     } else if (n.type === "CE") {
       if (n.z_ref && itemsByDifferRef?.has(n.z_ref)) {
-        rows.push({ key: n.id, ref: n.z_ref, label: n.label ?? "", isCE: true, node: n });
+        rows.push({ key: n.id, ref: n.z_ref, label: n.label ?? "", kind: "CE", node: n });
+      }
+    } else if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
+      const ref = n.label;
+      if (ref && itemsByDifferRef?.has(ref)) {
+        rows.push({ key: n.id, ref, label: n.location ?? "", kind: n.type, node: n });
       }
     }
     n.children.forEach(walk);
@@ -393,15 +398,23 @@ function HierarchyView({ root, itemsByDifferRef }: { root: TNode; itemsByDifferR
     return <div className="text-sm text-muted-foreground">No items from this system in your basket.</div>;
   }
 
+  const REF_CLS: Record<Row["kind"], string> = {
+    CYL: "text-amber-700",
+    CE:  "text-sky-700",
+    GMK: "text-violet-700",
+    MK:  "text-teal-700",
+    SMK: "text-emerald-700",
+  };
+
   return (
     <div className="divide-y">
       {rows.map((r) => {
         const item = itemsByDifferRef?.get(r.ref);
         const lockType = item?.cylinder_type ?? null;
         const lockFunction = item?.cylinder_profile ?? null;
-        const qty = r.node.quantity ?? item?.quantity ?? 1;
-        const pillCls = r.isCE ? TYPE_PILL.CE : TYPE_PILL.CYL;
-        const refCls = r.isCE ? "text-sky-700" : "text-amber-700";
+        const qty = item?.quantity ?? r.node.quantity ?? 1;
+        const pillCls = TYPE_PILL[r.kind];
+        const refCls = REF_CLS[r.kind];
         return (
           <div key={r.key} className="flex items-center gap-2 py-2 text-sm">
             {item?.image_url ? (
@@ -411,7 +424,7 @@ function HierarchyView({ root, itemsByDifferRef }: { root: TNode; itemsByDifferR
                 <Lock className="h-5 w-5 text-muted-foreground" />
               </div>
             )}
-            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${pillCls}`}>{r.isCE ? "CE" : "CYL"}</span>
+            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${pillCls}`}>{r.kind}</span>
             <span className={`font-mono text-xs font-medium ${refCls}`}>{r.ref}</span>
             {r.label && <span>{r.label}</span>}
             <span className="text-xs text-muted-foreground ml-auto">
