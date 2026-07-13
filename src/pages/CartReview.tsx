@@ -25,7 +25,11 @@ export default function CartReview() {
     const map = new Map<string, typeof items[0]>();
     items.forEach(i => {
       if (i.differ_ref) map.set(i.differ_ref, i);
-      if (i.kind === "key" && i.key_reference) map.set(i.key_reference, i);
+      if (i.kind === "key" && i.key_reference) {
+        map.set(i.key_reference, i);
+        const refOnly = i.key_reference.split(" — ")[0].trim();
+        if (refOnly !== i.key_reference) map.set(refOnly, i);
+      }
     });
     return map;
   }, [items]);
