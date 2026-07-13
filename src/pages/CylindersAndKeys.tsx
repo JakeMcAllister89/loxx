@@ -24,14 +24,11 @@ import cylinderRoundRim from "@/assets/cylinder-round-rim.jpg";
 
 // ─── Sirius proof points (4, not 6 equal cards) ───────────────────────────
 const siriusPoints = [
-  { icon: FileBadge, title: "Patent protection until 2043", copy: "Patent-protected key profiles provide long-term protection against unauthorised key duplication." },
-  { icon: ShieldCheck, title: "Starline key copy protection", copy: "Advanced technical key copy protection, exclusive to DOM, built into every key profile." },
-  { icon: Layers, title: "Scalable master key capability", copy: "Built to support everything from small single-site systems to complex multi-site master key installations." },
-  { icon: KeyRound, title: "Colour-coded key management", copy: "Each key includes a removable coloured ball to define user roles or access levels at a glance." },
-  { icon: Lock, title: "Drill and pull resistance", copy: "Robust construction to withstand common attack methods. Selected TS007 3-star options available." },
-  { icon: Puzzle, title: "Long key neck design", copy: "Ensures ease of use with escutcheons and protective furniture across a wide range of door hardware." },
-  { icon: RefreshCw, title: "Single or master keyed", copy: "Flexible to suit a range of security needs, from individual locks to complex grand master key systems." },
-  { icon: Building2, title: "High-value, high-volume", copy: "Cost-effective performance for large-scale rollouts without compromising on security." },
+  { icon: FileBadge, title: "Expected patent protection until 2043", copy: "Patent pending, with expected patent protection until 2043." },
+  { icon: ShieldCheck, title: "Key copy protection", copy: "Restricted key profiles and Starline technology help prevent unauthorised key duplication." },
+  { icon: Layers, title: "Master key capability", copy: "Supports grand master, master, sub-master and change-key hierarchies for real buildings." },
+  { icon: Lock, title: "Drill and pull protection", copy: "Hardened components resist common attack methods. Selected TS007 3-star options available." },
+  { icon: Puzzle, title: "Modular cylinder options", copy: "A wide range of cylinder types and lengths to suit different door and ironmongery configurations." },
 ];
 
 // ─── Cylinder options with real product images where available ─────────────
@@ -44,7 +41,7 @@ const cylinderOptions = [
   },
   {
     title: "Thumbturn cylinders",
-    copy: "Key operation from outside with an internal thumbturn for accessible and escape doors.",
+    copy: "Key operation from outside with internal thumbturn operation where suitable.",
     img: cylinderThumbTurn,
     alt: "DOM rs Sirius® euro thumbturn cylinder",
   },
@@ -68,7 +65,7 @@ const cylinderOptions = [
   },
   {
     title: "Replacement keys",
-    copy: "Additional or replacement keys cut to your existing system differ, ordered from the live record.",
+    copy: "Additional or replacement keys ordered against the live My LOXX system record.",
     img: domKey,
     alt: "DOM rs Sirius® replacement key",
     darkBg: true,
@@ -117,11 +114,12 @@ export default function CylindersAndKeys() {
               </Button>
             </div>
           </div>
-          <div className="flex items-center justify-center">
+          <div className="relative flex items-center justify-center py-8">
+            <div className="absolute inset-0 rounded-3xl" style={{ background: "radial-gradient(ellipse at center, hsl(33,91%,44%,0.07) 0%, transparent 70%)" }} />
             <img
               src={domHeroImage}
               alt="DOM rs Sirius® euro profile master key cylinder with key"
-              className="max-h-[420px] w-auto object-contain"
+              className="relative max-h-[440px] w-auto object-contain drop-shadow-xl"
             />
           </div>
         </div>
@@ -194,7 +192,7 @@ export default function CylindersAndKeys() {
                 Commercial-grade master key cylinders engineered and manufactured in Germany. The Sirius® range is designed for complex master key systems where long-term key control, security and modular configuration matter.
               </p>
               <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed">
-                DIN EN1303 rated. Patent-protected key profile to 2043. Supplied exclusively through My LOXX for managed master key systems.
+                DOM rs Sirius® is designed for master key systems and includes patented key protection, with expected patent protection until 2043. My LOXX supplies and manages these cylinders and keys for commercial master key projects.
               </p>
               <div className="mt-8 space-y-4">
                 {siriusPoints.map((p) => (
@@ -281,7 +279,7 @@ export default function CylindersAndKeys() {
               </div>
             ))}
           </div>
-          <p className="mt-6 text-sm text-muted-foreground">Additional finishes and colour matching available for project-specific requirements — contact us to discuss.</p>
+          <p className="mt-6 text-sm text-muted-foreground">Additional finishes and colour matching may be available for suitable project requirements.</p>
         </div>
       </section>
 
@@ -323,7 +321,7 @@ export default function CylindersAndKeys() {
                 For doorset manufacturers and project partners
               </h2>
               <p className="mt-4 text-[15px] text-muted-foreground leading-relaxed max-w-2xl">
-                Add a managed master key system to your doorset package without taking on long-term admin. My LOXX supports the cylinder and key package after handover, giving the end customer a clear way to manage future orders.
+                Add a managed master key system to your doorset package without taking on long-term key and cylinder admin. My LOXX supports the cylinder and key package after handover, giving the end customer a clear way to manage future orders.
               </p>
             </div>
             <div className="flex md:justify-end">
