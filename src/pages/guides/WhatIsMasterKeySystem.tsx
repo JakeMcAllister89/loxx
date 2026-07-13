@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LoxxLogo } from "@/components/LoxxLogo";
+import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import keyHierarchyImage from "@/assets/key-hierarchy.png";
 import cylinderDouble from "@/assets/cylinder-double.png";
@@ -350,28 +350,8 @@ function MasterKeyedDiagram() {
 export default function WhatIsMasterKeySystem() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* ── NAV ── */}
-      <header className="bg-[#fafafa] text-foreground border-b border-border/60">
-        <div className="container flex items-center justify-between py-4">
-          <Link to="/">
-            <LoxxLogo />
-          </Link>
-          <nav className="flex items-center gap-2">
-            <Link to="/guides/what-is-a-master-key-system" className="text-sm px-3 py-2 text-foreground font-medium">
-              Guide
-            </Link>
-            <Link to="/cylinders-and-keys" className="text-sm px-3 py-2 text-foreground/70 hover:text-foreground">
-              Cylinders &amp; Keys
-            </Link>
-            <Link to="/auth" className="text-sm px-3 py-2 text-foreground/70 hover:text-foreground">
-              Sign In
-            </Link>
-            <Button asChild className="bg-primary hover:bg-primary/90">
-              <Link to="/auth?mode=signup">Get Started</Link>
-            </Button>
-          </nav>
-        </div>
-      </header>
+      <MarketingHeader />
+
 
       {/* ── 1. HERO — two-column on desktop ── */}
       <section className="bg-[#fafafa] border-b border-border/60">
