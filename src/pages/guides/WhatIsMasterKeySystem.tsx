@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LoxxLogo } from "@/components/LoxxLogo";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
+import builderCanvasExample from "@/assets/builder-canvas-example.png";
 import {
   GraduationCap, HeartPulse, Briefcase, Home, Landmark, Ticket,
-  ChevronDown, ChevronUp, CheckCircle2, AlertTriangle,
+  ChevronDown, ChevronUp, CheckCircle2, AlertTriangle, X,
 } from "lucide-react";
 
 // ─── Environment cards ─────────────────────────────────────────────────────
@@ -155,6 +156,72 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   );
 }
 
+// ─── System type mini-diagram ─────────────────────────────────────────────
+// Simple CSS-only diagrams for keyed-to-differ, keyed-alike, master-keyed
+function KeyedToDifferDiagram() {
+  return (
+    <div className="flex flex-col gap-2 p-4 rounded-lg bg-background border border-border">
+      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Keyed to differ</div>
+      {["Room A", "Room B", "Room C"].map((room, i) => (
+        <div key={room} className="flex items-center gap-2">
+          <div className="h-5 w-5 rounded flex items-center justify-center text-[9px] font-bold shrink-0"
+            style={{ background: `hsl(33,91%,${52 - i * 8}%)`, color: "#fff" }}>K{i + 1}</div>
+          <div className="h-px flex-1 bg-border" />
+          <div className="h-5 w-14 rounded border border-border bg-card flex items-center justify-center text-[9px] text-muted-foreground shrink-0">{room}</div>
+        </div>
+      ))}
+      <p className="text-[10px] text-muted-foreground mt-1 leading-snug">One key per lock. Each key opens only its own door.</p>
+    </div>
+  );
+}
+
+function KeyedAlikeDiagram() {
+  return (
+    <div className="flex flex-col gap-2 p-4 rounded-lg bg-background border border-border">
+      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Keyed alike</div>
+      <div className="flex items-start gap-3">
+        <div className="h-7 w-7 rounded flex items-center justify-center text-[9px] font-bold shrink-0 mt-1"
+          style={{ background: "hsl(33,91%,44%)", color: "#fff" }}>K1</div>
+        <div className="flex flex-col gap-1.5 flex-1">
+          {["Room A", "Room B", "Room C"].map((room) => (
+            <div key={room} className="flex items-center gap-2">
+              <div className="h-px flex-1 bg-border" />
+              <div className="h-5 w-14 rounded border border-border bg-card flex items-center justify-center text-[9px] text-muted-foreground shrink-0">{room}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="text-[10px] text-muted-foreground mt-1 leading-snug">One key opens multiple locks. No access hierarchy.</p>
+    </div>
+  );
+}
+
+function MasterKeyedDiagram() {
+  return (
+    <div className="flex flex-col gap-2 p-4 rounded-lg bg-background border border-border">
+      <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Master keyed</div>
+      <div className="flex items-start gap-2">
+        <div className="flex flex-col items-center gap-1">
+          <div className="h-6 w-10 rounded flex items-center justify-center text-[9px] font-bold"
+            style={{ background: "hsl(178,60%,38%)", color: "#fff" }}>MK</div>
+          <div className="w-px flex-1 bg-border min-h-[24px]" />
+        </div>
+        <div className="flex flex-col gap-1.5 flex-1 mt-0.5">
+          {[["K1", "Room A"], ["K2", "Room B"], ["K3", "Room C"]].map(([k, room]) => (
+            <div key={room} className="flex items-center gap-2">
+              <div className="h-5 w-5 rounded flex items-center justify-center text-[9px] font-bold shrink-0"
+                style={{ background: "hsl(33,91%,44%)", color: "#fff" }}>{k}</div>
+              <div className="h-px flex-1 bg-border" />
+              <div className="h-5 w-14 rounded border border-border bg-card flex items-center justify-center text-[9px] text-muted-foreground shrink-0">{room}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="text-[10px] text-muted-foreground mt-1 leading-snug">Individual keys + one master key that opens all doors in the group.</p>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────
 export default function WhatIsMasterKeySystem() {
   return (
@@ -173,34 +240,70 @@ export default function WhatIsMasterKeySystem() {
         </div>
       </header>
 
-      {/* ── 1. HERO ── */}
+      {/* ── 1. HERO — two-column on desktop ── */}
       <section className="bg-[#fafafa] border-b border-border/60">
-        <div className="container py-14 md:py-20 max-w-3xl">
-          <span className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary mb-4">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            Guide
-          </span>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.05]">
-            What is a master key system?
-          </h1>
-          <p className="mt-5 text-lg text-muted-foreground leading-relaxed max-w-2xl">
-            A master key system is a planned lock and key structure that lets different people open different doors with the right level of access.
-          </p>
-          <p className="mt-3 text-base text-muted-foreground leading-relaxed max-w-2xl">
-            A site manager may need access to every door. A department lead may only need one area. A teacher, tenant or contractor may only need a single room or defined group of doors. My LOXX helps organisations keep that system clear, current and controlled from one digital record.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25">
-              <Link to="/book-a-demo">Book a My LOXX Demo</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link to="/cylinders-and-keys">View Cylinders &amp; Keys</Link>
-            </Button>
+        <div className="container py-14 md:py-20 grid md:grid-cols-[1fr_1.1fr] gap-10 items-center">
+          <div>
+            <span className="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-primary mb-4">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Guide
+            </span>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.05]">
+              What is a master key system?
+            </h1>
+            <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
+              A master key system is a planned lock and key structure that lets different people open different doors with the right level of access.
+            </p>
+            <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+              A site manager may need access to every door. A department lead may only need one area. A teacher, tenant or contractor may only need a single room or defined group of doors. My LOXX helps organisations keep that system clear, current and controlled from one digital record.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25">
+                <Link to="/book-a-demo">Book a My LOXX Demo</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link to="/cylinders-and-keys">View Cylinders &amp; Keys</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="hidden md:block">
+            <div className="rounded-xl border border-border bg-white shadow-lg overflow-hidden">
+              <img
+                src={builderCanvasExample}
+                alt="Visual master key hierarchy inside the My LOXX System Builder"
+                className="w-full h-auto block"
+              />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── 2. PLAIN-ENGLISH DEFINITION ── */}
+      {/* ── 2. ANCHOR NAV ── */}
+      <nav className="border-b border-border bg-card sticky top-0 z-10">
+        <div className="container py-3 overflow-x-auto">
+          <div className="flex gap-1 min-w-max">
+            <span className="text-xs font-medium text-muted-foreground self-center mr-2">Quick links:</span>
+            {[
+              { label: "Key hierarchy", id: "key-hierarchy" },
+              { label: "System types", id: "system-types" },
+              { label: "Planning", id: "planning" },
+              { label: "Common mistakes", id: "common-mistakes" },
+              { label: "How My LOXX helps", id: "how-loxx-helps" },
+              { label: "FAQ", id: "faq" },
+            ].map((link) => (
+              <a
+                key={link.id}
+                href={`#${link.id}`}
+                className="text-xs px-3 py-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-background transition-colors whitespace-nowrap"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      {/* ── 3. PLAIN-ENGLISH DEFINITION ── */}
       <section className="container py-14 max-w-3xl">
         <h2 className="text-2xl font-bold tracking-tight">Master key systems, explained simply</h2>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed">
@@ -217,58 +320,78 @@ export default function WhatIsMasterKeySystem() {
         </div>
       </section>
 
-      {/* ── 3. HIERARCHY VISUAL ── */}
-      <section className="bg-card border-y border-border">
+      {/* ── 4. HIERARCHY DIAGRAM ── */}
+      <section id="key-hierarchy" className="bg-card border-y border-border">
         <div className="container py-14 max-w-3xl">
           <h2 className="text-2xl font-bold tracking-tight">The key hierarchy</h2>
           <p className="mt-3 text-base text-muted-foreground leading-relaxed">
             Most master key systems are built around four levels. Not every system needs all four — simpler sites may only need two or three.
           </p>
-          <div className="mt-8 space-y-3">
-            {/* GMK */}
-            <div className="flex gap-4 items-start p-5 rounded-xl border bg-background"
-              style={{ borderColor: "hsl(245,60%,67%,0.4)", borderLeftWidth: "3px", borderLeftColor: "hsl(245,60%,67%)" }}>
-              <div className="h-3 w-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: "hsl(245,60%,67%)" }} />
-              <div>
-                <div className="text-sm font-bold text-foreground">Grand Master Key</div>
-                <div className="text-sm text-muted-foreground mt-0.5">Highest level access across the system, where specified. Typically held by authorised senior facilities, estates or security personnel.</div>
+
+          {/* Visual stepped tree */}
+          <div className="mt-8 relative">
+            {/* Vertical connector line */}
+            <div className="absolute left-[18px] top-8 bottom-8 w-px bg-border" />
+
+            <div className="space-y-0">
+              {/* GMK */}
+              <div className="relative flex gap-4 pb-6">
+                <div className="h-9 w-9 rounded-full shrink-0 flex items-center justify-center z-10 border-2 border-background"
+                  style={{ background: "hsl(245,60%,67%)" }}>
+                  <span className="text-[9px] font-bold text-white">GMK</span>
+                </div>
+                <div className="flex-1 pt-1">
+                  <div className="text-sm font-bold text-foreground">Grand Master Key</div>
+                  <div className="text-sm text-muted-foreground mt-0.5">Highest level access across the system, where specified.</div>
+                </div>
               </div>
-            </div>
-            {/* MK */}
-            <div className="ml-6 flex gap-4 items-start p-5 rounded-xl border bg-background"
-              style={{ borderColor: "hsl(178,60%,45%,0.4)", borderLeftWidth: "3px", borderLeftColor: "hsl(178,60%,45%)" }}>
-              <div className="h-3 w-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: "hsl(178,60%,45%)" }} />
-              <div>
-                <div className="text-sm font-bold text-foreground">Master Key</div>
-                <div className="text-sm text-muted-foreground mt-0.5">Access to a building, department or main group of doors within the system.</div>
+
+              {/* MK — indented */}
+              <div className="relative flex gap-4 pb-6 pl-6">
+                <div className="absolute left-[18px] top-0 h-4 w-6 border-l border-b border-border rounded-bl" style={{ left: "18px" }} />
+                <div className="h-9 w-9 rounded-full shrink-0 flex items-center justify-center z-10 border-2 border-background"
+                  style={{ background: "hsl(178,60%,38%)" }}>
+                  <span className="text-[9px] font-bold text-white">MK</span>
+                </div>
+                <div className="flex-1 pt-1">
+                  <div className="text-sm font-bold text-foreground">Master Key</div>
+                  <div className="text-sm text-muted-foreground mt-0.5">Access to a building, department or main group of doors.</div>
+                </div>
               </div>
-            </div>
-            {/* SMK */}
-            <div className="ml-12 flex gap-4 items-start p-5 rounded-xl border bg-background"
-              style={{ borderColor: "hsl(154,71%,36%,0.4)", borderLeftWidth: "3px", borderLeftColor: "hsl(154,71%,36%)" }}>
-              <div className="h-3 w-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: "hsl(154,71%,36%)" }} />
-              <div>
-                <div className="text-sm font-bold text-foreground">Sub Master Key</div>
-                <div className="text-sm text-muted-foreground mt-0.5">Access to a smaller zone, floor or team area within a master key group.</div>
+
+              {/* SMK — further indented */}
+              <div className="relative flex gap-4 pb-6 pl-12">
+                <div className="h-9 w-9 rounded-full shrink-0 flex items-center justify-center z-10 border-2 border-background"
+                  style={{ background: "hsl(154,71%,36%)" }}>
+                  <span className="text-[9px] font-bold text-white">SMK</span>
+                </div>
+                <div className="flex-1 pt-1">
+                  <div className="text-sm font-bold text-foreground">Sub Master Key</div>
+                  <div className="text-sm text-muted-foreground mt-0.5">Access to a smaller zone, floor or team area.</div>
+                </div>
               </div>
-            </div>
-            {/* CYL */}
-            <div className="ml-18 flex gap-4 items-start p-5 rounded-xl border bg-background"
-              style={{ borderColor: "hsl(33,91%,44%,0.4)", borderLeftWidth: "3px", borderLeftColor: "hsl(33,91%,44%)", marginLeft: "4.5rem" }}>
-              <div className="h-3 w-3 rounded-full shrink-0 mt-1" style={{ backgroundColor: "hsl(33,91%,44%)" }} />
-              <div>
-                <div className="text-sm font-bold text-foreground">Individual Key</div>
-                <div className="text-sm text-muted-foreground mt-0.5">Access to one door or a defined keyed-alike group, depending on how the system is designed.</div>
+
+              {/* CYL — furthest indented */}
+              <div className="relative flex gap-4 pl-[4.5rem]">
+                <div className="h-9 w-9 rounded-full shrink-0 flex items-center justify-center z-10 border-2 border-background"
+                  style={{ background: "hsl(33,91%,44%)" }}>
+                  <span className="text-[9px] font-bold text-white">CYL</span>
+                </div>
+                <div className="flex-1 pt-1">
+                  <div className="text-sm font-bold text-foreground">Individual Key</div>
+                  <div className="text-sm text-muted-foreground mt-0.5">Access to one door or a defined keyed-alike group, depending on how the system is designed.</div>
+                </div>
               </div>
             </div>
           </div>
-          <p className="mt-5 text-xs text-muted-foreground">
+
+          <p className="mt-6 text-xs text-muted-foreground">
             These colours match the My LOXX System Builder, so the hierarchy you plan here is the same one you will see in the platform.
           </p>
         </div>
       </section>
 
-      {/* ── 4. KEY TERMS ── */}
+      {/* ── 5. KEY TERMS ── */}
       <section className="container py-14 max-w-3xl">
         <h2 className="text-2xl font-bold tracking-tight">Key terms worth knowing</h2>
         <p className="mt-3 text-base text-muted-foreground leading-relaxed">
@@ -281,7 +404,6 @@ export default function WhatIsMasterKeySystem() {
             { term: "Master key", def: "A key that opens multiple locks within a defined group, while each lock still has its own individual key." },
             { term: "Grand master key", def: "A higher-level key that opens multiple master key groups across the system, where specified." },
             { term: "Common entrance", def: "Designed for multi-occupancy buildings where controlled key access is required to shared areas without compromising the security of private spaces. Residents or staff hold keys for the main entrance and permitted communal areas — such as bin stores or cycle facilities — while individual flats, rooms or units remain independent. Building managers or caretakers can be issued higher-level keys to access additional service areas when required." },
-
           ].map((g) => (
             <div key={g.term} className="p-4 rounded-lg border border-border bg-card">
               <div className="text-sm font-bold text-foreground">{g.term}</div>
@@ -291,15 +413,24 @@ export default function WhatIsMasterKeySystem() {
         </div>
       </section>
 
-      {/* ── 5. SYSTEM TYPES ── */}
-      <section className="bg-card border-y border-border">
+      {/* ── 6. SYSTEM TYPES with mini-diagrams ── */}
+      <section id="system-types" className="bg-card border-y border-border">
         <div className="container py-14 max-w-3xl">
           <h2 className="text-2xl font-bold tracking-tight">The main types of key system</h2>
           <p className="mt-3 text-base text-muted-foreground leading-relaxed">
             Not every suited lock system is a full master key system. The right structure depends on how the building is used, how many access levels are needed and how much the system is likely to grow.
           </p>
-          <div className="mt-6 space-y-4">
-            {systemTypes.map((s) => (
+
+          {/* Three visual types */}
+          <div className="mt-8 grid sm:grid-cols-3 gap-4">
+            <KeyedToDifferDiagram />
+            <KeyedAlikeDiagram />
+            <MasterKeyedDiagram />
+          </div>
+
+          {/* Remaining three — text only */}
+          <div className="mt-4 space-y-4">
+            {systemTypes.slice(2).map((s) => (
               <div key={s.t} className="flex gap-3 items-start">
                 <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 mt-2" />
                 <div>
@@ -312,134 +443,180 @@ export default function WhatIsMasterKeySystem() {
         </div>
       </section>
 
-      {/* ── 6. WHY ORGANISATIONS USE THEM ── */}
-
+      {/* ── 7. WHY ORGANISATIONS USE THEM ── */}
       <section className="container py-14 max-w-3xl">
-          <h2 className="text-2xl font-bold tracking-tight">Why organisations use master key systems</h2>
-          <div className="mt-6 space-y-4">
-            {[
-              { t: "Fewer keys to carry", d: "People carry one key for the areas they are authorised to access, rather than a separate key for every door." },
-              { t: "Clearer access levels", d: "Access can be planned around buildings, departments, roles or zones — making it easier to manage who can go where." },
-              { t: "Faster authorised access", d: "Authorised facilities, estates or security personnel can access critical areas when needed without relying on others to open doors." },
-              { t: "Cleaner handover", d: "A planned system is easier to explain, document and manage than a collection of unrelated locks and separate key bunches." },
-              { t: "Room for future expansion", d: "If the system is designed properly, new doors, departments or buildings can be added later without replacing existing cylinders." },
-            ].map((b) => (
-              <div key={b.t} className="flex gap-3 items-start">
-                <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" strokeWidth={2.25} />
-                <div>
-                  <div className="text-sm font-semibold text-foreground">{b.t}</div>
-                  <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{b.d}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-      </section>
-
-      {/* ── 6. ENVIRONMENTS ── */}
-      <section className="container py-14">
-        <div className="max-w-3xl mb-8">
-          <h2 className="text-2xl font-bold tracking-tight">How master key systems are used in different buildings</h2>
-          <p className="mt-3 text-base text-muted-foreground leading-relaxed">
-            The structure of a master key system depends on how the building is used. The access needs of a school are different from those of a hospital or residential block, even if the underlying lock and key principles are the same.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {environments.map((e) => (
-            <div key={e.title} className="rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-              <div className="flex items-center gap-2 mb-3">
-                <e.icon className="h-4 w-4 text-primary shrink-0" strokeWidth={2} />
-                <h3 className="text-sm font-bold leading-snug">{e.title}</h3>
-              </div>
-              <p className="text-[11px] font-semibold text-primary/80 uppercase tracking-wide mb-2">Typical areas</p>
-              <p className="text-xs text-muted-foreground leading-relaxed mb-3">{e.areas}</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">{e.body}</p>
-            </div>
-          ))}
-        </div>
-        <p className="mt-6 text-sm text-muted-foreground max-w-3xl">
-          My LOXX is used across all of these environments to keep the system record live, track changes and manage replacement orders from one place.
-        </p>
-      </section>
-
-      {/* ── 7. COMMON MISTAKES ── */}
-      <section className="bg-card border-y border-border">
-        <div className="container py-14 max-w-3xl">
-          <h2 className="text-2xl font-bold tracking-tight">Common mistakes when managing a master key system</h2>
-          <p className="mt-3 text-base text-muted-foreground leading-relaxed">
-            Most problems with master key systems are not technical. They are the result of record-keeping and process failures that build up over time.
-          </p>
-          <div className="mt-6 space-y-3">
-            {mistakes.map((m) => (
-              <div key={m} className="flex gap-3 items-start p-4 rounded-lg border border-border bg-background">
-                <AlertTriangle className="h-4 w-4 text-primary/70 shrink-0 mt-0.5" strokeWidth={2} />
-                <p className="text-sm text-muted-foreground leading-relaxed">{m}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── THE RECORD PROBLEM ── */}
-      <section className="container py-14 max-w-3xl">
-        <h2 className="text-2xl font-bold tracking-tight">The problem is rarely the lock. It is the record.</h2>
-        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          Most master key systems do not fail on day one. They fail slowly.
-        </p>
-        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          A key is issued but not recorded. A contractor keeps a key longer than expected. A cylinder is replaced but the schedule is not updated. A staff member leaves and no one is certain whether their key was returned. Individually, these are small admin issues. Over time, they become a security problem.
-        </p>
-        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          Most master key systems start with a proper schedule. A locksmith or architectural ironmonger designs the hierarchy, supplies the cylinders and keys, and hands over a document that describes the system. The problem is that the document stays static while the building keeps changing.
-        </p>
-        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          When the record falls behind, facilities teams lose confidence in the system. They may not know who holds which key, what a lost key actually opens, or whether a replacement order matches the current setup. At that point, the system becomes more of a liability than an asset.
-        </p>
-        <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          In practice, key control means knowing which keys exist, who holds them, what they open, who approved them, and what action was taken when something changed.
-        </p>
-      </section>
-
-      {/* ── PRE-DESIGN CHECKLIST ── */}
-      <section className="container py-14 max-w-3xl">
-        <h2 className="text-2xl font-bold tracking-tight">What information is needed to design a master key system?</h2>
-        <p className="mt-3 text-base text-muted-foreground leading-relaxed">
-          Before a system can be properly designed, the following information is normally required. Having this ready makes the design process faster and reduces the likelihood of changes after installation.
-        </p>
-        <div className="mt-6 space-y-2.5">
-          {preDesignChecklist.map((item) => (
-            <div key={item} className="flex gap-3 items-start">
+        <h2 className="text-2xl font-bold tracking-tight">Why organisations use master key systems</h2>
+        <div className="mt-6 space-y-4">
+          {[
+            { t: "Fewer keys to carry", d: "People carry one key for the areas they are authorised to access, rather than a separate key for every door." },
+            { t: "Clearer access levels", d: "Access can be planned around buildings, departments, roles or zones — making it easier to manage who can go where." },
+            { t: "Faster authorised access", d: "Authorised facilities, estates or security personnel can access critical areas when needed without relying on others to open doors." },
+            { t: "Cleaner handover", d: "A planned system is easier to explain, document and manage than a collection of unrelated locks and separate key bunches." },
+            { t: "Room for future expansion", d: "If the system is designed properly, new doors, departments or buildings can be added later without replacing existing cylinders." },
+          ].map((b) => (
+            <div key={b.t} className="flex gap-3 items-start">
               <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" strokeWidth={2.25} />
-              <p className="text-sm text-muted-foreground leading-relaxed">{item}</p>
+              <div>
+                <div className="text-sm font-semibold text-foreground">{b.t}</div>
+                <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{b.d}</p>
+              </div>
             </div>
           ))}
         </div>
-        <p className="mt-5 text-sm text-muted-foreground leading-relaxed">
-          My LOXX provides a structured place to record and maintain all of this information, so it stays accurate after handover rather than being locked in a spreadsheet or a supplier's files.
-        </p>
       </section>
 
-      {/* ── PLANNING STEPS ── */}
+      {/* ── 8. ENVIRONMENTS ── */}
       <section className="bg-card border-y border-border">
-        <div className="container py-14 max-w-3xl">
-          <h2 className="text-2xl font-bold tracking-tight">How to plan a master key system</h2>
-          <p className="mt-3 text-base text-muted-foreground leading-relaxed">
-            A well-planned system is easier to manage, easier to extend and less likely to create problems when staff change or buildings grow.
-          </p>
-          <div className="mt-8 space-y-5">
-            {planningSteps.map((s) => (
-              <div key={s.n} className="flex gap-4 items-start">
-                <div className="text-2xl font-extrabold text-primary/25 tracking-tight shrink-0 w-7 text-right leading-tight mt-0.5">{s.n}</div>
-                <div>
-                  <div className="text-sm font-bold text-foreground">{s.t}</div>
-                  <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{s.d}</p>
+        <div className="container py-14">
+          <div className="max-w-3xl mb-8">
+            <h2 className="text-2xl font-bold tracking-tight">How master key systems are used in different buildings</h2>
+            <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+              The structure of a master key system depends on how the building is used. The access needs of a school are different from those of a hospital or residential block, even if the underlying lock and key principles are the same.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {environments.map((e) => (
+              <div key={e.title} className="rounded-xl border border-border bg-background p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+                <div className="flex items-center gap-2 mb-3">
+                  <e.icon className="h-4 w-4 text-primary shrink-0" strokeWidth={2} />
+                  <h3 className="text-sm font-bold leading-snug">{e.title}</h3>
                 </div>
+                <p className="text-[11px] font-semibold text-primary/80 uppercase tracking-wide mb-2">Typical areas</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-3">{e.areas}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{e.body}</p>
               </div>
             ))}
+          </div>
+          <p className="mt-6 text-sm text-muted-foreground max-w-3xl">
+            My LOXX is used across all of these environments to keep the system record live, track changes and manage replacement orders from one place.
+          </p>
+        </div>
+      </section>
+
+      {/* ── 9. COMMON MISTAKES ── */}
+      <section id="common-mistakes" className="container py-14 max-w-3xl">
+        <h2 className="text-2xl font-bold tracking-tight">Common mistakes when managing a master key system</h2>
+        <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+          Most problems with master key systems are not technical. They are the result of record-keeping and process failures that build up over time.
+        </p>
+        <div className="mt-6 space-y-3">
+          {mistakes.map((m) => (
+            <div key={m} className="flex gap-3 items-start p-4 rounded-lg border border-border bg-card">
+              <AlertTriangle className="h-4 w-4 text-primary/70 shrink-0 mt-0.5" strokeWidth={2} />
+              <p className="text-sm text-muted-foreground leading-relaxed">{m}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 10. THE RECORD PROBLEM ── */}
+      <section className="bg-card border-y border-border">
+        <div className="container py-14 max-w-3xl">
+          <h2 className="text-2xl font-bold tracking-tight">The problem is rarely the lock. It is the record.</h2>
+          <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+            Most master key systems do not fail on day one. They fail slowly.
+          </p>
+          <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+            A key is issued but not recorded. A contractor keeps a key longer than expected. A cylinder is replaced but the schedule is not updated. A staff member leaves and no one is certain whether their key was returned. Individually, these are small admin issues. Over time, they become a security problem.
+          </p>
+          <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+            Most master key systems start with a proper schedule. A locksmith or architectural ironmonger designs the hierarchy, supplies the cylinders and keys, and hands over a document that describes the system. The problem is that the document stays static while the building keeps changing.
+          </p>
+          <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+            When the record falls behind, facilities teams lose confidence in the system. They may not know who holds which key, what a lost key actually opens, or whether a replacement order matches the current setup. At that point, the system becomes more of a liability than an asset.
+          </p>
+          <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+            In practice, key control means knowing which keys exist, who holds them, what they open, who approved them, and what action was taken when something changed.
+          </p>
+        </div>
+      </section>
+
+      {/* ── 11. BEFORE / AFTER PANEL ── */}
+      <section className="container py-14 max-w-3xl">
+        <h2 className="text-2xl font-bold tracking-tight">From scattered records to one live system</h2>
+        <div className="mt-8 grid sm:grid-cols-2 gap-px rounded-xl overflow-hidden border border-border shadow-sm">
+          {/* Before */}
+          <div className="bg-background p-6">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">The old way</div>
+            <div className="space-y-3">
+              {[
+                "Spreadsheets and PDF schedules",
+                "Supplier emails",
+                "Individual memory",
+                "Unclear key holders",
+                "Lost keys with unknown impact",
+                "No record of system changes",
+              ].map((item) => (
+                <div key={item} className="flex gap-2.5 items-start">
+                  <X className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="text-sm text-muted-foreground">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* After */}
+          <div className="bg-primary/5 p-6">
+            <div className="text-xs font-semibold text-primary uppercase tracking-wide mb-4">With My LOXX</div>
+            <div className="space-y-3">
+              {[
+                "Live visual system hierarchy",
+                "Issued key record",
+                "Lost key events and resolution",
+                "Replacement orders from the live record",
+                "Audit trail of system changes",
+                "One record for the whole team",
+              ].map((item) => (
+                <div key={item} className="flex gap-2.5 items-start">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <span className="text-sm text-foreground font-medium">{item}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── CYLINDER OPTIONS ── */}
+      {/* ── 12. PRE-DESIGN CHECKLIST ── */}
+      <section className="bg-card border-y border-border">
+        <div className="container py-14 max-w-3xl">
+          <h2 className="text-2xl font-bold tracking-tight">What information is needed to design a master key system?</h2>
+          <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+            Before a system can be properly designed, the following information is normally required. Having this ready makes the design process faster and reduces the likelihood of changes after installation.
+          </p>
+          <div className="mt-6 space-y-2.5">
+            {preDesignChecklist.map((item) => (
+              <div key={item} className="flex gap-3 items-start">
+                <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" strokeWidth={2.25} />
+                <p className="text-sm text-muted-foreground leading-relaxed">{item}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-5 text-sm text-muted-foreground leading-relaxed">
+            My LOXX provides a structured place to record and maintain all of this information, so it stays accurate after handover rather than being locked in a spreadsheet or a supplier's files.
+          </p>
+        </div>
+      </section>
+
+      {/* ── 13. PLANNING STEPS ── */}
+      <section id="planning" className="container py-14 max-w-3xl">
+        <h2 className="text-2xl font-bold tracking-tight">How to plan a master key system</h2>
+        <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+          A well-planned system is easier to manage, easier to extend and less likely to create problems when staff change or buildings grow.
+        </p>
+        <div className="mt-8 space-y-5">
+          {planningSteps.map((s) => (
+            <div key={s.n} className="flex gap-4 items-start">
+              <div className="text-2xl font-extrabold text-primary/25 tracking-tight shrink-0 w-7 text-right leading-tight mt-0.5">{s.n}</div>
+              <div>
+                <div className="text-sm font-bold text-foreground">{s.t}</div>
+                <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">{s.d}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 14. CYLINDER OPTIONS ── */}
       <section className="bg-card border-y border-border">
         <div className="container py-14 max-w-3xl">
           <h2 className="text-2xl font-bold tracking-tight">Common cylinder options in a master key system</h2>
@@ -464,8 +641,8 @@ export default function WhatIsMasterKeySystem() {
         </div>
       </section>
 
-      {/* ── HOW MY LOXX HELPS ── */}
-      <section className="container py-14 max-w-3xl">
+      {/* ── 15. HOW MY LOXX HELPS ── */}
+      <section id="how-loxx-helps" className="container py-14 max-w-3xl">
         <h2 className="text-2xl font-bold tracking-tight">How My LOXX helps</h2>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed">
           My LOXX gives your master key system a live digital record. Instead of relying on old schedules, spreadsheets and scattered emails, your team can see the system hierarchy, issued keys, lost key events, replacement orders and changes in one place.
@@ -495,8 +672,8 @@ export default function WhatIsMasterKeySystem() {
         </div>
       </section>
 
-      {/* ── 11. FAQ ── */}
-      <section className="bg-card border-y border-border">
+      {/* ── 16. FAQ ── */}
+      <section id="faq" className="bg-card border-y border-border">
         <div className="container py-14 max-w-3xl">
           <h2 className="text-2xl font-bold tracking-tight">Frequently asked questions</h2>
           <div className="mt-8 rounded-xl border border-border bg-background overflow-hidden px-6">
