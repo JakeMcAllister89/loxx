@@ -74,11 +74,6 @@ const cylinderOptions = [
 ];
 
 // ─── Finishes ─────────────────────────────────────────────────────────────
-const finishes = [
-  "Dull Nickel", "Matt Chrome", "Bright Chrome", "Satin Brass", "Polished Brass",
-  "Dark Bronze", "Antique Bronze", "Black", "Gold Plated", "Matt Black",
-];
-
 // ─── Ordering steps ───────────────────────────────────────────────────────
 const steps = [
   { icon: Layers, n: "01", title: "Build or import the system", copy: "Your master key system is built or imported into My LOXX, with every door, cylinder and access level recorded." },
@@ -263,7 +258,7 @@ export default function CylindersAndKeys() {
                 Different buildings and door types require different cylinder functions. The right function depends on the door's role, who needs access, and what level of override or control is required.
               </p>
               <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed">
-                With the introduction of Martyn's Law (Protect Duty), the specification of appropriate cylinder functions for educational and public venues is becoming increasingly relevant for specifiers and estates teams.
+                For education, healthcare and public buildings, the correct cylinder function can be just as important as the key hierarchy itself.
               </p>
             </div>
             <div className="flex items-center justify-center">
@@ -279,12 +274,12 @@ export default function CylindersAndKeys() {
               {
                 title: "Classroom cylinder",
                 env: "Schools, colleges, educational settings",
-                desc: "Can only be unlocked from the inside — not locked. Prevents students from locking themselves in while allowing authorised keyholders quick access from outside. Suitable for classrooms, seminar rooms and educational spaces where safeguarding is a priority.",
+                desc: "Designed to reduce the risk of a room being locked from inside while maintaining authorised key access from outside. Suitable for classrooms, seminar rooms and educational spaces where safeguarding is a priority.",
               },
               {
                 title: "Clutch cylinder",
                 env: "Hospitals, secure accommodation, public venues",
-                desc: "Can be locked from inside with a thumbturn, but always overridden from outside with a key. Used where staff need to maintain access even if a room is occupied — relevant to Martyn's Law (Protect Duty) specifications for public and educational buildings.",
+                desc: "Can be locked from inside with a thumbturn, but always overridden from outside with a key. Used where staff need to maintain access even if a room is occupied — relevant where staff need reliable authorised access from outside the room.",
               },
               {
                 title: "Double entry cylinder",
