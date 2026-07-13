@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button";
 import { LoxxLogo } from "@/components/LoxxLogo";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import builderCanvasExample from "@/assets/builder-canvas-example.png";
+import keyHierarchyImage from "@/assets/key-hierarchy.png";
 import cylinderDouble from "@/assets/cylinder-double.png";
 import cylinderThumbTurn from "@/assets/cylinder-thumbturn.jpg";
 import cylinderHalf from "@/assets/cylinder-half.jpg";
+import cylinderPadlock from "@/assets/cylinder-padlock.jpg";
+import cylinderRoundRim from "@/assets/cylinder-round-rim.jpg";
 import {
   GraduationCap,
   HeartPulse,
@@ -174,12 +177,16 @@ const cylinderOptions: { t: string; d: string; img?: string; alt?: string }[] = 
     alt: "DOM rs Sirius® half cylinder",
   },
   {
-    t: "Freewheel cylinders",
-    d: "Used where the door hardware or lock case requires freewheel operation — the cylinder rotates freely until the correct key is inserted.",
+    t: "Round rim cylinders",
+    d: "Commonly found on common entrance doors, particularly in student accommodation and residential developments. They work with a traditional night-latch style lock case rather than a mortice lock, and can be included in a master key system to give authorised access to shared building entrances.",
+    img: cylinderRoundRim,
+    alt: "DOM round rim cylinder",
   },
   {
     t: "Padlocks and specialist cylinders",
     d: "Useful where gates, cabinets, stores or external assets need to sit within the same system and be opened by the same key hierarchy.",
+    img: cylinderPadlock,
+    alt: "DOM padlock",
   },
 ];
 
@@ -398,18 +405,9 @@ export default function WhatIsMasterKeySystem() {
           </div>
           <div className="hidden md:block">
             <div className="rounded-xl border border-border bg-white shadow-lg overflow-hidden">
-              {/* Lightweight app frame bar */}
-              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-[#fafafa]">
-                <div className="flex gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-border" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-border" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-border" />
-                </div>
-                <span className="text-[11px] text-muted-foreground ml-2">myloxx.co.uk — System Builder</span>
-              </div>
               <img
-                src={builderCanvasExample}
-                alt="Visual master key hierarchy inside the My LOXX System Builder"
+                src={keyHierarchyImage}
+                alt="Master key system hierarchy diagram showing Grand Master Key, Master Keys, Sub Master Keys and individual cylinders"
                 className="w-full h-auto block"
               />
             </div>
@@ -580,16 +578,20 @@ export default function WhatIsMasterKeySystem() {
               term: "Grand master key",
               def: "A higher-level key that opens multiple master key groups across the system, where specified.",
             },
-            {
-              term: "Common entrance",
-              def: "Designed for multi-occupancy buildings where controlled key access is required to shared areas without compromising the security of private spaces. Residents or staff hold keys for the main entrance and permitted communal areas — such as bin stores or cycle facilities — while individual flats, rooms or units remain independent. Building managers or caretakers can be issued higher-level keys to access additional service areas when required.",
-            },
           ].map((g) => (
             <div key={g.term} className="p-4 rounded-lg border border-border bg-card">
               <div className="text-sm font-bold text-foreground">{g.term}</div>
               <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{g.def}</p>
             </div>
           ))}
+          <div className="sm:col-span-2 p-4 rounded-lg border border-border bg-card">
+            <div className="text-sm font-bold text-foreground">Common entrance</div>
+            <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+              Used in multi-occupancy buildings where residents or staff hold a key for shared areas — main entrance,
+              bin stores, cycle facilities — while individual flats or rooms remain independently keyed. Building
+              managers or caretakers can be issued higher-level keys for service areas.
+            </p>
+          </div>
         </div>
       </section>
 
