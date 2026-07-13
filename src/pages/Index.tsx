@@ -253,7 +253,7 @@ export default function Index() {
               </div>
               <p className="mt-1 text-xs text-muted-foreground/80">Information is scattered.</p>
 
-              <div className="relative mt-5 h-[190px] rounded-xl border border-border/40 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--border))_1px,transparent_0)] bg-[length:24px_24px] overflow-hidden">
+              <div className="relative mt-5 h-[190px] rounded-xl border border-border/25 bg-[radial-gradient(circle_at_1px_1px,hsl(var(--border))_1px,transparent_0)] bg-[length:24px_24px] overflow-hidden">
                 {/* Faint connector lines from scattered records to the convergence dot */}
                 <svg
                   className="absolute inset-0 h-full w-full"
@@ -286,7 +286,7 @@ export default function Index() {
                 {/* Convergence dot above the live record */}
                 <span
                   aria-hidden
-                  className="scatter-item absolute left-1/2 top-[74%] -translate-x-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]"
+                  className="scatter-item absolute left-1/2 top-[74%] -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_0_6px_hsl(var(--primary)/0.18),0_0_18px_4px_hsl(var(--primary)/0.22)]"
                 />
 
                 {oldWay.map((o, i) => {
@@ -301,9 +301,9 @@ export default function Index() {
                     <span
                       key={o.t}
                       style={{ animationDelay: `${i * 0.35}s` }}
-                      className={`scatter-item absolute ${pos} inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm`}
+                      className={`scatter-item absolute ${pos} inline-flex items-center gap-2 rounded-lg border border-border/50 bg-background/70 px-3 py-2 text-sm text-muted-foreground shadow-sm`}
                     >
-                      <o.icon className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      <o.icon className="h-3.5 w-3.5 text-primary/50" strokeWidth={1.75} />
                       {o.t}
                     </span>
                   );
@@ -317,8 +317,9 @@ export default function Index() {
             </div>
 
             {/* AFTER — single organised system container */}
-            <div className="relative rounded-2xl border border-border border-l-[4px] border-l-primary bg-card p-6 shadow-lg overflow-hidden after-highlight">
-              <div aria-hidden className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+            <div className="relative rounded-2xl border border-border border-l-[4px] border-l-primary bg-card p-6 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden after-highlight">
+              <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.08),transparent_55%)]" />
+              <div aria-hidden className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary/15 blur-3xl" />
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
@@ -338,7 +339,7 @@ export default function Index() {
                 {newWay.map((n) => (
                   <span
                     key={n.t}
-                    className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-3 py-2.5 text-sm font-medium text-foreground"
+                    className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-primary/[0.13]"
                   >
                     <n.icon className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
                     {n.t}
@@ -356,8 +357,8 @@ export default function Index() {
             }
             .scatter-item { animation: scatterSettle 1.4s ease-out both; }
             @keyframes afterGlow {
-              0%,100% { box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.05); }
-              50%     { box-shadow: 0 16px 40px -18px hsl(var(--primary) / 0.35); }
+              0%,100% { box-shadow: 0 8px 24px -10px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04); }
+              50%     { box-shadow: 0 24px 60px -20px hsl(var(--primary) / 0.45), 0 0 30px -8px hsl(var(--primary) / 0.2); }
             }
             .after-highlight { animation: afterGlow 6s ease-in-out infinite; }
             @media (prefers-reduced-motion: reduce) {
