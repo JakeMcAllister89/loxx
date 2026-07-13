@@ -257,8 +257,8 @@ Deno.serve(async (req) => {
           quantity: 1,
           price_data: {
             currency: "gbp",
-            unit_amount: Math.round(it.unit_price * 100),
-            tax_behavior: "exclusive" as const,
+            unit_amount: Math.round(it.unit_price * 100 * 1.2),
+            tax_behavior: "inclusive" as const,
             product_data: {
               name: "Delivery Charge",
               tax_code: PHYSICAL_GOODS_TAX_CODE,
@@ -281,8 +281,8 @@ Deno.serve(async (req) => {
         quantity: it.quantity,
         price_data: {
           currency: "gbp",
-          unit_amount: Math.round(it.unit_price * 100),
-          tax_behavior: "exclusive" as const,
+          unit_amount: Math.round(it.unit_price * 100 * 1.2),
+          tax_behavior: "inclusive" as const,
           product_data: {
             name: name.slice(0, 250),
             ...(description ? { description: description.slice(0, 350) } : {}),
@@ -298,7 +298,7 @@ Deno.serve(async (req) => {
       return_url: body.returnUrl,
       line_items,
       customer_email: user.email ?? undefined,
-      automatic_tax: { enabled: true },
+      automatic_tax: { enabled: false },
       payment_intent_data: {
         description: `LOXX order ${order.id.slice(0, 8).toUpperCase()}`,
       },
