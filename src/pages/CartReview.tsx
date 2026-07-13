@@ -385,7 +385,7 @@ function HierarchyView({ root, itemsByDifferRef }: { root: TNode; itemsByDifferR
         rows.push({ key: n.id, ref: n.z_ref, label: n.label ?? "", kind: "CE", node: n });
       }
     } else if (n.type === "GMK" || n.type === "MK" || n.type === "SMK") {
-      const ref = n.label;
+      const ref = n.keys?.[0]?.ref ?? n.label;
       if (ref && itemsByDifferRef?.has(ref)) {
         rows.push({ key: n.id, ref, label: n.location ?? "", kind: n.type, node: n });
       }
