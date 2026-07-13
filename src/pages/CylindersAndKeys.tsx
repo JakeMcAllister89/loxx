@@ -85,7 +85,7 @@ const steps = [
 export default function CylindersAndKeys() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <MarketingHeader activePage="/cylinders-and-keys" />
+      <MarketingHeader />
 
       {/* ── 1. HERO ── */}
       <section className="bg-[#fafafa] border-b border-border/60">
