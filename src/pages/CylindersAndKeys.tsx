@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import domHeroImage from "@/assets/domrssirius-main.jpg";
 import domLogo from "@/assets/dom-logo.jpg";
-import domKey from "@/assets/dom-key.jpg";
+import domKey from "@/assets/dom-key-white.png";
 import finishMattBlack from "@/assets/finish-matt-black.webp";
 import finishAntiqueBronze from "@/assets/finish-antique-bronze.webp";
 import finishDarkBronze from "@/assets/finish-dark-bronze.webp";
@@ -274,52 +274,37 @@ export default function CylindersAndKeys() {
               />
             </div>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid md:grid-cols-2 gap-5">
             {[
-              {
-                title: "Standard double cylinder",
-                env: "Offices, commercial buildings, general access doors",
-                desc: "Key operation from both sides. The most common cylinder function for external and internal commercial doors where both sides require key access.",
-                badge: null,
-              },
-              {
-                title: "Thumbturn cylinder",
-                env: "Internal doors, accessible exits, communal areas",
-                desc: "Key operation from outside with thumbturn operation from inside where suitable. Allows easy egress from one side without a key.",
-                badge: null,
-              },
-              {
-                title: "Round rim cylinder",
-                env: "Common entrances, student accommodation, residential blocks",
-                desc: "Used with traditional night-latch lock cases on shared building entrances. Allows authorised key access while maintaining private access to individual units.",
-                badge: null,
-              },
               {
                 title: "Classroom cylinder",
                 env: "Schools, colleges, educational settings",
-                desc: "Can only be unlocked from the inside — not locked. Prevents students from locking themselves in while allowing authorised keyholders quick access from outside.",
-                badge: "Coming soon",
+                desc: "Can only be unlocked from the inside — not locked. Prevents students from locking themselves in while allowing authorised keyholders quick access from outside. Suitable for classrooms, seminar rooms and educational spaces where safeguarding is a priority.",
               },
               {
                 title: "Clutch cylinder",
                 env: "Hospitals, secure accommodation, public venues",
-                desc: "Can be locked from inside with a thumbturn, but always overridden from outside with a key. Used where staff need to maintain access even if a room is occupied. Relevant to Martyn's Law specifications.",
-                badge: "Coming soon",
+                desc: "Can be locked from inside with a thumbturn, but always overridden from outside with a key. Used where staff need to maintain access even if a room is occupied — relevant to Martyn's Law (Protect Duty) specifications for public and educational buildings.",
+              },
+              {
+                title: "Double entry cylinder",
+                env: "Offices, hotels, multi-occupancy buildings",
+                desc: "Provides key access from both sides, allowing the cylinder to be locked or unlocked from one side even if a key is inserted on the other. Suited to doors where both sides need independent key operation without blocking each other.",
+              },
+              {
+                title: "3-star cylinders",
+                env: "External doors, higher security applications",
+                desc: "For doors requiring higher security ratings or compliance with PAS 24 requirements, TS007 3-star cylinders can be included within the same master key system. Suitable for external doors, entrance doors and any opening where elevated attack resistance is specified.",
               },
             ].map((f) => (
               <div key={f.title} className="rounded-xl border border-border bg-card p-5 shadow-sm flex flex-col gap-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="text-sm font-bold text-foreground">{f.title}</div>
-                  {f.badge && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">{f.badge}</span>
-                  )}
-                </div>
+                <div className="text-sm font-bold text-foreground">{f.title}</div>
                 <div className="text-[11px] font-medium text-primary/80 uppercase tracking-wide">{f.env}</div>
                 <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
-          <p className="mt-6 text-sm text-muted-foreground">Classroom and clutch cylinders are planned additions to the My LOXX range. <Link to="/book-a-demo" className="text-primary hover:underline">Contact us to discuss your project requirements.</Link></p>
+          <p className="mt-6 text-sm text-muted-foreground"><Link to="/book-a-demo" className="text-primary hover:underline">Contact us to discuss specific cylinder function requirements for your project.</Link></p>
         </div>
       </section>
 
