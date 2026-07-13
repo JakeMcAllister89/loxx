@@ -404,13 +404,11 @@ export default function WhatIsMasterKeySystem() {
             </div>
           </div>
           <div className="hidden md:block">
-            <div className="rounded-xl border border-border bg-white shadow-lg overflow-hidden">
-              <img
-                src={keyHierarchyImage}
-                alt="Master key system hierarchy diagram showing Grand Master Key, Master Keys, Sub Master Keys and individual cylinders"
-                className="w-full h-auto block"
-              />
-            </div>
+            <img
+              src={keyHierarchyImage}
+              alt="Master key system hierarchy diagram showing Grand Master Key, Master Keys, Sub Master Keys and individual cylinders"
+              className="w-full h-auto block"
+            />
           </div>
         </div>
       </section>
