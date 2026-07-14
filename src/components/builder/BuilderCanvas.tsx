@@ -80,6 +80,7 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 
   const measure = (n: TNode): number => {
     if (n.children.length === 0 || collapsed.has(n.id)) return NODE_WIDTH;
+    if (n.type === "CE") return NODE_WIDTH;
     return Math.max(
       NODE_WIDTH,
       n.children.reduce((s, c, i) => s + measure(c) + (i > 0 ? HGAP : 0), 0)
