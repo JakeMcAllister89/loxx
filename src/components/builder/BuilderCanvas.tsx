@@ -81,8 +81,11 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
     if (n.children.length === 0 || collapsed.has(n.id)) return NODE_WIDTH;
     if (n.type === "CE") {
       const cyls = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
-      if (cyls.length <= 1) return NODE_WIDTH;
-      return cyls.length * NODE_WIDTH + (cyls.length - 1) * HGAP;
+      const subCEs = n.children.filter(c => c.type === "CE" && c.z_ref?.includes("."));
+      const subCylCount = subCEs.reduce((max, s) => Math.max(max, s.children.filter(c => c.type === "CYL" && !c.decommissioned_at).length), 0);
+      const effectiveCylCount = Math.max(cyls.length, subCylCount, 1);
+      if (effectiveCylCount <= 1 && subCEs.length === 0) return NODE_WIDTH;
+      return effectiveCylCount * NODE_WIDTH + (effectiveCylCount - 1) * HGAP;
     }
     return Math.max(
       NODE_WIDTH,
