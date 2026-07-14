@@ -80,7 +80,7 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
   const measure = (n: TNode): number => {
     if (n.children.length === 0 || collapsed.has(n.id)) return NODE_WIDTH;
     if (n.type === "CE") {
-      return NODE_WIDTH;
+      return NODE_WIDTH + HGAP + NODE_WIDTH;
     }
 
 
@@ -112,7 +112,7 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
         const subCyls = sub.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
         const subCylStart = subDepth + 1;
         subCyls.forEach((c, j) => {
-          laid.push({ id: c.id, node: c, x, y: (subCylStart + j) * (NODE_HEIGHT + VGAP) });
+          laid.push({ id: c.id, node: c, x: x + NODE_WIDTH + HGAP, y: (subCylStart + j) * (NODE_HEIGHT + VGAP) });
         });
       });
 
@@ -123,7 +123,7 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
       const cylStartDepth = maxSubCEDepth + 1;
 
       cyls.forEach((c, i) => {
-        laid.push({ id: c.id, node: c, x, y: (cylStartDepth + i) * (NODE_HEIGHT + VGAP) });
+        laid.push({ id: c.id, node: c, x: x + NODE_WIDTH + HGAP, y: (cylStartDepth + i) * (NODE_HEIGHT + VGAP) });
       });
 
 
@@ -212,7 +212,6 @@ function CanvasInner({
     const collectEdges = (n: TNode) => {
       if (collapsedSet.has(n.id)) return;
       for (const c of n.children) {
-        if (n.type === "CE" && c.type === "CYL") continue;
         edges.push({
           id: `${n.id}->${c.id}`,
           source: n.id,
