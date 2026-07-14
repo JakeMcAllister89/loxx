@@ -227,6 +227,7 @@ function CanvasInner({
     const collectEdges = (n: TNode) => {
       if (collapsedSet.has(n.id)) return;
       for (const c of n.children) {
+        if (n.type === "CE" && c.type === "CYL") { collectEdges(c); continue; }
         edges.push({
           id: `${n.id}->${c.id}`,
           source: n.id,
@@ -239,8 +240,34 @@ function CanvasInner({
     };
     if (tree.root) collectEdges(tree.root);
 
+    const bracketNodes: Node[] = [];
+    const collectBrackets = (n: TNode, x: number, depth: number) => {
+      if (n.type === "CE" && !collapsedSet.has(n.id)) {
+        const laidCE = laid.find(l => l.id === n.id);
+        if (laidCE) {
+          const directCyls = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
+          const subCEs = n.children.filter(c => c.type === "CE");
+          const totalRows = subCEs.length > 0 ? subCEs.length : directCyls.length;
+          if (totalRows > 0) {
+            const bracketHeight = totalRows * (NODE_HEIGHT + VGAP) - VGAP / 2;
+            bracketNodes.push({
+              id: `bracket-${n.id}`,
+              type: "bracket",
+              position: { x: laidCE.x - 10, y: laidCE.y + NODE_HEIGHT + VGAP / 2 },
+              draggable: false,
+              selectable: false,
+              zIndex: -1,
+              data: { height: bracketHeight, color: "hsl(160 70% 35%)" },
+            });
+          }
+        }
+      }
+      n.children.forEach(c => collectBrackets(c, x, depth + 1));
+    };
+    if (tree.root) collectBrackets(tree.root, 0, 0);
+    const allNodes = [...nodes, ...bracketNodes];
 
-    return { nodes, edges };
+    return { nodes: allNodes, edges };
   }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly, collapsed, onToggleCollapsed, issueCounts, onOpenIssues]);
 
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState(nodes);
