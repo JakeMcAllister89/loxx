@@ -95,8 +95,24 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
   const measure = (n: TNode): number => {
     if (n.children.length === 0 || collapsed.has(n.id)) return NODE_WIDTH;
     if (n.type === "CE") {
-      return NODE_WIDTH + HGAP + NODE_WIDTH;
+      const subCEs = n.children.filter(c => c.type === "CE");
+
+      if (subCEs.length > 0) {
+        const deepestSubCE = subCEs[subCEs.length - 1];
+        const deepCyls = deepestSubCE.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
+
+        if (deepCyls.length === 0) return NODE_WIDTH;
+
+        return deepCyls.length * NODE_WIDTH + (deepCyls.length - 1) * HGAP;
+      }
+
+      const cyls = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
+
+      if (cyls.length === 0) return NODE_WIDTH;
+
+      return cyls.length * NODE_WIDTH + (cyls.length - 1) * HGAP;
     }
+
 
 
     return Math.max(
@@ -113,37 +129,62 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
     }
 
     if (n.type === "CE") {
-      // Separate top-level CEs (Z1, Z2 — direct GMK/MK children) from sub-CEs (Z1.1:1, Z1.2)
-      const subCEs = n.children.filter(c => c.type === "CE" && c.z_ref?.includes("."));
-      const cyls   = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
+      const subCEs = n.children.filter(c => c.type === "CE");
 
-      // Place this CE node
-      laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
+      const cyls = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
 
-      // Stack sub-CEs vertically below in same column
-      subCEs.forEach((sub, i) => {
-        const subDepth = depth + 1 + i;
-        laid.push({ id: sub.id, node: sub, x, y: subDepth * (NODE_HEIGHT + VGAP) });
-        const subCyls = sub.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
-        const subCylStart = subDepth + 1;
-        subCyls.forEach((c, j) => {
-          laid.push({ id: c.id, node: c, x: x + NODE_WIDTH + HGAP, y: (subCylStart + j) * (NODE_HEIGHT + VGAP) });
+      const totalWidth = measure(n);
+
+      const cx = x + totalWidth / 2;
+
+      const nodeX = cx - NODE_WIDTH / 2;
+
+      laid.push({ id: n.id, node: n, x: nodeX, y: depth * (NODE_HEIGHT + VGAP) });
+
+      if (subCEs.length > 0) {
+
+        subCEs.forEach((sub, i) => {
+
+          const subCyls = sub.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
+
+          laid.push({ id: sub.id, node: sub, x: nodeX, y: (depth + 1 + i) * (NODE_HEIGHT + VGAP) });
+
+          if (subCyls.length > 0) {
+
+            const subCylWidth = subCyls.length * NODE_WIDTH + (subCyls.length - 1) * HGAP;
+
+            const subCylStartX = cx - subCylWidth / 2;
+
+            const cylDepth = depth + 1 + i + 1;
+
+            subCyls.forEach((c, j) => {
+
+              laid.push({ id: c.id, node: c, x: subCylStartX + j * (NODE_WIDTH + HGAP), y: cylDepth * (NODE_HEIGHT + VGAP) });
+
+            });
+
+          }
+
         });
-      });
 
-      const maxSubCEDepth = subCEs.length > 0
-        ? depth + 1 + subCEs.length - 1 + Math.max(0, ...subCEs.map(s => s.children.filter(c => c.type === "CYL").length))
-        : depth;
+      } else if (cyls.length > 0) {
 
-      const cylStartDepth = maxSubCEDepth + 1;
+        const cylWidth = cyls.length * NODE_WIDTH + (cyls.length - 1) * HGAP;
 
-      cyls.forEach((c, i) => {
-        laid.push({ id: c.id, node: c, x: x + NODE_WIDTH + HGAP, y: (cylStartDepth + i) * (NODE_HEIGHT + VGAP) });
-      });
+        const cylStartX = cx - cylWidth / 2;
 
+        cyls.forEach((c, i) => {
 
-      return { cx: x + NODE_WIDTH / 2 };
+          laid.push({ id: c.id, node: c, x: cylStartX + i * (NODE_WIDTH + HGAP), y: (depth + 1) * (NODE_HEIGHT + VGAP) });
+
+        });
+
+      }
+
+      return { cx };
+
     }
+
 
     // Standard horizontal layout
     let cursor = x;
