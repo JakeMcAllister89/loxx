@@ -192,41 +192,20 @@ function CanvasInner({
     });
 
     const edges: Edge[] = [];
-    const getLastInCEStack = (n: TNode): TNode => {
-      if (collapsedSet.has(n.id) || n.children.length === 0) return n;
-      if (n.type !== "CE") return n;
-      const ceKids = n.children.filter(c => c.type === "CE");
-      const cylKids = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
-      const ordered = [...ceKids, ...cylKids];
-      if (ordered.length === 0) return n;
-      return getLastInCEStack(ordered[ordered.length - 1]);
-    };
-
     const collectEdges = (n: TNode) => {
       if (collapsedSet.has(n.id)) return;
       for (const c of n.children) {
-        if (n.type === "CE" && (c.type === "CE" || c.type === "CYL")) {
-          collectEdges(c);
-          continue;
-        }
-        if (c.type === "CE") {
-          const last = getLastInCEStack(c);
-          edges.push({
-            id: `${n.id}->${c.id}-line`,
-            source: n.id,
-            target: last.id,
-            type: "tree",
-            style: { stroke: "hsl(var(--border))", strokeWidth: 1.5 },
-          });
-          collectEdges(c);
-          continue;
-        }
+        const isCEStack = n.type === "CE";
         edges.push({
           id: `${n.id}->${c.id}`,
           source: n.id,
           target: c.id,
           type: "tree",
-          style: { stroke: "hsl(var(--border))", strokeWidth: 1.5 },
+          style: {
+            stroke: "hsl(var(--border))",
+            strokeWidth: isCEStack ? 0.75 : 1.5,
+            strokeOpacity: isCEStack ? 0.5 : 1,
+          },
         });
         collectEdges(c);
       }
