@@ -4,19 +4,46 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
-import { Search, Save, Trash2, Plus, Download, Upload, Check, ChevronsUpDown } from "lucide-react";
+import { Search, Save, Download, Upload, ArrowLeft } from "lucide-react";
 
 interface OrgRow { id: string; name: string }
 interface MemberRow { org_id: string; email: string | null; org_role: string; status: string }
 interface DefaultRow { org_id: string; default_margin_pct: number | null }
-interface ProductRow { id: string; code: string; name: string; is_active: boolean }
+interface ProductRow { id: string; code: string; name: string; is_active: boolean; price_gbp: number | null; cost_price: number | null }
 interface OverrideRow { id: string; org_id: string; product_id: string; margin_pct: number }
+
+const fmtGbp = (n: number | null | undefined) => n == null ? "—" : `£${Number(n).toFixed(2)}`;
+const fmtPct = (n: number | null | undefined) => n == null || !Number.isFinite(Number(n)) ? "—" : `${Number(n).toFixed(1)}%`;
+
+// Catalogue margin across all products where both cost and price are usable.
+function catalogueAvgMargin(products: ProductRow[]): number | null {
+  let num = 0, den = 0;
+  for (const p of products) {
+    const price = Number(p.price_gbp);
+    const cost = Number(p.cost_price);
+    if (!Number.isFinite(price) || !Number.isFinite(cost) || price <= 0) continue;
+    num += (price - cost);
+    den += price;
+  }
+  if (den <= 0) return null;
+  return (num / den) * 100;
+}
+
+// Product's own catalogue margin (single product).
+function productCatalogueMargin(p: ProductRow): number | null {
+  const price = Number(p.price_gbp);
+  const cost = Number(p.cost_price);
+  if (!Number.isFinite(price) || !Number.isFinite(cost) || price <= 0) return null;
+  return ((price - cost) / price) * 100;
+}
+
+function sellFromMargin(cost: number | null, marginPct: number): number | null {
+  if (cost == null || !Number.isFinite(cost)) return null;
+  if (!Number.isFinite(marginPct) || marginPct >= 100) return null;
+  return Math.round((cost / (1 - marginPct / 100)) * 100) / 100;
+}
 
 export default function AdminPriceLists() {
   const { user: me } = useAuth();
@@ -28,13 +55,12 @@ export default function AdminPriceLists() {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
-  const [ovSearch, setOvSearch] = useState("");
   const [edits, setEdits] = useState<Record<string, string>>({});
-  const [ovEdits, setOvEdits] = useState<Record<string, string>>({});
-  const [addFor, setAddFor] = useState<OrgRow | null>(null);
-  const [addProductId, setAddProductId] = useState<string>("");
-  const [addMargin, setAddMargin] = useState<string>("");
-  const [addPickerOpen, setAddPickerOpen] = useState(false);
+
+  // View 2 state
+  const [openOrg, setOpenOrg] = useState<OrgRow | null>(null);
+  const [rowMargins, setRowMargins] = useState<Record<string, string>>({}); // productId -> margin string
+  const [rowDirty, setRowDirty] = useState<Record<string, boolean>>({});
   const fileRef = useRef<HTMLInputElement>(null);
 
   const loadAll = async () => {
@@ -43,7 +69,7 @@ export default function AdminPriceLists() {
       supabase.from("organisations").select("id,name").order("name"),
       supabase.from("org_members").select("org_id,email,org_role,status").eq("status", "active"),
       supabase.from("customer_pricing").select("org_id,default_margin_pct"),
-      supabase.from("products").select("id,code,name,is_active").eq("is_active", true).order("code"),
+      supabase.from("products").select("id,code,name,is_active,price_gbp,cost_price").eq("is_active", true).order("code"),
       supabase.from("customer_product_pricing").select("id,org_id,product_id,margin_pct"),
     ]);
     setOrgs(((o.data as any) ?? []) as OrgRow[]);
@@ -61,25 +87,18 @@ export default function AdminPriceLists() {
     if (master?.email) return master.email;
     return members.find(m => m.org_id === orgId)?.email ?? "—";
   };
-  const defaultFor = (orgId: string) => defaults.find(d => d.org_id === orgId)?.default_margin_pct ?? null;
-  const orgById = (id: string) => orgs.find(o => o.id === id);
-  const productById = (id: string) => products.find(p => p.id === id);
+  const defaultFor = (orgId: string): number | null => {
+    const v = defaults.find(d => d.org_id === orgId)?.default_margin_pct;
+    return v == null ? null : Number(v);
+  };
+
+  const catalogueAvg = useMemo(() => catalogueAvgMargin(products), [products]);
 
   const filteredOrgs = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return orgs;
     return orgs.filter(o => o.name.toLowerCase().includes(q));
   }, [orgs, search]);
-
-  // Group overrides by org
-  const overrideGroups = useMemo(() => {
-    const orgIdsWith = Array.from(new Set(overrides.map(o => o.org_id)));
-    const q = ovSearch.trim().toLowerCase();
-    return orgIdsWith
-      .map(id => ({ org: orgById(id), items: overrides.filter(x => x.org_id === id) }))
-      .filter(g => g.org && (!q || g.org!.name.toLowerCase().includes(q)))
-      .sort((a, b) => (a.org!.name).localeCompare(b.org!.name));
-  }, [overrides, orgs, ovSearch]);
 
   const saveDefault = async (orgId: string) => {
     const raw = edits[orgId];
@@ -88,7 +107,7 @@ export default function AdminPriceLists() {
     if (trimmed === "") {
       const { error } = await supabase.from("customer_pricing").delete().eq("org_id", orgId);
       if (error) { toast.error(error.message); return; }
-      toast.success("Reverted to standard pricing");
+      toast.success("Reverted to catalogue pricing");
     } else {
       const num = Number(trimmed);
       if (!Number.isFinite(num) || num < 1 || num > 99) { toast.error("Margin must be between 1 and 99"); return; }
@@ -96,57 +115,93 @@ export default function AdminPriceLists() {
         org_id: orgId, default_margin_pct: num, updated_by: me?.id, updated_at: new Date().toISOString(),
       } as any, { onConflict: "org_id" });
       if (error) { toast.error(error.message); return; }
-      toast.success("Default margin saved");
+      toast.success("Margin saved");
     }
     setEdits(prev => { const n = { ...prev }; delete n[orgId]; return n; });
     loadAll();
   };
 
-  const saveOverride = async (row: OverrideRow) => {
-    const raw = ovEdits[row.id];
-    if (raw === undefined) return;
+  // ----- View 2 helpers -----
+  const openCustomer = (org: OrgRow) => {
+    setOpenOrg(org);
+    // Precompute row margins for this org
+    const orgDefault = defaultFor(org.id);
+    const map: Record<string, string> = {};
+    for (const p of products) {
+      const override = overrides.find(o => o.org_id === org.id && o.product_id === p.id);
+      let m: number | null = null;
+      if (override) m = Number(override.margin_pct);
+      else if (orgDefault != null) m = orgDefault;
+      else m = productCatalogueMargin(p);
+      map[p.id] = m == null ? "" : m.toFixed(1);
+    }
+    setRowMargins(map);
+    setRowDirty({});
+  };
+
+  const closeCustomer = () => {
+    setOpenOrg(null);
+    setRowMargins({});
+    setRowDirty({});
+  };
+
+  const setRowMargin = (productId: string, val: string) => {
+    setRowMargins(prev => ({ ...prev, [productId]: val }));
+    setRowDirty(prev => ({ ...prev, [productId]: true }));
+  };
+
+  const avgMarginView2 = useMemo(() => {
+    if (!openOrg) return null;
+    let num = 0, den = 0;
+    for (const p of products) {
+      const marginStr = rowMargins[p.id];
+      const margin = Number(marginStr);
+      const cost = Number(p.cost_price);
+      if (!Number.isFinite(margin) || !Number.isFinite(cost) || cost <= 0 || margin >= 100) continue;
+      const sell = cost / (1 - margin / 100);
+      num += (sell - cost);
+      den += sell;
+    }
+    if (den <= 0) return null;
+    return (num / den) * 100;
+  }, [rowMargins, products, openOrg]);
+
+  const saveRow = async (p: ProductRow) => {
+    if (!openOrg) return;
+    const raw = rowMargins[p.id];
     const num = Number(raw);
     if (!Number.isFinite(num) || num < 1 || num > 99) { toast.error("Margin must be between 1 and 99"); return; }
-    const { error } = await supabase.from("customer_product_pricing").update({
-      margin_pct: num, updated_by: me?.id, updated_at: new Date().toISOString(),
-    } as any).eq("id", row.id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Override saved");
-    setOvEdits(prev => { const n = { ...prev }; delete n[row.id]; return n; });
-    loadAll();
-  };
-
-  const deleteOverride = async (row: OverrideRow) => {
-    const { error } = await supabase.from("customer_product_pricing").delete().eq("id", row.id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Override removed");
-    loadAll();
-  };
-
-  const submitAdd = async () => {
-    if (!addFor || !addProductId) { toast.error("Pick a product"); return; }
-    const num = Number(addMargin);
-    if (!Number.isFinite(num) || num < 1 || num > 99) { toast.error("Margin must be between 1 and 99"); return; }
     const { error } = await supabase.from("customer_product_pricing").upsert({
-      org_id: addFor.id, product_id: addProductId, margin_pct: num, updated_by: me?.id, updated_at: new Date().toISOString(),
+      org_id: openOrg.id, product_id: p.id, margin_pct: num, updated_by: me?.id, updated_at: new Date().toISOString(),
     } as any, { onConflict: "org_id,product_id" });
     if (error) { toast.error(error.message); return; }
-    toast.success("Override added");
-    setAddFor(null); setAddProductId(""); setAddMargin("");
-    loadAll();
+    toast.success(`Saved ${p.code}`);
+    setRowDirty(prev => { const n = { ...prev }; delete n[p.id]; return n; });
+    // Reload overrides in background
+    const { data } = await supabase.from("customer_product_pricing").select("id,org_id,product_id,margin_pct");
+    setOverrides(((data as any) ?? []) as OverrideRow[]);
   };
 
   const exportCsv = () => {
-    const rows: string[] = ["org_name,product_code,product_name,margin_pct"];
-    for (const o of overrides) {
-      const org = orgById(o.org_id); const p = productById(o.product_id);
-      if (!org || !p) continue;
-      const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
-      rows.push([esc(org.name), esc(p.code), esc(p.name), String(o.margin_pct)].join(","));
+    if (!openOrg) return;
+    const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
+    const rows: string[] = ["product_code,product_name,cost_price,selling_price,margin_pct"];
+    for (const p of products) {
+      const margin = Number(rowMargins[p.id]);
+      const sell = sellFromMargin(p.cost_price == null ? null : Number(p.cost_price), margin);
+      rows.push([
+        esc(p.code),
+        esc(p.name),
+        p.cost_price == null ? "" : String(Number(p.cost_price).toFixed(2)),
+        sell == null ? "" : sell.toFixed(2),
+        Number.isFinite(margin) ? margin.toFixed(2) : "",
+      ].join(","));
     }
     const blob = new Blob([rows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `product-overrides-${new Date().toISOString().slice(0,10)}.csv`;
+    const a = document.createElement("a");
+    const safe = openOrg.name.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
+    a.href = url; a.download = `price-list-${safe}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click(); URL.revokeObjectURL(url);
   };
 
@@ -171,231 +226,181 @@ export default function AdminPriceLists() {
   };
 
   const importCsv = async (file: File) => {
+    if (!openOrg) return;
     const text = await file.text();
     const rows = parseCsv(text);
     if (rows.length === 0) { toast.error("Empty CSV"); return; }
     const header = rows[0].map(h => h.trim().toLowerCase());
-    const iOrg = header.indexOf("org_name");
     const iCode = header.indexOf("product_code");
     const iMargin = header.indexOf("margin_pct");
-    if (iOrg < 0 || iCode < 0 || iMargin < 0) { toast.error("CSV needs org_name, product_code, margin_pct columns"); return; }
+    if (iCode < 0 || iMargin < 0) { toast.error("CSV needs product_code and margin_pct columns"); return; }
 
-    const orgByName = new Map(orgs.map(o => [o.name.toLowerCase(), o]));
     const productByCode = new Map(products.map(p => [p.code.toLowerCase(), p]));
-    const existing = new Map(overrides.map(o => [`${o.org_id}:${o.product_id}`, o]));
-
-    let inserted = 0, updated = 0, skipped = 0;
-    const skips: string[] = [];
+    let imported = 0, skipped = 0;
     const payload: any[] = [];
     for (let r = 1; r < rows.length; r++) {
       const row = rows[r];
-      const orgName = (row[iOrg] ?? "").trim();
       const code = (row[iCode] ?? "").trim();
       const margin = Number((row[iMargin] ?? "").trim());
-      if (!orgName || !code) { skipped++; skips.push(`Row ${r + 1}: missing org or code`); continue; }
-      if (!Number.isFinite(margin) || margin < 1 || margin > 99) { skipped++; skips.push(`Row ${r + 1}: margin out of range`); continue; }
-      const org = orgByName.get(orgName.toLowerCase());
       const prod = productByCode.get(code.toLowerCase());
-      if (!org) { skipped++; skips.push(`Row ${r + 1}: org "${orgName}" not found`); continue; }
-      if (!prod) { skipped++; skips.push(`Row ${r + 1}: product "${code}" not found`); continue; }
-      const key = `${org.id}:${prod.id}`;
-      if (existing.has(key)) updated++; else inserted++;
-      payload.push({ org_id: org.id, product_id: prod.id, margin_pct: margin, updated_by: me?.id, updated_at: new Date().toISOString() });
+      if (!prod || !Number.isFinite(margin) || margin < 1 || margin > 99) { skipped++; continue; }
+      imported++;
+      payload.push({ org_id: openOrg.id, product_id: prod.id, margin_pct: margin, updated_by: me?.id, updated_at: new Date().toISOString() });
     }
-
     if (payload.length) {
       const { error } = await supabase.from("customer_product_pricing").upsert(payload as any, { onConflict: "org_id,product_id" });
       if (error) { toast.error(error.message); return; }
     }
-    toast.success(`Imported: ${inserted} new · ${updated} updated · ${skipped} skipped`);
-    if (skips.length) console.warn("Import skipped rows:", skips);
-    loadAll();
+    toast.success(`Imported ${imported} rows · ${skipped} skipped`);
+    // Reload and re-open to refresh margins
+    await loadAll();
+    const org = openOrg;
+    // Wait tick then reopen with fresh data
+    setTimeout(() => openCustomer(org), 0);
   };
 
+  // ============ RENDER ============
+
+  if (openOrg) {
+    return (
+      <DashboardLayout>
+        <div className="p-6 max-w-7xl mx-auto">
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Button variant="ghost" size="icon" onClick={closeCustomer} aria-label="Back">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight">{openOrg.name}</h1>
+                <p className="text-sm text-muted-foreground">{orgContact(openOrg.id)}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Avg margin: <span className="font-medium text-foreground">{fmtPct(avgMarginView2)}</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
+              <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4 mr-1" /> Import CSV</Button>
+              <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) importCsv(f); e.currentTarget.value = ""; }} />
+            </div>
+          </div>
+
+          <div className="rounded-[10px] border bg-card shadow-card overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-40">Code</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="w-32">Cost price</TableHead>
+                  <TableHead className="w-32">Selling price</TableHead>
+                  <TableHead className="w-36">Margin %</TableHead>
+                  <TableHead className="w-20 text-right">Save</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>}
+                {!loading && products.map(p => {
+                  const margin = Number(rowMargins[p.id]);
+                  const cost = p.cost_price == null ? null : Number(p.cost_price);
+                  const sell = sellFromMargin(cost, margin);
+                  const dirty = !!rowDirty[p.id];
+                  return (
+                    <TableRow key={p.id}>
+                      <TableCell className="font-mono text-xs">{p.code}</TableCell>
+                      <TableCell>{p.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{fmtGbp(cost)}</TableCell>
+                      <TableCell>{fmtGbp(sell)}</TableCell>
+                      <TableCell>
+                        <Input
+                          type="number" step="0.1" min="1" max="99"
+                          value={rowMargins[p.id] ?? ""}
+                          onChange={e => setRowMargin(p.id, e.target.value)}
+                          className="h-8 w-28"
+                        />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant={dirty ? "default" : "outline"}
+                          onClick={() => saveRow(p)}
+                          disabled={!dirty}
+                        >
+                          <Save className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // View 1
   return (
     <DashboardLayout>
       <div className="p-6 max-w-7xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold tracking-tight">Price Lists</h1>
-          <p className="text-sm text-muted-foreground">Customer-specific pricing: default margins and per-product overrides.</p>
+          <p className="text-sm text-muted-foreground">Customer-specific pricing. Open a customer to manage their full price list.</p>
         </div>
 
-        <Tabs defaultValue="defaults">
-          <TabsList>
-            <TabsTrigger value="defaults">Customer Defaults</TabsTrigger>
-            <TabsTrigger value="overrides">Product Overrides</TabsTrigger>
-          </TabsList>
+        <div className="relative max-w-md mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search organisation" className="pl-9" />
+        </div>
 
-          <TabsContent value="defaults" className="mt-4 space-y-4">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search organisation" className="pl-9" />
-            </div>
-
-            <div className="rounded-[10px] border bg-card shadow-card overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Organisation</TableHead>
-                    <TableHead>Contact email</TableHead>
-                    <TableHead className="w-40">Default margin %</TableHead>
-                    <TableHead className="w-24 text-right">Action</TableHead>
+        <div className="rounded-[10px] border bg-card shadow-card overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Organisation</TableHead>
+                <TableHead>Contact email</TableHead>
+                <TableHead className="w-44">Margin</TableHead>
+                <TableHead className="w-40 text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>}
+              {!loading && filteredOrgs.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No organisations found.</TableCell></TableRow>}
+              {filteredOrgs.map(o => {
+                const current = defaultFor(o.id);
+                const editing = edits[o.id] !== undefined;
+                const value = editing ? edits[o.id] : (current != null ? String(current) : "");
+                const placeholder = catalogueAvg != null ? catalogueAvg.toFixed(1) : "—";
+                return (
+                  <TableRow key={o.id}>
+                    <TableCell className="font-medium">{o.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{orgContact(o.id)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number" step="0.1" min="1" max="99"
+                          placeholder={placeholder}
+                          value={value}
+                          onChange={e => setEdits(prev => ({ ...prev, [o.id]: e.target.value }))}
+                          className="h-8 w-24"
+                        />
+                        <Button size="sm" variant="outline" onClick={() => saveDefault(o.id)} disabled={!editing}>
+                          <Save className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="outline" onClick={() => openCustomer(o)}>
+                        Open
+                      </Button>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>}
-                  {!loading && filteredOrgs.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No organisations found.</TableCell></TableRow>}
-                  {filteredOrgs.map(o => {
-                    const current = defaultFor(o.id);
-                    const editing = edits[o.id] !== undefined;
-                    const value = editing ? edits[o.id] : (current != null ? String(current) : "");
-                    return (
-                      <TableRow key={o.id}>
-                        <TableCell className="font-medium">{o.name}</TableCell>
-                        <TableCell className="text-muted-foreground">{orgContact(o.id)}</TableCell>
-                        <TableCell>
-                          <Input
-                            type="number" step="0.01" min="1" max="99"
-                            placeholder="Standard"
-                            value={value}
-                            onChange={e => setEdits(prev => ({ ...prev, [o.id]: e.target.value }))}
-                            className="h-8 w-32"
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button size="sm" variant="outline" onClick={() => saveDefault(o.id)} disabled={!editing}>
-                            <Save className="h-3.5 w-3.5 mr-1" /> Save
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="overrides" className="mt-4 space-y-4">
-            <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input value={ovSearch} onChange={e => setOvSearch(e.target.value)} placeholder="Search organisation" className="pl-9" />
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
-                <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4 mr-1" /> Import CSV</Button>
-                <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) importCsv(f); e.currentTarget.value = ""; }} />
-              </div>
-            </div>
-
-            {loading && <div className="text-center text-muted-foreground py-8">Loading…</div>}
-            {!loading && overrideGroups.length === 0 && <div className="text-center text-muted-foreground py-8 rounded-[10px] border bg-card">No product overrides yet.</div>}
-
-            <div className="space-y-4">
-              {overrideGroups.map(g => (
-                <div key={g.org!.id} className="rounded-[10px] border bg-card shadow-card overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
-                    <div>
-                      <div className="font-semibold">{g.org!.name}</div>
-                      <div className="text-xs text-muted-foreground">{g.items.length} override{g.items.length === 1 ? "" : "s"}</div>
-                    </div>
-                    <Button size="sm" variant="outline" onClick={() => { setAddFor(g.org!); setAddProductId(""); setAddMargin(""); }}>
-                      <Plus className="h-3.5 w-3.5 mr-1" /> Add override
-                    </Button>
-                  </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-40">Code</TableHead>
-                        <TableHead>Product</TableHead>
-                        <TableHead className="w-40">Margin %</TableHead>
-                        <TableHead className="w-32 text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {g.items.map(row => {
-                        const p = productById(row.product_id);
-                        const editing = ovEdits[row.id] !== undefined;
-                        const value = editing ? ovEdits[row.id] : String(row.margin_pct);
-                        return (
-                          <TableRow key={row.id}>
-                            <TableCell className="font-mono text-xs">{p?.code ?? "—"}</TableCell>
-                            <TableCell>{p?.name ?? <span className="text-muted-foreground italic">Unknown product</span>}</TableCell>
-                            <TableCell>
-                              <Input
-                                type="number" step="0.01" min="1" max="99"
-                                value={value}
-                                onChange={e => setOvEdits(prev => ({ ...prev, [row.id]: e.target.value }))}
-                                className="h-8 w-32"
-                              />
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-1">
-                                <Button size="sm" variant="outline" onClick={() => saveOverride(row)} disabled={!editing}>
-                                  <Save className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => deleteOverride(row)} className="text-red-600 hover:text-red-700">
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <Dialog open={!!addFor} onOpenChange={(o) => !o && setAddFor(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add product override</DialogTitle>
-              {addFor && <p className="text-sm text-muted-foreground">{addFor.name}</p>}
-            </DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-muted-foreground">Product</label>
-                <Popover open={addPickerOpen} onOpenChange={setAddPickerOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" role="combobox" className="w-full justify-between">
-                      {addProductId ? (() => { const p = productById(addProductId); return p ? `${p.code} — ${p.name}` : "Select product"; })() : "Select product"}
-                      <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search by code or name" />
-                      <CommandList>
-                        <CommandEmpty>No products found.</CommandEmpty>
-                        <CommandGroup>
-                          {products.map(p => (
-                            <CommandItem key={p.id} value={`${p.code} ${p.name}`} onSelect={() => { setAddProductId(p.id); setAddPickerOpen(false); }}>
-                              <Check className={`h-4 w-4 mr-2 ${addProductId === p.id ? "opacity-100" : "opacity-0"}`} />
-                              <span className="font-mono text-xs mr-2">{p.code}</span> {p.name}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Margin %</label>
-                <Input type="number" step="0.01" min="1" max="99" value={addMargin} onChange={e => setAddMargin(e.target.value)} placeholder="e.g. 35" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setAddFor(null)}>Cancel</Button>
-              <Button onClick={submitAdd}>Add override</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </DashboardLayout>
   );
