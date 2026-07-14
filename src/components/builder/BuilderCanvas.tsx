@@ -97,15 +97,13 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
       laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
       let d = depth + 1;
       const stack = (node: TNode) => {
-        for (const c of node.children) {
-          if (collapsed.has(c.id)) {
-            laid.push({ id: c.id, node: c, x, y: d * (NODE_HEIGHT + VGAP) });
-            d++;
-          } else {
-            laid.push({ id: c.id, node: c, x, y: d * (NODE_HEIGHT + VGAP) });
-            d++;
-            if (c.type === "CE" || c.type === "CYL") stack(c);
-          }
+        const ceChildren = node.children.filter(c => c.type === "CE");
+        const cylChildren = node.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
+        const ordered = [...ceChildren, ...cylChildren];
+        for (const c of ordered) {
+          laid.push({ id: c.id, node: c, x, y: d * (NODE_HEIGHT + VGAP) });
+          d++;
+          if (!collapsed.has(c.id)) stack(c);
         }
       };
       stack(n);
