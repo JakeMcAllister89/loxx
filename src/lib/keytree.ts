@@ -133,7 +133,21 @@ export function updateNode(root: TNode | null, id: string, patch: Partial<TNode>
 }
 
 export function addChild(root: TNode | null, parentId: string, child: TNode): TNode | null {
-  return mapTree(root, (n) => (n.id === parentId ? { ...n, children: [...n.children, child] } : n));
+  return mapTree(root, (n) => {
+    if (n.id !== parentId) return n;
+
+    if (child.type === "CE") {
+      const firstCylIdx = n.children.findIndex(c => c.type === "CYL");
+
+      if (firstCylIdx === -1) return { ...n, children: [...n.children, child] };
+
+      const next = [...n.children];
+      next.splice(firstCylIdx, 0, child);
+      return { ...n, children: next };
+    }
+
+    return { ...n, children: [...n.children, child] };
+  });
 }
 
 /** Insert a new node as a sibling immediately after the node with id `afterId`. */
