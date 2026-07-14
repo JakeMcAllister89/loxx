@@ -123,7 +123,7 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
       });
 
       const maxSubCEDepth = subCEs.length > 0
-        ? depth + 1 + subCEs.length - 1 + Math.max(0, ...subCEs.map(s => s.children.filter(c => c.type === "CYL").length))
+        ? depth + 1 + subCEs.length - 1 + (subCEs.some(s => s.children.filter(c => c.type === "CYL" && !c.decommissioned_at).length > 0) ? 1 : 0)
         : depth;
 
       const cylStartDepth = maxSubCEDepth + 1;
