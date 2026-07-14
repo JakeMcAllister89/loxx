@@ -203,8 +203,8 @@ function CanvasInner({
           type: "tree",
           style: {
             stroke: "hsl(var(--border))",
-            strokeWidth: isCEStack ? 0.75 : 1.5,
-            strokeOpacity: isCEStack ? 0.5 : 1,
+            strokeWidth: isCEStack ? 0.75 : 2,
+            strokeOpacity: isCEStack ? 0.3 : 1,
           },
         });
         collectEdges(c);
