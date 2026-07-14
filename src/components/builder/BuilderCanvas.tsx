@@ -80,8 +80,9 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
   const measure = (n: TNode): number => {
     if (n.children.length === 0 || collapsed.has(n.id)) return NODE_WIDTH;
     if (n.type === "CE") {
-      // A top-level CE (Z1, Z2) occupies one column — its sub-CEs and CYLs stack vertically within it.
-      return NODE_WIDTH;
+      const cyls = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
+      if (cyls.length <= 1) return NODE_WIDTH;
+      return cyls.length * NODE_WIDTH + (cyls.length - 1) * HGAP;
     }
     return Math.max(
       NODE_WIDTH,
@@ -120,8 +121,15 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
         : depth;
 
       const cylStartDepth = maxSubCEDepth + 1;
+
+      const cylY = cylStartDepth * (NODE_HEIGHT + VGAP);
+
+      const totalCylWidth = cyls.length * NODE_WIDTH + (cyls.length - 1) * HGAP;
+
+      const cylStartX = x + NODE_WIDTH / 2 - totalCylWidth / 2;
+
       cyls.forEach((c, i) => {
-        laid.push({ id: c.id, node: c, x, y: (cylStartDepth + i) * (NODE_HEIGHT + VGAP) });
+        laid.push({ id: c.id, node: c, x: cylStartX + i * (NODE_WIDTH + HGAP), y: cylY });
       });
 
       return { cx: x + NODE_WIDTH / 2 };
