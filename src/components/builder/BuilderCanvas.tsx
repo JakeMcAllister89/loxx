@@ -93,6 +93,25 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
       return { cx: x + NODE_WIDTH / 2 };
     }
 
+    if (n.type === "CE") {
+      laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
+      let d = depth + 1;
+      const stack = (node: TNode) => {
+        for (const c of node.children) {
+          if (collapsed.has(c.id)) {
+            laid.push({ id: c.id, node: c, x, y: d * (NODE_HEIGHT + VGAP) });
+            d++;
+          } else {
+            laid.push({ id: c.id, node: c, x, y: d * (NODE_HEIGHT + VGAP) });
+            d++;
+            if (c.type === "CE" || c.type === "CYL") stack(c);
+          }
+        }
+      };
+      stack(n);
+      return { cx: x + NODE_WIDTH / 2 };
+    }
+
     let cursor = x;
     let firstCX = 0;
     let lastCX = 0;
