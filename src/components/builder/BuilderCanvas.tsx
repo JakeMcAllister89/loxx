@@ -122,15 +122,10 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 
       const cylStartDepth = maxSubCEDepth + 1;
 
-      const cylY = cylStartDepth * (NODE_HEIGHT + VGAP);
-
-      const totalCylWidth = cyls.length * NODE_WIDTH + (cyls.length - 1) * HGAP;
-
-      const cylStartX = x + NODE_WIDTH / 2 - totalCylWidth / 2;
-
       cyls.forEach((c, i) => {
-        laid.push({ id: c.id, node: c, x: cylStartX + i * (NODE_WIDTH + HGAP), y: cylY });
+        laid.push({ id: c.id, node: c, x, y: (cylStartDepth + i) * (NODE_HEIGHT + VGAP) });
       });
+
 
       return { cx: x + NODE_WIDTH / 2 };
     }
