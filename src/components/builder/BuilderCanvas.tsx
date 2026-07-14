@@ -114,16 +114,13 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
         laid.push({ id: sub.id, node: sub, x, y: subDepth * (NODE_HEIGHT + VGAP) });
         const subCyls = sub.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
         const subCylStart = subDepth + 1;
-        const subCylY = subCylStart * (NODE_HEIGHT + VGAP);
-        const totalSubCylWidth = subCyls.length * NODE_WIDTH + (subCyls.length - 1) * HGAP;
-        const subCylStartX = x + NODE_WIDTH / 2 - totalSubCylWidth / 2;
         subCyls.forEach((c, j) => {
-          laid.push({ id: c.id, node: c, x: subCylStartX + j * (NODE_WIDTH + HGAP), y: subCylY });
+          laid.push({ id: c.id, node: c, x, y: (subCylStart + j) * (NODE_HEIGHT + VGAP) });
         });
       });
 
       const maxSubCEDepth = subCEs.length > 0
-        ? depth + 1 + subCEs.length - 1 + (subCEs.some(s => s.children.filter(c => c.type === "CYL" && !c.decommissioned_at).length > 0) ? 1 : 0)
+        ? depth + 1 + subCEs.length - 1 + Math.max(0, ...subCEs.map(s => s.children.filter(c => c.type === "CYL").length))
         : depth;
 
       const cylStartDepth = maxSubCEDepth + 1;
