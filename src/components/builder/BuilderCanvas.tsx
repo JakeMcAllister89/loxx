@@ -192,37 +192,9 @@ function CanvasInner({
     });
 
     const edges: Edge[] = [];
-    const getBottomOfStack = (n: TNode): TNode => {
-      if (collapsedSet.has(n.id) || n.children.length === 0) return n;
-      if (n.type === "CE") {
-        const ceChildren = n.children.filter(c => c.type === "CE");
-        const cylChildren = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
-        const ordered = [...ceChildren, ...cylChildren];
-        if (ordered.length === 0) return n;
-        return getBottomOfStack(ordered[ordered.length - 1]);
-      }
-      return n;
-    };
-
     const collectEdges = (n: TNode) => {
       if (collapsedSet.has(n.id)) return;
       for (const c of n.children) {
-        if (n.type === "CE" && (c.type === "CE" || c.type === "CYL")) {
-          collectEdges(c);
-          continue;
-        }
-        if (c.type === "CE") {
-          const bottom = getBottomOfStack(c);
-          edges.push({
-            id: `${n.id}->${c.id}-stack`,
-            source: n.id,
-            target: bottom.id,
-            type: "tree",
-            style: { stroke: "hsl(var(--border))", strokeWidth: 1.5 },
-          });
-          collectEdges(c);
-          continue;
-        }
         edges.push({
           id: `${n.id}->${c.id}`,
           source: n.id,
