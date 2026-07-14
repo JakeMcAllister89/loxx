@@ -58,16 +58,24 @@ export default function Auth() {
           },
         });
         if (error) throw error;
-        toast.success("Account created. You're signed in.");
+        toast.success("Signup received. We'll email you once it's approved.");
+        supabase.functions.invoke("send-signup-confirmation", {
+          body: { email, first_name: firstName, organisation_name: company },
+        }).catch(() => {});
         setTimeout(() => {
           supabase.functions.invoke("notify-new-signup", {
             body: { source: "auth_signup", email },
           }).catch(() => {});
         }, 3000);
-        navigate(nextPath);
+        navigate("/pending-approval");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          if (/email not confirmed/i.test(error.message)) {
+            throw new Error("Your account is awaiting approval. You'll receive an email confirmation once it's been reviewed.");
+          }
+          throw error;
+        }
         navigate(nextPath);
       }
     } catch (err: any) {
