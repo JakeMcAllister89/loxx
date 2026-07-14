@@ -80,27 +80,6 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 
   const measure = (n: TNode): number => {
     if (n.children.length === 0 || collapsed.has(n.id)) return NODE_WIDTH;
-    if (n.type === "CE") {
-      const subCEs = n.children.filter(c => c.type === "CE");
-
-      if (subCEs.length > 0) {
-        const deepestSubCE = subCEs[subCEs.length - 1];
-        const deepCyls = deepestSubCE.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
-
-        if (deepCyls.length === 0) return NODE_WIDTH;
-
-        return deepCyls.length * NODE_WIDTH + (deepCyls.length - 1) * HGAP;
-      }
-
-      const cyls = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
-
-      if (cyls.length === 0) return NODE_WIDTH;
-
-      return cyls.length * NODE_WIDTH + (cyls.length - 1) * HGAP;
-    }
-
-
-
     return Math.max(
       NODE_WIDTH,
       n.children.reduce((s, c, i) => s + measure(c) + (i > 0 ? HGAP : 0), 0)
@@ -108,71 +87,11 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
   };
 
   const place = (n: TNode, x: number, depth: number): { cx: number } => {
-    const isCollapsed = collapsed.has(n.id);
-    if (n.children.length === 0 || isCollapsed) {
+    if (n.children.length === 0 || collapsed.has(n.id)) {
       laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
       return { cx: x + NODE_WIDTH / 2 };
     }
 
-    if (n.type === "CE") {
-      const subCEs = n.children.filter(c => c.type === "CE");
-
-      const cyls = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
-
-      const totalWidth = measure(n);
-
-      const cx = x + totalWidth / 2;
-
-      const nodeX = cx - NODE_WIDTH / 2;
-
-      laid.push({ id: n.id, node: n, x: nodeX, y: depth * (NODE_HEIGHT + VGAP) });
-
-      if (subCEs.length > 0) {
-
-        subCEs.forEach((sub, i) => {
-
-          const subCyls = sub.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
-
-          laid.push({ id: sub.id, node: sub, x: nodeX, y: (depth + 1 + i) * (NODE_HEIGHT + VGAP) });
-
-          if (subCyls.length > 0) {
-
-            const subCylWidth = subCyls.length * NODE_WIDTH + (subCyls.length - 1) * HGAP;
-
-            const subCylStartX = cx - subCylWidth / 2;
-
-            const cylDepth = depth + 1 + i + 1;
-
-            subCyls.forEach((c, j) => {
-
-              laid.push({ id: c.id, node: c, x: subCylStartX + j * (NODE_WIDTH + HGAP), y: cylDepth * (NODE_HEIGHT + VGAP) });
-
-            });
-
-          }
-
-        });
-
-      } else if (cyls.length > 0) {
-
-        const cylWidth = cyls.length * NODE_WIDTH + (cyls.length - 1) * HGAP;
-
-        const cylStartX = cx - cylWidth / 2;
-
-        cyls.forEach((c, i) => {
-
-          laid.push({ id: c.id, node: c, x: cylStartX + i * (NODE_WIDTH + HGAP), y: (depth + 1) * (NODE_HEIGHT + VGAP) });
-
-        });
-
-      }
-
-      return { cx };
-
-    }
-
-
-    // Standard horizontal layout
     let cursor = x;
     let firstCX = 0;
     let lastCX = 0;
@@ -190,9 +109,13 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 
   place(root, 0, 0);
 
-  const maxX = Math.max(...laid.map((l) => l.x + NODE_WIDTH));
-  const maxY = Math.max(...laid.map((l) => l.y + NODE_HEIGHT));
-  return { laid, width: maxX, height: maxY };
+  const xs = laid.map(l => l.x);
+  const ys = laid.map(l => l.y);
+  return {
+    laid,
+    width: Math.max(...xs) + NODE_WIDTH,
+    height: Math.max(...ys) + NODE_HEIGHT,
+  };
 }
 
 function CanvasInner({
