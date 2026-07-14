@@ -111,7 +111,7 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
       // Stack sub-CEs vertically below in same column
       subCEs.forEach((sub, i) => {
         const subDepth = depth + 1 + i;
-        laid.push({ id: sub.id, node: sub, x: x + 20, y: subDepth * (NODE_HEIGHT + VGAP) });
+        laid.push({ id: sub.id, node: sub, x, y: subDepth * (NODE_HEIGHT + VGAP) });
         const subCyls = sub.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
         const subCylStart = subDepth + 1;
         subCyls.forEach((c, j) => {
