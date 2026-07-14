@@ -212,6 +212,7 @@ function CanvasInner({
     const collectEdges = (n: TNode) => {
       if (collapsedSet.has(n.id)) return;
       for (const c of n.children) {
+        if (n.type === "CE" && c.type === "CYL") continue;
         edges.push({
           id: `${n.id}->${c.id}`,
           source: n.id,
