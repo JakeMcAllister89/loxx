@@ -45,7 +45,22 @@ interface Props {
   onOpenIssues?: (nodeId: string, filter: "issued" | "lost") => void;
 }
 
-const nodeTypes = { keynode: CanvasNode };
+function BracketNode({ data }: { data: { height: number; color: string } }) {
+  return (
+    <div
+      style={{
+        width: 4,
+        height: data.height,
+        background: data.color,
+        borderRadius: 2,
+        opacity: 0.5,
+        pointerEvents: "none",
+      }}
+    />
+  );
+}
+
+const nodeTypes = { keynode: CanvasNode, bracket: BracketNode };
 
 function TreeEdge({ sourceX, sourceY, targetX, targetY, style }: EdgeProps) {
   const isAligned = Math.abs(sourceX - targetX) < 1;
