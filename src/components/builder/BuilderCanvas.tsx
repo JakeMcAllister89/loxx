@@ -195,7 +195,23 @@ function CanvasInner({
     const collectEdges = (n: TNode) => {
       if (collapsedSet.has(n.id)) return;
       for (const c of n.children) {
-        const isCEStack = n.type === "CE" && c.type === "CE";
+        const isCEtoCE = n.type === "CE" && c.type === "CE";
+        const isCEtoCYL = n.type === "CE" && c.type === "CYL";
+        if (isCEtoCYL) {
+          const cylSiblings = n.children.filter(ch => ch.type === "CYL" && !ch.decommissioned_at);
+          const isLast = cylSiblings[cylSiblings.length - 1]?.id === c.id;
+          if (isLast) {
+            edges.push({
+              id: `${n.id}->${c.id}`,
+              source: n.id,
+              target: c.id,
+              type: "tree",
+              style: { stroke: "hsl(var(--border))", strokeWidth: 1.5, strokeOpacity: 1 },
+            });
+          }
+          collectEdges(c);
+          continue;
+        }
         edges.push({
           id: `${n.id}->${c.id}`,
           source: n.id,
@@ -203,8 +219,8 @@ function CanvasInner({
           type: "tree",
           style: {
             stroke: "hsl(var(--border))",
-            strokeWidth: isCEStack ? 0.75 : 2,
-            strokeOpacity: isCEStack ? 0.3 : 1,
+            strokeWidth: isCEtoCE ? 0.75 : 1.5,
+            strokeOpacity: isCEtoCE ? 0.3 : 1,
           },
         });
         collectEdges(c);
