@@ -45,22 +45,8 @@ interface Props {
   onOpenIssues?: (nodeId: string, filter: "issued" | "lost") => void;
 }
 
-function BracketNode({ data }: { data: { height: number; color: string } }) {
-  return (
-    <div
-      style={{
-        width: 4,
-        height: data.height,
-        background: data.color,
-        borderRadius: 2,
-        opacity: 0.5,
-        pointerEvents: "none",
-      }}
-    />
-  );
-}
 
-const nodeTypes = { keynode: CanvasNode, bracket: BracketNode };
+const nodeTypes = { keynode: CanvasNode };
 
 function TreeEdge({ sourceX, sourceY, targetX, targetY, style }: EdgeProps) {
   const isAligned = Math.abs(sourceX - targetX) < 1;
@@ -281,34 +267,7 @@ function CanvasInner({
     };
     if (tree.root) collectEdges(tree.root);
 
-    const bracketNodes: Node[] = [];
-    const collectBrackets = (n: TNode, x: number, depth: number) => {
-      if (n.type === "CE" && !collapsedSet.has(n.id)) {
-        const laidCE = laid.find(l => l.id === n.id);
-        if (laidCE) {
-          const directCyls = n.children.filter(c => c.type === "CYL" && !c.decommissioned_at);
-          const subCEs = n.children.filter(c => c.type === "CE");
-          const totalRows = subCEs.length > 0 ? subCEs.length : directCyls.length;
-          if (totalRows > 0) {
-            const bracketHeight = totalRows * (NODE_HEIGHT + VGAP) - VGAP / 2;
-            bracketNodes.push({
-              id: `bracket-${n.id}`,
-              type: "bracket",
-              position: { x: laidCE.x - 10, y: laidCE.y + NODE_HEIGHT + VGAP / 2 },
-              draggable: false,
-              selectable: false,
-              zIndex: -1,
-              data: { height: bracketHeight, color: "hsl(160 70% 35%)" },
-            });
-          }
-        }
-      }
-      n.children.forEach(c => collectBrackets(c, x, depth + 1));
-    };
-    if (tree.root) collectBrackets(tree.root, 0, 0);
-    const allNodes = [...nodes, ...bracketNodes];
-
-    return { nodes: allNodes, edges };
+    return { nodes, edges };
   }, [tree, selectedId, errorIds, highlightIds, productsByCode, onAddChild, parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly, collapsed, onToggleCollapsed, issueCounts, onOpenIssues]);
 
   const [rfNodes, setRfNodes, onNodesChange] = useNodesState(nodes);
