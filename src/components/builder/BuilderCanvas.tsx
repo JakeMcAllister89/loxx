@@ -80,6 +80,7 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 
   const measure = (n: TNode): number => {
     if (n.children.length === 0 || collapsed.has(n.id)) return NODE_WIDTH;
+    if (n.type === "CE") return NODE_WIDTH;
     return Math.max(
       NODE_WIDTH,
       n.children.reduce((s, c, i) => s + measure(c) + (i > 0 ? HGAP : 0), 0)
@@ -89,6 +90,25 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
   const place = (n: TNode, x: number, depth: number): { cx: number } => {
     if (n.children.length === 0 || collapsed.has(n.id)) {
       laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
+      return { cx: x + NODE_WIDTH / 2 };
+    }
+
+    if (n.type === "CE") {
+      laid.push({ id: n.id, node: n, x, y: depth * (NODE_HEIGHT + VGAP) });
+      let d = depth + 1;
+      const stack = (node: TNode) => {
+        for (const c of node.children) {
+          if (collapsed.has(c.id)) {
+            laid.push({ id: c.id, node: c, x, y: d * (NODE_HEIGHT + VGAP) });
+            d++;
+          } else {
+            laid.push({ id: c.id, node: c, x, y: d * (NODE_HEIGHT + VGAP) });
+            d++;
+            if (c.type === "CE" || c.type === "CYL") stack(c);
+          }
+        }
+      };
+      stack(n);
       return { cx: x + NODE_WIDTH / 2 };
     }
 
@@ -177,7 +197,6 @@ function CanvasInner({
     const collectEdges = (n: TNode) => {
       if (collapsedSet.has(n.id)) return;
       for (const c of n.children) {
-        if (n.type === "CE" && c.type === "CYL") { collectEdges(c); continue; }
         edges.push({
           id: `${n.id}->${c.id}`,
           source: n.id,
