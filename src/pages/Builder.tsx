@@ -575,7 +575,35 @@ function BuilderInner({ systemId }: { systemId: string }) {
     });
     setCopySpecState({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false });
     setSelectedId(null);
-  }, [pushUndo]);
+    setTree((cur) => {
+      const source = findNode(cur.root, sourceId);
+      if (!source) return cur;
+      const label = newLabel.trim() || "New door";
+      const prod = productsRef.current.find((p) => p.code === source.cylinder_type);
+      const profile = (prod as any)?.cylinder_profile ?? null;
+      const size = source.size ?? (prod as any)?.size ?? null;
+      const specParts = [source.cylinder_type, profile, source.finish, size].filter(Boolean);
+      logAction({
+        system_id: systemId,
+        action: "cylinder_configured",
+        node_type: "CYL",
+        node_label: label,
+        new_value: specParts.join(" · "),
+        metadata: {
+          room_name: label,
+          product: source.cylinder_type ?? null,
+          product_name: (prod as any)?.product_description ?? prod?.name ?? null,
+          profile,
+          finish: source.finish ?? null,
+          size,
+          extra_keys: source.extra_keys ?? 0,
+          quantity: 1,
+          copied_from: findNode(cur.root, sourceId)?.label ?? sourceId,
+        },
+      });
+      return cur;
+    });
+  }, [pushUndo, systemId]);
 
   /** Open the "Replace cylinder" flow for a CYL node. */
   const openReplaceFlow = useCallback((nodeId: string) => {
