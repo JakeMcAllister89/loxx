@@ -254,13 +254,6 @@ function CanvasInner({
     lastNodeCount.current = nodes.length;
   }, [nodes, setCenter]);
 
-  // Fit when node count changes (mount, new system, add/remove)
-  useEffect(() => {
-    if (nodes.length === 0) return;
-    const t = setTimeout(() => fitView({ padding: 0.25, duration: 300 }), 150);
-    return () => clearTimeout(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodes.length]);
 
   const handleNodeClick = useCallback((_: unknown, n: Node) => onSelect(n.id), [onSelect]);
 
