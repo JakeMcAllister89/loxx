@@ -36,6 +36,9 @@ interface ConfirmState {
   mode: "key" | "cylinder";
   row: CylinderRow | null;
   reason: "faulty" | "lost_key";
+  quantity: number;
+  differKeyCode: string | null;
+  differKeyPrice: number;
 }
 
 export default function QuickOrder() {
@@ -49,7 +52,7 @@ export default function QuickOrder() {
   const [cylinders, setCylinders] = useState<CylinderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
-  const [confirm, setConfirm] = useState<ConfirmState>({ open: false, mode: "key", row: null, reason: "faulty" });
+  const [confirm, setConfirm] = useState<ConfirmState>({ open: false, mode: "key", row: null, reason: "faulty", quantity: 1, differKeyCode: null, differKeyPrice: 12 });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -112,7 +115,14 @@ export default function QuickOrder() {
   }, [cylinders, search, filterSystem, filterLockType, filterFinish]);
 
   const openConfirm = (row: CylinderRow, mode: "key" | "cylinder") => {
-    setConfirm({ open: true, mode, row, reason: "faulty" });
+    const differKeyProd = products.find((p: any) =>
+      p.cylinder_type === "Key" && (p.cylinder_profile ?? "").toUpperCase().includes("DIFFER")
+    );
+    setConfirm({
+      open: true, mode, row, reason: "faulty", quantity: 1,
+      differKeyCode: differKeyProd?.code ?? null,
+      differKeyPrice: differKeyProd ? Number(differKeyProd.price_gbp) : 12,
+    });
   };
 
   const handleConfirm = async () => {
@@ -132,8 +142,8 @@ export default function QuickOrder() {
           image_url: differKeyProd?.image_url ?? undefined,
           room_label: row.label,
           differ_ref: row.differRef,
-          quantity: 1,
-          unit_price: differKeyProd ? Number(differKeyProd.price_gbp) : 12,
+          quantity: confirm.quantity,
+          unit_price: confirm.differKeyPrice,
           system_id: row.systemId,
           system_name: row.systemName,
           system_reference: row.systemRef,
@@ -210,7 +220,7 @@ export default function QuickOrder() {
           image_url: prod?.image_url ?? undefined,
           room_label: row.label,
           differ_ref: row.differRef,
-          quantity: 1,
+          quantity: confirm.quantity,
           unit_price: prod ? Number(prod.price_gbp) : 0,
           system_id: row.systemId,
           system_name: row.systemName,
@@ -332,8 +342,16 @@ export default function QuickOrder() {
                 {confirm.row.lockType && <div className="flex justify-between"><span className="text-muted-foreground">Lock function</span><span>{confirm.row.lockType}</span></div>}
                 {confirm.row.finish && <div className="flex justify-between"><span className="text-muted-foreground">Finish</span><span>{confirm.row.finish}</span></div>}
                 {confirm.row.size && <div className="flex justify-between"><span className="text-muted-foreground">Size</span><span>{confirm.row.size}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">Product code</span><span className="font-mono text-xs">{confirm.row.cylinder_type}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Product code</span><span className="font-mono text-xs">{confirm.mode === "key" ? (confirm.differKeyCode ?? "—") : confirm.row.cylinder_type}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">System</span><span>{confirm.row.systemName}</span></div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="text-sm">Quantity</Label>
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setConfirm(c => ({ ...c, quantity: Math.max(1, c.quantity - 1) }))}>−</Button>
+                  <span className="w-8 text-center text-sm font-medium">{confirm.quantity}</span>
+                  <Button type="button" variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setConfirm(c => ({ ...c, quantity: c.quantity + 1 }))}>+</Button>
+                </div>
               </div>
               {confirm.mode === "cylinder" && (
                 <div className="space-y-2">
