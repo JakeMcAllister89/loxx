@@ -554,10 +554,12 @@ function BuilderInner({ systemId }: { systemId: string }) {
       if (!parent) return prev;
       const siblingCount = parent.children.length;
       const assignedDiffer = keyedAlike ? source.differ : prev.next_differ;
+      const nodeId = newId();
+      const label = newLabel.trim() || `Door ${siblingCount + 1}`;
       const newNode: TNode = {
-        id: newId(),
+        id: nodeId,
         type: "CYL",
-        label: newLabel.trim() || `Door ${siblingCount + 1}`,
+        label,
         differ: assignedDiffer,
         ...(keyedAlike ? { keyed_alike_source_differ: source.differ } : {}),
         cylinder_type: source.cylinder_type,
@@ -565,20 +567,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
         size: source.size,
         quantity: source.quantity ?? 1,
         extra_keys: source.extra_keys ?? 0,
-        
         children: [],
       };
       const finalNewNode = isFulfilledRef.current ? { ...newNode, is_new: true } : newNode;
       const newRoot = addChild(prev.root, parent.id, finalNewNode);
       dirtyRef.current = true;
-      return assignNextDiffers({ ...prev, root: newRoot });
-    });
-    setCopySpecState({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false });
-    setSelectedId(null);
-    setTree((cur) => {
-      const source = findNode(cur.root, sourceId);
-      if (!source) return cur;
-      const label = newLabel.trim() || "New door";
+      const next = assignNextDiffers({ ...prev, root: newRoot });
+      const placed = findNode(next.root, nodeId);
+      const differRef = placed?.differ != null ? `D${String(placed.differ).padStart(3, "0")}` : "";
       const prod = productsRef.current.find((p) => p.code === source.cylinder_type);
       const profile = (prod as any)?.cylinder_profile ?? null;
       const size = source.size ?? (prod as any)?.size ?? null;
@@ -590,6 +586,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         node_label: label,
         new_value: specParts.join(" · "),
         metadata: {
+          differ_ref: differRef,
           room_name: label,
           product: source.cylinder_type ?? null,
           product_name: (prod as any)?.product_description ?? prod?.name ?? null,
@@ -598,11 +595,13 @@ function BuilderInner({ systemId }: { systemId: string }) {
           size,
           extra_keys: source.extra_keys ?? 0,
           quantity: 1,
-          copied_from: findNode(cur.root, sourceId)?.label ?? sourceId,
+          copied_from: source.label,
         },
       });
-      return cur;
+      return next;
     });
+    setCopySpecState({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false });
+    setSelectedId(null);
   }, [pushUndo, systemId]);
 
   /** Open the "Replace cylinder" flow for a CYL node. */
