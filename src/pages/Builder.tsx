@@ -433,8 +433,15 @@ function BuilderInner({ systemId }: { systemId: string }) {
       if (locationAuditRef.current && locationAuditRef.current.nodeId === prev) flushLocationAudit();
       if (cylConfigRef.current && cylConfigRef.current.nodeId === prev) flushCylConfig();
     }
+    // Start a config session when switching to a CYL node
+    if (selectedId) {
+      const node = findNode(tree.root, selectedId);
+      if (node && node.type === "CYL" && (!cylConfigRef.current || cylConfigRef.current.nodeId !== selectedId)) {
+        cylConfigRef.current = { nodeId: selectedId, originalLabel: node.label };
+      }
+    }
     prevSelectedRef.current = selectedId;
-  }, [selectedId, flushLabelAudit, flushLocationAudit, flushCylConfig]);
+  }, [selectedId, flushLabelAudit, flushLocationAudit, flushCylConfig, tree.root]);
 
   const mutate = (updater: (t: TreeData) => TreeData) => {
     setTree((prev) => { const next = updater(prev); dirtyRef.current = true; return next; });
