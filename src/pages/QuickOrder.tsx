@@ -116,7 +116,10 @@ export default function QuickOrder() {
 
   const openConfirm = (row: CylinderRow, mode: "key" | "cylinder") => {
     const differKeyProd = products.find((p: any) =>
-      p.cylinder_type === "Key" && (p.cylinder_profile ?? "").toUpperCase().includes("DIFFER")
+      p.cylinder_type === "Key" && (
+        (p.code ?? "").toUpperCase().includes("REP") ||
+        (p.cylinder_profile ?? "").toUpperCase().includes("REP")
+      ) && (p.cylinder_profile ?? "").toUpperCase().includes("DIFFER")
     );
     setConfirm({
       open: true, mode, row, reason: "faulty", quantity: 1,
@@ -133,7 +136,10 @@ export default function QuickOrder() {
       const prod = products.find((p: any) => p.code === row.cylinder_type);
       if (mode === "key") {
         const differKeyProd = products.find((p: any) =>
-          p.cylinder_type === "Key" && (p.cylinder_profile ?? "").toUpperCase().includes("DIFFER")
+          p.cylinder_type === "Key" && (
+            (p.code ?? "").toUpperCase().includes("REP") ||
+            (p.cylinder_profile ?? "").toUpperCase().includes("REP")
+          ) && (p.cylinder_profile ?? "").toUpperCase().includes("DIFFER")
         );
         addToCart({
           kind: "key",
