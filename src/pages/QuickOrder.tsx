@@ -21,6 +21,8 @@ interface CylinderRow {
   label: string;
   differRef: string;
   cylinder_type: string;
+  lockType: string | null;
+  lockFunction: string | null;
   finish: string | null;
   size: string | null;
   systemId: string;
@@ -41,6 +43,9 @@ export default function QuickOrder() {
   const { add: addToCart } = useCart();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [filterSystem, setFilterSystem] = useState("");
+  const [filterLockType, setFilterLockType] = useState("");
+  const [filterFinish, setFilterFinish] = useState("");
   const [cylinders, setCylinders] = useState<CylinderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
@@ -59,11 +64,14 @@ export default function QuickOrder() {
         const tree = sys.tree_data as any as TreeData;
         const walk = (n: TNode) => {
           if (n.type === "CYL" && !n.decommissioned_at && n.cylinder_type) {
+            const prod = (prods ?? []).find((p: any) => p.code === n.cylinder_type);
             rows.push({
               nodeId: n.id,
               label: n.label,
               differRef: `D${String(n.differ ?? 0).padStart(3, "0")}`,
               cylinder_type: n.cylinder_type,
+              lockType: prod?.cylinder_type ?? null,
+              lockFunction: (prod as any)?.cylinder_profile ?? null,
               finish: n.finish ?? null,
               size: n.size ?? null,
               systemId: sys.id,
@@ -83,16 +91,25 @@ export default function QuickOrder() {
     load();
   }, []);
 
+  const systemOptions = useMemo(() => [...new Set(cylinders.map(r => r.systemId))].map(id => cylinders.find(r => r.systemId === id)!).map(r => ({ id: r.systemId, name: r.systemName })), [cylinders]);
+  const lockTypeOptions = useMemo(() => [...new Set(cylinders.map(r => r.lockType).filter(Boolean))] as string[], [cylinders]);
+  const finishOptions = useMemo(() => [...new Set(cylinders.map(r => r.finish).filter(Boolean))] as string[], [cylinders]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return cylinders;
-    return cylinders.filter(r =>
-      r.label.toLowerCase().includes(q) ||
-      r.differRef.toLowerCase().includes(q) ||
-      r.systemName.toLowerCase().includes(q) ||
-      (r.systemRef ?? "").toLowerCase().includes(q)
-    );
-  }, [cylinders, search]);
+    return cylinders.filter(r => {
+      if (filterSystem && r.systemId !== filterSystem) return false;
+      if (filterLockType && r.lockType !== filterLockType) return false;
+      if (filterFinish && r.finish !== filterFinish) return false;
+      if (q && !(
+        r.label.toLowerCase().includes(q) ||
+        r.differRef.toLowerCase().includes(q) ||
+        r.systemName.toLowerCase().includes(q) ||
+        (r.systemRef ?? "").toLowerCase().includes(q)
+      )) return false;
+      return true;
+    });
+  }, [cylinders, search, filterSystem, filterLockType, filterFinish]);
 
   const openConfirm = (row: CylinderRow, mode: "key" | "cylinder") => {
     setConfirm({ open: true, mode, row, reason: "faulty" });
@@ -234,14 +251,23 @@ export default function QuickOrder() {
           </p>
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by door, differ, or system…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex flex-wrap gap-3 mb-6">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search door or differ ref…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+          </div>
+          <select value={filterSystem} onChange={e => setFilterSystem(e.target.value)} className="text-sm border rounded-md px-3 py-2 bg-background min-w-[160px]">
+            <option value="">All systems</option>
+            {systemOptions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+          <select value={filterLockType} onChange={e => setFilterLockType(e.target.value)} className="text-sm border rounded-md px-3 py-2 bg-background min-w-[160px]">
+            <option value="">All lock types</option>
+            {lockTypeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <select value={filterFinish} onChange={e => setFilterFinish(e.target.value)} className="text-sm border rounded-md px-3 py-2 bg-background min-w-[140px]">
+            <option value="">All finishes</option>
+            {finishOptions.map(f => <option key={f} value={f}>{f}</option>)}
+          </select>
         </div>
 
         {loading ? (
@@ -265,19 +291,20 @@ export default function QuickOrder() {
                     <div key={`${row.systemId}-${row.nodeId}`} className="flex items-center justify-between px-4 py-3 gap-4">
                       <div className="min-w-0">
                         <div className="font-medium truncate">{row.label}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {row.differRef}
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          <span className="font-mono">{row.differRef}</span>
+                          {row.lockType && ` · ${row.lockType}`}
+                          {row.lockFunction && ` · ${row.lockFunction}`}
                           {row.finish && ` · ${row.finish}`}
                           {row.size && ` · ${row.size}`}
-                          {row.cylinder_type && ` · ${row.cylinder_type}`}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <Button size="sm" variant="outline" onClick={() => openConfirm(row, "key")}>
-                          <Key className="h-3.5 w-3.5 mr-1.5" /> Spare key
+                          <Key className="h-3.5 w-3.5 mr-1" /> Extra key
                         </Button>
                         <Button size="sm" variant="outline" onClick={() => openConfirm(row, "cylinder")}>
-                          <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Replace cylinder
+                          <RefreshCw className="h-3.5 w-3.5 mr-1" /> Extra cylinder
                         </Button>
                       </div>
                     </div>
@@ -293,7 +320,7 @@ export default function QuickOrder() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {confirm.mode === "key" ? "Order spare key" : "Order replacement cylinder"}
+              {confirm.mode === "key" ? "Order extra key" : "Order extra cylinder"}
             </DialogTitle>
           </DialogHeader>
           {confirm.row && (
