@@ -327,10 +327,12 @@ export default function QuickOrder() {
             <div className="space-y-4">
               <div className="text-sm space-y-1">
                 <div className="flex justify-between"><span className="text-muted-foreground">Door</span><span>{confirm.row.label}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Differ ref</span><span>{confirm.row.differRef}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Product</span><span>{confirm.row.cylinder_type}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Differ ref</span><span className="font-mono">{confirm.row.differRef}</span></div>
+                {confirm.row.lockFunction && <div className="flex justify-between"><span className="text-muted-foreground">Lock profile</span><span>{confirm.row.lockFunction}</span></div>}
+                {confirm.row.lockType && <div className="flex justify-between"><span className="text-muted-foreground">Lock function</span><span>{confirm.row.lockType}</span></div>}
                 {confirm.row.finish && <div className="flex justify-between"><span className="text-muted-foreground">Finish</span><span>{confirm.row.finish}</span></div>}
                 {confirm.row.size && <div className="flex justify-between"><span className="text-muted-foreground">Size</span><span>{confirm.row.size}</span></div>}
+                <div className="flex justify-between"><span className="text-muted-foreground">Product code</span><span className="font-mono text-xs">{confirm.row.cylinder_type}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">System</span><span>{confirm.row.systemName}</span></div>
               </div>
               {confirm.mode === "cylinder" && (
