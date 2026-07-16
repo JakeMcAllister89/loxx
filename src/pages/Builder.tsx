@@ -1094,7 +1094,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
         }}>
           <ChevronsDownUp className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="sm" title="Expand all" onClick={() => setCollapsed(new Set())}>
+        <Button variant="outline" size="sm" title="Expand all" onClick={() => { setCollapsed(new Set()); setTimeout(() => fitViewRef.current?.(), 200); }}>
           <ChevronsUpDown className="h-4 w-4" />
         </Button>
         <Button variant="outline" size="sm" onClick={handleUndo} disabled={!canUndo} title="Undo last action (Ctrl+Z)">
