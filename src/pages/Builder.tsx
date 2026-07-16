@@ -601,6 +601,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
       return next;
     });
     setCopySpecState({ open: false, sourceId: "", newLabel: "", step: "differ-choice", keyedAlike: false });
+    cylConfigRef.current = null;
     setSelectedId(null);
   }, [pushUndo, systemId]);
 
