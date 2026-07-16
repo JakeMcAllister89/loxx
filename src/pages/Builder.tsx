@@ -805,6 +805,20 @@ function BuilderInner({ systemId }: { systemId: string }) {
     return s;
   }, [search, tree, productsByCode]);
 
+  const systemStats = useMemo(() => {
+    const counts = { MK: 0, SMK: 0, CE: 0, CYL: 0 };
+    if (!tree.root) return counts;
+    const walk = (n: TNode) => {
+      if (n.type === "MK") counts.MK++;
+      else if (n.type === "SMK") counts.SMK++;
+      else if (n.type === "CE") counts.CE++;
+      else if (n.type === "CYL" && !n.decommissioned_at) counts.CYL++;
+      n.children.forEach(walk);
+    };
+    walk(tree.root);
+    return counts;
+  }, [tree]);
+
   useEffect(() => {
     if (searchMatch.size === 1) {
       const id = [...searchMatch][0];
@@ -1586,6 +1600,18 @@ function BuilderInner({ systemId }: { systemId: string }) {
             <div className="p-6 text-sm text-muted-foreground">
               <h3 className="text-base font-semibold text-foreground mb-1">Details</h3>
               <p>Click any row to edit its properties, or hover and tap <kbd className="px-1 rounded bg-muted text-xs">+</kbd> to add a child.</p>
+
+              <div className="mt-6 rounded-lg border bg-muted/40 p-4 space-y-2">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide mb-3">System overview</h4>
+                <div className="space-y-1.5 text-xs text-muted-foreground">
+                  <div className="flex justify-between"><span>Grand Master Key</span><span className="font-medium text-foreground">1</span></div>
+                  {systemStats.MK > 0 && <div className="flex justify-between"><span>Master {systemStats.MK !== 1 ? "Keys" : "Key"}</span><span className="font-medium text-foreground">{systemStats.MK}</span></div>}
+                  {systemStats.SMK > 0 && <div className="flex justify-between"><span>Sub Master {systemStats.SMK !== 1 ? "Keys" : "Key"}</span><span className="font-medium text-foreground">{systemStats.SMK}</span></div>}
+                  {systemStats.CE > 0 && <div className="flex justify-between"><span>Common {systemStats.CE !== 1 ? "Entrances" : "Entrance"}</span><span className="font-medium text-foreground">{systemStats.CE}</span></div>}
+                  <div className="flex justify-between border-t pt-1.5 mt-1.5"><span>Total cylinders</span><span className="font-semibold text-foreground">{systemStats.CYL}</span></div>
+                </div>
+              </div>
+
               <div className="mt-6 space-y-2 text-xs">
                 <Legend type="GMK" /><Legend type="MK" /><Legend type="SMK" /><Legend type="CYL" /><Legend type="CE" />
               </div>
