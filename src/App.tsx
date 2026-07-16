@@ -50,6 +50,7 @@ import BacsConfirmed from "./pages/BacsConfirmed";
 import IssuedKeys from "./pages/IssuedKeys";
 import BookDemo from "./pages/BookDemo";
 import CylindersAndKeys from "./pages/CylindersAndKeys";
+import QuickOrder from "./pages/QuickOrder";
 import WhatIsMasterKeySystem from "@/pages/guides/WhatIsMasterKeySystem";
 import OAuthConsent from "./pages/OAuthConsent";
 
@@ -97,6 +98,7 @@ const App = () => (
               <Route path="/basket/review" element={<RoleRoute allow={["master_admin","admin"]}><CartReview /></RoleRoute>} />
               <Route path="/checkout/return" element={<ProtectedRoute><CheckoutReturn /></ProtectedRoute>} />
               <Route path="/orders" element={<RoleRoute allow={["master_admin","admin","standard"]}><Orders /></RoleRoute>} />
+              <Route path="/quick-order" element={<RoleRoute allow={["master_admin","admin","standard"]}><QuickOrder /></RoleRoute>} />
               <Route path="/orders/bacs-confirmed" element={<ProtectedRoute><BacsConfirmed /></ProtectedRoute>} />
               <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
               <Route path="/pending-approval" element={<ProtectedRoute><PendingApproval /></ProtectedRoute>} />
