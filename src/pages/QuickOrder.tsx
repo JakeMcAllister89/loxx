@@ -21,6 +21,8 @@ interface CylinderRow {
   label: string;
   differRef: string;
   cylinder_type: string;
+  lockType: string | null;
+  lockFunction: string | null;
   finish: string | null;
   size: string | null;
   systemId: string;
@@ -41,6 +43,9 @@ export default function QuickOrder() {
   const { add: addToCart } = useCart();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [filterSystem, setFilterSystem] = useState("");
+  const [filterLockType, setFilterLockType] = useState("");
+  const [filterFinish, setFilterFinish] = useState("");
   const [cylinders, setCylinders] = useState<CylinderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
@@ -59,11 +64,14 @@ export default function QuickOrder() {
         const tree = sys.tree_data as any as TreeData;
         const walk = (n: TNode) => {
           if (n.type === "CYL" && !n.decommissioned_at && n.cylinder_type) {
+            const prod = (prods ?? []).find((p: any) => p.code === n.cylinder_type);
             rows.push({
               nodeId: n.id,
               label: n.label,
               differRef: `D${String(n.differ ?? 0).padStart(3, "0")}`,
               cylinder_type: n.cylinder_type,
+              lockType: prod?.cylinder_type ?? null,
+              lockFunction: (prod as any)?.cylinder_profile ?? null,
               finish: n.finish ?? null,
               size: n.size ?? null,
               systemId: sys.id,
@@ -83,16 +91,25 @@ export default function QuickOrder() {
     load();
   }, []);
 
+  const systemOptions = useMemo(() => [...new Set(cylinders.map(r => r.systemId))].map(id => cylinders.find(r => r.systemId === id)!).map(r => ({ id: r.systemId, name: r.systemName })), [cylinders]);
+  const lockTypeOptions = useMemo(() => [...new Set(cylinders.map(r => r.lockType).filter(Boolean))] as string[], [cylinders]);
+  const finishOptions = useMemo(() => [...new Set(cylinders.map(r => r.finish).filter(Boolean))] as string[], [cylinders]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return cylinders;
-    return cylinders.filter(r =>
-      r.label.toLowerCase().includes(q) ||
-      r.differRef.toLowerCase().includes(q) ||
-      r.systemName.toLowerCase().includes(q) ||
-      (r.systemRef ?? "").toLowerCase().includes(q)
-    );
-  }, [cylinders, search]);
+    return cylinders.filter(r => {
+      if (filterSystem && r.systemId !== filterSystem) return false;
+      if (filterLockType && r.lockType !== filterLockType) return false;
+      if (filterFinish && r.finish !== filterFinish) return false;
+      if (q && !(
+        r.label.toLowerCase().includes(q) ||
+        r.differRef.toLowerCase().includes(q) ||
+        r.systemName.toLowerCase().includes(q) ||
+        (r.systemRef ?? "").toLowerCase().includes(q)
+      )) return false;
+      return true;
+    });
+  }, [cylinders, search, filterSystem, filterLockType, filterFinish]);
 
   const openConfirm = (row: CylinderRow, mode: "key" | "cylinder") => {
     setConfirm({ open: true, mode, row, reason: "faulty" });
