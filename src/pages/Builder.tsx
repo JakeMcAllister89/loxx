@@ -1080,13 +1080,13 @@ function BuilderInner({ systemId }: { systemId: string }) {
           {countDoors(tree.root)} {countDoors(tree.root) !== 1 ? "doors" : "door"}
         </span>
 
-        <div className="ml-4 relative">
+        <div className="ml-4 relative flex items-center gap-2">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search doors & zones…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 w-64 h-9" />
           {search.trim() && (
-            <div className="absolute top-full left-0 mt-1 text-[11px] text-muted-foreground whitespace-nowrap">
+            <span className="text-[11px] text-muted-foreground whitespace-nowrap">
               {searchMatch.size === 0 ? "No matches" : `${searchMatch.size} match${searchMatch.size !== 1 ? "es" : ""} highlighted`}
-            </div>
+            </span>
           )}
         </div>
 
