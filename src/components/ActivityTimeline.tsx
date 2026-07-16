@@ -8,6 +8,7 @@ export function ActivityTimeline({
   limit = 20,
   refreshMs = 5000,
   showClear = false,
+  showExport = false,
   actionTypes,
   emptyText = "No activity yet",
 }: {
@@ -15,6 +16,7 @@ export function ActivityTimeline({
   limit?: number;
   refreshMs?: number;
   showClear?: boolean;
+  showExport?: boolean;
   actionTypes?: string[];
   emptyText?: string;
 }) {
@@ -62,6 +64,29 @@ export function ActivityTimeline({
     setNonce((n) => n + 1);
   };
 
+  const exportCsv = () => {
+    const header = ["timestamp", "action", "node_type", "node_label", "old_value", "new_value"];
+    const escape = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines = [header.join(",")];
+    rows.forEach((r) => {
+      lines.push([
+        new Date(r.created_at).toISOString(),
+        r.action,
+        r.node_type ?? "",
+        r.node_label ?? "",
+        r.old_value ?? "",
+        r.new_value ?? "",
+      ].map(escape).join(","));
+    });
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `activity-${systemId ?? "log"}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) return <div className="text-xs text-muted-foreground">Loading activity…</div>;
 
   return (
@@ -99,14 +124,24 @@ export function ActivityTimeline({
           })}
         </ol>
       )}
-      {showClear && systemId && rows.length > 0 && (
-        <div className="mt-4 pt-3 border-t">
-          <button
-            onClick={clearAll}
-            className="text-[11px] text-muted-foreground hover:text-destructive underline-offset-2 hover:underline"
-          >
-            Clear activity
-          </button>
+      {(showClear || showExport) && systemId && rows.length > 0 && (
+        <div className="mt-4 pt-3 border-t flex items-center gap-4">
+          {showExport && (
+            <button
+              onClick={exportCsv}
+              className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+            >
+              Export CSV
+            </button>
+          )}
+          {showClear && (
+            <button
+              onClick={clearAll}
+              className="text-[11px] text-muted-foreground hover:text-destructive underline-offset-2 hover:underline"
+            >
+              Clear activity
+            </button>
+          )}
         </div>
       )}
     </div>
