@@ -1090,6 +1090,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
           };
           if (tree.root) walk(tree.root);
           setCollapsed(toCollapse);
+          setTimeout(() => fitViewRef.current?.(), 200);
         }}>
           <ChevronsDownUp className="h-4 w-4" />
         </Button>

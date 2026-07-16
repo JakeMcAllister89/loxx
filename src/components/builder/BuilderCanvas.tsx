@@ -141,8 +141,8 @@ function CanvasInner({
   parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly,
   collapsed, onToggleCollapsed, issueCounts, onOpenIssues,
 }: Props) {
-  const { fitView, setCenter } = useReactFlow();
-  const lastNodeCount = useRef(0);
+  const { fitView, setCenter, getViewport } = useReactFlow();
+  const lastNodeIds = useRef<Set<string>>(new Set());
 
   const { nodes, edges } = useMemo(() => {
     if (!tree.root) return { nodes: [] as Node[], edges: [] as Edge[] };
@@ -245,14 +245,17 @@ function CanvasInner({
 
   // Auto-pan to newly added nodes
   useEffect(() => {
-    if (nodes.length > lastNodeCount.current && lastNodeCount.current > 0) {
-      const newest = nodes[nodes.length - 1];
-      if (newest?.position) {
-        setCenter(newest.position.x + NODE_WIDTH / 2, newest.position.y + NODE_HEIGHT / 2, { zoom: 1, duration: 500 });
+    const currentIds = new Set(nodes.map(n => n.id));
+    const newNodes = nodes.filter(n => !lastNodeIds.current.has(n.id));
+    if (newNodes.length > 0 && lastNodeIds.current.size > 0) {
+      const target = newNodes[0];
+      if (target?.position) {
+        const { zoom } = getViewport();
+        setCenter(target.position.x + NODE_WIDTH / 2, target.position.y + NODE_HEIGHT / 2, { zoom, duration: 400 });
       }
     }
-    lastNodeCount.current = nodes.length;
-  }, [nodes, setCenter]);
+    lastNodeIds.current = currentIds;
+  }, [nodes, setCenter, getViewport]);
 
 
   const handleNodeClick = useCallback((_: unknown, n: Node) => onSelect(n.id), [onSelect]);
