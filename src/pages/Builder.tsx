@@ -805,6 +805,20 @@ function BuilderInner({ systemId }: { systemId: string }) {
     return s;
   }, [search, tree, productsByCode]);
 
+  const systemStats = useMemo(() => {
+    const counts = { MK: 0, SMK: 0, CE: 0, CYL: 0 };
+    if (!tree.root) return counts;
+    const walk = (n: TNode) => {
+      if (n.type === "MK") counts.MK++;
+      else if (n.type === "SMK") counts.SMK++;
+      else if (n.type === "CE") counts.CE++;
+      else if (n.type === "CYL" && !n.decommissioned_at) counts.CYL++;
+      n.children.forEach(walk);
+    };
+    walk(tree.root);
+    return counts;
+  }, [tree]);
+
   useEffect(() => {
     if (searchMatch.size === 1) {
       const id = [...searchMatch][0];
