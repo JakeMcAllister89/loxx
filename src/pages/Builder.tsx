@@ -224,6 +224,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const dirtyRef = useRef(false);
   const savedNameRef = useRef<string>("");
   const fitViewRef = useRef<(() => void) | null>(null);
+  const panToNodeRef = useRef<((id: string) => void) | null>(null);
+
   const newNodeIdsRef = useRef<Set<string>>(new Set());
 
   // Undo history
@@ -803,6 +805,14 @@ function BuilderInner({ systemId }: { systemId: string }) {
     return s;
   }, [search, tree, productsByCode]);
 
+  useEffect(() => {
+    if (searchMatch.size === 1) {
+      const id = [...searchMatch][0];
+      setTimeout(() => panToNodeRef.current?.(id), 100);
+    }
+  }, [searchMatch]);
+
+
   const errorIds = useMemo(() => new Set(issues.filter((i) => i.level === "error" && i.nodeId).map((i) => i.nodeId!)), [issues]);
 
   const runValidate = () => {
@@ -1072,7 +1082,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
 
         <div className="ml-4 relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search doors & zones…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 w-56 h-9" />
+          <Input placeholder="Search doors & zones…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 w-64 h-9" />
           {search.trim() && (
             <div className="absolute top-full left-0 mt-1 text-[11px] text-muted-foreground whitespace-nowrap">
               {searchMatch.size === 0 ? "No matches" : `${searchMatch.size} match${searchMatch.size !== 1 ? "es" : ""} highlighted`}
@@ -1299,6 +1309,8 @@ function BuilderInner({ systemId }: { systemId: string }) {
               onAddChild={handleAddChild}
               onPaneClick={() => setSelectedId(null)}
               registerFitView={(fn) => { fitViewRef.current = fn; }}
+              registerPanToNode={(fn) => { panToNodeRef.current = fn; }}
+
               parentsWithDecomm={decommParents}
               revealedDecomm={revealedDecomm}
               onToggleReveal={toggleRevealParent}
