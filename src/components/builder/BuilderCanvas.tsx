@@ -30,6 +30,7 @@ interface Props {
   onAddChild: (parentId: string, childType?: NodeType) => void;
   onPaneClick?: () => void;
   registerFitView?: (fn: () => void) => void;
+  registerPanToNode?: (fn: (id: string) => void) => void;
   /** Parent ids known to have decommissioned CYL children (e.g. SMK). */
   parentsWithDecomm?: Set<string>;
   /** Parent ids whose decommissioned children are currently revealed. */
@@ -137,7 +138,7 @@ function layout(root: TNode, collapsed: Set<string> = new Set()): { laid: Laid[]
 }
 
 function CanvasInner({
-  tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, onPaneClick, registerFitView,
+  tree, selectedId, errorIds, highlightIds, productsByCode, onSelect, onAddChild, onPaneClick, registerFitView, registerPanToNode,
   parentsWithDecomm, revealedDecomm, onToggleReveal, getExtraAddActions, readOnly,
   collapsed, onToggleCollapsed, issueCounts, onOpenIssues,
 }: Props) {
@@ -242,6 +243,18 @@ function CanvasInner({
   useEffect(() => {
     if (registerFitView) registerFitView(() => fitView({ padding: 0.25, duration: 400 }));
   }, [registerFitView, fitView]);
+
+  useEffect(() => {
+    if (!registerPanToNode) return;
+
+    registerPanToNode((id: string) => {
+      const target = rfNodes.find(n => n.id === id);
+      if (!target?.position) return;
+
+      const { zoom } = getViewport();
+      setCenter(target.position.x + NODE_WIDTH / 2, target.position.y + NODE_HEIGHT / 2, { zoom: Math.max(zoom, 0.8), duration: 400 });
+    });
+  }, [registerPanToNode, rfNodes, setCenter, getViewport]);
 
   // Auto-pan to newly added nodes
   useEffect(() => {
