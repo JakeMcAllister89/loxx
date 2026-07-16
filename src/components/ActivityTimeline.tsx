@@ -6,7 +6,7 @@ import { toast } from "sonner";
 export function ActivityTimeline({
   systemId,
   limit = 20,
-  refreshMs = 30000,
+  refreshMs = 5000,
   showClear = false,
   actionTypes,
   emptyText = "No activity yet",
@@ -44,8 +44,14 @@ export function ActivityTimeline({
     let active = true;
     (async () => { await load(); if (!active) return; })();
     const iv = setInterval(load, refreshMs);
-    return () => { active = false; clearInterval(iv); };
-  }, [load, refreshMs, nonce]);
+    const channel = supabase
+      .channel(`audit-${systemId ?? "global"}-${nonce}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "audit_log", ...(systemId ? { filter: `system_id=eq.${systemId}` } : {}) },
+        () => { if (active) load(); }
+      )
+      .subscribe();
+    return () => { active = false; clearInterval(iv); supabase.removeChannel(channel); };
+  }, [load, refreshMs, nonce, systemId]);
 
   const clearAll = async () => {
     if (!systemId) return;
