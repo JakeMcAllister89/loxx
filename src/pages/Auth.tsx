@@ -59,14 +59,16 @@ export default function Auth() {
         });
         if (error) throw error;
         toast.success("Signup received. We'll email you once it's approved.");
-        supabase.functions.invoke("send-signup-confirmation", {
+        await supabase.functions.invoke("send-signup-confirmation", {
           body: { email, first_name: firstName, organisation_name: company },
         }).catch(() => {});
-        setTimeout(() => {
-          supabase.functions.invoke("notify-new-signup", {
-            body: { source: "auth_signup", email },
-          }).catch(() => {});
-        }, 3000);
+
+        await new Promise(r => setTimeout(r, 2000));
+
+        await supabase.functions.invoke("notify-new-signup", {
+          body: { source: "auth_signup", email },
+        }).catch(() => {});
+
         navigate("/pending-approval");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
