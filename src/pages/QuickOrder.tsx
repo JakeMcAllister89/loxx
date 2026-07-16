@@ -233,7 +233,7 @@ export default function QuickOrder() {
           : prev
         );
       }
-      setConfirm({ open: false, mode: "key", row: null, reason: "faulty" });
+      setConfirm({ open: false, mode: "key", row: null, reason: "faulty", quantity: 1, differKeyCode: null, differKeyPrice: 12 });
     } catch (e: any) {
       toast.error(e.message ?? "Something went wrong");
     } finally {
