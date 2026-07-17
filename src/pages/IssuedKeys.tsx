@@ -23,7 +23,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Users, Search, History, MoreHorizontal, Archive } from "lucide-react";
+import { ArrowLeft, Plus, Users, Search, History, MessageSquare, MoreHorizontal, Archive } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { TNode, TreeData } from "@/lib/keytree";
 import { logAction } from "@/lib/audit";
@@ -209,6 +209,10 @@ export default function IssuedKeys() {
   const [editDateOf, setEditDateOf] = useState<Issue | null>(null);
   const [editDate, setEditDate] = useState<string>("");
 
+  const [noteOf, setNoteOf] = useState<Issue | null>(null);
+  const [noteText, setNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
+
   const loadAll = async () => {
     setLoading(true);
     if (globalMode) {
@@ -318,6 +322,24 @@ export default function IssuedKeys() {
     logAction({ system_id: i.system_id, action: "key_returned", node_label: label, metadata: { holder_name: holder?.name, key_ref: keyRef, quantity: qty } });
     toast.success(qty === totalQty ? "All keys marked returned" : `${qty} of ${totalQty} keys marked returned`);
     setReturnOf(null);
+    loadAll();
+  };
+
+  const saveNote = async () => {
+    if (!noteOf || !noteText.trim()) return;
+    setSavingNote(true);
+    const timestamp = new Date().toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const entry = `[${timestamp}] ${noteText.trim()}`;
+    const existing = noteOf.notes?.trim();
+    const newNotes = existing ? `${existing}\n${entry}` : entry;
+    const { error } = await (supabase.from("key_issues" as any) as any)
+      .update({ notes: newNotes })
+      .eq("id", noteOf.id);
+    if (error) { toast.error("Failed to save note"); setSavingNote(false); return; }
+    toast.success("Note saved");
+    setNoteOf(null);
+    setNoteText("");
+    setSavingNote(false);
     loadAll();
   };
 
@@ -487,14 +509,15 @@ export default function IssuedKeys() {
                     <th className="text-left px-4 py-2.5 font-medium">Status</th>
                     <th className="text-left px-4 py-2.5 font-medium">Issued</th>
                     <th className="text-left px-4 py-2.5 font-medium">Expected return</th>
+                    <th className="text-left px-4 py-2.5 font-medium">Notes</th>
                     <th className="text-right px-4 py-2.5 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={8} className="text-center p-8 text-muted-foreground">Loading…</td></tr>
+                    <tr><td colSpan={!readOnly ? 9 : 8} className="text-center p-8 text-muted-foreground">Loading…</td></tr>
                   ) : filteredIssues.length === 0 ? (
-                    <tr><td colSpan={8} className="text-center p-8 text-muted-foreground">No records</td></tr>
+                    <tr><td colSpan={!readOnly ? 9 : 8} className="text-center p-8 text-muted-foreground">No records</td></tr>
                   ) : filteredIssues.map(i => {
                     const node = nodeById.get(i.node_id);
                     const holder = holderById.get(i.holder_id);
@@ -535,6 +558,15 @@ export default function IssuedKeys() {
                         <td className="px-4 py-2.5">{statusBadge(i.status, i.expected_return_date)}</td>
                         <td className="px-4 py-2.5">{fmtDateTime(i.issued_at)}</td>
                         <td className="px-4 py-2.5 text-muted-foreground">{fmtDate(i.expected_return_date)}</td>
+                        <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[200px]">
+                          {i.notes ? (
+                            <div className="space-y-0.5">
+                              {i.notes.split("\n").map((line, idx) => (
+                                <div key={idx} className="truncate" title={line}>{line}</div>
+                              ))}
+                            </div>
+                          ) : "—"}
+                        </td>
                         <td className="px-4 py-2.5 text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -559,6 +591,11 @@ export default function IssuedKeys() {
                               <DropdownMenuItem onClick={() => setHistoryOpen(i)}>
                                 <History className="h-3.5 w-3.5" /> View history
                               </DropdownMenuItem>
+                              {!readOnly && (
+                                <DropdownMenuItem onClick={() => { setNoteOf(i); setNoteText(""); }}>
+                                  <MessageSquare className="h-3.5 w-3.5" /> Add note
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </td>
@@ -763,6 +800,29 @@ export default function IssuedKeys() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add note */}
+      <Dialog open={!!noteOf} onOpenChange={(o) => { if (!o) { setNoteOf(null); setNoteText(""); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add note</DialogTitle>
+            <DialogDescription>{(noteOf as any)?.node_label} — {noteOf && holderById.get(noteOf.holder_id)?.name}</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="e.g. Chased John via email for key return…"
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            rows={4}
+            className="resize-none"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setNoteOf(null); setNoteText(""); }} disabled={savingNote}>Cancel</Button>
+            <Button onClick={saveNote} disabled={savingNote || !noteText.trim()} className="bg-[#d4820a] hover:bg-[#b8700a] text-white">
+              {savingNote ? "Saving…" : "Save note"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </DashboardLayout>
