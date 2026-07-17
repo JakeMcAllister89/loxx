@@ -509,14 +509,15 @@ export default function IssuedKeys() {
                     <th className="text-left px-4 py-2.5 font-medium">Status</th>
                     <th className="text-left px-4 py-2.5 font-medium">Issued</th>
                     <th className="text-left px-4 py-2.5 font-medium">Expected return</th>
+                    <th className="text-left px-4 py-2.5 font-medium">Notes</th>
                     <th className="text-right px-4 py-2.5 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={8} className="text-center p-8 text-muted-foreground">Loading…</td></tr>
+                    <tr><td colSpan={!readOnly ? 9 : 8} className="text-center p-8 text-muted-foreground">Loading…</td></tr>
                   ) : filteredIssues.length === 0 ? (
-                    <tr><td colSpan={8} className="text-center p-8 text-muted-foreground">No records</td></tr>
+                    <tr><td colSpan={!readOnly ? 9 : 8} className="text-center p-8 text-muted-foreground">No records</td></tr>
                   ) : filteredIssues.map(i => {
                     const node = nodeById.get(i.node_id);
                     const holder = holderById.get(i.holder_id);
