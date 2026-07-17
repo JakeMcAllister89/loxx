@@ -190,6 +190,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [isFulfilled, setIsFulfilled] = useState(false);
   const isFulfilledRef = useRef(false);
   const [issueCounts, setIssueCounts] = useState<Map<string, { issued: number; lost: number }>>(new Map());
+  const [issuedKeysModal, setIssuedKeysModal] = useState<{ open: boolean; nodeId: string; nodeLabel: string; rows: any[] }>({ open: false, nodeId: "", nodeLabel: "", rows: [] });
   const loadIssueCounts = useCallback(async () => {
     if (readOnly) return;
     const { data } = await supabase
@@ -208,6 +209,17 @@ function BuilderInner({ systemId }: { systemId: string }) {
     setIssueCounts(m);
   }, [systemId, readOnly]);
   useEffect(() => { loadIssueCounts(); }, [loadIssueCounts]);
+  const openIssuedKeys = useCallback(async (nodeId: string) => {
+    const node = findNode(tree.root, nodeId);
+    const { data } = await (supabase
+      .from("key_issues" as any) as any)
+      .select("*, holder:holder_id(first_name, last_name, email)")
+      .eq("system_id", systemId)
+      .eq("node_id", nodeId)
+      .in("status", ["issued", "lost"])
+      .order("issued_at", { ascending: false });
+    setIssuedKeysModal({ open: true, nodeId, nodeLabel: node?.label ?? "Keys", rows: data ?? [] });
+  }, [systemId, tree.root]);
   // Replace-cylinder modal state: target node id + current step + draft note
   const [replaceState, setReplaceState] = useState<
     | { open: false }
@@ -1390,7 +1402,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 });
               }}
               issueCounts={issueCounts}
-              onOpenIssues={(nodeId, filter) => navigate(`/builder/${systemId}/keys?nodeId=${nodeId}${filter === "lost" ? "&tab=lost" : ""}`)}
+              onOpenIssues={(nodeId) => openIssuedKeys(nodeId)}
             />
           )}
         </div>
