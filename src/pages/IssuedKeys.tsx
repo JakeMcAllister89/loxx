@@ -591,6 +591,11 @@ export default function IssuedKeys() {
                               <DropdownMenuItem onClick={() => setHistoryOpen(i)}>
                                 <History className="h-3.5 w-3.5" /> View history
                               </DropdownMenuItem>
+                              {!readOnly && (
+                                <DropdownMenuItem onClick={() => { setNoteOf(i); setNoteText(""); }}>
+                                  <MessageSquare className="h-3.5 w-3.5" /> Add note
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </td>
