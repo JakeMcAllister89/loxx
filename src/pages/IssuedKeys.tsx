@@ -808,7 +808,7 @@ export default function IssuedKeys() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Add note</DialogTitle>
-            <DialogDescription>{noteOf?.node_label} — {noteOf && holderById.get(noteOf.holder_id)?.name}</DialogDescription>
+            <DialogDescription>{(noteOf as any)?.node_label} — {noteOf && holderById.get(noteOf.holder_id)?.name}</DialogDescription>
           </DialogHeader>
           <Textarea
             placeholder="e.g. Chased John via email for key return…"
