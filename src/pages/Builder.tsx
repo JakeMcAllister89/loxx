@@ -2788,6 +2788,46 @@ function DetailPanel({
           );
         })()}
       </div>
+      {/* Issued keys inline dialog */}
+      <Dialog open={issuedKeysModal.open} onOpenChange={(o) => setIssuedKeysModal(m => ({ ...m, open: o }))}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Issued keys — {issuedKeysModal.nodeLabel}</DialogTitle>
+          </DialogHeader>
+          {issuedKeysModal.rows.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4">No keys currently issued for this door.</p>
+          ) : (
+            <div className="divide-y text-sm max-h-96 overflow-y-auto">
+              {issuedKeysModal.rows.map((r: any) => (
+                <div key={r.id} className="py-3 flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="font-medium">
+                      {r.holder?.first_name} {r.holder?.last_name}
+                      {r.holder?.email && <span className="text-muted-foreground font-normal ml-1 text-xs">({r.holder.email})</span>}
+                    </div>
+                    {r.key_ref && <div className="text-xs text-muted-foreground mt-0.5">Ref: {r.key_ref}</div>}
+                    {r.notes && <div className="text-xs text-muted-foreground mt-0.5">{r.notes}</div>}
+                    {r.expected_return_date && <div className="text-xs text-muted-foreground mt-0.5">Return by: {new Date(r.expected_return_date).toLocaleDateString("en-GB")}</div>}
+                    <div className="text-xs text-muted-foreground mt-0.5">Issued: {new Date(r.issued_at).toLocaleDateString("en-GB")}</div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.status === "lost" ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>
+                      {r.status === "lost" ? "Lost" : "Issued"}
+                    </span>
+                    {r.quantity > 1 && <span className="text-xs text-muted-foreground">×{r.quantity}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => navigate(`/builder/${systemId}/keys?nodeId=${issuedKeysModal.nodeId}`)}>
+              Open in Key Log
+            </Button>
+            <Button size="sm" onClick={() => setIssuedKeysModal(m => ({ ...m, open: false }))}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
