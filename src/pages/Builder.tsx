@@ -190,6 +190,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
   const [isFulfilled, setIsFulfilled] = useState(false);
   const isFulfilledRef = useRef(false);
   const [issueCounts, setIssueCounts] = useState<Map<string, { issued: number; lost: number }>>(new Map());
+  const [issuedKeysModal, setIssuedKeysModal] = useState<{ open: boolean; nodeId: string; nodeLabel: string; rows: any[] }>({ open: false, nodeId: "", nodeLabel: "", rows: [] });
   const loadIssueCounts = useCallback(async () => {
     if (readOnly) return;
     const { data } = await supabase
@@ -208,6 +209,17 @@ function BuilderInner({ systemId }: { systemId: string }) {
     setIssueCounts(m);
   }, [systemId, readOnly]);
   useEffect(() => { loadIssueCounts(); }, [loadIssueCounts]);
+  const openIssuedKeys = useCallback(async (nodeId: string) => {
+    const node = findNode(tree.root, nodeId);
+    const { data } = await (supabase
+      .from("key_issues" as any) as any)
+      .select("*, holder:holder_id(first_name, last_name, email)")
+      .eq("system_id", systemId)
+      .eq("node_id", nodeId)
+      .in("status", ["issued", "lost"])
+      .order("issued_at", { ascending: false });
+    setIssuedKeysModal({ open: true, nodeId, nodeLabel: node?.label ?? "Keys", rows: data ?? [] });
+  }, [systemId, tree.root]);
   // Replace-cylinder modal state: target node id + current step + draft note
   const [replaceState, setReplaceState] = useState<
     | { open: false }
@@ -1390,7 +1402,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 });
               }}
               issueCounts={issueCounts}
-              onOpenIssues={(nodeId, filter) => navigate(`/builder/${systemId}/keys?nodeId=${nodeId}${filter === "lost" ? "&tab=lost" : ""}`)}
+              onOpenIssues={(nodeId) => openIssuedKeys(nodeId)}
             />
           )}
         </div>
@@ -2776,6 +2788,46 @@ function DetailPanel({
           );
         })()}
       </div>
+      {/* Issued keys inline dialog */}
+      <Dialog open={issuedKeysModal.open} onOpenChange={(o) => setIssuedKeysModal(m => ({ ...m, open: o }))}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Issued keys — {issuedKeysModal.nodeLabel}</DialogTitle>
+          </DialogHeader>
+          {issuedKeysModal.rows.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4">No keys currently issued for this door.</p>
+          ) : (
+            <div className="divide-y text-sm max-h-96 overflow-y-auto">
+              {issuedKeysModal.rows.map((r: any) => (
+                <div key={r.id} className="py-3 flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="font-medium">
+                      {r.holder?.first_name} {r.holder?.last_name}
+                      {r.holder?.email && <span className="text-muted-foreground font-normal ml-1 text-xs">({r.holder.email})</span>}
+                    </div>
+                    {r.key_ref && <div className="text-xs text-muted-foreground mt-0.5">Ref: {r.key_ref}</div>}
+                    {r.notes && <div className="text-xs text-muted-foreground mt-0.5">{r.notes}</div>}
+                    {r.expected_return_date && <div className="text-xs text-muted-foreground mt-0.5">Return by: {new Date(r.expected_return_date).toLocaleDateString("en-GB")}</div>}
+                    <div className="text-xs text-muted-foreground mt-0.5">Issued: {new Date(r.issued_at).toLocaleDateString("en-GB")}</div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.status === "lost" ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>
+                      {r.status === "lost" ? "Lost" : "Issued"}
+                    </span>
+                    {r.quantity > 1 && <span className="text-xs text-muted-foreground">×{r.quantity}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => navigate(`/builder/${systemId}/keys?nodeId=${issuedKeysModal.nodeId}`)}>
+              Open in Key Log
+            </Button>
+            <Button size="sm" onClick={() => setIssuedKeysModal(m => ({ ...m, open: false }))}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
