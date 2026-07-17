@@ -325,6 +325,24 @@ export default function IssuedKeys() {
     loadAll();
   };
 
+  const saveNote = async () => {
+    if (!noteOf || !noteText.trim()) return;
+    setSavingNote(true);
+    const timestamp = new Date().toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const entry = `[${timestamp}] ${noteText.trim()}`;
+    const existing = noteOf.notes?.trim();
+    const newNotes = existing ? `${existing}\n${entry}` : entry;
+    const { error } = await (supabase.from("key_issues" as any) as any)
+      .update({ notes: newNotes })
+      .eq("id", noteOf.id);
+    if (error) { toast.error("Failed to save note"); setSavingNote(false); return; }
+    toast.success("Note saved");
+    setNoteOf(null);
+    setNoteText("");
+    setSavingNote(false);
+    loadAll();
+  };
+
   const doLost = async () => {
     if (!user || !lostOf) return;
     const totalQty = lostOf.quantity ?? 1;
