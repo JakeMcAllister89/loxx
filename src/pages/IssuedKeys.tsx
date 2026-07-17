@@ -802,6 +802,29 @@ export default function IssuedKeys() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add note */}
+      <Dialog open={!!noteOf} onOpenChange={(o) => { if (!o) { setNoteOf(null); setNoteText(""); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add note</DialogTitle>
+            <DialogDescription>{noteOf?.node_label} — {noteOf && holderById.get(noteOf.holder_id)?.name}</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="e.g. Chased John via email for key return…"
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            rows={4}
+            className="resize-none"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setNoteOf(null); setNoteText(""); }} disabled={savingNote}>Cancel</Button>
+            <Button onClick={saveNote} disabled={savingNote || !noteText.trim()} className="bg-[#d4820a] hover:bg-[#b8700a] text-white">
+              {savingNote ? "Saving…" : "Save note"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
