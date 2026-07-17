@@ -211,14 +211,18 @@ function BuilderInner({ systemId }: { systemId: string }) {
   useEffect(() => { loadIssueCounts(); }, [loadIssueCounts]);
   const openIssuedKeys = useCallback(async (nodeId: string) => {
     const node = findNode(tree.root, nodeId);
-    const { data } = await (supabase
-      .from("key_issues" as any) as any)
-      .select("*, holder:holder_id(first_name, last_name, email)")
-      .eq("system_id", systemId)
-      .eq("node_id", nodeId)
-      .in("status", ["issued", "lost"])
-      .order("issued_at", { ascending: false });
-    setIssuedKeysModal({ open: true, nodeId, nodeLabel: node?.label ?? "Keys", rows: data ?? [] });
+    const [{ data: issues }, { data: holders }] = await Promise.all([
+      (supabase.from("key_issues" as any) as any)
+        .select("*")
+        .eq("system_id", systemId)
+        .eq("node_id", nodeId)
+        .in("status", ["issued", "lost"])
+        .order("issued_at", { ascending: false }),
+      (supabase.from("key_holders" as any) as any).select("id, name, email, department"),
+    ]);
+    const holderMap = new Map((holders ?? []).map((h: any) => [h.id, h]));
+    const rows = (issues ?? []).map((r: any) => ({ ...r, holder: holderMap.get(r.holder_id) ?? null }));
+    setIssuedKeysModal({ open: true, nodeId, nodeLabel: node?.label ?? "Keys", rows });
   }, [systemId, tree.root]);
   // Replace-cylinder modal state: target node id + current step + draft note
   const [replaceState, setReplaceState] = useState<
@@ -2152,7 +2156,7 @@ function BuilderInner({ systemId }: { systemId: string }) {
                 <div key={r.id} className="py-3 flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="font-medium">
-                      {r.holder?.first_name} {r.holder?.last_name}
+                      {r.holder?.name ?? "Unknown holder"}
                       {r.holder?.email && <span className="text-muted-foreground font-normal ml-1 text-xs">({r.holder.email})</span>}
                     </div>
                     {r.key_ref && <div className="text-xs text-muted-foreground mt-0.5">Ref: {r.key_ref}</div>}
