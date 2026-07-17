@@ -244,6 +244,19 @@ function CanvasInner({
     if (registerFitView) registerFitView(() => fitView({ padding: 0.25, duration: 400 }));
   }, [registerFitView, fitView]);
 
+  const hasInitialFit = useRef(false);
+
+  useEffect(() => {
+    if (hasInitialFit.current || nodes.length === 0) return;
+
+    const t = setTimeout(() => {
+      fitView({ padding: 0.25, duration: 300 });
+      hasInitialFit.current = true;
+    }, 100);
+
+    return () => clearTimeout(t);
+  }, [nodes.length, fitView]);
+
   useEffect(() => {
     if (!registerPanToNode) return;
 
