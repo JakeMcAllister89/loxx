@@ -558,6 +558,15 @@ export default function IssuedKeys() {
                         <td className="px-4 py-2.5">{statusBadge(i.status, i.expected_return_date)}</td>
                         <td className="px-4 py-2.5">{fmtDateTime(i.issued_at)}</td>
                         <td className="px-4 py-2.5 text-muted-foreground">{fmtDate(i.expected_return_date)}</td>
+                        <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[200px]">
+                          {i.notes ? (
+                            <div className="space-y-0.5">
+                              {i.notes.split("\n").map((line, idx) => (
+                                <div key={idx} className="truncate" title={line}>{line}</div>
+                              ))}
+                            </div>
+                          ) : "—"}
+                        </td>
                         <td className="px-4 py-2.5 text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
