@@ -23,7 +23,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Users, Search, History, MoreHorizontal, Archive } from "lucide-react";
+import { ArrowLeft, Plus, Users, Search, History, MessageSquare, MoreHorizontal, Archive } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { TNode, TreeData } from "@/lib/keytree";
 import { logAction } from "@/lib/audit";
@@ -208,6 +208,10 @@ export default function IssuedKeys() {
   const [resolveNotes, setResolveNotes] = useState("");
   const [editDateOf, setEditDateOf] = useState<Issue | null>(null);
   const [editDate, setEditDate] = useState<string>("");
+
+  const [noteOf, setNoteOf] = useState<Issue | null>(null);
+  const [noteText, setNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
 
   const loadAll = async () => {
     setLoading(true);
